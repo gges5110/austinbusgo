@@ -1,0 +1,107 @@
+from peewee import Model, TextField, IntegerField, FloatField, BooleanField
+
+from database import db
+
+
+# GTFS reference: https://developers.google.com/transit/gtfs/reference
+
+
+class UnknownField(object):
+    def __init__(self, *_, **__): pass
+
+
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class Routes(BaseModel):
+    route_id = IntegerField(index=True, null=True,
+                            primary_key=True, unique=True)
+    agency_id = IntegerField(null=True)
+    route_short_name = IntegerField(null=True, unique=True)
+    route_long_name = TextField(null=True)
+    route_desc = TextField(null=True)
+    route_type = IntegerField(null=True)
+    route_url = TextField(null=True)
+    route_color = TextField(null=True)
+    route_text_color = TextField(null=True)
+
+    class Meta:
+        table_name = 'routes'
+        primary_key = False
+
+
+class Shapes(BaseModel):
+    shape_id = TextField(index=True, null=True)
+    shape_pt_lat = FloatField(null=True)
+    shape_pt_lon = FloatField(null=True)
+    shape_pt_sequence = IntegerField(index=True, null=True)
+    shape_dist_traveled = FloatField(null=True)
+    sup_detour_flag = TextField(null=True)
+
+    class Meta:
+        table_name = 'shapes'
+        primary_key = False
+
+
+class StopTimes(BaseModel):
+    trip_id = TextField(index=True, null=True)
+    arrival_time = TextField(null=True)
+    departure_time = TextField(null=True)
+    stop_id = IntegerField(index=True, null=True)
+    stop_sequence = IntegerField(index=True, null=True)
+    stop_headsign = TextField(null=True)
+    pickup_type = IntegerField(null=True)
+    drop_off_type = IntegerField(null=True)
+    shape_dist_traveled = FloatField(null=True)
+    timepoint = IntegerField(null=True)
+    sup_est_delay = TextField(null=True)
+
+    class Meta:
+        table_name = 'stop_times'
+        primary_key = False
+
+
+class Stops(BaseModel):
+    stop_id = IntegerField(index=True, null=True,
+                           primary_key=True, unique=True)
+    stop_code = IntegerField(null=True)
+    stop_name = TextField(null=True)
+    stop_desc = TextField(null=True)
+    stop_lat = FloatField(null=True)
+    stop_lon = FloatField(null=True)
+    zone_id = TextField(null=True)
+    stop_url = TextField(null=True)
+    location_type = IntegerField(null=True)
+    parent_station = TextField(null=True)
+    stop_timezone = TextField(null=True)
+    wheelchair_boarding = IntegerField(null=True)
+    corner_placement = TextField(null=True)
+    stop_position = TextField(null=True)
+    on_street = TextField(null=True)
+    at_street = TextField(null=True)
+    heading = IntegerField(null=True)
+
+    class Meta:
+        table_name = 'stops'
+        primary_key = False
+
+
+class Trips(BaseModel):
+    route_id = IntegerField(index=True, null=True)
+    service_id = TextField(null=True)
+    trip_id = TextField(index=True, null=True, primary_key=True, unique=True)
+    trip_headsign = TextField(null=True)
+    trip_short_name = TextField(null=True)
+    direction_id = BooleanField(index=True, null=True)
+    block_id = TextField(null=True)
+    shape_id = TextField(index=True, null=True)
+    wheelchair_accessible = IntegerField(null=True)
+    bikes_allowed = IntegerField(null=True)
+    dir_abbr = TextField(null=True)
+    sup_service_mod = IntegerField(null=True)
+
+    class Meta:
+        table_name = 'trips'
+        primary_key = False

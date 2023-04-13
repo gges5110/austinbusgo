@@ -1,0 +1,118 @@
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+
+stages:
+  - test
+  - build
+  - deploy
+  - sync-schema
+
+update-gtfs-files:
+  stage: sync-schema
+  image: python:3.9
+  only:
+    - schedules
+  script:
+    - apt-get update
+    - apt --assume-yes install postgresql-common
+    - sh /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+    - apt -y install postgresql-client-13
+    - export DATABASE_URL=$DBURI
+    - python ci-job/updateGTFS.py
+
+test-server:
+  stage: test
+  image: python:3.9
+  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'
+  script:
+    - pip install -r requirements.txt
+    - coverage run --source=./server -m unittest discover -s tests
+    - coverage report -m
+  only:
+    refs:
+      - master
+      - merge_requests
+    changes:
+      - server/**/*
+      - tests/**/*
+  allow_failure: true
+  except:
+    - schedules
+
+test-client:
+  stage: test
+  image: node:dubnium-alpine
+  cache:
+    paths:
+      - node_modules/
+  coverage: '/^All files\s+\|\s*(\d+\.*\d*)/' # Jest test coverage, can be overridden
+  script:
+    - cd client
+    - npm ci --cache .npm
+    - npm run test:ci
+    - npm run build
+  only:
+    refs:
+      - master
+      - merge_requests
+    changes:
+      - client/**/*
+  except:
+    - schedules
+
+
+build-client:
+  stage: build
+  image: node:dubnium-alpine
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - cd client
+    - npm ci --cache .npm
+    - npm run build
+  artifacts:
+    paths:
+    - client/build/
+  only:
+    - master
+  except:
+    - schedules
+
+pages:
+  stage: deploy
+  image: node:dubnium-alpine
+  # This folder is cached between builds
+  # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+  cache:
+    paths:
+      - node_modules/
+
+  # Export storybook as a static site (to public)
+  script:
+    - cd client
+    - npm ci --cache .npm
+    - npm run build-storybook -- -o ../public
+  # Required artifact for GitLab Pages
+  artifacts:
+    paths:
+      - public
+  only:
+    refs:
+      - master
+    changes:
+      - client/**/*
+  except:
+    - schedules
+
+deploy-to-heroku:
+  stage: deploy
+  script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+    - dpl --provider=heroku --app=austin-bus-go --api-key=$HEROKU_PRODUCTION_API_KEY --skip_cleanup=true
+  except:
+    - schedules
+  only:
+    - master

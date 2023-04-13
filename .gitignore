@@ -1,0 +1,12 @@
+.idea/*
+.idea/vcs.xml
+*.pyc
+.DS_Store
+*.db
+capmetro/*
+.coverage
+htmlcov/*
+.pytest_cache
+.sublime-project
+.sublime-workspace
+/venv

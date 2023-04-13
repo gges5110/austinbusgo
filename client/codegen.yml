@@ -1,0 +1,28 @@
+schema: http://localhost:5000/graphql
+documents: "src/schemas/*.tsx"
+generates:
+  src/interfaces/interface.d.tsx:
+    plugins:
+      - typescript
+  src/interfaces:
+    preset: near-operation-file
+    presetConfig:
+      extension: .generated.ts
+      baseTypesPath: interface.d.tsx
+    config:
+      withHooks: true
+      withComponent: false
+      withHOC: false
+      withResultType: false
+      namingConvention:
+        typeNames: pascal-case#pascalCase
+        enumValues: keep
+    plugins:
+      - typescript-operations
+      - typescript-react-apollo
+config:
+  declarationKind: 'interface'
+
+hooks:
+  afterAllFileWrite:
+    - prettier --write
