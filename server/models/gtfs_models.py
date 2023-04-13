@@ -1,6 +1,6 @@
 from peewee import Model, TextField, IntegerField, FloatField, BooleanField
 
-from database import db
+from server.database import db
 
 
 # GTFS reference: https://developers.google.com/transit/gtfs/reference

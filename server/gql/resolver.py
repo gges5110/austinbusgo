@@ -5,11 +5,11 @@ from typing import List, Dict, Any
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from pytz import timezone
 
-from config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
-from models.gtfs_models import Stops, Trips, Shapes
-from services.gtfs_service import GTFSService
-from services.gtfs_rt_service import GTFSRTService
-from services.gtfs_rt_client import GTFSClient
+from server.config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
+from server.models.gtfs_models import Stops, Trips, Shapes
+from server.services.gtfs_service import GTFSService
+from server.services.gtfs_rt_service import GTFSRTService
+from server.services.gtfs_rt_client import GTFSClient
 
 logger = logging.getLogger('resolver')
 

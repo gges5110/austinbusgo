@@ -1,6 +1,6 @@
 import graphene
 
-from gql.resolver import Resolver
+from server.gql.resolver import Resolver
 
 
 class RunningTrip(graphene.ObjectType):

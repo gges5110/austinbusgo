@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from typing import Dict, Any
 
-from gql.resolver import Resolver, ArrivalTimeInfo
-from models.gtfs_models import StopTimes, Trips
+from server.gql.resolver import Resolver, ArrivalTimeInfo
+from server.models.gtfs_models import StopTimes, Trips
 
 
 def create_vehicle_position(trip_id: str, stop_sequence: int = None) -> VehiclePosition:
@@ -29,7 +29,7 @@ class TestResolver(TestCase):
         # TODO: make inject fake client and services into this resolver instance for testing purposes.
         self.resolver = Resolver()
 
-    @patch('services.gtfs_service.GTFSService.get_trip_by_id')
+    @patch('server.services.gtfs_service.GTFSService.get_trip_by_id')
     def test_resolve_trip(self, mock_get_trip_by_id):
         trip_id = "trip_1"
         mock_trip = {
@@ -43,7 +43,7 @@ class TestResolver(TestCase):
         mock_get_trip_by_id.assert_called_with(trip_id)
         self.assertEqual(trip, mock_trip)
 
-    @patch('services.gtfs_service.GTFSService.get_stops_by_trip_id')
+    @patch('server.services.gtfs_service.GTFSService.get_stops_by_trip_id')
     def test_resolve_stops(self, mock_get_stops_by_trip_id):
         mock_stops = [
             {
@@ -62,7 +62,7 @@ class TestResolver(TestCase):
         self.assertEqual(len(stops), len(mock_stops))
         self.assertListEqual(stops, mock_stops)
 
-    @patch('services.gtfs_service.GTFSService.get_stop')
+    @patch('server.services.gtfs_service.GTFSService.get_stop')
     def test_resolve_stop(self, mock_get_stop):
         stop_id = "stop_1"
         mock_stop = {
@@ -76,7 +76,7 @@ class TestResolver(TestCase):
         mock_get_stop.assert_called_with(stop_id)
         self.assertEqual(stop, mock_stop)
 
-    @patch('services.gtfs_service.GTFSService.get_shapes_by_trip_id')
+    @patch('server.services.gtfs_service.GTFSService.get_shapes_by_trip_id')
     def test_resolve_route_shapes(self, mock_get_shapes_by_trip_id):
         trip_id = "trip_1"
         mock_shapes = [
@@ -95,7 +95,7 @@ class TestResolver(TestCase):
         self.assertEqual(len(shapes), len(mock_shapes))
         self.assertListEqual(shapes, mock_shapes)
 
-    @patch('services.gtfs_rt_service.GTFSRTService.get_real_time_vehicle_positions')
+    @patch('server.services.gtfs_rt_service.GTFSRTService.get_real_time_vehicle_positions')
     def test_resolve_vehicle_positions(self, mock_get_real_time_vehicle_positions):
         route_id = 3
         direction = True
@@ -136,7 +136,7 @@ class TestResolver(TestCase):
     #     self.assertEqual(len(arrival_times), len(mock_vehicle_positions))
     #     self.assertListEqual(arrival_times, mock_vehicle_positions)
 
-    @patch('services.gtfs_service.GTFSService.get_stop_time', MagicMock(side_effect=get_stop_time_side_effect))
+    @patch('server.services.gtfs_service.GTFSService.get_stop_time', MagicMock(side_effect=get_stop_time_side_effect))
     def test_remove_past_vehicles(self):
         stop_id = 'stop_1'
         vehicle_by_trip_id = {
@@ -150,7 +150,7 @@ class TestResolver(TestCase):
         self.assertEqual(len(vehicle_by_trip_id), 2)
         self.assertListEqual(list(vehicle_by_trip_id), ['trip_1', 'trip_2'])
 
-    @patch('services.gtfs_service.GTFSService.get_stop_time', MagicMock(side_effect=get_stop_time_side_effect))
+    @patch('server.services.gtfs_service.GTFSService.get_stop_time', MagicMock(side_effect=get_stop_time_side_effect))
     def test_populate_scheduled_arrival_time(self):
         arrival_time_by_trip_id: Dict[str, ArrivalTimeInfo] = {}
         stop_id = 'stop_1'
@@ -163,9 +163,9 @@ class TestResolver(TestCase):
         self.assertIsNotNone(arrival_time_by_trip_id[trip_id])
         self.assertEqual(arrival_time_by_trip_id[trip_id].scheduled_arrival_time, '8:05:59')
 
-    @patch('services.gtfs_rt_service.GTFSRTService.get_real_time_vehicle_trip_ids',
+    @patch('server.services.gtfs_rt_service.GTFSRTService.get_real_time_vehicle_trip_ids',
            MagicMock(return_value=['trip_1', 'trip_2', 'trip_3']))
-    @patch('services.gtfs_service.GTFSService.get_trips_with_distinct_headsign')
+    @patch('server.services.gtfs_service.GTFSService.get_trips_with_distinct_headsign')
     def test_resolve_running_trips(self, mock_get_trips_with_distinct_headsign):
 
         mock_get_trips_with_distinct_headsign.return_value = [

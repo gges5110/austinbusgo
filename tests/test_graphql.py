@@ -4,8 +4,8 @@ import unittest
 from graphene.test import Client
 from peewee import SqliteDatabase
 
-from models.gtfs_models import Stops
-from gql.schema import schema
+from server.models.gtfs_models import Stops
+from server.gql.schema import schema
 
 MODELS = [Stops]
 

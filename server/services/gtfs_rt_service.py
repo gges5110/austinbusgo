@@ -2,9 +2,9 @@ from typing import List
 
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 
-from config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
-from services.gtfs_rt_client import GTFSClient
-from services.gtfs_service import GTFSService
+from server.config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
+from server.services.gtfs_rt_client import GTFSClient
+from server.services.gtfs_service import GTFSService
 
 
 class GTFSRTService:

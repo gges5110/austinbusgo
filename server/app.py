@@ -4,7 +4,7 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_graphql import GraphQLView
 
-from gql.schema import schema
+from server.gql.schema import schema
 
 static_folder_root = os.path.join(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))), "client", "build")
@@ -25,7 +25,7 @@ def create_app():
         '/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
     CORS(austin_bus_go_app, resources={r'/graphql': {'origins': '*'}})
 
-    from database import db
+    from server.database import db
 
     @austin_bus_go_app.before_request
     def _db_connect():

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from typing import List
 
-from services.gtfs_rt_client import GTFSClient
-from services.gtfs_rt_service import GTFSRTService
+from server.services.gtfs_rt_client import GTFSClient
+from server.services.gtfs_rt_service import GTFSRTService
 
 mock_trip_updates_pb_file_url = 'http://url1'
 mock_vehicle_positions_pb_file_url = 'http://url2'
@@ -41,7 +41,7 @@ class TestGTFSRTService(unittest.TestCase):
         self.client.load_vehicle_positions.assert_called_with(route_id='3')
         self.assertEqual(len(trip_ids), 2)
 
-    @patch('services.gtfs_service.GTFSService.get_trips_with_direction_and_route', MagicMock(return_value=["trip_2"]))
+    @patch('server.services.gtfs_service.GTFSService.get_trips_with_direction_and_route', MagicMock(return_value=["trip_2"]))
     def test_get_real_time_vehicle_positions(self):
         vehicle_position = VehiclePosition()
         vehicle_position.trip.trip_id = "trip_1"
@@ -54,7 +54,7 @@ class TestGTFSRTService(unittest.TestCase):
 
         self.assertEqual(len(vehicle_positions), 1)
 
-    @patch('services.gtfs_rt_client.GTFSClient.load_trip_updates')
+    @patch('server.services.gtfs_rt_client.GTFSClient.load_trip_updates')
     def test_get_real_time_trip_updates(self, mock_load_trip_updates):
         trip_ids = ['trip_1', 'trip_2']
         mock_load_trip_updates.return_value = [
@@ -67,7 +67,7 @@ class TestGTFSRTService(unittest.TestCase):
         mock_load_trip_updates.assert_called_with()
         self.assertEqual(len(trip_updates), 2)
 
-    @patch('services.gtfs_rt_client.GTFSClient.load_trip_updates')
+    @patch('server.services.gtfs_rt_client.GTFSClient.load_trip_updates')
     def test_get_real_time_trip_updates_no_trip_ids(self, mock_load_trip_updates):
         mock_load_trip_updates.return_value = [
             create_trip_update('trip_1'),

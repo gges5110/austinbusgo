@@ -3,8 +3,8 @@ from unittest import TestCase
 
 from peewee import DoesNotExist, SqliteDatabase
 
-from services.gtfs_service import GTFSService
-from models.gtfs_models import Stops, Trips, Shapes, StopTimes, Routes
+from server.services.gtfs_service import GTFSService
+from server.models.gtfs_models import Stops, Trips, Shapes, StopTimes, Routes
 
 MODELS = [Stops, Trips, Shapes, StopTimes, Routes]
 

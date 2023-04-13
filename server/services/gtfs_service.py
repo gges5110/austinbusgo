@@ -1,7 +1,7 @@
 """ This file contains methods to retrieve data from database """
 from typing import List
 
-from models.gtfs_models import Routes, Trips, Stops, Shapes, StopTimes
+from server.models.gtfs_models import Routes, Trips, Stops, Shapes, StopTimes
 
 
 class GTFSService:

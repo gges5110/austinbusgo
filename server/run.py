@@ -1,6 +1,6 @@
 from app import create_app
 
-from config import environment, port
+from server.config import environment, port
 
 if __name__ == '__main__':
     # https://stackoverflow.com/questions/17260338/deploying-flask-with-heroku
