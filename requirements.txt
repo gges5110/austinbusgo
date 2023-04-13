@@ -1,5 +1,5 @@
 pytz==2020.1
-Flask==1.1.2
+Flask==2.2.2
 Flask-Cors==3.0.9
 requests==2.25.0
 peewee==3.13.3
@@ -10,5 +10,5 @@ graphene==2.1.8
 gunicorn
 autopep8
 coverage
-Werkzeug==1.0.1
+Werkzeug==2.2.2
 typing==3.7.4.3
