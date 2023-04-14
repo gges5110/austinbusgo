@@ -5,7 +5,10 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { SnackbarProvider } from "notistack";
 
 const client = new ApolloClient({
-  uri: "/graphql",
+  uri:
+    process.env.REACT_APP_API_BASE !== undefined
+      ? `${process.env.REACT_APP_API_BASE}/graphql`
+      : "/graphql",
   cache: new InMemoryCache(),
 });
 
