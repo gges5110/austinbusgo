@@ -8,10 +8,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import ReactMapGL, {
   Layer,
+  MapProvider,
   Source,
-  ViewportChangeHandler,
-  ViewState,
-  WebMercatorViewport,
+  useMap,
+  ViewStateChangeEvent,
 } from "react-map-gl";
 import {
   ArrivalTime,
@@ -24,6 +24,7 @@ import { SearchPanel } from "../SearchPanel";
 import { StopDrawer } from "./Stop/StopDrawer";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
+import "./Map.css";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -35,6 +36,15 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+type ViewState = {
+  /** Longitude at map center */
+  longitude: number;
+  /** Latitude at map center */
+  latitude: number;
+  /** Map zoom level */
+  zoom: number;
+};
+
 interface MapProps {
   readonly trip?: RunningTrip;
   readonly routeShapes: ShapeData[];
@@ -45,11 +55,6 @@ interface MapProps {
   setTrip(trip?: RunningTrip): void;
   openSettingsDialog(): void;
 }
-
-export const iconSize = {
-  width: 24,
-  height: 24,
-};
 
 const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
   type: "FeatureCollection",
@@ -69,7 +74,7 @@ const vehicleZoomLevel = 15;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
-export const Map: React.FunctionComponent<MapProps> = ({
+const Map: React.FunctionComponent<MapProps> = ({
   trip,
   stops,
   routeShapes,
@@ -80,6 +85,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
   openSettingsDialog,
 }) => {
   const classes = useStyles();
+  const { mapId: map } = useMap();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
@@ -109,15 +115,6 @@ export const Map: React.FunctionComponent<MapProps> = ({
     zoom: 11.5,
   });
 
-  const setViewPortWithTransition = (viewState: ViewState) => {
-    setViewPort({
-      ...viewState,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      transitionDuration: 500,
-    });
-  };
-
   useEffect(() => {
     if (routeShapes.length !== 0) {
       setRouteShape(
@@ -127,8 +124,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         )
       );
 
-      // Reference: https://github.com/uber-archive/viewport-mercator-project/blob/master/docs/api-reference/web-mercator-viewport.md
-      const newViewport = new WebMercatorViewport(viewPort).fitBounds(
+      map?.fitBounds(
         [
           [
             Math.min(...routeShapes.map((routeShape) => routeShape.shapePtLon)),
@@ -139,14 +135,8 @@ export const Map: React.FunctionComponent<MapProps> = ({
             Math.max(...routeShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
         ],
-        {
-          padding: 80,
-        }
+        { padding: 80 }
       );
-
-      setViewPortWithTransition({
-        ...newViewport,
-      });
     } else {
       setRouteShape([]);
     }
@@ -159,15 +149,16 @@ export const Map: React.FunctionComponent<MapProps> = ({
     setSelectedStop(undefined);
   };
 
-  const onViewportChange: ViewportChangeHandler = (viewState) => {
-    setViewPort(viewState);
+  const onViewportChange = (event: ViewStateChangeEvent) => {
+    setViewPort(event.viewState);
   };
 
   const arrivalTimeOnClick = (arrivalTime: ArrivalTime) => {
-    setViewPortWithTransition({
-      ...viewPort,
-      latitude: arrivalTime.vehicle.position?.latitude || viewPort.latitude,
-      longitude: arrivalTime.vehicle.position?.longitude || viewPort.longitude,
+    map?.flyTo({
+      center: [
+        arrivalTime.vehicle.position?.longitude || viewPort.longitude,
+        arrivalTime.vehicle.position?.latitude || viewPort.latitude,
+      ],
       zoom: vehicleZoomLevel,
     });
 
@@ -175,20 +166,23 @@ export const Map: React.FunctionComponent<MapProps> = ({
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
-    setViewPortWithTransition({
-      ...viewPort,
-      latitude: vehicle.position?.latitude || viewPort.latitude,
-      longitude: vehicle.position?.longitude || viewPort.longitude,
+    map?.flyTo({
+      center: [
+        vehicle.position?.longitude || viewPort.longitude,
+        vehicle.position?.latitude || viewPort.latitude,
+      ],
+      zoom: vehicleZoomLevel,
     });
   };
 
   const useUserLocation = () => {
     if (navigator.geolocation) {
       const geoSuccess: PositionCallback = (position) => {
-        setViewPortWithTransition({
-          ...viewPort,
-          latitude: position.coords.latitude || viewPort.latitude,
-          longitude: position.coords.longitude || viewPort.longitude,
+        map?.flyTo({
+          center: [
+            position.coords.longitude || viewPort.longitude,
+            position.coords.latitude || viewPort.latitude,
+          ],
         });
       };
       const geoError: PositionErrorCallback = (error) => {
@@ -206,66 +200,94 @@ export const Map: React.FunctionComponent<MapProps> = ({
   };
 
   return (
-    <ReactMapGL
-      {...viewPort}
-      width={"100%"}
-      height={"100%"}
-      style={{ zIndex: 1 }}
-      mapStyle={"mapbox://styles/mapbox/streets-v9"}
-      onViewportChange={onViewportChange}
-    >
-      <SearchPanel
-        runningTrips={runningTrips}
-        setTrip={setTrip}
-        trip={trip}
-        loading={loading}
-        openSettingsDialog={openSettingsDialog}
-      />
-      <Fab
-        color="primary"
-        aria-label="add"
-        className={classes.fab}
-        onClick={useUserLocation}
+    <>
+      <ReactMapGL
+        id="mapId"
+        {...viewPort}
+        mapStyle={"mapbox://styles/mapbox/streets-v9"}
+        onMove={onViewportChange}
       >
-        <MyLocationIcon />
-      </Fab>
-      <StopMarkers
-        stops={stops}
-        setSelectedStop={setSelectedStop}
-        direction={trip?.direction || false}
-      />
-
-      {trip && selectedStop && (
-        <StopDrawer
-          stop={selectedStop}
-          runningTrip={trip}
-          arrivalTimeOnClick={arrivalTimeOnClick}
-          open={selectedStop !== null}
-          onClose={closeStopDrawer}
+        <Fab
+          color="primary"
+          aria-label="add"
+          className={classes.fab}
+          onClick={useUserLocation}
+        >
+          <MyLocationIcon />
+        </Fab>
+        <StopMarkers
+          stops={stops}
+          setSelectedStop={setSelectedStop}
+          direction={trip?.direction || false}
         />
-      )}
 
-      {
-        // Render Bus Vehicle Marker
-        vehiclePositions.map((vehiclePosition) => (
-          <VehicleMarker
-            key={vehiclePosition?.vehicle?.id || ""}
-            vehiclePosition={vehiclePosition}
-            onClick={vehicleMarkerOnClick}
+        {trip && selectedStop && (
+          <StopDrawer
+            stop={selectedStop}
+            runningTrip={trip}
+            arrivalTimeOnClick={arrivalTimeOnClick}
+            open={selectedStop !== null}
+            onClose={closeStopDrawer}
           />
-        ))
-      }
+        )}
 
-      <Source id="my-data" type="geojson" data={routeShapeGeoJSON}>
-        <Layer
-          id="point"
-          type="line"
-          paint={{
-            "line-color": `#${trip?.color || "a5a5a5"}`,
-            "line-width": 5,
-          }}
-        />
-      </Source>
-    </ReactMapGL>
+        {
+          // Render Bus Vehicle Marker
+          vehiclePositions.map((vehiclePosition) => (
+            <VehicleMarker
+              key={vehiclePosition?.vehicle?.id || ""}
+              vehiclePosition={vehiclePosition}
+              onClick={vehicleMarkerOnClick}
+            />
+          ))
+        }
+
+        <Source id="my-data" type="geojson" data={routeShapeGeoJSON}>
+          <Layer
+            id="point"
+            type="line"
+            paint={{
+              "line-color": `#${trip?.color || "a5a5a5"}`,
+              "line-width": 5,
+            }}
+          />
+        </Source>
+      </ReactMapGL>
+      <div className="map-overlay-container">
+        <div className="map-overlay">
+          <SearchPanel
+            runningTrips={runningTrips}
+            setTrip={setTrip}
+            trip={trip}
+            loading={loading}
+            openSettingsDialog={openSettingsDialog}
+          />
+        </div>
+      </div>
+    </>
   );
 };
+
+export const MapWrapper: React.FunctionComponent<MapProps> = ({
+  trip,
+  stops,
+  routeShapes,
+  vehiclePositions,
+  runningTrips,
+  loading,
+  setTrip,
+  openSettingsDialog,
+}) => (
+  <MapProvider>
+    <Map
+      trip={trip}
+      loading={loading}
+      routeShapes={routeShapes}
+      stops={stops}
+      vehiclePositions={vehiclePositions}
+      runningTrips={runningTrips}
+      setTrip={setTrip}
+      openSettingsDialog={openSettingsDialog}
+    />
+  </MapProvider>
+);

@@ -4,7 +4,6 @@ import * as React from "react";
 import { Marker } from "react-map-gl";
 import { VehiclePosition } from "../../../interfaces/interface.d";
 import { VehicleIcon } from "./VehicleIcon";
-import { iconSize } from "../Map";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
 
 interface VehicleMarkerProps {
@@ -35,8 +34,6 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         longitude={position?.longitude || 0}
         latitude={position?.latitude || 0}
         key={vehiclePosition?.vehicle?.id || ""}
-        offsetLeft={-iconSize.width / 2}
-        offsetTop={-iconSize.height}
       >
         <VehicleIcon bearing={position?.bearing || 0} onClick={handleOnClick} />
       </Marker>
