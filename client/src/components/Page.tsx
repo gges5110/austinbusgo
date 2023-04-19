@@ -9,7 +9,7 @@ import { useRunningTripsQuery } from "../schemas/RunningTrips.generated";
 import { useStopsLazyQuery } from "../schemas/StopsAndRouteShapes.generated";
 import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "./LoadingSnackbarMessage";
-import { Map } from "./Map/Map";
+import { MapWrapper } from "./Map/Map";
 import { SettingsDialog } from "./SettingsDialog";
 
 const defaultAutoPollingInterval = 15000;
@@ -137,7 +137,7 @@ export const Page: React.FunctionComponent = () => {
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
-      <Map
+      <MapWrapper
         openSettingsDialog={() => setSettingsDialogOpen(true)}
         runningTrips={runningTripsResponse?.runningTrips || []}
         setTrip={setTrip}
