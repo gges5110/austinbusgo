@@ -1,6 +1,6 @@
-from peewee import Model, TextField, IntegerField, FloatField, BooleanField
+from peewee import TextField, IntegerField, FloatField, BooleanField
 
-from server.database import db
+from server.database import db_wrapper
 
 
 # GTFS reference: https://developers.google.com/transit/gtfs/reference
@@ -10,12 +10,7 @@ class UnknownField(object):
     def __init__(self, *_, **__): pass
 
 
-class BaseModel(Model):
-    class Meta:
-        database = db
-
-
-class Routes(BaseModel):
+class Routes(db_wrapper.Model):
     route_id = IntegerField(index=True, null=True,
                             primary_key=True, unique=True)
     agency_id = IntegerField(null=True)
@@ -32,7 +27,7 @@ class Routes(BaseModel):
         primary_key = False
 
 
-class Shapes(BaseModel):
+class Shapes(db_wrapper.Model):
     shape_id = TextField(index=True, null=True)
     shape_pt_lat = FloatField(null=True)
     shape_pt_lon = FloatField(null=True)
@@ -45,7 +40,7 @@ class Shapes(BaseModel):
         primary_key = False
 
 
-class StopTimes(BaseModel):
+class StopTimes(db_wrapper.Model):
     trip_id = TextField(index=True, null=True)
     arrival_time = TextField(null=True)
     departure_time = TextField(null=True)
@@ -63,7 +58,7 @@ class StopTimes(BaseModel):
         primary_key = False
 
 
-class Stops(BaseModel):
+class Stops(db_wrapper.Model):
     stop_id = IntegerField(index=True, null=True,
                            primary_key=True, unique=True)
     stop_code = IntegerField(null=True)
@@ -88,7 +83,7 @@ class Stops(BaseModel):
         primary_key = False
 
 
-class Trips(BaseModel):
+class Trips(db_wrapper.Model):
     route_id = IntegerField(index=True, null=True)
     service_id = TextField(null=True)
     trip_id = TextField(index=True, null=True, primary_key=True, unique=True)
