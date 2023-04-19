@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_graphql import GraphQLView
 
 from server.config import db_url
-from server.database import db_wrapper
+from server.database import db_wrapper, database_sanity_check
 from server.gql.schema import schema
 
 static_folder_root = os.path.join(os.path.dirname(
@@ -31,5 +30,6 @@ def create_app():
     # Database
     austin_bus_go_app.config['DATABASE'] = db_url
     db_wrapper.init_app(austin_bus_go_app)
+    database_sanity_check()
 
     return austin_bus_go_app

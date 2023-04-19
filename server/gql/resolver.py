@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import List, Dict
 
@@ -10,8 +9,6 @@ from server.models.gtfs_models import Stops, Trips, Shapes
 from server.services.gtfs_rt_client import GTFSClient
 from server.services.gtfs_rt_service import GTFSRTService
 from server.services.gtfs_service import GTFSService
-
-logger = logging.getLogger('resolver')
 
 
 class ArrivalTimeInfo:
