@@ -1,8 +1,8 @@
-DROP TABLE stops;
-DROP TABLE routes;
-DROP TABLE shapes;
-DROP TABLE trips;
-DROP TABLE stop_times;
+DROP TABLE IF EXISTS stops;
+DROP TABLE IF EXISTS routes;
+DROP TABLE IF EXISTS shapes;
+DROP TABLE IF EXISTS trips;
+DROP TABLE IF EXISTS stop_times;
 
 CREATE TABLE stops
 (

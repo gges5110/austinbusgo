@@ -4,6 +4,8 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_graphql import GraphQLView
 
+from server.config import db_url
+from server.database import db_wrapper
 from server.gql.schema import schema
 
 static_folder_root = os.path.join(os.path.dirname(
@@ -21,20 +23,13 @@ def create_app():
         else:
             return send_from_directory(static_folder_root, 'index.html')
 
+    # GraphQL
     austin_bus_go_app.add_url_rule(
         '/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
     CORS(austin_bus_go_app, resources={r'/graphql': {'origins': '*'}})
 
-    from server.database import db
-
-    @austin_bus_go_app.before_request
-    def _db_connect():
-        db.connect()
-
-    # This hook ensures that the connection is closed when we've finished processing the request.
-    @austin_bus_go_app.teardown_request
-    def _db_close(exc):
-        if not db.is_closed():
-            db.close()
+    # Database
+    austin_bus_go_app.config['DATABASE'] = db_url
+    db_wrapper.init_app(austin_bus_go_app)
 
     return austin_bus_go_app

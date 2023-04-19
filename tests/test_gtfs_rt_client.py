@@ -9,6 +9,25 @@ mock_trip_updates_pb_file_url = 'http://url1'
 mock_vehicle_positions_pb_file_url = 'http://url2'
 
 
+def get_mock_feed_entity():
+    feed_entity = FeedEntity()
+    feed_entity.id = '1'
+    return feed_entity
+
+
+def get_mock_trip(route_id='2'):
+    trip = TripDescriptor()
+    trip.route_id = route_id
+    return trip
+
+
+def get_mock_trip_update():
+    trip_update = TripUpdate()
+    trip = get_mock_trip()
+    trip_update.trip.CopyFrom(trip)
+    return trip_update
+
+
 class TestGTFSRTClient(unittest.TestCase):
     def setUp(self):
         self.client = GTFSClient(mock_trip_updates_pb_file_url, mock_vehicle_positions_pb_file_url)
@@ -17,8 +36,8 @@ class TestGTFSRTClient(unittest.TestCase):
     def test_load_trip_updates(self, mock_gtfs_client_get_feed_message_entity_from_url):
         # Setup protobuf mock for trip update
         feed_message = FeedMessage()
-        feed_entity = FeedEntity()
-        trip_update = TripUpdate()
+        feed_entity = get_mock_feed_entity()
+        trip_update = get_mock_trip_update()
         feed_entity.trip_update.CopyFrom(trip_update)
         feed_message.entity.append(feed_entity)
 
@@ -34,10 +53,9 @@ class TestGTFSRTClient(unittest.TestCase):
     def test_load_vehicle_positions(self, mock_gtfs_client_get_feed_message_entity_from_url):
         # Setup protobuf mock for vehicle position
         feed_message = FeedMessage()
-        feed_entity = FeedEntity()
+        feed_entity = get_mock_feed_entity()
         vehicle_position = VehiclePosition()
-        trip = TripDescriptor()
-        trip.route_id = '2'
+        trip = get_mock_trip()
         vehicle_position.trip.CopyFrom(trip)
         feed_entity.vehicle.CopyFrom(vehicle_position)
         feed_message.entity.append(feed_entity)
@@ -54,10 +72,9 @@ class TestGTFSRTClient(unittest.TestCase):
     def test_load_vehicle_positions_with_route_id(self, mock_gtfs_client_get_feed_message_entity_from_url):
         # Setup protobuf mock for vehicle position
         feed_message = FeedMessage()
-        feed_entity = FeedEntity()
+        feed_entity = get_mock_feed_entity()
         vehicle_position = VehiclePosition()
-        trip = TripDescriptor()
-        trip.route_id = '3'
+        trip = get_mock_trip('3')
         vehicle_position.trip.CopyFrom(trip)
         feed_entity.vehicle.CopyFrom(vehicle_position)
         feed_message.entity.append(feed_entity)
