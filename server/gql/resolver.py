@@ -25,30 +25,28 @@ class Resolver:
         self.gtfs_service = gtfs_service or GTFSService()
         self.gtfs_rt_service = GTFSRTService(self.gtfs_client)
 
-    def resolve_running_trips(self, query, info, filter_input=None):
-        if filter_input is None:
-            filter_input = {}
-        route_name_prefix = filter_input['name_prefix'] if 'name_prefix' in filter_input else None
+    def resolve_trip(self, query, info, trip_id) -> Trips:
+        return self.gtfs_service.get_trip_by_id(trip_id)
 
+    def resolve_trips(self, query, info):
         trip_ids = self.gtfs_rt_service.get_real_time_vehicle_trip_ids()
-
-        trips_with_distinct_headsign = self.gtfs_service.get_trips_with_distinct_headsign(
-            trip_ids, route_name_prefix)
+        trips_with_distinct_headsign = self.gtfs_service.get_distinct_trip_headsigns(trip_ids)
+        unique_trip_headsigns = [trip.trip_headsign for trip in trips_with_distinct_headsign]
 
         trip_info_list = [{
             'trip_id': trip.trip_id,
             'route_id': trip.route_id,
             'direction': trip.direction_id,
-            'name': trip.trip_headsign,
-            'color': trip.routes.route_color
-        } for trip in trips_with_distinct_headsign]
+            'route_long_name': trip.routes.route_long_name,
+            'color': trip.routes.route_color,
+            'trip_headsign': trip.trip_headsign,
+            'running': trip.trip_headsign in unique_trip_headsigns,
+            'dir_abbr': trip.dir_abbr,
+        } for trip in self.gtfs_service.get_trips()]
 
-        # Alphabetically sort trips by route_id
-        trip_info_list.sort(key=lambda trip_info: (trip_info['name']))
+        # Alphabetically sort trips by trip_headsign
+        trip_info_list.sort(key=lambda trip_info: (trip_info['trip_headsign']))
         return trip_info_list
-
-    def resolve_trip(self, query, info, trip_id) -> Trips:
-        return self.gtfs_service.get_trip_by_id(trip_id)
 
     def resolve_stops(self, query, info, trip_id) -> List[Stops]:
         return self.gtfs_service.get_stops_by_trip_id(trip_id)

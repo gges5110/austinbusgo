@@ -102,21 +102,6 @@ class TestGTFSService(TestCase):
         trips = GTFSService.get_trips_with_direction_and_route(['trip_1', 'trip_3'], 3, True)
         self.assertEqual(len(trips), 2)
 
-    def test_get_trips_with_distinct_headsign(self):
-        trip_ids = ['trip_1', 'trip_2', 'trip_3', 'trip_4']
-
-        Trips.create(trip_id='trip_1', route_id=3, direction_id=True, trip_headsign='1-Lamar/South Congress SB')
-        Trips.create(trip_id='trip_2', route_id=3, direction_id=False, trip_headsign='1-Lamar/South Congress NB')
-        Trips.create(trip_id='trip_3', route_id=3, direction_id=True, trip_headsign='1-Lamar/South Congress SB')
-        Trips.create(trip_id='trip_4', route_id=3, direction_id=False, trip_headsign='1-Lamar/South Congress NB')
-        Routes.create(route_id=3)
-
-        trips_with_distinct_headsign = GTFSService.get_trips_with_distinct_headsign(trip_ids)
-
-        # Calling get_trips_with_distinct_headsign would fail because distinct operator only exists on psql and not
-        # sqlite. We will need to setup a psql database for testing.
-        # self.assertEqual(len(trips_with_distinct_headsign), 2)
-
 
 if __name__ == '__main__':
     unittest.main()

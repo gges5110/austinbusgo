@@ -13,18 +13,14 @@ export interface Scalars {
 
 export interface Query {
   __typename?: "Query";
-  runningTrips?: Maybe<Array<RunningTrip>>;
   stops?: Maybe<Array<Stop>>;
   stop: Stop;
   trip: Trip;
+  trips?: Maybe<Array<RunningTrip>>;
   routeShapes?: Maybe<Array<Shape>>;
   vehiclePositions?: Maybe<Array<VehiclePosition>>;
   arrivalTimes?: Maybe<Array<ArrivalTime>>;
   realTimeVehiclePositions?: Maybe<Array<Maybe<VehiclePosition>>>;
-}
-
-export interface QueryRunningTripsArgs {
-  filterInput?: Maybe<RunningTripFilterInput>;
 }
 
 export interface QueryStopsArgs {
@@ -52,28 +48,6 @@ export interface QueryArrivalTimesArgs {
   routeId: Scalars["Int"];
   direction: Scalars["Boolean"];
   stopId: Scalars["String"];
-}
-
-/** Information about a running trip  */
-export interface RunningTrip {
-  __typename?: "RunningTrip";
-  /** Name of the running trip */
-  name: Scalars["String"];
-  /** Trip Id */
-  tripId: Scalars["String"];
-  /** Route Id */
-  routeId: Scalars["String"];
-  /** Trip direction */
-  direction: Scalars["Boolean"];
-  /** Route Color */
-  color?: Maybe<Scalars["String"]>;
-}
-
-export interface RunningTripFilterInput {
-  /** Contains the route specified. */
-  routeId?: Maybe<Scalars["String"]>;
-  /** Route name starts with the specified input. */
-  namePrefix?: Maybe<Scalars["String"]>;
 }
 
 export interface Stop {
@@ -112,6 +86,27 @@ export interface Trip {
   wheelchairAccessible?: Maybe<Scalars["Int"]>;
   /** Indicates whether bikes are allowed. */
   bikesAllowed?: Maybe<Scalars["Int"]>;
+  /** Direction */
+  dirAbbr?: Maybe<Scalars["String"]>;
+}
+
+/** Information about a running trip  */
+export interface RunningTrip {
+  __typename?: "RunningTrip";
+  /** Long name of the route */
+  routeLongName: Scalars["String"];
+  /** Trip Id */
+  tripId: Scalars["String"];
+  /** Route Id */
+  routeId: Scalars["String"];
+  /** Trip direction */
+  direction: Scalars["Boolean"];
+  /** Route Color */
+  color?: Maybe<Scalars["String"]>;
+  /** Trip is currently running */
+  running?: Maybe<Scalars["Boolean"]>;
+  /** Direction */
+  dirAbbr?: Maybe<Scalars["String"]>;
 }
 
 export interface Shape {

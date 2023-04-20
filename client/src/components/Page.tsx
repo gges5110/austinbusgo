@@ -5,7 +5,7 @@ import * as React from "react";
 import { ReactNode, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { RunningTrip } from "../interfaces/interface.d";
-import { useRunningTripsQuery } from "../schemas/RunningTrips.generated";
+import { useTripsQuery } from "../schemas/Trips.generated";
 import { useStopsLazyQuery } from "../schemas/StopsAndRouteShapes.generated";
 import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "./LoadingSnackbarMessage";
@@ -39,7 +39,7 @@ export const Page: React.FunctionComponent = () => {
     </IconButton>
   );
 
-  const { data: runningTripsResponse, loading } = useRunningTripsQuery({
+  const { data: tripsResponse, loading } = useTripsQuery({
     pollInterval: defaultAutoPollingInterval,
   });
 
@@ -92,7 +92,9 @@ export const Page: React.FunctionComponent = () => {
     setSelectedTrip(trip);
     if (trip !== undefined) {
       const key = enqueueSnackbar(
-        <LoadingSnackbarMessage message={`Loading route ${trip.name}...`} />,
+        <LoadingSnackbarMessage
+          message={`Loading route ${trip.routeLongName}...`}
+        />,
         {
           variant: "info",
           autoHideDuration: 30000,
@@ -139,7 +141,7 @@ export const Page: React.FunctionComponent = () => {
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
       <MapWrapper
         openSettingsDialog={() => setSettingsDialogOpen(true)}
-        runningTrips={runningTripsResponse?.runningTrips || []}
+        runningTrips={tripsResponse?.trips || []}
         setTrip={setTrip}
         loading={loading}
         stops={(selectedTrip && stopsAndRouteShapes?.stops) || []}

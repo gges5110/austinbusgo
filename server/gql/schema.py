@@ -5,12 +5,13 @@ from server.gql.resolver import Resolver
 
 class RunningTrip(graphene.ObjectType):
     """ Information about a running trip """
-    name = graphene.String(
-        description='Name of the running trip', required=True)
+    route_long_name = graphene.String(description='Long name of the route', required=True)
     trip_id = graphene.String(description='Trip Id', required=True)
     route_id = graphene.String(description='Route Id', required=True)
     direction = graphene.Boolean(description='Trip direction', required=True)
     color = graphene.String(description='Route Color')
+    running = graphene.Boolean(description='Trip is currently running')
+    dir_abbr = graphene.String(description="Direction")
 
 
 class Stop(graphene.ObjectType):
@@ -48,6 +49,7 @@ class TripDescriptor(graphene.ObjectType):
                                            'is omitted, then route_id, direction_id, start_time, '
                                            'and schedule_relationship=SCHEDULED must all be set to identify a trip '
                                            'instance.')
+    # direction_id is omitted in Capital Metro's feed.
 
 
 # Identification information for the vehicle performing the trip.
@@ -192,6 +194,7 @@ class Trip(graphene.ObjectType):
                                            "trip.")
     wheelchair_accessible = graphene.Int(description="Indicates wheelchair accessibility.")
     bikes_allowed = graphene.Int(description="Indicates whether bikes are allowed.")
+    dir_abbr = graphene.String(description="Direction")
 
 
 class ArrivalTime(graphene.ObjectType):
@@ -204,14 +207,13 @@ class ArrivalTime(graphene.ObjectType):
 class Query(graphene.ObjectType):
     resolver = Resolver()
 
-    running_trips = graphene.Field(graphene.List(graphene.NonNull(RunningTrip)), filter_input=graphene.Argument(
-        RunningTripFilterInput), resolver=resolver.resolve_running_trips)
     stops = graphene.Field(graphene.List(graphene.NonNull(Stop)), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_stops)
     stop = graphene.Field(graphene.NonNull(Stop), stop_id=graphene.String(
         required=True), resolver=resolver.resolve_stop)
     trip = graphene.Field(graphene.NonNull(Trip), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_trip)
+    trips = graphene.Field(graphene.List(graphene.NonNull(RunningTrip)), resolver=resolver.resolve_trips)
     route_shapes = graphene.Field(graphene.List(graphene.NonNull(Shape)), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_route_shapes)
 
@@ -219,7 +221,7 @@ class Query(graphene.ObjectType):
         required=True), direction=graphene.Boolean(required=True), resolver=resolver.resolve_vehicle_positions)
     arrival_times = graphene.Field(graphene.List(graphene.NonNull(ArrivalTime)), route_id=graphene.Int(
         required=True), direction=graphene.Boolean(required=True), stop_id=graphene.String(required=True),
-        resolver=resolver.resolve_arrival_times)
+                                   resolver=resolver.resolve_arrival_times)
 
     # For debugging purposes
     real_time_vehicle_positions = graphene.Field(graphene.List(
