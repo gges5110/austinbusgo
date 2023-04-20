@@ -15,26 +15,25 @@ class GTFSService:
 
     # Trips
     @staticmethod
-    def get_trips_with_distinct_headsign(trip_ids: List[str], route_name_prefix: str = None) -> List[Trips]:
-        if route_name_prefix is None:
-            return Trips \
-                .select(Trips, Routes) \
-                .distinct(Trips.trip_headsign) \
-                .join(Routes, on=(Trips.route_id == Routes.route_id).alias("routes")) \
-                .where(Trips.trip_id.in_(trip_ids))
-        else:
-            return Trips \
-                .select(Trips, Routes) \
-                .distinct(Trips.trip_headsign) \
-                .join(Routes, on=(Trips.route_id == Routes.route_id).alias("routes")) \
-                .where(Trips.trip_id.in_(trip_ids) & Trips.trip_headsign.startswith(route_name_prefix))
+    def get_distinct_trip_headsigns(trip_ids: List[str]) -> List[Trips]:
+        return Trips \
+            .select(Trips.trip_headsign, Trips.trip_id) \
+            .distinct(Trips.trip_headsign) \
+            .where(Trips.trip_id.in_(trip_ids))
+
+    @staticmethod
+    def get_trips() -> List[Trips]:
+        return Trips \
+            .select(Trips, Routes) \
+            .distinct(Trips.trip_headsign) \
+            .join(Routes, on=(Trips.route_id == Routes.route_id).alias("routes"))
 
     @staticmethod
     def get_trips_with_direction_and_route(trip_ids: List[str], route_id: int, direction: bool) -> List[Trips]:
         return [trip.trip_id for trip in Trips.select(Trips.trip_id)
-                .where((Trips.trip_id.in_(trip_ids))
-                       & (Trips.route_id == route_id)
-                       & (Trips.direction_id == direction))]
+        .where((Trips.trip_id.in_(trip_ids))
+               & (Trips.route_id == route_id)
+               & (Trips.direction_id == direction))]
 
     @staticmethod
     def get_trip_by_id(trip_id: str) -> Trips:

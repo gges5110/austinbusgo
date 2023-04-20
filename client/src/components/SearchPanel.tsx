@@ -6,6 +6,7 @@ import SettingsIcon from "@material-ui/icons/Settings";
 import { Autocomplete } from "@material-ui/lab";
 import * as React from "react";
 import { RunningTrip } from "../interfaces/interface.d";
+import classNames from "classnames";
 
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -28,6 +29,9 @@ export const useStyles = makeStyles((theme: Theme) =>
     iconButton: {
       marginLeft: 10,
       padding: 10,
+    },
+    inactiveOptions: {
+      color: "grey",
     },
   })
 );
@@ -64,15 +68,25 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   return (
     <Paper className={classes.root}>
       <Autocomplete
-        id="combo-box-demo"
         options={runningTrips || []}
         loading={loading}
         className={classes.autoComplete}
         value={trip || null}
         blurOnSelect={true}
+        autoComplete={true}
         onChange={searchRouteOnChange}
-        groupBy={(option) => option.name.charAt(0) || ""}
-        getOptionLabel={(option) => option.name}
+        groupBy={(option) => option.routeId.charAt(0) || ""}
+        getOptionLabel={(option) => option.routeLongName}
+        ListboxProps={{ style: { maxHeight: "60vh" } }}
+        renderOption={(props) => {
+          return (
+            <div
+              className={classNames({
+                [classes.inactiveOptions]: !props.running,
+              })}
+            >{`${props.routeId} ${props.routeLongName} ${props.dirAbbr}`}</div>
+          );
+        }}
         renderInput={(params) => (
           <InputBase
             placeholder={"Search Routes"}
