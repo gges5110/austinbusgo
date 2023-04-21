@@ -3,6 +3,7 @@ import * as React from "react";
 import { Page } from "./components/Page";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { SnackbarProvider } from "notistack";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 const client = new ApolloClient({
   uri:
@@ -23,20 +24,27 @@ export const theme = createMuiTheme({
   },
 });
 
-export const App: React.FunctionComponent = () => (
-  <ApolloProvider client={client}>
-    <MuiThemeProvider theme={theme}>
-      <SnackbarProvider
-        maxSnack={3}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
-        }}
-        preventDuplicate={true}
-        autoHideDuration={2000}
-      >
-        <Page />
-      </SnackbarProvider>
-    </MuiThemeProvider>
-  </ApolloProvider>
-);
+export const App: React.FunctionComponent = () => {
+  const router = createBrowserRouter([
+    { path: "/", element: <Page /> },
+    { path: "/:tripId", element: <Page /> },
+  ]);
+
+  return (
+    <ApolloProvider client={client}>
+      <MuiThemeProvider theme={theme}>
+        <SnackbarProvider
+          maxSnack={3}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+          preventDuplicate={true}
+          autoHideDuration={2000}
+        >
+          <RouterProvider router={router} />
+        </SnackbarProvider>
+      </MuiThemeProvider>
+    </ApolloProvider>
+  );
+};

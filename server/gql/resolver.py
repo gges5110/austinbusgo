@@ -45,7 +45,7 @@ class Resolver:
         } for trip in self.gtfs_service.get_trips()]
 
         # Alphabetically sort trips by trip_headsign
-        trip_info_list.sort(key=lambda trip_info: (trip_info['trip_headsign']))
+        trip_info_list.sort(key=lambda trip_info: (-trip_info['running'], trip_info['trip_headsign']))
         return trip_info_list
 
     def resolve_stops(self, query, info, trip_id) -> List[Stops]:

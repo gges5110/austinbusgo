@@ -11,6 +11,7 @@ import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.genera
 import { LoadingSnackbarMessage } from "./LoadingSnackbarMessage";
 import { MapWrapper } from "./Map/Map";
 import { SettingsDialog } from "./SettingsDialog";
+import { useNavigate } from "react-router-dom";
 
 const defaultAutoPollingInterval = 15000;
 
@@ -88,9 +89,12 @@ export const Page: React.FunctionComponent = () => {
     },
   });
 
+  const navigate = useNavigate();
+
   const setTrip = (trip: RunningTrip | undefined): void => {
     setSelectedTrip(trip);
     if (trip !== undefined) {
+      navigate(`/${trip.tripId}`);
       const key = enqueueSnackbar(
         <LoadingSnackbarMessage
           message={`Loading route ${trip.routeLongName}...`}
