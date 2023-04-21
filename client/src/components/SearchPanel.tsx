@@ -1,40 +1,118 @@
-import { IconButton } from "@material-ui/core";
+import {
+  Button,
+  ButtonProps,
+  debounce,
+  Divider,
+  IconButton,
+  Popper,
+  PopperProps,
+  styled,
+  Tooltip,
+  TooltipProps,
+} from "@material-ui/core";
 import InputBase from "@material-ui/core/InputBase";
 import Paper from "@material-ui/core/Paper";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import SettingsIcon from "@material-ui/icons/Settings";
+import ClearIcon from "@material-ui/icons/Clear";
 import { Autocomplete } from "@material-ui/lab";
 import * as React from "react";
 import { RunningTrip } from "../interfaces/interface.d";
 import classNames from "classnames";
+import { useHotkeys } from "react-hotkeys-hook";
+import { useCallback, useRef } from "react";
+import { PaperProps } from "@material-ui/core/Paper/Paper";
 
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      marginLeft: 25,
-      marginTop: 10,
-      padding: "2px 10px",
+      margin: "8px 0px 8px 24px",
       display: "flex",
       alignItems: "center",
-      width: 350,
+      width: "fit-content",
+      borderRadius: "10px",
+    },
+    hotkeyButtonContainer: {
+      padding: theme.spacing(1.5),
     },
     autoComplete: {
-      width: 300,
+      width: 256,
+      padding: 0,
+      paddingRight: theme.spacing(3),
     },
     input: {
-      marginLeft: theme.spacing(1),
+      paddingLeft: theme.spacing(2.5),
       flex: 1,
       width: "100%",
     },
-    iconButton: {
-      marginLeft: 10,
-      padding: 10,
+    hotkeyButton: {
+      "&:hover": {
+        backgroundColor: "#fff",
+        color: "#2196f3",
+      },
+    },
+    settingsButton: {
+      padding: theme.spacing(1.5),
+      backgroundColor: "#fff",
+      color: "#2196f3",
     },
     inactiveOptions: {
       color: "grey",
     },
   })
 );
+
+const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
+  <Popper
+    {...props}
+    style={{
+      width: 395,
+      paddingTop: 20,
+    }}
+    placement="bottom-start"
+  />
+);
+
+const StyledPaper: React.FunctionComponent<PaperProps> = (props) => {
+  return (
+    <Paper
+      style={{
+        borderRadius: 10,
+      }}
+      {...props}
+    ></Paper>
+  );
+};
+
+const useStylesBootstrap = makeStyles((theme) => ({
+  arrow: {
+    color: theme.palette.common.black,
+  },
+  tooltip: {
+    backgroundColor: theme.palette.common.black,
+    fontSize: 14,
+  },
+}));
+
+const StyledTooltip: React.FunctionComponent<TooltipProps> = (props) => {
+  const classes = useStylesBootstrap();
+
+  return <Tooltip classes={classes} {...props} />;
+};
+
+const directionAbbreviationMapping: Map<string, string> = new Map([
+  ["N", "North"],
+  ["S", "South"],
+  ["E", "East"],
+  ["W", "West"],
+  ["I", "Inbound"],
+  ["O", "Outbound"],
+]);
+
+const HotkeyButton = styled(Button)<ButtonProps>(() => ({
+  minWidth: "unset",
+  borderRadius: "7px",
+}));
 
 export interface SearchPanelProps {
   readonly runningTrips: RunningTrip[];
@@ -59,11 +137,32 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     newValue: RunningTrip | null
   ) => {
     if (newValue != null) {
-      setTrip(newValue);
+      if (trip?.tripId !== newValue.tripId) {
+        setTrip(newValue);
+      }
     } else {
       setTrip(undefined);
     }
   };
+  const ref = useRef();
+
+  const focusAutocomplete = () => {
+    ref?.current?.focus?.();
+  };
+
+  useHotkeys(
+    "ctrl+k",
+    () => {
+      focusAutocomplete();
+    },
+    []
+  );
+
+  const clearSelection = () => {
+    setTrip(undefined);
+  };
+
+  const delayedQuery = useCallback(debounce(searchRouteOnChange, 500), []);
 
   return (
     <Paper className={classes.root}>
@@ -74,9 +173,26 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         value={trip || null}
         blurOnSelect={true}
         autoComplete={true}
+        PaperComponent={StyledPaper}
+        PopperComponent={StyledPopper}
+        fullWidth={true}
+        autoHighlight={true}
+        open={true}
+        openOnFocus={true}
+        selectOnFocus={true}
+        onHighlightChange={(event, option, reason) => {
+          if (reason === "keyboard") {
+            delayedQuery(event, option);
+          }
+        }}
         onChange={searchRouteOnChange}
-        groupBy={(option) => option.routeId.charAt(0) || ""}
-        getOptionLabel={(option) => option.routeLongName}
+        getOptionSelected={(option, value) => {
+          return option.tripId === value.tripId;
+        }}
+        groupBy={(option) => (option.running ? "Running" : "Inactive" || "")}
+        getOptionLabel={(option) =>
+          `${option.routeId} ${option.routeLongName} ${option.dirAbbr}`
+        }
         ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props) => {
           return (
@@ -84,25 +200,68 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               className={classNames({
                 [classes.inactiveOptions]: !props.running,
               })}
-            >{`${props.routeId} ${props.routeLongName} ${props.dirAbbr}`}</div>
+            >
+              <span style={{ width: 30, display: "inline-block" }}>
+                {props.routeId}
+              </span>{" "}
+              <span style={{ fontWeight: "bold" }}>{props.routeLongName}</span>{" "}
+              <span style={{ fontSize: 14 }}>
+                {props.dirAbbr
+                  ? directionAbbreviationMapping.get(props.dirAbbr) ||
+                    props.dirAbbr
+                  : ""}
+              </span>
+            </div>
           );
         }}
         renderInput={(params) => (
           <InputBase
             placeholder={"Search Routes"}
             ref={params.InputProps.ref}
-            inputProps={params.inputProps}
+            inputRef={ref}
+            inputProps={{ ...params.inputProps, style: { padding: 0 } }}
             className={classes.input}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                ref?.current?.blur?.();
+              }
+            }}
           />
         )}
       />
-      <IconButton
-        className={classes.iconButton}
-        aria-label="directions"
-        onClick={openSettingsDialog}
-      >
-        <SettingsIcon />
-      </IconButton>
+      <div className={classes.hotkeyButtonContainer}>
+        <StyledTooltip title="Start search" placement="bottom-end">
+          <HotkeyButton
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              focusAutocomplete();
+            }}
+            className={classes.hotkeyButton}
+          >
+            <div>⌘K</div>
+          </HotkeyButton>
+        </StyledTooltip>
+      </div>
+      <Divider style={{ height: 28 }} orientation="vertical" />
+      {trip === undefined ? (
+        <IconButton
+          className={classes.settingsButton}
+          aria-label="directions"
+          onClick={openSettingsDialog}
+        >
+          <SettingsIcon />
+        </IconButton>
+      ) : (
+        <StyledTooltip title="Clear search" placement="bottom-end">
+          <IconButton
+            className={classes.settingsButton}
+            onClick={clearSelection}
+          >
+            <ClearIcon />
+          </IconButton>
+        </StyledTooltip>
+      )}
     </Paper>
   );
 };

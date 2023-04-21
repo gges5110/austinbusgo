@@ -19,7 +19,6 @@ import { useArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 import { ArrivalTimeList } from "../../ArrivalTimeList";
 
 interface StopDrawerProps {
-  readonly open: boolean;
   readonly stop: Stop;
   readonly runningTrip: RunningTrip;
   onClose(): void;
@@ -28,7 +27,6 @@ interface StopDrawerProps {
 
 export const StopDrawer: React.FunctionComponent<StopDrawerProps> = ({
   onClose,
-  open,
   runningTrip,
   stop,
   arrivalTimeOnClick,
@@ -45,7 +43,7 @@ export const StopDrawer: React.FunctionComponent<StopDrawerProps> = ({
   return (
     <SwipeableDrawer
       anchor="bottom"
-      open={open}
+      open={true}
       onClose={onClose}
       disableBackdropTransition={true}
       // eslint-disable-next-line @typescript-eslint/no-empty-function

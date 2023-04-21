@@ -226,7 +226,6 @@ const Map: React.FunctionComponent<MapProps> = ({
             stop={selectedStop}
             runningTrip={trip}
             arrivalTimeOnClick={arrivalTimeOnClick}
-            open={selectedStop !== null}
             onClose={closeStopDrawer}
           />
         )}
@@ -242,7 +241,7 @@ const Map: React.FunctionComponent<MapProps> = ({
           ))
         }
 
-        <Source id="my-data" type="geojson" data={routeShapeGeoJSON}>
+        <Source id="route-shapes" type="geojson" data={routeShapeGeoJSON}>
           <Layer
             id="point"
             type="line"
