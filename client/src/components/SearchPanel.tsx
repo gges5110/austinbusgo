@@ -175,9 +175,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         autoComplete={true}
         PaperComponent={StyledPaper}
         PopperComponent={StyledPopper}
-        fullWidth={true}
         autoHighlight={true}
-        open={true}
         openOnFocus={true}
         selectOnFocus={true}
         onHighlightChange={(event, option, reason) => {
