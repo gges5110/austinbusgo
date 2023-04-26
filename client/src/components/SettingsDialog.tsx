@@ -70,7 +70,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
 
   return (
     <Dialog
-      fullScreen={true}
+      fullScreen={false}
       open={open}
       onClose={handleClose}
       TransitionComponent={Transition}

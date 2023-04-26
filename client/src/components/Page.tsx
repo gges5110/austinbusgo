@@ -2,16 +2,20 @@ import { IconButton } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { RunningTrip } from "../interfaces/interface.d";
 import { useTripsQuery } from "../schemas/Trips.generated";
-import { useStopsLazyQuery } from "../schemas/StopsAndRouteShapes.generated";
 import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "./LoadingSnackbarMessage";
-import { MapWrapper } from "./Map/Map";
 import { SettingsDialog } from "./SettingsDialog";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useStopsAndShapesLazyQuery } from "../schemas/StopsAndRouteShapes.generated";
+import { getDate } from "./Map/Stop/StopDrawer";
+import { useAtom } from "jotai";
+import { selectedRouteAtom, settingsDialogOpenAtom } from "../Atoms";
+import { useRouteLazyQuery } from "../schemas/Route.generated";
+import { MapWrapper } from "./Map/MapWrapper";
 
 const defaultAutoPollingInterval = 15000;
 
@@ -20,13 +24,52 @@ export const Page: React.FunctionComponent = () => {
     "vehiclePositionAutoPolling",
     false
   );
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState<boolean>(false);
-  const [selectedTrip, setSelectedTrip] = useState<RunningTrip | undefined>(
-    undefined
+  const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
+    settingsDialogOpenAtom
   );
+  const [selectedTrip, setSelectedTrip] = useAtom(selectedRouteAtom);
   const [tripLoadingSnackbarKey, setTripLoadingSnackbarKey] = useState<
     SnackbarKey | undefined
   >(undefined);
+  const { routeId, directionId, stopId } = useParams();
+  const [getRoute] = useRouteLazyQuery({
+    fetchPolicy: "network-only",
+    onCompleted: (route) => {
+      if (route) {
+        setSelectedTrip({
+          routeId: String(route.route.routeId),
+          direction: Boolean(directionId),
+          routeLongName: route.route.routeLongName || "",
+          color: route.route.routeColor,
+        });
+      }
+    },
+  });
+  console.log(routeId, directionId, stopId);
+  useEffect(() => {
+    if (routeId && directionId) {
+      getRoute({
+        variables: {
+          routeId: routeId,
+        },
+      });
+
+      getStopsAndShapes({
+        variables: {
+          routeId,
+          directionId: Boolean(directionId),
+          date: getDate(),
+        },
+      });
+
+      getVehiclePositions({
+        variables: {
+          routeId: Number(routeId),
+          direction: Boolean(directionId),
+        },
+      });
+    }
+  }, []);
   const [
     vehiclePositionsLoadingSnackbarKey,
     setVehiclePositionsLoadingSnackbarKey,
@@ -41,13 +84,15 @@ export const Page: React.FunctionComponent = () => {
   );
 
   const { data: tripsResponse, loading } = useTripsQuery({
-    pollInterval: defaultAutoPollingInterval,
+    variables: {
+      date: getDate(),
+    },
   });
 
   const [
-    getStopsAndRouteShapes,
-    { data: stopsAndRouteShapes },
-  ] = useStopsLazyQuery({
+    getStopsAndShapes,
+    { data: stopsAndShapes },
+  ] = useStopsAndShapesLazyQuery({
     fetchPolicy: "network-only",
     onError: () => {
       if (tripLoadingSnackbarKey) {
@@ -94,7 +139,9 @@ export const Page: React.FunctionComponent = () => {
   const setTrip = (trip: RunningTrip | undefined): void => {
     setSelectedTrip(trip);
     if (trip !== undefined) {
-      navigate(`/${trip.tripId}`);
+      navigate(
+        `/route/${trip.routeId}/direction/${trip.direction ? "1" : "0"}`
+      );
       const key = enqueueSnackbar(
         <LoadingSnackbarMessage
           message={`Loading route ${trip.routeLongName}...`}
@@ -106,9 +153,11 @@ export const Page: React.FunctionComponent = () => {
       );
       setTripLoadingSnackbarKey(key);
 
-      getStopsAndRouteShapes({
+      getStopsAndShapes({
         variables: {
-          tripId: trip.tripId,
+          routeId: trip.routeId,
+          directionId: trip.direction,
+          date: getDate(),
         },
       });
 
@@ -118,6 +167,8 @@ export const Page: React.FunctionComponent = () => {
           direction: trip.direction,
         },
       });
+    } else {
+      navigate(`/`);
     }
   };
 
@@ -144,12 +195,13 @@ export const Page: React.FunctionComponent = () => {
   return (
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
       <MapWrapper
-        openSettingsDialog={() => setSettingsDialogOpen(true)}
         runningTrips={tripsResponse?.trips || []}
         setTrip={setTrip}
         loading={loading}
-        stops={(selectedTrip && stopsAndRouteShapes?.stops) || []}
-        routeShapes={(selectedTrip && stopsAndRouteShapes?.routeShapes) || []}
+        stops={(selectedTrip && stopsAndShapes?.stopsAndShapes.stops) || []}
+        routeShapes={
+          (selectedTrip && stopsAndShapes?.stopsAndShapes.shapes) || []
+        }
         vehiclePositions={
           (selectedTrip && vehiclePositions?.vehiclePositions) || []
         }

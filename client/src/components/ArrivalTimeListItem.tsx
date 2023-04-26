@@ -74,11 +74,18 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
 
   return (
     <ListItem
-      button={true}
+      /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
+      // @ts-ignore
+      button={updatedArrivalTime != undefined}
       key={scheduledArrivalTime}
-      onClick={() => arrivalTimeOnClick(arrivalTime)}
+      onClick={() => {
+        if (updatedArrivalTime) {
+          arrivalTimeOnClick(arrivalTime);
+        }
+      }}
     >
       <ListItemText
+        style={{ marginRight: 30 }}
         primary={
           <span>
             <DirectionsBusIcon fontSize={"small"} />

@@ -22,6 +22,8 @@ import classNames from "classnames";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useCallback, useRef } from "react";
 import { PaperProps } from "@material-ui/core/Paper/Paper";
+import { useAtom, useSetAtom } from "jotai";
+import { searchModeAtom, settingsDialogOpenAtom } from "../Atoms";
 
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -37,11 +39,10 @@ export const useStyles = makeStyles((theme: Theme) =>
     },
     autoComplete: {
       width: 256,
-      padding: 0,
-      paddingRight: theme.spacing(3),
     },
     input: {
       paddingLeft: theme.spacing(2.5),
+      paddingRight: theme.spacing(3),
       flex: 1,
       width: "100%",
     },
@@ -66,8 +67,8 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   <Popper
     {...props}
     style={{
-      width: 395,
-      paddingTop: 20,
+      width: 372,
+      paddingTop: 15,
     }}
     placement="bottom-start"
   />
@@ -119,7 +120,6 @@ export interface SearchPanelProps {
   readonly loading?: boolean;
   readonly trip?: RunningTrip;
   setTrip(trip?: RunningTrip): void;
-  openSettingsDialog(): void;
 }
 
 export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
@@ -127,8 +127,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   loading,
   trip,
   setTrip,
-  openSettingsDialog,
 }) => {
+  const setSettingsDialogOpen = useSetAtom(settingsDialogOpenAtom);
   const classes = useStyles();
 
   const searchRouteOnChange = (
@@ -137,7 +137,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     newValue: RunningTrip | null
   ) => {
     if (newValue != null) {
-      if (trip?.tripId !== newValue.tripId) {
+      if (trip?.routeId !== newValue.routeId) {
         setTrip(newValue);
       }
     } else {
@@ -185,7 +185,10 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         }}
         onChange={searchRouteOnChange}
         getOptionSelected={(option, value) => {
-          return option.tripId === value.tripId;
+          return (
+            option.routeId === value.routeId &&
+            option.direction == value.direction
+          );
         }}
         groupBy={(option) => (option.running ? "Running" : "Inactive" || "")}
         getOptionLabel={(option) =>
@@ -217,7 +220,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             placeholder={"Search Routes"}
             ref={params.InputProps.ref}
             inputRef={ref}
-            inputProps={{ ...params.inputProps, style: { padding: 0 } }}
+            inputProps={{ ...params.inputProps, style: {} }}
             className={classes.input}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
@@ -246,7 +249,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         <IconButton
           className={classes.settingsButton}
           aria-label="directions"
-          onClick={openSettingsDialog}
+          onClick={() => setSettingsDialogOpen(true)}
         >
           <SettingsIcon />
         </IconButton>
@@ -261,5 +264,18 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         </StyledTooltip>
       )}
     </Paper>
+  );
+};
+
+export enum SearchMode {
+  Route,
+  Stop,
+}
+export const SearchModeToggle: React.FunctionComponent = () => {
+  const [searchMode, setSearchMode] = useAtom(searchModeAtom);
+  return (
+    <IconButton onClick={() => setSettingsDialogOpen(true)}>
+      <SettingsIcon />
+    </IconButton>
   );
 };

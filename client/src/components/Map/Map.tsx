@@ -8,7 +8,6 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import ReactMapGL, {
   Layer,
-  MapProvider,
   Source,
   useMap,
   ViewStateChangeEvent,
@@ -25,6 +24,7 @@ import { StopDrawer } from "./Stop/StopDrawer";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import "./Map.css";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -45,15 +45,14 @@ type ViewState = {
   zoom: number;
 };
 
-interface MapProps {
+export interface MapProps {
   readonly trip?: RunningTrip;
-  readonly routeShapes: ShapeData[];
+  readonly routeShapes: ShapeData[][];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
   readonly runningTrips: RunningTrip[];
   readonly loading?: boolean;
   setTrip(trip?: RunningTrip): void;
-  openSettingsDialog(): void;
 }
 
 const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
@@ -74,7 +73,7 @@ const vehicleZoomLevel = 15;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
-const Map: React.FunctionComponent<MapProps> = ({
+export const Map: React.FunctionComponent<MapProps> = ({
   trip,
   stops,
   routeShapes,
@@ -82,28 +81,31 @@ const Map: React.FunctionComponent<MapProps> = ({
   runningTrips,
   loading,
   setTrip,
-  openSettingsDialog,
 }) => {
   const classes = useStyles();
   const { mapId: map } = useMap();
+  const navigate = useNavigate();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
   >(geojson);
 
-  const setRouteShape = (coords: Coordinate[]): void => {
+  const setRouteShape = (shapeDataList: ShapeData[][]): void => {
     setRouteShapeGeoJSON({
       type: "FeatureCollection",
-      features: [
-        {
+      features: shapeDataList.map((shapeDatas) => {
+        return {
           type: "Feature",
           geometry: {
             type: "LineString",
-            coordinates: coords,
+            coordinates: shapeDatas.map(
+              (shapeData) =>
+                [shapeData.shapePtLon, shapeData.shapePtLat] as Coordinate
+            ),
           },
           properties: {},
-        },
-      ],
+        };
+      }),
     });
   };
 
@@ -117,22 +119,19 @@ const Map: React.FunctionComponent<MapProps> = ({
 
   useEffect(() => {
     if (routeShapes.length !== 0) {
-      setRouteShape(
-        routeShapes.map(
-          (routeShape: ShapeData) =>
-            [routeShape.shapePtLon, routeShape.shapePtLat] as Coordinate
-        )
-      );
+      const flatShapes = routeShapes.flat();
+
+      setRouteShape(routeShapes);
 
       map?.fitBounds(
         [
           [
-            Math.min(...routeShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.min(...routeShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
+            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
           [
-            Math.max(...routeShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.max(...routeShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
+            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
         ],
         { padding: 80 }
@@ -145,8 +144,15 @@ const Map: React.FunctionComponent<MapProps> = ({
 
   const [selectedStop, setSelectedStop] = useState<Stop | undefined>(undefined);
 
+  const setStop = (stop: Stop | undefined) => {
+    if (stop) {
+      navigate(`/stop/${stop.stopId}`);
+    }
+    setSelectedStop(stop);
+  };
+
   const closeStopDrawer = (): void => {
-    setSelectedStop(undefined);
+    setStop(undefined);
   };
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
@@ -156,13 +162,13 @@ const Map: React.FunctionComponent<MapProps> = ({
   const arrivalTimeOnClick = (arrivalTime: ArrivalTime) => {
     map?.flyTo({
       center: [
-        arrivalTime.vehicle.position?.longitude || viewPort.longitude,
-        arrivalTime.vehicle.position?.latitude || viewPort.latitude,
+        arrivalTime.vehicle?.position?.longitude || viewPort.longitude,
+        arrivalTime.vehicle?.position?.latitude || viewPort.latitude,
       ],
       zoom: vehicleZoomLevel,
     });
 
-    setSelectedStop(undefined);
+    setStop(undefined);
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
@@ -217,14 +223,13 @@ const Map: React.FunctionComponent<MapProps> = ({
         </Fab>
         <StopMarkers
           stops={stops}
-          setSelectedStop={setSelectedStop}
+          setSelectedStop={setStop}
           direction={trip?.direction || false}
         />
 
         {trip && selectedStop && (
           <StopDrawer
             stop={selectedStop}
-            runningTrip={trip}
             arrivalTimeOnClick={arrivalTimeOnClick}
             onClose={closeStopDrawer}
           />
@@ -259,34 +264,9 @@ const Map: React.FunctionComponent<MapProps> = ({
             setTrip={setTrip}
             trip={trip}
             loading={loading}
-            openSettingsDialog={openSettingsDialog}
           />
         </div>
       </div>
     </>
   );
 };
-
-export const MapWrapper: React.FunctionComponent<MapProps> = ({
-  trip,
-  stops,
-  routeShapes,
-  vehiclePositions,
-  runningTrips,
-  loading,
-  setTrip,
-  openSettingsDialog,
-}) => (
-  <MapProvider>
-    <Map
-      trip={trip}
-      loading={loading}
-      routeShapes={routeShapes}
-      stops={stops}
-      vehiclePositions={vehiclePositions}
-      runningTrips={runningTrips}
-      setTrip={setTrip}
-      openSettingsDialog={openSettingsDialog}
-    />
-  </MapProvider>
-);

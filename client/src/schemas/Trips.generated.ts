@@ -2,7 +2,9 @@ import * as Types from "../interfaces/interface.d";
 
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
-export type TripsQueryVariables = Types.Exact<{ [key: string]: never }>;
+export type TripsQueryVariables = Types.Exact<{
+  date: Types.Scalars["String"];
+}>;
 
 export type TripsQuery = { __typename?: "Query" } & {
   trips?: Types.Maybe<
@@ -13,7 +15,6 @@ export type TripsQuery = { __typename?: "Query" } & {
         | "routeId"
         | "direction"
         | "color"
-        | "tripId"
         | "running"
         | "dirAbbr"
       >
@@ -22,13 +23,12 @@ export type TripsQuery = { __typename?: "Query" } & {
 };
 
 export const TripsDocument = gql`
-  query Trips {
-    trips {
+  query Trips($date: String!) {
+    trips(date: $date) {
       routeLongName
       routeId
       direction
       color
-      tripId
       running
       dirAbbr
     }
@@ -47,6 +47,7 @@ export const TripsDocument = gql`
  * @example
  * const { data, loading, error } = useTripsQuery({
  *   variables: {
+ *      date: // value for 'date'
  *   },
  * });
  */

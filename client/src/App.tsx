@@ -27,7 +27,8 @@ export const theme = createMuiTheme({
 export const App: React.FunctionComponent = () => {
   const router = createBrowserRouter([
     { path: "/", element: <Page /> },
-    { path: "/:tripId", element: <Page /> },
+    { path: "/route/:routeId/direction/:directionId", element: <Page /> },
+    { path: "/stop/:stopId", element: <Page /> },
   ]);
 
   return (

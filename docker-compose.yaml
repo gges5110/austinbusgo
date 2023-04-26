@@ -19,7 +19,9 @@ services:
       - ./ci-job/capmetro/routes.txt:/capmetro/routes.txt
       - ./ci-job/capmetro/shapes.txt:/capmetro/shapes.txt
       - ./ci-job/capmetro/trips.txt:/capmetro/trips.txt
-      - ./ci-job/capmetro/stop_times.txt:/capmetro/stop_times.txt
+      - ./ci-job/capmetro/stop_times1.txt:/capmetro/stop_times.txt
+      - ./ci-job/capmetro/calendar.txt:/capmetro/calendar.txt
+      - ./ci-job/capmetro/calendar_dates.txt:/capmetro/calendar_dates.txt
       # copy the sql script to create tables
       - ./server/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql
 volumes:

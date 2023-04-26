@@ -6,6 +6,7 @@ export type ArrivalTimesQueryVariables = Types.Exact<{
   routeId: Types.Scalars["Int"];
   direction: Types.Scalars["Boolean"];
   stopId: Types.Scalars["String"];
+  date: Types.Scalars["String"];
 }>;
 
 export type ArrivalTimesQuery = { __typename?: "Query" } & {
@@ -28,37 +29,49 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
             | "wheelchairAccessible"
             | "bikesAllowed"
           >;
-          vehicle: { __typename?: "VehiclePosition" } & Pick<
-            Types.VehiclePosition,
-            "stopId" | "currentStatus" | "timestamp"
-          > & {
-              trip?: Types.Maybe<
-                { __typename?: "TripDescriptor" } & Pick<
-                  Types.TripDescriptor,
-                  "tripId" | "routeId" | "startDate"
-                >
-              >;
-              vehicle?: Types.Maybe<
-                { __typename?: "VehicleDescriptor" } & Pick<
-                  Types.VehicleDescriptor,
-                  "id" | "label"
-                >
-              >;
-              position?: Types.Maybe<
-                { __typename?: "Position" } & Pick<
-                  Types.Position,
-                  "latitude" | "longitude"
-                >
-              >;
-            };
+          vehicle?: Types.Maybe<
+            { __typename?: "VehiclePosition" } & Pick<
+              Types.VehiclePosition,
+              "stopId" | "currentStatus" | "timestamp"
+            > & {
+                trip?: Types.Maybe<
+                  { __typename?: "TripDescriptor" } & Pick<
+                    Types.TripDescriptor,
+                    "tripId" | "routeId" | "startDate"
+                  >
+                >;
+                vehicle?: Types.Maybe<
+                  { __typename?: "VehicleDescriptor" } & Pick<
+                    Types.VehicleDescriptor,
+                    "id" | "label"
+                  >
+                >;
+                position?: Types.Maybe<
+                  { __typename?: "Position" } & Pick<
+                    Types.Position,
+                    "latitude" | "longitude"
+                  >
+                >;
+              }
+          >;
         }
     >
   >;
 };
 
 export const ArrivalTimesDocument = gql`
-  query ArrivalTimes($routeId: Int!, $direction: Boolean!, $stopId: String!) {
-    arrivalTimes(routeId: $routeId, direction: $direction, stopId: $stopId) {
+  query ArrivalTimes(
+    $routeId: Int!
+    $direction: Boolean!
+    $stopId: String!
+    $date: String!
+  ) {
+    arrivalTimes(
+      routeId: $routeId
+      direction: $direction
+      stopId: $stopId
+      date: $date
+    ) {
       updatedArrivalTime
       scheduledArrivalTime
       trip {
@@ -110,6 +123,7 @@ export const ArrivalTimesDocument = gql`
  *      routeId: // value for 'routeId'
  *      direction: // value for 'direction'
  *      stopId: // value for 'stopId'
+ *      date: // value for 'date'
  *   },
  * });
  */

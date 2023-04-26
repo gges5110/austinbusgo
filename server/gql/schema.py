@@ -3,15 +3,13 @@ import graphene
 from server.gql.resolver import Resolver
 
 
-class RunningTrip(graphene.ObjectType):
-    """ Information about a running trip """
-    route_long_name = graphene.String(description='Long name of the route', required=True)
-    trip_id = graphene.String(description='Trip Id', required=True)
-    route_id = graphene.String(description='Route Id', required=True)
-    direction = graphene.Boolean(description='Trip direction', required=True)
-    color = graphene.String(description='Route Color')
-    running = graphene.Boolean(description='Trip is currently running')
-    dir_abbr = graphene.String(description="Direction")
+class Route(graphene.ObjectType):
+    route_id = graphene.Int(description='Identifies a route.', required=True)
+    agency_id = graphene.Int(description='Agency for the specified route.')
+    route_short_name = graphene.String(description='Short name of a route.')
+    route_long_name = graphene.String(description='Full name of a route.')
+    route_color = graphene.String(description='Route color designation that matches public facing material.')
+    route_desc = graphene.String(description='Description of a route that provides useful, quality information.')
 
 
 class Stop(graphene.ObjectType):
@@ -197,23 +195,41 @@ class Trip(graphene.ObjectType):
     dir_abbr = graphene.String(description="Direction")
 
 
+class RunningTrip(graphene.ObjectType):
+    """ Information about a running trip """
+    route_long_name = graphene.String(description='Long name of the route', required=True)
+    route_id = graphene.String(description='Route Id', required=True)
+    direction = graphene.Boolean(description='Trip direction', required=True)
+    color = graphene.String(description='Route Color')
+    running = graphene.Boolean(description='Trip is currently running')
+    dir_abbr = graphene.String(description="Direction")
+
+
 class ArrivalTime(graphene.ObjectType):
-    vehicle = graphene.Field(VehiclePosition, required=True)
+    vehicle = graphene.Field(VehiclePosition)
     scheduled_arrival_time = graphene.String(required=True)
     trip = graphene.Field(Trip, required=True)
     updated_arrival_time = graphene.String()
 
 
+class StopsAndShapes(graphene.ObjectType):
+    stops = graphene.List(graphene.NonNull(Stop))
+    shapes = graphene.List(graphene.NonNull((graphene.List(graphene.NonNull(Shape)))))
+
+
 class Query(graphene.ObjectType):
     resolver = Resolver()
-
-    stops = graphene.Field(graphene.List(graphene.NonNull(Stop)), trip_id=graphene.String(
-        required=True), resolver=resolver.resolve_stops)
+    stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.String(
+        required=True), direction_id=graphene.Boolean(required=True), date=graphene.String(required=True),
+                                      resolver=resolver.resolve_stops_and_shapes)
     stop = graphene.Field(graphene.NonNull(Stop), stop_id=graphene.String(
         required=True), resolver=resolver.resolve_stop)
+    route = graphene.Field(graphene.NonNull(Route), route_id=graphene.String(
+        required=True), resolver=resolver.resolve_route)
     trip = graphene.Field(graphene.NonNull(Trip), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_trip)
-    trips = graphene.Field(graphene.List(graphene.NonNull(RunningTrip)), resolver=resolver.resolve_trips)
+    trips = graphene.Field(graphene.List(graphene.NonNull(RunningTrip)), date=graphene.String(required=True),
+                           resolver=resolver.resolve_trips)
     route_shapes = graphene.Field(graphene.List(graphene.NonNull(Shape)), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_route_shapes)
 
@@ -221,6 +237,7 @@ class Query(graphene.ObjectType):
         required=True), direction=graphene.Boolean(required=True), resolver=resolver.resolve_vehicle_positions)
     arrival_times = graphene.Field(graphene.List(graphene.NonNull(ArrivalTime)), route_id=graphene.Int(
         required=True), direction=graphene.Boolean(required=True), stop_id=graphene.String(required=True),
+                                   date=graphene.String(required=True),
                                    resolver=resolver.resolve_arrival_times)
 
     # For debugging purposes

@@ -13,8 +13,9 @@ export interface Scalars {
 
 export interface Query {
   __typename?: "Query";
-  stops?: Maybe<Array<Stop>>;
+  stopsAndShapes: StopsAndShapes;
   stop: Stop;
+  route: Route;
   trip: Trip;
   trips?: Maybe<Array<RunningTrip>>;
   routeShapes?: Maybe<Array<Shape>>;
@@ -23,16 +24,26 @@ export interface Query {
   realTimeVehiclePositions?: Maybe<Array<Maybe<VehiclePosition>>>;
 }
 
-export interface QueryStopsArgs {
-  tripId: Scalars["String"];
+export interface QueryStopsAndShapesArgs {
+  routeId: Scalars["String"];
+  directionId: Scalars["Boolean"];
+  date: Scalars["String"];
 }
 
 export interface QueryStopArgs {
   stopId: Scalars["String"];
 }
 
+export interface QueryRouteArgs {
+  routeId: Scalars["String"];
+}
+
 export interface QueryTripArgs {
   tripId: Scalars["String"];
+}
+
+export interface QueryTripsArgs {
+  date: Scalars["String"];
 }
 
 export interface QueryRouteShapesArgs {
@@ -48,6 +59,13 @@ export interface QueryArrivalTimesArgs {
   routeId: Scalars["Int"];
   direction: Scalars["Boolean"];
   stopId: Scalars["String"];
+  date: Scalars["String"];
+}
+
+export interface StopsAndShapes {
+  __typename?: "StopsAndShapes";
+  stops?: Maybe<Array<Stop>>;
+  shapes?: Maybe<Array<Array<Shape>>>;
 }
 
 export interface Stop {
@@ -62,6 +80,32 @@ export interface Stop {
   stopLat?: Maybe<Scalars["Float"]>;
   /** Longitude of the location. */
   stopLon?: Maybe<Scalars["Float"]>;
+}
+
+export interface Shape {
+  __typename?: "Shape";
+  /** Identifies a shape. */
+  shapeId: Scalars["String"];
+  /** Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape. */
+  shapePtLat: Scalars["Float"];
+  /** Longitude of a shape point. */
+  shapePtLon: Scalars["Float"];
+}
+
+export interface Route {
+  __typename?: "Route";
+  /** Identifies a route. */
+  routeId: Scalars["Int"];
+  /** Agency for the specified route. */
+  agencyId?: Maybe<Scalars["Int"]>;
+  /** Short name of a route. */
+  routeShortName?: Maybe<Scalars["String"]>;
+  /** Full name of a route. */
+  routeLongName?: Maybe<Scalars["String"]>;
+  /** Route color designation that matches public facing material. */
+  routeColor?: Maybe<Scalars["String"]>;
+  /** Description of a route that provides useful, quality information. */
+  routeDesc?: Maybe<Scalars["String"]>;
 }
 
 export interface Trip {
@@ -95,8 +139,6 @@ export interface RunningTrip {
   __typename?: "RunningTrip";
   /** Long name of the route */
   routeLongName: Scalars["String"];
-  /** Trip Id */
-  tripId: Scalars["String"];
   /** Route Id */
   routeId: Scalars["String"];
   /** Trip direction */
@@ -107,16 +149,6 @@ export interface RunningTrip {
   running?: Maybe<Scalars["Boolean"]>;
   /** Direction */
   dirAbbr?: Maybe<Scalars["String"]>;
-}
-
-export interface Shape {
-  __typename?: "Shape";
-  /** Identifies a shape. */
-  shapeId: Scalars["String"];
-  /** Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape. */
-  shapePtLat: Scalars["Float"];
-  /** Longitude of a shape point. */
-  shapePtLon: Scalars["Float"];
 }
 
 export interface VehiclePosition {
@@ -184,7 +216,7 @@ export enum VehicleStopStatus {
 
 export interface ArrivalTime {
   __typename?: "ArrivalTime";
-  vehicle: VehiclePosition;
+  vehicle?: Maybe<VehiclePosition>;
   scheduledArrivalTime: Scalars["String"];
   trip: Trip;
   updatedArrivalTime?: Maybe<Scalars["String"]>;

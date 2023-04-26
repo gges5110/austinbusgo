@@ -1,13 +1,12 @@
 import { gql } from "@apollo/client";
 
 export const TRIPS_QUERY = gql`
-  query Trips {
-    trips {
+  query Trips($date: String!) {
+    trips(date: $date) {
       routeLongName
       routeId
       direction
       color
-      tripId
       running
       dirAbbr
     }

@@ -6,43 +6,54 @@ import {
   ListItemIcon,
   ListItemText,
   SwipeableDrawer,
+  useMediaQuery,
 } from "@material-ui/core";
 import PlaceIcon from "@material-ui/icons/Place";
 import { Alert } from "@material-ui/lab";
 import * as React from "react";
-import {
-  ArrivalTime,
-  RunningTrip,
-  Stop,
-} from "../../../interfaces/interface.d";
+import { ArrivalTime, Stop } from "../../../interfaces/interface.d";
 import { useArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 import { ArrivalTimeList } from "../../ArrivalTimeList";
+import { theme } from "../../../App";
+import { useAtomValue } from "jotai";
+import { selectedRouteAtom } from "../../../Atoms";
 
 interface StopDrawerProps {
   readonly stop: Stop;
-  readonly runningTrip: RunningTrip;
   onClose(): void;
   arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
 }
 
+export const getDate = () => {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    ("0" + (d.getMonth() + 1)).slice(-2),
+    ("0" + d.getDate()).slice(-2),
+  ].join("");
+};
+
 export const StopDrawer: React.FunctionComponent<StopDrawerProps> = ({
   onClose,
-  runningTrip,
   stop,
   arrivalTimeOnClick,
 }) => {
+  const runningTrip = useAtomValue(selectedRouteAtom);
   const { loading, data, error } = useArrivalTimesQuery({
     fetchPolicy: "network-only",
     variables: {
       stopId: String(stop.stopId),
-      direction: runningTrip.direction,
-      routeId: Number(runningTrip.routeId),
+      direction: runningTrip?.direction || false,
+      routeId: Number(runningTrip?.routeId),
+      date: getDate(),
     },
   });
+  const matches = useMediaQuery(theme.breakpoints.up("sm"));
 
   return (
     <SwipeableDrawer
-      anchor="bottom"
+      anchor={matches ? "right" : "bottom"}
+      hideBackdrop={matches}
       open={true}
       onClose={onClose}
       disableBackdropTransition={true}

@@ -3,6 +3,8 @@ DROP TABLE IF EXISTS routes;
 DROP TABLE IF EXISTS shapes;
 DROP TABLE IF EXISTS trips;
 DROP TABLE IF EXISTS stop_times;
+DROP TABLE IF EXISTS calendar;
+DROP TABLE IF EXISTS calendar_dates;
 
 CREATE TABLE stops
 (
@@ -67,8 +69,8 @@ CREATE TABLE trips
 CREATE TABLE stop_times
 (
   trip_id           text NOT NULL,
-  arrival_time      text NOT NULL,
-  departure_time    text NOT NULL,
+  arrival_time      text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
+  departure_time    text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
   stop_id           integer NOT NULL,
   stop_sequence     integer NOT NULL,
   stop_headsign     text NULL,
@@ -79,14 +81,39 @@ CREATE TABLE stop_times
   sup_est_delay     integer NULL
 );
 
+CREATE TABLE calendar
+(
+  service_id        text PRIMARY KEY,
+  monday            boolean NOT NULL,
+  tuesday           boolean NOT NULL,
+  wednesday         boolean NOT NULL,
+  thursday          boolean NOT NULL,
+  friday            boolean NOT NULL,
+  saturday          boolean NOT NULL,
+  sunday            boolean NOT NULL,
+  start_date        DATE NOT NULL,
+  end_date          DATE NOT NULL,
+  service_name      text NOT NULL
+);
+
+CREATE TABLE calendar_dates
+(
+  service_id        text NOT NULL,
+  date              DATE NOT NULL,
+  exception_type    integer NOT NULL
+);
+
 \copy stops from './capmetro/stops.txt' with csv header
 \copy routes from './capmetro/routes.txt' with csv header
 \copy shapes from './capmetro/shapes.txt' with csv header
 \copy trips from './capmetro/trips.txt' with csv header
 \copy stop_times from './capmetro/stop_times.txt' with csv header
+\copy calendar from './capmetro/calendar.txt' with csv header
+\copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 
 CREATE INDEX SHAPES_shape_id ON shapes(shape_id);
 CREATE INDEX TRIPS_trip_id_route_id ON trips(trip_id, route_id);
 CREATE INDEX TRIPS_trip_id_direction_id ON trips(trip_id, direction_id);
 CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
+CREATE INDEX CALENDAR_service_id ON calendar(service_id);
