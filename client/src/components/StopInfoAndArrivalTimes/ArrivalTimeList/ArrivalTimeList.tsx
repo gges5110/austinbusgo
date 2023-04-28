@@ -1,10 +1,9 @@
-import { List, ListItem, ListItemText } from "@material-ui/core";
-import { Skeleton } from "@material-ui/lab";
+import { List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
-import { ArrivalTime } from "../interfaces/interface.d";
+import { ArrivalTime } from "../../../interfaces/interface.d";
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
 
 dayjs.extend(relativeTime);

@@ -3,7 +3,7 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type StopsAndShapesQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
+  routeId: Types.Scalars["Int"];
   directionId: Types.Scalars["Boolean"];
   date: Types.Scalars["String"];
 }>;
@@ -29,14 +29,18 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
       >
     >;
   };
+  distinctTrips?: Types.Maybe<
+    Array<
+      { __typename?: "Trip" } & Pick<
+        Types.Trip,
+        "tripId" | "tripShortName" | "directionId"
+      >
+    >
+  >;
 };
 
 export const StopsAndShapesDocument = gql`
-  query StopsAndShapes(
-    $routeId: String!
-    $directionId: Boolean!
-    $date: String!
-  ) {
+  query StopsAndShapes($routeId: Int!, $directionId: Boolean!, $date: String!) {
     stopsAndShapes(routeId: $routeId, directionId: $directionId, date: $date) {
       stops {
         stopId
@@ -49,6 +53,11 @@ export const StopsAndShapesDocument = gql`
         shapePtLat
         shapePtLon
       }
+    }
+    distinctTrips(routeId: $routeId) {
+      tripId
+      tripShortName
+      directionId
     }
   }
 `;

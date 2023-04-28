@@ -28,7 +28,10 @@ class Resolver:
     def resolve_trip(self, query, info, trip_id) -> Trips:
         return self.gtfs_service.get_trip_by_id(trip_id)
 
-    def resolve_trips(self, query, info, date: str):
+    def resolve_distinct_trips(self, query, info, route_id: int) -> List[Trips]:
+        return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
+
+    def resolve_trips(self, query, info, date: str, route_id):
         # TODO only get trips that has upcoming arrival times.
         trips_with_distinct_headsign = self.gtfs_service.get_trips_for_date(date)
         unique_trip_headsigns = [trip.trip_headsign for trip in trips_with_distinct_headsign]
@@ -61,6 +64,9 @@ class Resolver:
 
     def resolve_route(self, query, info, route_id) -> Routes:
         return self.gtfs_service.get_route(route_id)
+
+    def resolve_routes(self, query, info) -> List[Routes]:
+        return self.gtfs_service.get_routes()
 
     def resolve_route_shapes(self, query, info, trip_id) -> List[Shapes]:
         return self.gtfs_service.get_shapes_by_trip_id(trip_id)

@@ -1,6 +1,6 @@
-import { IconButton, Tooltip } from "@material-ui/core";
-import { blue } from "@material-ui/core/colors";
-import LocationOnIcon from "@material-ui/icons/LocationOn";
+import { IconButton, Tooltip } from "@mui/material";
+import { blue } from "@mui/material/colors";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import React from "react";
 
 export interface StopPinProps {

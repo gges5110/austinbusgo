@@ -7,7 +7,7 @@ class Route(graphene.ObjectType):
     route_id = graphene.Int(description='Identifies a route.', required=True)
     agency_id = graphene.Int(description='Agency for the specified route.')
     route_short_name = graphene.String(description='Short name of a route.')
-    route_long_name = graphene.String(description='Full name of a route.')
+    route_long_name = graphene.String(description='Full name of a route.', required=True)
     route_color = graphene.String(description='Route color designation that matches public facing material.')
     route_desc = graphene.String(description='Description of a route that provides useful, quality information.')
 
@@ -219,15 +219,18 @@ class StopsAndShapes(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     resolver = Resolver()
-    stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.String(
+    stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.Int(
         required=True), direction_id=graphene.Boolean(required=True), date=graphene.String(required=True),
                                       resolver=resolver.resolve_stops_and_shapes)
     stop = graphene.Field(graphene.NonNull(Stop), stop_id=graphene.String(
         required=True), resolver=resolver.resolve_stop)
-    route = graphene.Field(graphene.NonNull(Route), route_id=graphene.String(
+    route = graphene.Field(graphene.NonNull(Route), route_id=graphene.Int(
         required=True), resolver=resolver.resolve_route)
+    routes = graphene.Field(graphene.List(graphene.NonNull(Route)), resolver=resolver.resolve_routes)
     trip = graphene.Field(graphene.NonNull(Trip), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_trip)
+    distinct_trips = graphene.Field(graphene.List(graphene.NonNull(Trip)), route_id=graphene.Int(required=True),
+                                    resolver=resolver.resolve_distinct_trips)
     trips = graphene.Field(graphene.List(graphene.NonNull(RunningTrip)), date=graphene.String(required=True),
                            resolver=resolver.resolve_trips)
     route_shapes = graphene.Field(graphene.List(graphene.NonNull(Shape)), trip_id=graphene.String(

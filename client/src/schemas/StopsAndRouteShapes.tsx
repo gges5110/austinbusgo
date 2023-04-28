@@ -1,11 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
-  query StopsAndShapes(
-    $routeId: String!
-    $directionId: Boolean!
-    $date: String!
-  ) {
+  query StopsAndShapes($routeId: Int!, $directionId: Boolean!, $date: String!) {
     stopsAndShapes(routeId: $routeId, directionId: $directionId, date: $date) {
       stops {
         stopId
@@ -18,6 +14,11 @@ export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
         shapePtLat
         shapePtLon
       }
+    }
+    distinctTrips(routeId: $routeId) {
+      tripId
+      tripShortName
+      directionId
     }
   }
 `;

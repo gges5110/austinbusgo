@@ -1,30 +1,11 @@
-import {
-  Button,
-  createStyles,
-  ListItem,
-  ListItemText,
-  Typography,
-} from "@material-ui/core";
-import { green, red } from "@material-ui/core/colors";
-import { makeStyles } from "@material-ui/core/styles";
-import AccessibleIcon from "@material-ui/icons/Accessible";
-import DirectionsBikeIcon from "@material-ui/icons/DirectionsBike";
-import DirectionsBusIcon from "@material-ui/icons/DirectionsBus";
+import { Button, ListItem, ListItemText, Typography } from "@mui/material";
+import AccessibleIcon from "@mui/icons-material/Accessible";
+import DirectionsBikeIcon from "@mui/icons-material/DirectionsBike";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
-import { ArrivalTime } from "../interfaces/interface.d";
+import { ArrivalTime } from "../../../interfaces/interface.d";
 import { Bullet } from "./Bullet";
-
-const useStyles = makeStyles(() =>
-  createStyles({
-    early: {
-      color: green[400],
-    },
-    late: {
-      color: red[400],
-    },
-  })
-);
 
 export interface ArrivalTimeListItemProps {
   readonly arrivalTime: ArrivalTime;
@@ -37,15 +18,13 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
 }) => {
   const { updatedArrivalTime, scheduledArrivalTime } = arrivalTime;
 
-  const classes = useStyles();
-
   const scheduledArrivalTimeInMoment: Dayjs = dayjs(
     scheduledArrivalTime,
     "HH:mm:ss"
   );
 
   let timeDiffString;
-  let textColor: string | undefined = undefined;
+  const textColor: string | undefined = undefined;
   let updatedArrivalTimeInMoment: Dayjs | undefined = undefined;
 
   if (updatedArrivalTime) {
@@ -65,10 +44,9 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
       true
     );
     timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
-    textColor = early ? classes.early : classes.late;
+
     if (isSame) {
       timeDiffString = "On time";
-      textColor = classes.early;
     }
   }
 

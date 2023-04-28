@@ -1,9 +1,8 @@
 import * as React from "react";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import Typography from "@material-ui/core/Typography";
-import { Skeleton } from "@material-ui/lab";
+import { styled } from "@mui/material/styles";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -12,6 +11,23 @@ import {
 } from "../../../interfaces/interface.d";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { TripQuery } from "../../../schemas/Trip.generated";
+import { Skeleton } from "@mui/material";
+
+const PREFIX = "VehiclePopupContent";
+
+const classes = {
+  root: `${PREFIX}-root`,
+  title: `${PREFIX}-title`,
+};
+
+const StyledCard = styled(Card)({
+  [`&.${classes.root}`]: {
+    minWidth: 275,
+  },
+  [`& .${classes.title}`]: {
+    fontSize: 14,
+  },
+});
 
 dayjs.extend(relativeTime);
 
@@ -30,15 +46,6 @@ const getFormattedVehicleStopStatus = (
   }
 };
 
-const useStyles = makeStyles({
-  root: {
-    minWidth: 275,
-  },
-  title: {
-    fontSize: 14,
-  },
-});
-
 export interface VehiclePopupContentProps {
   readonly vehiclePosition: VehiclePosition;
   readonly stop?: StopQuery;
@@ -54,10 +61,8 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
   trip,
   tripLoading,
 }) => {
-  const classes = useStyles();
-
   return (
-    <Card className={classes.root} variant="outlined">
+    <StyledCard className={classes.root} variant="outlined">
       <CardContent>
         <Typography className={classes.title} color="textSecondary">
           {vehiclePosition.trip?.routeId || ""}
@@ -76,6 +81,6 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
           Updated {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
         </Typography>
       </CardContent>
-    </Card>
+    </StyledCard>
   );
 };

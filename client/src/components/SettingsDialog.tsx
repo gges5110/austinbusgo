@@ -1,36 +1,24 @@
-import { createStyles, Dialog, Switch, Theme } from "@material-ui/core";
-import AppBar from "@material-ui/core/AppBar";
-import Fade from "@material-ui/core/Fade";
-import IconButton from "@material-ui/core/IconButton";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import ListItemText from "@material-ui/core/ListItemText";
-import ListSubheader from "@material-ui/core/ListSubheader";
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import AutorenewIcon from "@material-ui/icons/Autorenew";
-import CodeIcon from "@material-ui/icons/Code";
-import Toolbar from "@material-ui/core/Toolbar";
-import { TransitionProps } from "@material-ui/core/transitions";
-import CloseIcon from "@material-ui/icons/Close";
+import { Dialog, Fade, ListItemButton, Switch } from "@mui/material";
+import AppBar from "@mui/material/AppBar";
+import IconButton from "@mui/material/IconButton";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
+import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import CodeIcon from "@mui/icons-material/Code";
+import Toolbar from "@mui/material/Toolbar";
+import { TransitionProps } from "@mui/material/transitions";
+import CloseIcon from "@mui/icons-material/Close";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    appBar: {
-      position: "relative",
-    },
-    title: {
-      marginLeft: theme.spacing(2),
-      flex: 1,
-    },
-  })
-);
-
 const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children?: React.ReactElement },
+  props: TransitionProps & {
+    children: React.ReactElement;
+  },
   ref: React.Ref<unknown>
 ) {
   return <Fade ref={ref} {...props} />;
@@ -51,8 +39,6 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
   setAutoPolling,
   reloadVehiclePositions,
 }) => {
-  const classes = useStyles();
-
   const { enqueueSnackbar } = useSnackbar();
 
   const handleClose = () => {
@@ -75,7 +61,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
       onClose={handleClose}
       TransitionComponent={Transition}
     >
-      <AppBar className={classes.appBar}>
+      <AppBar sx={{ position: "relative" }}>
         <Toolbar>
           <IconButton
             edge="start"
@@ -104,12 +90,12 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
             />
           </ListItemSecondaryAction>
         </ListItem>
-        <ListItem button={true} onClick={reloadVehiclePositions}>
+        <ListItemButton onClick={reloadVehiclePositions}>
           <ListItemIcon>
             <AutorenewIcon />
           </ListItemIcon>
           <ListItemText primary="Reload Vehicles" />
-        </ListItem>
+        </ListItemButton>
 
         <ListSubheader>About Austin Bus Go</ListSubheader>
         <ListItem

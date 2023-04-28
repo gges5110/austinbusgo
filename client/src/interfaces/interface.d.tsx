@@ -16,7 +16,9 @@ export interface Query {
   stopsAndShapes: StopsAndShapes;
   stop: Stop;
   route: Route;
+  routes?: Maybe<Array<Route>>;
   trip: Trip;
+  distinctTrips?: Maybe<Array<Trip>>;
   trips?: Maybe<Array<RunningTrip>>;
   routeShapes?: Maybe<Array<Shape>>;
   vehiclePositions?: Maybe<Array<VehiclePosition>>;
@@ -25,7 +27,7 @@ export interface Query {
 }
 
 export interface QueryStopsAndShapesArgs {
-  routeId: Scalars["String"];
+  routeId: Scalars["Int"];
   directionId: Scalars["Boolean"];
   date: Scalars["String"];
 }
@@ -35,11 +37,15 @@ export interface QueryStopArgs {
 }
 
 export interface QueryRouteArgs {
-  routeId: Scalars["String"];
+  routeId: Scalars["Int"];
 }
 
 export interface QueryTripArgs {
   tripId: Scalars["String"];
+}
+
+export interface QueryDistinctTripsArgs {
+  routeId: Scalars["Int"];
 }
 
 export interface QueryTripsArgs {
@@ -101,7 +107,7 @@ export interface Route {
   /** Short name of a route. */
   routeShortName?: Maybe<Scalars["String"]>;
   /** Full name of a route. */
-  routeLongName?: Maybe<Scalars["String"]>;
+  routeLongName: Scalars["String"];
   /** Route color designation that matches public facing material. */
   routeColor?: Maybe<Scalars["String"]>;
   /** Description of a route that provides useful, quality information. */

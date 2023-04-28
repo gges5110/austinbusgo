@@ -1,7 +1,6 @@
-import { createStyles, Theme } from "@material-ui/core";
-import Fab from "@material-ui/core/Fab";
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import MyLocationIcon from "@material-ui/icons/MyLocation";
+import { useTheme } from "@mui/material";
+import Fab from "@mui/material/Fab";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as GeoJSON from "geojson";
 import { useSnackbar } from "notistack";
 import * as React from "react";
@@ -12,29 +11,10 @@ import ReactMapGL, {
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
-import {
-  ArrivalTime,
-  RunningTrip,
-  Stop,
-  VehiclePosition,
-} from "../../interfaces/interface.d";
+import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
 import { ShapeData } from "../../interfaces/Shape";
-import { SearchPanel } from "../SearchPanel";
-import { StopDrawer } from "./Stop/StopDrawer";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
-import "./Map.css";
-import { useNavigate } from "react-router-dom";
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    fab: {
-      position: "absolute",
-      bottom: theme.spacing(4),
-      right: theme.spacing(2),
-    },
-  })
-);
 
 type ViewState = {
   /** Longitude at map center */
@@ -46,13 +26,12 @@ type ViewState = {
 };
 
 export interface MapProps {
-  readonly trip?: RunningTrip;
+  readonly route?: Route;
+  readonly stop?: Stop;
   readonly routeShapes: ShapeData[][];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
-  readonly runningTrips: RunningTrip[];
-  readonly loading?: boolean;
-  setTrip(trip?: RunningTrip): void;
+  setSelectedStopId(stopId: number): void;
 }
 
 const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
@@ -74,17 +53,14 @@ const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
 export const Map: React.FunctionComponent<MapProps> = ({
-  trip,
+  route,
   stops,
+  stop,
+  setSelectedStopId,
   routeShapes,
   vehiclePositions,
-  runningTrips,
-  loading,
-  setTrip,
 }) => {
-  const classes = useStyles();
   const { mapId: map } = useMap();
-  const navigate = useNavigate();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
@@ -117,12 +93,19 @@ export const Map: React.FunctionComponent<MapProps> = ({
     zoom: 11.5,
   });
 
-  useEffect(() => {
+  const flyToStop = (stop: Stop) => {
+    map?.flyTo({
+      center: [
+        stop.stopLon || viewPort.longitude,
+        stop.stopLat || viewPort.latitude,
+      ],
+      zoom: vehicleZoomLevel,
+    });
+  };
+
+  const flyToRoute = () => {
     if (routeShapes.length !== 0) {
       const flatShapes = routeShapes.flat();
-
-      setRouteShape(routeShapes);
-
       map?.fitBounds(
         [
           [
@@ -134,41 +117,39 @@ export const Map: React.FunctionComponent<MapProps> = ({
             Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
         ],
-        { padding: 80 }
+        {
+          padding: {
+            top: 80,
+            left: 640,
+            right: 80,
+            bottom: 80,
+          },
+        }
       );
+    }
+  };
+
+  useEffect(() => {
+    if (stop) {
+      flyToStop(stop);
+    } else {
+      flyToRoute();
+    }
+  }, [stop]);
+
+  useEffect(() => {
+    if (routeShapes.length !== 0) {
+      flyToRoute();
+
+      setRouteShape(routeShapes);
     } else {
       setRouteShape([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(routeShapes)]);
 
-  const [selectedStop, setSelectedStop] = useState<Stop | undefined>(undefined);
-
-  const setStop = (stop: Stop | undefined) => {
-    if (stop) {
-      navigate(`/stop/${stop.stopId}`);
-    }
-    setSelectedStop(stop);
-  };
-
-  const closeStopDrawer = (): void => {
-    setStop(undefined);
-  };
-
   const onViewportChange = (event: ViewStateChangeEvent) => {
     setViewPort(event.viewState);
-  };
-
-  const arrivalTimeOnClick = (arrivalTime: ArrivalTime) => {
-    map?.flyTo({
-      center: [
-        arrivalTime.vehicle?.position?.longitude || viewPort.longitude,
-        arrivalTime.vehicle?.position?.latitude || viewPort.latitude,
-      ],
-      zoom: vehicleZoomLevel,
-    });
-
-    setStop(undefined);
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
@@ -204,7 +185,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
       console.log("Geolocation is not supported for this Browser/OS.");
     }
   };
-
+  const theme = useTheme();
   return (
     <>
       <ReactMapGL
@@ -216,24 +197,22 @@ export const Map: React.FunctionComponent<MapProps> = ({
         <Fab
           color="primary"
           aria-label="add"
-          className={classes.fab}
+          sx={{
+            position: "absolute",
+            bottom: theme.spacing(4),
+            right: theme.spacing(2),
+          }}
           onClick={useUserLocation}
         >
           <MyLocationIcon />
         </Fab>
         <StopMarkers
           stops={stops}
-          setSelectedStop={setStop}
-          direction={trip?.direction || false}
+          setSelectedStop={(stop) => {
+            setSelectedStopId(stop.stopId);
+          }}
+          direction={false}
         />
-
-        {trip && selectedStop && (
-          <StopDrawer
-            stop={selectedStop}
-            arrivalTimeOnClick={arrivalTimeOnClick}
-            onClose={closeStopDrawer}
-          />
-        )}
 
         {
           // Render Bus Vehicle Marker
@@ -251,22 +230,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
             id="point"
             type="line"
             paint={{
-              "line-color": `#${trip?.color || "a5a5a5"}`,
+              "line-color": `#${route?.routeColor || "a5a5a5"}`,
               "line-width": 5,
             }}
           />
         </Source>
       </ReactMapGL>
-      <div className="map-overlay-container">
-        <div className="map-overlay">
-          <SearchPanel
-            runningTrips={runningTrips}
-            setTrip={setTrip}
-            trip={trip}
-            loading={loading}
-          />
-        </div>
-      </div>
     </>
   );
 };

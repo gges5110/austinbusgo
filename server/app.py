@@ -14,8 +14,9 @@ static_folder_root = os.path.join(os.path.dirname(
 
 def create_app():
     austin_bus_go_app = Flask(__name__, static_folder=static_folder_root)
-    if austin_bus_go_app.debug:
-        austin_bus_go_app.wsgi_app = ProfilerMiddleware(austin_bus_go_app.wsgi_app)
+
+    # if austin_bus_go_app.debug:
+    #     austin_bus_go_app.wsgi_app = ProfilerMiddleware(austin_bus_go_app.wsgi_app)
 
     @austin_bus_go_app.route("/", defaults={'path': ''})
     @austin_bus_go_app.route('/<path:path>')

@@ -82,7 +82,7 @@ export const arrivalTimesMock: ArrivalTime[] = [
       },
       position: {
         latitude: 30.270435333251953,
-        longitude: -97.69692993164062,
+        longitude: -97.6969299316406,
         __typename: "Position",
       },
       stopId: "634",

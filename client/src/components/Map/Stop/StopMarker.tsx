@@ -6,7 +6,7 @@ import { StopPin } from "./StopPin";
 interface StopMarkerProps {
   readonly stop: Stop;
   readonly direction: boolean;
-  fetchArrivalTime?(stop: Stop): void;
+  setSelectedStop(stop: Stop): void;
 }
 
 export class StopMarker extends React.PureComponent<StopMarkerProps> {
@@ -24,8 +24,8 @@ export class StopMarker extends React.PureComponent<StopMarkerProps> {
   }
 
   private onClick = (): void => {
-    if (this.props.fetchArrivalTime) {
-      this.props.fetchArrivalTime(this.props.stop);
+    if (this.props.setSelectedStop) {
+      this.props.setSelectedStop(this.props.stop);
     }
   };
 }

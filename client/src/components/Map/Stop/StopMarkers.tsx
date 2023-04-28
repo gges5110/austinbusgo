@@ -16,7 +16,7 @@ export class StopMarkers extends PureComponent<StopMarkersProps> {
         key={stop.stopId}
         direction={direction}
         stop={stop}
-        fetchArrivalTime={setSelectedStop}
+        setSelectedStop={setSelectedStop}
       />
     ));
   }

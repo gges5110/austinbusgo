@@ -3,7 +3,7 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type RouteQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
+  routeId: Types.Scalars["Int"];
 }>;
 
 export type RouteQuery = { __typename?: "Query" } & {
@@ -14,7 +14,7 @@ export type RouteQuery = { __typename?: "Query" } & {
 };
 
 export const RouteDocument = gql`
-  query Route($routeId: String!) {
+  query Route($routeId: Int!) {
     route(routeId: $routeId) {
       routeLongName
       routeId

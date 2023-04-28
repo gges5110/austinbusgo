@@ -14,6 +14,10 @@ class GTFSService:
     def get_route(route_id: str) -> Routes:
         return Routes.get_by_id(route_id)
 
+    @staticmethod
+    def get_routes() -> List[Routes]:
+        return Routes.select(Routes)
+
     # Stops
     @staticmethod
     def get_stop(stop_id: int) -> Stops:
@@ -21,23 +25,26 @@ class GTFSService:
 
     @staticmethod
     def get_stops_by_route_id(route_id: str, direction_id: bool, date: str) -> List[Stops]:
-        return Stops.select(Stops, Trips, StopTimes) \
-            .distinct(Stops.stop_id) \
+        return Stops.select(Stops, Trips, StopTimes.stop_sequence) \
+            .distinct(StopTimes.stop_sequence, Stops.stop_id) \
             .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id).alias('stoptime')) \
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias('trip')) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
             .where((Trips.route_id == route_id)
                    & (Trips.direction_id == direction_id)
                    & (CalendarDates.date == date)
-                   )
+                   ) \
+            .order_by(StopTimes.stop_sequence, Stops.stop_id)
 
     # Trips
     @staticmethod
-    def get_distinct_trip_headsigns(trip_ids: List[str]) -> List[Trips]:
+    def get_trips_by_distinct_short_name(route_id: int) -> List[Trips]:
         return Trips \
-            .select(Trips.trip_headsign, Trips.trip_id) \
-            .distinct(Trips.trip_headsign) \
-            .where(Trips.trip_id.in_(trip_ids))
+            .select(Trips) \
+            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
+            .distinct(Trips.direction_id, Trips.trip_short_name) \
+            .where((Trips.route_id == route_id) & (CalendarDates.date == "20230427")) \
+            .order_by(Trips.direction_id, Trips.trip_short_name)
 
     @staticmethod
     def get_all_trips() -> List[Trips]:
