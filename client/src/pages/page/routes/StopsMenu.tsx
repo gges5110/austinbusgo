@@ -7,11 +7,13 @@ import {
 } from "../../../App";
 import * as React from "react";
 import { StopsSearchPanel } from "../../../components/StopsSearchPanel";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 
 export const StopsMenu = () => {
   const navigate = useNavigate();
   const stopsData = useDataFromLoader(stopsLoader);
   const stopLoaderData = useDataFromRouteLoader("stop", stopLoader);
+  const { viewStatePathname } = useViewStatePathname();
 
   return (
     <>
@@ -19,10 +21,9 @@ export const StopsMenu = () => {
         stops={stopsData?.stopsByName?.data.stopsByName || []}
         setStop={(stop) => {
           if (stop) {
-            navigate(`/@30.3116707,-97.7385137,12.89z/stops/${stop.stopId}`);
+            navigate(`${viewStatePathname}/stops/${stop.stopId}`);
           }
         }}
-        searchString={stopsData.q || ""}
         stop={stopLoaderData?.data.stop}
       />
       <Outlet />

@@ -27,6 +27,12 @@ declare module "@mui/material/Button" {
     neutral: true;
   }
 }
+
+declare module "@mui/material/SvgIcon" {
+  interface SvgIconPropsColorOverrides {
+    neutral: true;
+  }
+}
 export const theme = createTheme({
   palette: {
     primary: {

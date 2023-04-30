@@ -7,6 +7,7 @@ import {
 } from "../../../App";
 import { SearchPanel } from "../../../components/SearchPanel";
 import * as React from "react";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 
 export const RoutesMenu = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export const RoutesMenu = () => {
     data: { routes },
   } = useDataFromLoader(routesLoader);
   const routeLoaderData = useDataFromRouteLoader("route", routeLoader);
+  const { viewStatePathname } = useViewStatePathname();
 
   return (
     <>
@@ -22,7 +24,7 @@ export const RoutesMenu = () => {
         setRoute={(route) => {
           if (route) {
             navigate(
-              `/@30.3116707,-97.7385137,12.89z/routes/${route?.routeId}/direction/0`
+              `${viewStatePathname}/routes/${route?.routeId}/direction/0`
             );
           }
         }}

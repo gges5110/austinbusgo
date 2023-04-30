@@ -5,7 +5,10 @@ import * as React from "react";
 import { toBoolean } from "../../../Page";
 import { StopInfoAndArrivalTimes } from "../../../../../components/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 
-export const StopMenu = () => {
+interface StopMenuProps {
+  hideBackButton?: boolean;
+}
+export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const navigate = useNavigate();
   const { routeId, directionId } = useParams();
   const {
@@ -30,9 +33,10 @@ export const StopMenu = () => {
             stop={stop}
             routeId={Number(routeId) || 318}
             direction={toBoolean(directionId)}
-            clearSelectedStopId={() => {
+            onBack={() => {
               navigate(-1);
             }}
+            hideBackButton={hideBackButton}
           />
         </div>
       </Slide>

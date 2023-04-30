@@ -5,11 +5,14 @@ import { DirectionToggle } from "../../../../components/DirectionToggle/Directio
 import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
 import * as React from "react";
 import { toBoolean } from "../../Page";
+import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
   const { stops, distinctTrips } = useDataFromLoader(routeLoader);
   const { routeId, directionId } = useParams();
+
+  const { viewStatePathname } = useViewStatePathname();
 
   return (
     <Box
@@ -37,7 +40,7 @@ export const RouteMenu = () => {
               direction={toBoolean(directionId)}
               setDirection={(direction) => {
                 navigate(
-                  `/@30.3116707,-97.7385137,12.89z/routes/${routeId}/direction/${
+                  `${viewStatePathname}/routes/${routeId}/direction/${
                     direction ? 1 : 0
                   }`,
                   {
@@ -54,7 +57,7 @@ export const RouteMenu = () => {
               stops={stops}
               setSelectedStopId={(stopId) => {
                 navigate(
-                  `/@30.3116707,-97.7385137,12.89z/routes/${routeId}/direction/${directionId}/stops/${stopId}`
+                  `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
                 );
               }}
             />

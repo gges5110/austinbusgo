@@ -22,6 +22,11 @@ import match from "autosuggest-highlight/match";
 import { SearchModeToggle } from "./SearchModeToggle/SearchModeToggle";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useStopsByNameLazyQuery } from "../schemas/StopsByName.generated";
+import { useViewStatePathname } from "../hooks/UseViewStatePathname";
+import { useAtom } from "jotai";
+import { recentSearchStopsAtom } from "../Atoms";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 
 const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   <Popper
@@ -34,18 +39,19 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   />
 );
 
+interface StopOption extends Stop {
+  type: "recent" | "search";
+}
+
 export interface SearchPanelProps {
   stops: Stop[];
   stop?: Stop;
   setStop(stop?: Stop): void;
-  searchString: string;
 }
 
 export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
-  // stops,
   stop,
   setStop,
-  searchString,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,6 +60,11 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(
     location.pathname === "/stops"
   );
+  useEffect(() => {
+    if (stop) {
+      setInputString(getOptionLabel(stop));
+    }
+  }, [stop]);
 
   useEffect(() => {
     if (location.pathname === "/stops") {
@@ -69,6 +80,14 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     if (newValue != null) {
       if (stop?.stopId !== newValue.stopId) {
         setStop(newValue);
+        const newValueInRecentSearchStops = recentSearchStops.some((stop) => {
+          return stop.stopId === newValue.stopId;
+        });
+        if (!newValueInRecentSearchStops) {
+          setRecentSearchStops((prev) => {
+            return [...prev, newValue];
+          });
+        }
       }
     } else {
       setStop(undefined);
@@ -89,17 +108,21 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   );
 
   const [stops, setStops] = useState<Stop[]>([]);
+  const { viewStatePathname } = useViewStatePathname();
 
   const clearSelection = () => {
     if (location.pathname !== "/stops") {
-      navigate("/@30.3116707,-97.7385137,12.89z/stops");
+      navigate(`${viewStatePathname}/stops`);
       setSearchPanelOpen(true);
     }
     setInputString("");
     setStops([]);
   };
 
+  // TODO: fix onCompleted isn't fired when fetching from cached values
+  // https://github.com/apollographql/react-apollo/issues/2177
   const [getStopsByName, { loading }] = useStopsByNameLazyQuery({
+    notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
       if (data.stopsByName) {
         setStops(data.stopsByName);
@@ -140,6 +163,14 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     }
   };
 
+  const getOptionLabel = (stop: Stop) => {
+    return `${stop.stopId} ${stop.stopName}`;
+  };
+
+  const [recentSearchStops, setRecentSearchStops] = useAtom(
+    recentSearchStopsAtom
+  );
+
   return (
     <Paper
       sx={{
@@ -152,7 +183,16 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       }}
     >
       <Autocomplete
-        options={stops || []}
+        options={
+          [
+            ...stops.map((stop) => {
+              return { ...stop, type: "search" } as StopOption;
+            }),
+            ...recentSearchStops.map((stop) => {
+              return { ...stop, type: "recent" } as StopOption;
+            }),
+          ] || []
+        }
         sx={{ width: "300px" }}
         value={stop || null}
         inputValue={inputString}
@@ -186,29 +226,37 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         isOptionEqualToValue={(option, value) => {
           return option.stopId === value.stopId;
         }}
-        getOptionLabel={(option) => `${option.stopId} ${option.stopName}`}
+        getOptionLabel={getOptionLabel}
         ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props, option, { inputValue }) => {
+          const stopOption = option as StopOption;
           const routeLongNameMatches = match(
-            option.stopName || "",
+            stopOption.stopName || "",
             inputValue,
             {
               insideWords: true,
             }
           );
           const routeLongNameParts = parse(
-            option.stopName || "",
+            stopOption.stopName || "",
             routeLongNameMatches
           );
 
-          const routeIdMatches = match(String(option.stopId), inputValue, {
+          const routeIdMatches = match(String(stopOption.stopId), inputValue, {
             insideWords: true,
           });
-          const routeIdParts = parse(String(option.stopId), routeIdMatches);
+          const routeIdParts = parse(String(stopOption.stopId), routeIdMatches);
 
           return (
             <li {...props}>
               <Box sx={{ display: "flex", gap: 1 }}>
+                <Box>
+                  {stopOption.type === "recent" ? (
+                    <AccessTimeOutlinedIcon color={"neutral"} />
+                  ) : (
+                    <PlaceOutlinedIcon color={"neutral"} />
+                  )}
+                </Box>
                 <Box
                   component="span"
                   sx={{
@@ -295,7 +343,9 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       {inputString === "" ? (
         <SearchModeToggle />
       ) : loading ? (
-        <CircularProgress />
+        <Box sx={{ p: 0.5, px: 1 }}>
+          <CircularProgress size={24} />
+        </Box>
       ) : (
         <Tooltip title="Clear search" placement="bottom-end">
           <IconButton

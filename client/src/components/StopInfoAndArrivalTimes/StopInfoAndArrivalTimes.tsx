@@ -10,17 +10,18 @@ import { useState } from "react";
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
 
-  clearSelectedStopId(): void;
-
   direction: boolean;
   routeId: number;
+  hideBackButton?: boolean;
+  onBack(): void;
 }
 
 export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = ({
   stop,
   routeId,
   direction,
-  clearSelectedStopId,
+  hideBackButton,
+  onBack,
 }) => {
   const { data: arrivalTimesData, loading } = useArrivalTimesQuery({
     fetchPolicy: "network-only",
@@ -67,11 +68,13 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
             gap: 1,
           }}
         >
-          <Tooltip title={"Back"}>
-            <IconButton onClick={clearSelectedStopId}>
-              <ArrowBackIcon />
-            </IconButton>
-          </Tooltip>
+          {!hideBackButton && (
+            <Tooltip title={"Back"}>
+              <IconButton onClick={onBack}>
+                <ArrowBackIcon />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Box component={"div"}>
             <Typography variant="body1" gutterBottom>

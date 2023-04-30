@@ -167,7 +167,7 @@ export const App: React.FunctionComponent = () => {
           <Route
             path={"/:viewState/stops/:stopId"}
             id={"stop"}
-            element={<StopMenu />}
+            element={<StopMenu hideBackButton={true} />}
             loader={stopLoader}
           ></Route>
         </Route>

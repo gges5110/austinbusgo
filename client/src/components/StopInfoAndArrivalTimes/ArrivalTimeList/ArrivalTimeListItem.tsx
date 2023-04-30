@@ -119,10 +119,9 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
         className={updatedArrivalTime ? textColor : undefined}
         component={"span"}
       >
-        In{" "}
         {updatedArrivalTimeInMoment
-          ? updatedArrivalTimeInMoment.fromNow(true)
-          : scheduledArrivalTimeInMoment.fromNow(true)}
+          ? updatedArrivalTimeInMoment.fromNow()
+          : scheduledArrivalTimeInMoment.fromNow()}
       </Typography>
     </ListItem>
   );

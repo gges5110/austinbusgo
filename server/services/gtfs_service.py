@@ -115,5 +115,5 @@ class GTFSService:
             .where((Trips.direction_id == direction)
                    & (StopTimes.stop_id == stop_id)
                    & (CalendarDates.date == date)
-                   & (StopTimes.arrival_time > (datetime.now() + timedelta(hours=-1)).strftime("%H:%M:%S"))
+                   & (StopTimes.arrival_time > (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S"))
                    )

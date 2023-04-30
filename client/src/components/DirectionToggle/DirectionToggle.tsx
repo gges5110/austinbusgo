@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { StopsAndShapesQuery } from "../../schemas/StopsAndRouteShapes.generated";
 import { toBoolean } from "../../pages/page/Page";
+import { useEffect, useState } from "react";
 
 interface DirectionToggleProps {
   direction: boolean;
@@ -25,8 +26,14 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = (event.target as HTMLInputElement).value;
     event.currentTarget.blur();
+    setValue(toBoolean(value));
     setDirection(toBoolean(value));
   };
+
+  const [value, setValue] = useState<boolean>(false);
+  useEffect(() => {
+    setValue(direction);
+  }, [direction]);
 
   return (
     <FormControl>
@@ -34,7 +41,7 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
       <RadioGroup
         aria-labelledby="direction-radio-buttons-group"
         name="direction-radio-buttons-group"
-        value={direction}
+        value={value}
         onChange={handleChange}
       >
         {distinctTrips?.map((distinctTrip, index) => {

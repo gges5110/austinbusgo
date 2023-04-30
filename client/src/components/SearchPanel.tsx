@@ -13,13 +13,14 @@ import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
 import ClearIcon from "@mui/icons-material/Clear";
 import * as React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Route } from "../interfaces/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
 import { SearchModeToggle } from "./SearchModeToggle/SearchModeToggle";
-import { useLocation, useNavigate, useNavigation } from "react-router-dom";
+import { useNavigate, useNavigation } from "react-router-dom";
+import { useViewStatePathname } from "../hooks/UseViewStatePathname";
 
 const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   <Popper
@@ -45,13 +46,16 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 }) => {
   const navigation = useNavigation();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const routeLoading = navigation.location !== undefined;
 
-  const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(
-    location.pathname === "" || location.pathname === "/"
-  );
+  const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (route) {
+      setInputString(getOptionLabel(route));
+    }
+  }, [route]);
 
   const searchRouteOnChange = (
     event: React.SyntheticEvent,
@@ -79,9 +83,30 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     []
   );
 
+  const handleInputValueChange = (
+    event: React.SyntheticEvent,
+    value: string
+  ) => {
+    if (!event) {
+      return;
+    }
+
+    if (event.type === "blur") {
+      return;
+    }
+    setInputString(value);
+  };
+
+  const { viewStatePathname } = useViewStatePathname();
   const clearSelection = () => {
-    navigate("/@30.3116707,-97.7385137,12.89z");
+    navigate(viewStatePathname);
+    setInputString("");
     setSearchPanelOpen(true);
+  };
+
+  const [inputString, setInputString] = useState<string>("");
+  const getOptionLabel = (route: Route) => {
+    return `${route.routeId} ${route.routeLongName}`;
   };
 
   return (
@@ -115,6 +140,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             },
           },
         }}
+        inputValue={inputString}
+        onInputChange={handleInputValueChange}
         PopperComponent={StyledPopper}
         autoHighlight={true}
         openOnFocus={true}
@@ -123,7 +150,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         isOptionEqualToValue={(option, value) => {
           return option.routeId === value.routeId;
         }}
-        getOptionLabel={(option) => `${option.routeId} ${option.routeLongName}`}
+        getOptionLabel={getOptionLabel}
         ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props, option, { inputValue }) => {
           const routeLongNameMatches = match(option.routeLongName, inputValue, {
@@ -224,10 +251,13 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         </Tooltip>
       </Box>
       <Divider style={{ height: 28 }} orientation="vertical" />
-      {route === undefined ? (
+
+      {inputString === "" ? (
         <SearchModeToggle />
       ) : routeLoading ? (
-        <CircularProgress />
+        <Box sx={{ p: 0.5, px: 1 }}>
+          <CircularProgress size={24} />
+        </Box>
       ) : (
         <Tooltip title="Clear search" placement="bottom-end">
           <IconButton

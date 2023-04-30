@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useVehiclePositionsLazyQuery } from "../../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "../../components/LoadingSnackbarMessage";
 import { SettingsDialog } from "../../components/SettingsDialog";
-import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
@@ -14,6 +14,7 @@ import {
 } from "../../Atoms";
 import { MapWrapper } from "../../components/Map/MapWrapper";
 import { routeLoader, stopLoader, useDataFromRouteLoader } from "../../App";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 
 const defaultAutoPollingInterval = 15000;
 
@@ -26,9 +27,7 @@ export const Page: React.FunctionComponent = () => {
 
   const { routeId, directionId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
-  const viewStatePathname = location.pathname.match(re)?.[1] || "";
+  const { viewStatePathname } = useViewStatePathname();
 
   const setStop = (stopId: number | undefined) => {
     if (stopId !== undefined && location.pathname.includes("/routes")) {

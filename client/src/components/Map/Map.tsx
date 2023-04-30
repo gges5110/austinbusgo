@@ -15,7 +15,8 @@ import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
 import { ShapeData } from "../../interfaces/Shape";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useNavigation } from "react-router-dom";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 
 type ViewState = {
   /** Longitude at map center */
@@ -24,10 +25,6 @@ type ViewState = {
   latitude: number;
   /** Map zoom level */
   zoom: number;
-};
-
-type CustomViewStateChangeEvent = ViewStateChangeEvent & {
-  flyTo?: boolean;
 };
 
 export interface MapProps {
@@ -91,21 +88,16 @@ export const Map: React.FunctionComponent<MapProps> = ({
   };
 
   const { enqueueSnackbar } = useSnackbar();
+  const navigation = useNavigation();
   const location = useLocation();
   const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
 
-  const viewStatePathname = location.pathname.match(re)?.[1] || "";
-  const latlonzoomre = /^\/@([-0-9.]+),([-0-9.]+),([0-9.]+)z$/;
-  const viewStateMatch = viewStatePathname.match(latlonzoomre);
+  const { latitude, longitude, zoom } = useViewStatePathname();
 
   const [viewPort, setViewPort] = useState<ViewState>({
-    latitude: viewStateMatch?.[1]
-      ? Number(viewStateMatch[1])
-      : defaultCenter[1],
-    longitude: viewStateMatch?.[2]
-      ? Number(viewStateMatch[2])
-      : defaultCenter[0],
-    zoom: viewStateMatch?.[3] ? Number(viewStateMatch[3]) : 11.5,
+    latitude: latitude || defaultCenter[1],
+    longitude: longitude || defaultCenter[0],
+    zoom: zoom || 11.5,
   });
 
   const flyToStop = (stop: Stop) => {
@@ -177,16 +169,22 @@ export const Map: React.FunctionComponent<MapProps> = ({
       if (restOfPathname !== "" || restOfPathname !== undefined) {
         path += restOfPathname;
       }
-      navigate(path, { replace: true });
+
+      // TODO: prevent quick navigation from infinite loop
+      delayedQuery.clear();
+      if (navigation.location === undefined) {
+        navigate(path, { replace: true });
+      }
     }, 500),
-    [location.pathname]
+    [location.pathname, navigation.location]
   );
 
-  const onViewportChange = (event: CustomViewStateChangeEvent) => {
-    if (!(event.flyTo as boolean)) {
-      delayedQuery(event.viewState);
-    }
+  const onViewportChange = (event: ViewStateChangeEvent) => {
     setViewPort(event.viewState);
+  };
+
+  const onMoveEnd = (event: ViewStateChangeEvent) => {
+    delayedQuery(event.viewState);
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
@@ -238,6 +236,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         {...viewPort}
         mapStyle={"mapbox://styles/mapbox/streets-v9"}
         onMove={onViewportChange}
+        onMoveEnd={onMoveEnd}
       >
         <Fab
           color="primary"
