@@ -12,6 +12,7 @@ dayjs.extend(customParseFormat);
 export interface ArrivalTimeListProps {
   readonly arrivalTimes: ArrivalTime[];
   readonly loading: boolean;
+  selectedRouteIds: string[];
   arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
 }
 
@@ -19,6 +20,7 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
   arrivalTimes,
   loading,
   arrivalTimeOnClick,
+  selectedRouteIds,
 }) => (
   <List>
     {loading ? (
@@ -30,13 +32,19 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
         <ListItemText primary={"No more running buses"} />
       </ListItem>
     ) : (
-      arrivalTimes.map((arrivalTime, index) => (
-        <ArrivalTimeListItem
-          key={index}
-          arrivalTime={arrivalTime}
-          arrivalTimeOnClick={arrivalTimeOnClick}
-        />
-      ))
+      arrivalTimes.map((arrivalTime, index) => {
+        return (
+          <>
+            {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
+              <ArrivalTimeListItem
+                key={index}
+                arrivalTime={arrivalTime}
+                arrivalTimeOnClick={arrivalTimeOnClick}
+              />
+            )}
+          </>
+        );
+      })
     )}
   </List>
 );

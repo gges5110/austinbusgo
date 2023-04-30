@@ -1,14 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { routeLoader, useDataFromLoader } from "../../../../App";
-import {
-  Box,
-  Divider,
-  IconButton,
-  Slide,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Slide } from "@mui/material";
 import { DirectionToggle } from "../../../../components/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
 import * as React from "react";
@@ -16,22 +8,18 @@ import { toBoolean } from "../../Page";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
-  const loaderData = useDataFromLoader(routeLoader);
-  const selectedRoute = loaderData?.route;
-  const stops = loaderData?.stops;
-  const distinctTrips = loaderData.distinctTrips;
+  const { stops, distinctTrips } = useDataFromLoader(routeLoader);
   const { routeId, directionId } = useParams();
 
   return (
     <Box
       sx={{
         backgroundColor: "#FFF",
-        overflowY: "auto",
         maxHeight: "80vh",
         width: "408px",
         m: 4,
         mt: 2,
-        overflowX: "hidden",
+        overflow: "hidden",
         borderRadius: 2.5,
       }}
     >
@@ -39,59 +27,34 @@ export const RouteMenu = () => {
         <div>
           <Box
             sx={{
-              position: "sticky",
-              top: 0,
-              pt: 1,
-              pl: 2,
-              zIndex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
-              boxShadow: 3,
-              backdropFilter: "blur(5px)",
+              py: 1,
+              pl: 4,
+              boxShadow: 2,
               width: "100%",
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                alignItems: "flex-start",
+            <DirectionToggle
+              direction={toBoolean(directionId)}
+              setDirection={(direction) => {
+                navigate(
+                  `/@30.3116707,-97.7385137,12.89z/routes/${routeId}/direction/${
+                    direction ? 1 : 0
+                  }`,
+                  {
+                    replace: true,
+                  }
+                );
               }}
-            >
-              <Tooltip
-                title={"Back"}
-                onClick={() => {
-                  navigate(-1);
-                }}
-              >
-                <IconButton>
-                  <ArrowBackIcon />
-                </IconButton>
-              </Tooltip>
-              <Box>
-                <Typography variant="body1" gutterBottom>
-                  {selectedRoute.routeId} {selectedRoute.routeLongName}
-                </Typography>
-                <DirectionToggle
-                  direction={toBoolean(directionId)}
-                  setDirection={(direction) => {
-                    navigate(
-                      `/routes/${routeId}/direction/${direction ? 1 : 0}`,
-                      { replace: true }
-                    );
-                  }}
-                  distinctTrips={distinctTrips}
-                />
-              </Box>
-            </Box>
+              distinctTrips={distinctTrips}
+            />
           </Box>
 
-          <Divider />
-          <Box sx={{ px: 0 }}>
+          <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
             <StopsTimeline
               stops={stops}
               setSelectedStopId={(stopId) => {
                 navigate(
-                  `/routes/${routeId}/direction/${directionId}/stop/${stopId}`
+                  `/@30.3116707,-97.7385137,12.89z/routes/${routeId}/direction/${directionId}/stops/${stopId}`
                 );
               }}
             />

@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useArrivalTimesQuery } from "../../schemas/ArrivalTimes.generated";
 import { getDate } from "../../pages/page/Page";
-import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
 import { StopQuery } from "../../schemas/Stop.generated";
+import { useState } from "react";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -29,19 +30,32 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
       routeId,
       date: getDate(),
     },
+    onCompleted: (data) => {
+      const routeIds = data.arrivalTimes?.map(
+        (arrivalTime) => arrivalTime.trip.routeId
+      );
+      const uniqueRouteIds =
+        routeIds?.filter((item, pos, arr) => arr.indexOf(item) == pos) || [];
+      setSelectedRouteIds(uniqueRouteIds);
+    },
   });
+
+  const arrivalTimes = arrivalTimesData?.arrivalTimes || [];
+
+  const routeIds = arrivalTimes.map((arrivalTime) => arrivalTime.trip.routeId);
+  const uniqueRouteIds =
+    routeIds?.filter((item, pos, arr) => arr.indexOf(item) == pos) || [];
+  const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>(
+    uniqueRouteIds
+  );
+
   return (
     <div>
       <Box
         sx={{
-          position: "sticky",
-          top: 0,
-          pt: 1,
+          py: 1,
           pl: 2,
-          zIndex: 1,
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          boxShadow: 3,
-          backdropFilter: "blur(5px)",
+          boxShadow: 2,
           width: "100%",
         }}
       >
@@ -69,16 +83,51 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
           </Box>
         </Box>
       </Box>
+      {!loading && arrivalTimes.length > 0 && (
+        <Box sx={{ overflowX: "auto", py: 1, px: 1, boxShadow: 1 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {uniqueRouteIds.map((uniqueRouteId) => (
+              <Button
+                key={uniqueRouteId}
+                size="small"
+                variant={
+                  selectedRouteIds.includes(uniqueRouteId)
+                    ? "contained"
+                    : "outlined"
+                }
+                color={"primary"}
+                sx={{ my: 1 }}
+                onClick={() => {
+                  setSelectedRouteIds((prevState) => {
+                    if (prevState.includes(uniqueRouteId)) {
+                      const newArr = [...prevState];
+                      newArr.splice(newArr.indexOf(uniqueRouteId), 1);
+                      return newArr;
+                    } else {
+                      const newArr = [...prevState];
+                      newArr.push(uniqueRouteId);
+                      return newArr;
+                    }
+                  });
+                }}
+              >
+                {uniqueRouteId}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      )}
 
-      <Divider />
-
-      <ArrivalTimeList
-        arrivalTimes={arrivalTimesData?.arrivalTimes || []}
-        arrivalTimeOnClick={() => {
-          console.log("clicked");
-        }}
-        loading={loading}
-      />
+      <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
+        <ArrivalTimeList
+          arrivalTimes={arrivalTimes}
+          arrivalTimeOnClick={() => {
+            // TODO: fly to vehicle
+          }}
+          loading={loading}
+          selectedRouteIds={selectedRouteIds}
+        />
+      </Box>
     </div>
   );
 };

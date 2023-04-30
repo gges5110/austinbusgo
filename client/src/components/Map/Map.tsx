@@ -1,10 +1,10 @@
-import { useTheme } from "@mui/material";
+import { debounce, useTheme } from "@mui/material";
 import Fab from "@mui/material/Fab";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as GeoJSON from "geojson";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactMapGL, {
   Layer,
   Source,
@@ -15,6 +15,7 @@ import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
 import { ShapeData } from "../../interfaces/Shape";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type ViewState = {
   /** Longitude at map center */
@@ -23,6 +24,10 @@ type ViewState = {
   latitude: number;
   /** Map zoom level */
   zoom: number;
+};
+
+type CustomViewStateChangeEvent = ViewStateChangeEvent & {
+  flyTo?: boolean;
 };
 
 export interface MapProps {
@@ -48,7 +53,7 @@ const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
   ],
 };
 
-const vehicleZoomLevel = 15;
+const vehicleZoomLevel = 16;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
@@ -86,21 +91,34 @@ export const Map: React.FunctionComponent<MapProps> = ({
   };
 
   const { enqueueSnackbar } = useSnackbar();
+  const location = useLocation();
+  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
+
+  const viewStatePathname = location.pathname.match(re)?.[1] || "";
+  const latlonzoomre = /^\/@([-0-9.]+),([-0-9.]+),([0-9.]+)z$/;
+  const viewStateMatch = viewStatePathname.match(latlonzoomre);
 
   const [viewPort, setViewPort] = useState<ViewState>({
-    latitude: defaultCenter[1],
-    longitude: defaultCenter[0],
-    zoom: 11.5,
+    latitude: viewStateMatch?.[1]
+      ? Number(viewStateMatch[1])
+      : defaultCenter[1],
+    longitude: viewStateMatch?.[2]
+      ? Number(viewStateMatch[2])
+      : defaultCenter[0],
+    zoom: viewStateMatch?.[3] ? Number(viewStateMatch[3]) : 11.5,
   });
 
   const flyToStop = (stop: Stop) => {
-    map?.flyTo({
-      center: [
-        stop.stopLon || viewPort.longitude,
-        stop.stopLat || viewPort.latitude,
-      ],
-      zoom: vehicleZoomLevel,
-    });
+    map?.flyTo(
+      {
+        center: [
+          stop.stopLon || viewPort.longitude,
+          stop.stopLat || viewPort.latitude,
+        ],
+        zoom: vehicleZoomLevel,
+      },
+      { flyTo: true }
+    );
   };
 
   const flyToRoute = () => {
@@ -119,15 +137,17 @@ export const Map: React.FunctionComponent<MapProps> = ({
         ],
         {
           padding: {
-            top: 80,
-            left: 640,
-            right: 80,
-            bottom: 80,
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: 10,
           },
-        }
+        },
+        { flyTo: true }
       );
     }
   };
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (stop) {
@@ -148,7 +168,24 @@ export const Map: React.FunctionComponent<MapProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(routeShapes)]);
 
-  const onViewportChange = (event: ViewStateChangeEvent) => {
+  const delayedQuery = useCallback(
+    debounce((viewState: ViewState) => {
+      const restOfPathname = location.pathname.match(re)?.[2];
+      let path = `/@${parseFloat(viewState.latitude.toFixed(7))},${parseFloat(
+        viewState.longitude.toFixed(7)
+      )},${parseFloat(viewState.zoom.toFixed(2))}z`;
+      if (restOfPathname !== "" || restOfPathname !== undefined) {
+        path += restOfPathname;
+      }
+      navigate(path, { replace: true });
+    }, 500),
+    [location.pathname]
+  );
+
+  const onViewportChange = (event: CustomViewStateChangeEvent) => {
+    if (!(event.flyTo as boolean)) {
+      delayedQuery(event.viewState);
+    }
     setViewPort(event.viewState);
   };
 
@@ -164,7 +201,15 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   const useUserLocation = () => {
     if (navigator.geolocation) {
+      enqueueSnackbar("Retrieving current location...", {
+        variant: "info",
+      });
+
       const geoSuccess: PositionCallback = (position) => {
+        enqueueSnackbar("Location obtained", {
+          variant: "success",
+        });
+
         map?.flyTo({
           center: [
             position.coords.longitude || viewPort.longitude,

@@ -5,13 +5,14 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { SnackbarProvider } from "notistack";
 import {
   createBrowserRouter,
+  createRoutesFromElements,
   LoaderFunction,
+  Route,
   RouterProvider,
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
 import { theme } from "./Theming";
-import { RoutesDocument, RoutesQuery } from "./schemas/Routes.generated";
 import {
   RouteDocument,
   RouteQuery,
@@ -28,9 +29,17 @@ import {
   StopQuery,
   StopQueryVariables,
 } from "./schemas/Stop.generated";
-import { RoutesMenu } from "./pages/page/routes/RoutesMenu";
 import { RouteMenu } from "./pages/page/routes/route/RouteMenu";
 import { StopMenu } from "./pages/page/routes/route/stop/StopMenu";
+
+import { RoutesMenu } from "./pages/page/routes/RoutesMenu";
+import { RoutesDocument, RoutesQuery } from "./schemas/Routes.generated";
+import {
+  StopsByNameDocument,
+  StopsByNameQuery,
+  StopsByNameQueryVariables,
+} from "./schemas/StopsByName.generated";
+import { StopsMenu } from "./pages/page/routes/StopsMenu";
 
 const client = new ApolloClient({
   uri:
@@ -50,6 +59,29 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn
 ): Awaited<ReturnType<typeof loaderFn>> | undefined => {
   return useRouteLoaderData(routeId) as Awaited<ReturnType<typeof loaderFn>>;
+};
+
+export const stopsLoader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+
+  let stopsByName = undefined;
+  if (q) {
+    stopsByName = await client.query<
+      StopsByNameQuery,
+      StopsByNameQueryVariables
+    >({
+      query: StopsByNameDocument,
+      variables: {
+        stopName: q,
+      },
+    });
+  }
+
+  return {
+    stopsByName,
+    q,
+  };
 };
 
 export const routesLoader = async () => {
@@ -79,7 +111,7 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
     },
   });
 
-  const { data: StopsAndShapesData } = await client.query<
+  const { data: stopsAndShapesData } = await client.query<
     StopsAndShapesQuery,
     StopsAndShapesQueryVariables
   >({
@@ -90,49 +122,58 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
       date: getDate(),
     },
   });
-
   return {
     route: routeData.route,
-    shapes: StopsAndShapesData.stopsAndShapes.shapes,
-    stops: StopsAndShapesData.stopsAndShapes.stops,
-    distinctTrips: StopsAndShapesData.distinctTrips,
+    shapes: stopsAndShapesData.stopsAndShapes.shapes,
+    stops: stopsAndShapesData.stopsAndShapes.stops,
+    distinctTrips: stopsAndShapesData.distinctTrips,
   };
 };
 
 export const App: React.FunctionComponent = () => {
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Page />,
-
-      children: [
-        {
-          element: <RoutesMenu />,
-          index: true,
-          loader: routesLoader,
-        },
-        {
-          path: "/routes/:routeId/",
-          id: "route",
-          loader: routeLoader,
-          children: [
-            {
-              path: "/routes/:routeId/direction/:directionId",
-              index: true,
-              element: <RouteMenu />,
-              loader: routeLoader,
-            },
-            {
-              path: "/routes/:routeId/direction/:directionId/stop/:stopId",
-              id: "stop",
-              element: <StopMenu />,
-              loader: stopLoader,
-            },
-          ],
-        },
-      ],
-    },
-  ]);
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path={"/"} element={<Page />}>
+        <Route
+          path={"/:viewState?"}
+          element={<RoutesMenu />}
+          loader={routesLoader}
+        >
+          <Route
+            path={"/:viewState/routes/:routeId/direction/:directionId"}
+            id={"route"}
+            loader={routeLoader}
+          >
+            <Route
+              index={true}
+              element={<RouteMenu />}
+              loader={routeLoader}
+            ></Route>
+            <Route
+              path={
+                "/:viewState/routes/:routeId/direction/:directionId/stops/:stopId"
+              }
+              id={"stopOnRoute"}
+              element={<StopMenu />}
+              loader={stopLoader}
+            ></Route>
+          </Route>
+        </Route>
+        <Route
+          path={"/:viewState/stops"}
+          loader={stopsLoader}
+          element={<StopsMenu />}
+        >
+          <Route
+            path={"/:viewState/stops/:stopId"}
+            id={"stop"}
+            element={<StopMenu />}
+            loader={stopLoader}
+          ></Route>
+        </Route>
+      </Route>
+    )
+  );
 
   return (
     <ApolloProvider client={client}>

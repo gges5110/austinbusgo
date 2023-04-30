@@ -31,26 +31,6 @@ class Resolver:
     def resolve_distinct_trips(self, query, info, route_id: int) -> List[Trips]:
         return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
 
-    def resolve_trips(self, query, info, date: str, route_id):
-        # TODO only get trips that has upcoming arrival times.
-        trips_with_distinct_headsign = self.gtfs_service.get_trips_for_date(date)
-        unique_trip_headsigns = [trip.trip_headsign for trip in trips_with_distinct_headsign]
-
-        trip_info_list = [{
-            'trip_id': trip.trip_id,
-            'route_id': trip.route_id,
-            'direction': trip.direction_id,
-            'route_long_name': trip.routes.route_long_name,
-            'color': trip.routes.route_color,
-            'trip_headsign': trip.trip_headsign,
-            'running': trip.trip_headsign in unique_trip_headsigns,
-            'dir_abbr': trip.dir_abbr,
-        } for trip in self.gtfs_service.get_all_trips()]
-
-        # Alphabetically sort trips by trip_headsign
-        trip_info_list.sort(key=lambda trip_info: (-trip_info['running'], trip_info['trip_headsign']))
-        return trip_info_list
-
     def resolve_stops_and_shapes(self, query, info, route_id: str, direction_id: bool, date: str):
         stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
         stops_and_shapes = {'stops': [stop for stop in stops], 'shapes': []}
@@ -61,6 +41,12 @@ class Resolver:
 
     def resolve_stop(self, query, info, stop_id) -> Stops:
         return self.gtfs_service.get_stop(stop_id)
+
+    def resolve_near_by_stops(self, query, info, lat: float, lon: float, distance: float = 0.01):
+        return self.gtfs_service.get_near_by_stops(lat, lon, distance) or []
+
+    def resolve_stops_by_name(self, query, info, stop_name):
+        return self.gtfs_service.get_stops_by_name(stop_name) or []
 
     def resolve_route(self, query, info, route_id) -> Routes:
         return self.gtfs_service.get_route(route_id)
@@ -92,7 +78,7 @@ class Resolver:
         """
         # get trip ids from gtfs
         stop_times = self.gtfs_service.get_stop_time_by_route_id(route_id, direction, stop_id, date)
-        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions(
+        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions1(
             str(route_id), direction)
         vehicle_by_trip_id: Dict[str, VehiclePosition] = {
             self.gtfs_rt_service.get_trip_id(v): v for v in vehicles
@@ -127,33 +113,6 @@ class Resolver:
             timezone('US/Central')).strftime('%H:%M:%S')
 
         return updated_arrival_time
-
-    # def _remove_past_vehicles(self, vehicle_by_trip_id: Dict[str, VehiclePosition], stop_id: str) -> None:
-    #     past_vehicle_trip_ids: List[str] = []
-    #     for (trip_id, vehicle_position) in vehicle_by_trip_id.items():
-    #         try:
-    #             stop_time = self.gtfs_service.get_stop_time(trip_id, stop_id)
-    #         except StopTimes.DoesNotExist:
-    #             continue
-    #         current_stop_sequence = vehicle_by_trip_id[trip_id].current_stop_sequence
-    #         if stop_time.stop_sequence < current_stop_sequence:
-    #             past_vehicle_trip_ids.append(trip_id)
-    #
-    #     for trip_id in past_vehicle_trip_ids:
-    #         del vehicle_by_trip_id[trip_id]
-
-    # def _populate_scheduled_arrival_time(self, arrival_time_by_trip_id: Dict[str, ArrivalTimeInfo], stop_id, trip_id) \
-    #         -> None:
-    #     if trip_id not in arrival_time_by_trip_id:
-    #         arrival_time_by_trip_id[trip_id] = ArrivalTimeInfo()
-    #     arrival_time = arrival_time_by_trip_id[trip_id]
-    #     try:
-    #         stop_time = self.gtfs_service.get_stop_time(trip_id, stop_id)
-    #     except StopTimes.DoesNotExist:
-    #         arrival_time.scheduled_arrival_time = None
-    #         return
-    #
-    #     arrival_time.scheduled_arrival_time = stop_time.arrival_time
 
     # For debugging purposes
     def resolve_vehicle_positions_debug(self, query, info) -> List[VehiclePosition]:

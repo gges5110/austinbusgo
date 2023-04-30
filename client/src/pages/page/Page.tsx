@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useVehiclePositionsLazyQuery } from "../../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "../../components/LoadingSnackbarMessage";
 import { SettingsDialog } from "../../components/SettingsDialog";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
@@ -26,10 +26,15 @@ export const Page: React.FunctionComponent = () => {
 
   const { routeId, directionId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
+  const viewStatePathname = location.pathname.match(re)?.[1] || "";
 
   const setStop = (stopId: number | undefined) => {
-    if (stopId !== undefined) {
-      navigate(`/routes/${routeId}/direction/${directionId}/stop/${stopId}`);
+    if (stopId !== undefined && location.pathname.includes("/routes")) {
+      navigate(
+        `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
+      );
     }
   };
   const [
@@ -80,12 +85,16 @@ export const Page: React.FunctionComponent = () => {
   };
 
   const routeLoaderData = useDataFromRouteLoader("route", routeLoader);
+  const stopOnRouteLoaderData = useDataFromRouteLoader(
+    "stopOnRoute",
+    stopLoader
+  );
   const stopLoaderData = useDataFromRouteLoader("stop", stopLoader);
 
   setSelectedRoute(routeLoaderData?.route);
-  const stops = routeLoaderData?.stops || [];
+  const stop = stopOnRouteLoaderData?.data.stop || stopLoaderData?.data.stop;
+  const stops = routeLoaderData?.stops || (stop ? [stop] : []);
   const routeShapes = routeLoaderData?.shapes || [];
-  const stop = stopLoaderData?.data.stop;
   const vehiclePositions =
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
 

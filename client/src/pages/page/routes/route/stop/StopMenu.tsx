@@ -16,12 +16,11 @@ export const StopMenu = () => {
     <Box
       sx={{
         backgroundColor: "#FFF",
-        overflowY: "auto",
         maxHeight: "80vh",
         width: "408px",
         m: 4,
         mt: 2,
-        overflowX: "hidden",
+        overflow: "hidden",
         borderRadius: 2.5,
       }}
     >

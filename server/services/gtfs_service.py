@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 from typing import List
 
+from playhouse.postgres_ext import Match
+
 from server.models.gtfs_models import Routes, Trips, Stops, Shapes, StopTimes, CalendarDates
 
 
@@ -22,6 +24,22 @@ class GTFSService:
     @staticmethod
     def get_stop(stop_id: int) -> Stops:
         return Stops.get_by_id(stop_id)
+
+    @staticmethod
+    def get_stops_by_name(stop_name: str) -> List[Stops]:
+        stop_name.replace('/', '')
+
+        return Stops.select(Stops).where(
+            Match(Stops.at_street, stop_name) |
+            Match(Stops.on_street, stop_name) |
+            Match(Stops.stop_name, stop_name) |
+            Match(Stops.stop_code.cast("text"), stop_name)
+        )
+
+    @staticmethod
+    def get_near_by_stops(lat: float, lon: float, distance: float = 1.0):
+        return Stops.select(Stops).where((lat + distance >= Stops.stop_lat) & (Stops.stop_lat >= lat - distance) &
+                                         (lon + distance >= Stops.stop_lon) & (Stops.stop_lon >= lon - distance))
 
     @staticmethod
     def get_stops_by_route_id(route_id: str, direction_id: bool, date: str) -> List[Stops]:
@@ -94,8 +112,7 @@ class GTFSService:
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias('trip')) \
             .join(Stops, on=(Stops.stop_id == StopTimes.stop_id)) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
-            .where((Trips.route_id == route_id)
-                   & (Trips.direction_id == direction)
+            .where((Trips.direction_id == direction)
                    & (StopTimes.stop_id == stop_id)
                    & (CalendarDates.date == date)
                    & (StopTimes.arrival_time > (datetime.now() + timedelta(hours=-1)).strftime("%H:%M:%S"))

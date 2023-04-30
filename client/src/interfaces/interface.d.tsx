@@ -15,11 +15,12 @@ export interface Query {
   __typename?: "Query";
   stopsAndShapes: StopsAndShapes;
   stop: Stop;
+  stopsByName?: Maybe<Array<Stop>>;
+  nearByStops: Array<Stop>;
   route: Route;
   routes?: Maybe<Array<Route>>;
   trip: Trip;
   distinctTrips?: Maybe<Array<Trip>>;
-  trips?: Maybe<Array<RunningTrip>>;
   routeShapes?: Maybe<Array<Shape>>;
   vehiclePositions?: Maybe<Array<VehiclePosition>>;
   arrivalTimes?: Maybe<Array<ArrivalTime>>;
@@ -36,6 +37,15 @@ export interface QueryStopArgs {
   stopId: Scalars["String"];
 }
 
+export interface QueryStopsByNameArgs {
+  stopName: Scalars["String"];
+}
+
+export interface QueryNearByStopsArgs {
+  lat: Scalars["Float"];
+  lon: Scalars["Float"];
+}
+
 export interface QueryRouteArgs {
   routeId: Scalars["Int"];
 }
@@ -46,10 +56,6 @@ export interface QueryTripArgs {
 
 export interface QueryDistinctTripsArgs {
   routeId: Scalars["Int"];
-}
-
-export interface QueryTripsArgs {
-  date: Scalars["String"];
 }
 
 export interface QueryRouteShapesArgs {
@@ -136,23 +142,6 @@ export interface Trip {
   wheelchairAccessible?: Maybe<Scalars["Int"]>;
   /** Indicates whether bikes are allowed. */
   bikesAllowed?: Maybe<Scalars["Int"]>;
-  /** Direction */
-  dirAbbr?: Maybe<Scalars["String"]>;
-}
-
-/** Information about a running trip  */
-export interface RunningTrip {
-  __typename?: "RunningTrip";
-  /** Long name of the route */
-  routeLongName: Scalars["String"];
-  /** Route Id */
-  routeId: Scalars["String"];
-  /** Trip direction */
-  direction: Scalars["Boolean"];
-  /** Route Color */
-  color?: Maybe<Scalars["String"]>;
-  /** Trip is currently running */
-  running?: Maybe<Scalars["Boolean"]>;
   /** Direction */
   dirAbbr?: Maybe<Scalars["String"]>;
 }

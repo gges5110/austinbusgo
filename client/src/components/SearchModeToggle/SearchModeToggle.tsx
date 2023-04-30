@@ -1,9 +1,8 @@
 import * as React from "react";
-import { useAtom } from "jotai/index";
-import { searchModeAtom } from "../../Atoms";
 import { IconButton } from "@mui/material";
 import RouteIcon from "@mui/icons-material/Route";
 import PlaceIcon from "@mui/icons-material/Place";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export enum SearchMode {
   Route,
@@ -11,7 +10,15 @@ export enum SearchMode {
 }
 
 export const SearchModeToggle: React.FunctionComponent = () => {
-  const [searchMode, setSearchMode] = useAtom(searchModeAtom);
+  const location = useLocation();
+  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
+  const viewStatePathname = location.pathname.match(re)?.[1] || "";
+  const searchMode =
+    location.pathname.match(re)?.[2] === ""
+      ? SearchMode.Route
+      : SearchMode.Stop;
+
+  const navigate = useNavigate();
   return (
     <IconButton
       sx={{
@@ -23,9 +30,9 @@ export const SearchModeToggle: React.FunctionComponent = () => {
       color={"neutral"}
       onClick={() => {
         if (searchMode == SearchMode.Route) {
-          setSearchMode(SearchMode.Stop);
+          navigate(`${viewStatePathname}/stops`);
         } else {
-          setSearchMode(SearchMode.Route);
+          navigate(viewStatePathname);
         }
       }}
     >

@@ -33,10 +33,7 @@ export const StopsTimeline: React.FC<StopsTimelineProps> = ({
       {stops?.map((stop, index) => {
         return (
           <TimelineItem key={stop.stopCode}>
-            <TimelineOppositeContent
-              color="text.secondary"
-              sx={{ width: "20px" }}
-            >
+            <TimelineOppositeContent color="text.secondary">
               {stop.stopId}
             </TimelineOppositeContent>
             <TimelineSeparator>
@@ -47,7 +44,7 @@ export const StopsTimeline: React.FC<StopsTimelineProps> = ({
               <Button
                 color={"neutral"}
                 size={"small"}
-                // sx={{ whiteSpace: "nowrap" }}
+                variant="outlined"
                 onClick={() => {
                   setSelectedStopId(stop.stopId);
                 }}
