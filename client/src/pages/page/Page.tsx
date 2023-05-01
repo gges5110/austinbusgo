@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useVehiclePositionsLazyQuery } from "../../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "../../components/LoadingSnackbarMessage";
 import { SettingsDialog } from "../../components/SettingsDialog";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useMatches, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
@@ -13,8 +13,9 @@ import {
   settingsDialogOpenAtom,
 } from "../../Atoms";
 import { MapWrapper } from "../../components/Map/MapWrapper";
-import { routeLoader, stopLoader, useDataFromRouteLoader } from "../../App";
+import { HandleType, routeLoader, stopLoader } from "../../App";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { Params } from "@remix-run/router";
 
 const defaultAutoPollingInterval = 15000;
 
@@ -83,17 +84,46 @@ export const Page: React.FunctionComponent = () => {
     }
   };
 
-  const routeLoaderData = useDataFromRouteLoader("route", routeLoader);
-  const stopOnRouteLoaderData = useDataFromRouteLoader(
-    "stopOnRoute",
-    stopLoader
-  );
-  const stopLoaderData = useDataFromRouteLoader("stop", stopLoader);
+  const matches = useMatches() as {
+    id: string;
+    pathname: string;
+    params: Params;
+    data: unknown;
+    handle: HandleType;
+  }[];
+  const stop = matches
+    .filter((match) => Boolean(match.handle?.stop))
+    .map((match) =>
+      match.handle?.stop?.(match.data as Awaited<ReturnType<typeof stopLoader>>)
+    )[0];
 
-  setSelectedRoute(routeLoaderData?.route);
-  const stop = stopOnRouteLoaderData?.data.stop || stopLoaderData?.data.stop;
-  const stops = routeLoaderData?.stops || (stop ? [stop] : []);
-  const routeShapes = routeLoaderData?.shapes || [];
+  const route = matches
+    .filter((match) => Boolean(match.handle?.route))
+    .map((match) =>
+      match.handle?.route?.(
+        match.data as Awaited<ReturnType<typeof routeLoader>>
+      )
+    )[0];
+
+  const stops =
+    matches
+      .filter((match) => Boolean(match.handle?.stops))
+      .map((match) =>
+        match.handle?.stops?.(
+          match.data as Awaited<ReturnType<typeof routeLoader>>
+        )
+      )[0] || (stop ? [stop] : []);
+
+  const routeShapes =
+    matches
+      .filter((match) => Boolean(match.handle?.shapes))
+      .map((match) =>
+        match.handle?.shapes?.(
+          match.data as Awaited<ReturnType<typeof routeLoader>>
+        )
+      )[0] || [];
+
+  setSelectedRoute(route);
   const vehiclePositions =
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
 

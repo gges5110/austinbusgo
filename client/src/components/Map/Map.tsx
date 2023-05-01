@@ -33,6 +33,7 @@ export interface MapProps {
   readonly routeShapes: ShapeData[][];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
+
   setSelectedStopId(stopId: number): void;
 }
 
@@ -63,6 +64,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
   vehiclePositions,
 }) => {
   const { mapId: map } = useMap();
+  const navigate = useNavigate();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
@@ -92,7 +94,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const location = useLocation();
   const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
 
-  const { latitude, longitude, zoom } = useViewStatePathname();
+  const {
+    latitude,
+    longitude,
+    zoom,
+    viewStatePathname,
+  } = useViewStatePathname();
 
   const [viewPort, setViewPort] = useState<ViewState>({
     latitude: latitude || defaultCenter[1],
@@ -100,17 +107,33 @@ export const Map: React.FunctionComponent<MapProps> = ({
     zoom: zoom || 11.5,
   });
 
+  useEffect(() => {
+    if (viewStatePathname === "") {
+      const path = `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
+        viewPort.longitude.toFixed(7)
+      )},${parseFloat(viewPort.zoom.toFixed(2))}z`;
+
+      // hack to prevent navigation from failing on component mount
+      setTimeout(() => {
+        navigate(path);
+      });
+    }
+  }, []);
+
   const flyToStop = (stop: Stop) => {
-    map?.flyTo(
-      {
-        center: [
-          stop.stopLon || viewPort.longitude,
-          stop.stopLat || viewPort.latitude,
-        ],
-        zoom: vehicleZoomLevel,
+    map?.flyTo({
+      center: [
+        stop.stopLon || viewPort.longitude,
+        stop.stopLat || viewPort.latitude,
+      ],
+      zoom: vehicleZoomLevel,
+      padding: {
+        top: 0,
+        left: 400,
+        right: 0,
+        bottom: 0,
       },
-      { flyTo: true }
-    );
+    });
   };
 
   const flyToRoute = () => {
@@ -134,12 +157,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
             right: 10,
             bottom: 10,
           },
-        },
-        { flyTo: true }
+        }
       );
     }
   };
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (stop) {
@@ -166,7 +187,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
       let path = `/@${parseFloat(viewState.latitude.toFixed(7))},${parseFloat(
         viewState.longitude.toFixed(7)
       )},${parseFloat(viewState.zoom.toFixed(2))}z`;
-      if (restOfPathname !== "" || restOfPathname !== undefined) {
+      if (restOfPathname !== "" && restOfPathname !== undefined) {
         path += restOfPathname;
       }
 
@@ -175,7 +196,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
       if (navigation.location === undefined) {
         navigate(path, { replace: true });
       }
-    }, 500),
+    }, 50),
     [location.pathname, navigation.location]
   );
 

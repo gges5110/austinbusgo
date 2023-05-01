@@ -7,8 +7,8 @@ export type TripQueryVariables = Types.Exact<{
 }>;
 
 export type TripQuery = { __typename?: "Query" } & {
-  trip: { __typename?: "Trip" } & Pick<
-    Types.Trip,
+  trip: { __typename?: "TripWithRoute" } & Pick<
+    Types.TripWithRoute,
     | "routeId"
     | "serviceId"
     | "tripId"
@@ -19,7 +19,7 @@ export type TripQuery = { __typename?: "Query" } & {
     | "shapeId"
     | "wheelchairAccessible"
     | "bikesAllowed"
-  >;
+  > & { route: { __typename?: "Route" } & Pick<Types.Route, "routeLongName"> };
 };
 
 export const TripDocument = gql`
@@ -35,6 +35,9 @@ export const TripDocument = gql`
       shapeId
       wheelchairAccessible
       bikesAllowed
+      route {
+        routeLongName
+      }
     }
   }
 `;

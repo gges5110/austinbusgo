@@ -186,7 +186,24 @@ class Trip(graphene.ObjectType):
                                            "trip.")
     wheelchair_accessible = graphene.Int(description="Indicates wheelchair accessibility.")
     bikes_allowed = graphene.Int(description="Indicates whether bikes are allowed.")
-    dir_abbr = graphene.String(description="Direction")
+
+
+class TripWithRoute(graphene.ObjectType):
+    route_id = graphene.String(description="Identifies a route.", required=True)
+    service_id = graphene.String(description="Identifies a set of dates when service is available for one or more "
+                                             "routes.", required=True)
+    trip_id = graphene.String(description="Identifies a trip.", required=True)
+    trip_headsign = graphene.String(description="Text that appears on signage identifying the trip's destination to "
+                                                "riders.")
+    trip_short_name = graphene.String(description="Public facing text used to identify the trip to riders, "
+                                                  "for instance, to identify train numbers for commuter rail trips.")
+    direction_id = graphene.Boolean(description="Indicates the direction of travel for a trip.")
+    block_id = graphene.String(description="Identifies the block to which the trip belongs.")
+    shape_id = graphene.String(description="Identifies a geospatial shape describing the vehicle travel path for a "
+                                           "trip.")
+    wheelchair_accessible = graphene.Int(description="Indicates wheelchair accessibility.")
+    bikes_allowed = graphene.Int(description="Indicates whether bikes are allowed.")
+    route = graphene.Field(graphene.NonNull(Route))
 
 
 class ArrivalTime(graphene.ObjectType):
@@ -199,6 +216,21 @@ class ArrivalTime(graphene.ObjectType):
 class StopsAndShapes(graphene.ObjectType):
     stops = graphene.List(graphene.NonNull(Stop))
     shapes = graphene.List(graphene.NonNull((graphene.List(graphene.NonNull(Shape)))))
+
+
+class StopTimes(graphene.ObjectType):
+    trip_id = graphene.String(required=True)
+    arrival_time = graphene.String(required=True)
+    departure_time = graphene.String(required=True)
+    stop_id = graphene.Int(required=True)
+    stop_sequence = graphene.Int(required=True)
+    stop_headsign = graphene.String()
+    pickup_type = graphene.Int()
+    drop_off_type = graphene.Int()
+    shape_dist_traveled = graphene.Float()
+    timepoint = graphene.Int()
+    sup_est_delay = graphene.String()
+    stop = graphene.Field(graphene.NonNull(Stop))
 
 
 class Query(graphene.ObjectType):
@@ -216,7 +248,7 @@ class Query(graphene.ObjectType):
     route = graphene.Field(graphene.NonNull(Route), route_id=graphene.Int(
         required=True), resolver=resolver.resolve_route)
     routes = graphene.Field(graphene.List(graphene.NonNull(Route)), resolver=resolver.resolve_routes)
-    trip = graphene.Field(graphene.NonNull(Trip), trip_id=graphene.String(
+    trip = graphene.Field(graphene.NonNull(TripWithRoute), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_trip)
     distinct_trips = graphene.Field(graphene.List(graphene.NonNull(Trip)), route_id=graphene.Int(required=True),
                                     resolver=resolver.resolve_distinct_trips)
@@ -229,6 +261,8 @@ class Query(graphene.ObjectType):
         required=True), direction=graphene.Boolean(required=True), stop_id=graphene.String(required=True),
                                    date=graphene.String(required=True),
                                    resolver=resolver.resolve_arrival_times)
+    stop_times = graphene.Field(graphene.List(graphene.NonNull(StopTimes)), trip_id=graphene.String(required=True),
+                                resolver=resolver.resolve_stop_times)
 
     # For debugging purposes
     real_time_vehicle_positions = graphene.Field(graphene.List(

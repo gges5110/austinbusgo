@@ -6,6 +6,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
 import { StopQuery } from "../../schemas/Stop.generated";
 import { useState } from "react";
+import { ArrivalTime } from "../../interfaces/interface.d";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -14,6 +15,8 @@ interface StopInfoAndArrivalTimesProps {
   routeId: number;
   hideBackButton?: boolean;
   onBack(): void;
+
+  arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
 }
 
 export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = ({
@@ -22,6 +25,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
   direction,
   hideBackButton,
   onBack,
+  arrivalTimeOnClick,
 }) => {
   const { data: arrivalTimesData, loading } = useArrivalTimesQuery({
     fetchPolicy: "network-only",
@@ -124,9 +128,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
       <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
         <ArrivalTimeList
           arrivalTimes={arrivalTimes}
-          arrivalTimeOnClick={() => {
-            // TODO: fly to vehicle
-          }}
+          arrivalTimeOnClick={arrivalTimeOnClick}
           loading={loading}
           selectedRouteIds={selectedRouteIds}
         />

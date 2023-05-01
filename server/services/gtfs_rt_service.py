@@ -25,7 +25,7 @@ class GTFSRTService:
         return [self.get_trip_id(vehicle_position) for vehicle_position in
                 self.gtfs_rt_client.load_vehicle_positions(route_id=route_id)]
 
-    def get_real_time_vehicle_positions(self, route_id: str, direction: bool) -> List[VehiclePosition]:
+    def get_real_time_vehicle_positions_on_route(self, route_id: str, direction: bool) -> List[VehiclePosition]:
         current_vehicle_positions = self.gtfs_rt_client.load_vehicle_positions(route_id=route_id)
         trip_ids = [self.get_trip_id(vehicle_position)
                     for vehicle_position in current_vehicle_positions]
@@ -36,19 +36,8 @@ class GTFSRTService:
                 self.get_trip_id(vehicle_position)
                 in trips_on_route]
 
-    def get_real_time_vehicle_positions1(self, route_id: str, direction: bool) -> List[VehiclePosition]:
-        current_vehicle_positions = self.gtfs_rt_client.load_vehicle_positions(route_id=route_id)
-        trip_ids = [self.get_trip_id(vehicle_position)
-                    for vehicle_position in current_vehicle_positions]
-
-        trips_on_route = GTFSService.get_trips_with_direction_and_route(
-            trip_ids, int(route_id), direction)
-        return [vehicle_position for vehicle_position in current_vehicle_positions if
-                self.get_trip_id(vehicle_position)
-                in trips_on_route]
-
-    def get_real_time_vehicle_position(self, trip_id: str) -> VehiclePosition:
-        current_vehicle_positions = self.gtfs_rt_client.load_vehicle_position(trip_id)
+    def get_real_time_vehicle_positions(self) -> List[VehiclePosition]:
+        return self.gtfs_rt_client.load_vehicle_positions()
 
     @staticmethod
     def get_trip_id(vehicle: VehiclePosition) -> str:

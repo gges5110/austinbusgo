@@ -26,7 +26,8 @@ class Resolver:
         self.gtfs_rt_service = GTFSRTService(self.gtfs_client)
 
     def resolve_trip(self, query, info, trip_id) -> Trips:
-        return self.gtfs_service.get_trip_by_id(trip_id)
+        trips = self.gtfs_service.get_trip_by_id(trip_id)
+        return trips[0]
 
     def resolve_distinct_trips(self, query, info, route_id: int) -> List[Trips]:
         return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
@@ -58,7 +59,10 @@ class Resolver:
         return self.gtfs_service.get_shapes_by_trip_id(trip_id)
 
     def resolve_vehicle_positions(self, query, info, route_id: int, direction: bool) -> List[VehiclePosition]:
-        return self.gtfs_rt_service.get_real_time_vehicle_positions(str(route_id), direction)
+        return self.gtfs_rt_service.get_real_time_vehicle_positions_on_route(str(route_id), direction)
+
+    def resolve_stop_times(self, query, info, trip_id: str):
+        return self.gtfs_service.get_stop_times_by_trip_id(trip_id)
 
     def resolve_arrival_times(self, query, info, route_id: int, direction: bool, stop_id: str, date: str):
         """Finds the arrival times of a route at a given stop.
@@ -77,9 +81,8 @@ class Resolver:
               :param direction:
         """
         # get trip ids from gtfs
-        stop_times = self.gtfs_service.get_stop_time_by_route_id(route_id, direction, stop_id, date)
-        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions1(
-            str(route_id), direction)
+        stop_times = self.gtfs_service.get_stop_time_by_route_id(stop_id, date)
+        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions()
         vehicle_by_trip_id: Dict[str, VehiclePosition] = {
             self.gtfs_rt_service.get_trip_id(v): v for v in vehicles
         }

@@ -1,4 +1,9 @@
-import { Button, ListItem, ListItemText, Typography } from "@mui/material";
+import {
+  Button,
+  ListItemButton,
+  ListItemText,
+  Typography,
+} from "@mui/material";
 import AccessibleIcon from "@mui/icons-material/Accessible";
 import DirectionsBikeIcon from "@mui/icons-material/DirectionsBike";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
@@ -51,15 +56,10 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   }
 
   return (
-    <ListItem
-      /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-      // @ts-ignore
-      button={updatedArrivalTime != undefined}
+    <ListItemButton
       key={scheduledArrivalTime}
       onClick={() => {
-        if (updatedArrivalTime) {
-          arrivalTimeOnClick(arrivalTime);
-        }
+        arrivalTimeOnClick(arrivalTime);
       }}
     >
       <ListItemText
@@ -123,6 +123,6 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
           ? updatedArrivalTimeInMoment.fromNow()
           : scheduledArrivalTimeInMoment.fromNow()}
       </Typography>
-    </ListItem>
+    </ListItemButton>
   );
 };

@@ -1,9 +1,9 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useMatches, useNavigate } from "react-router-dom";
 import {
+  HandleType,
   stopLoader,
   stopsLoader,
   useDataFromLoader,
-  useDataFromRouteLoader,
 } from "../../../App";
 import * as React from "react";
 import { StopsSearchPanel } from "../../../components/StopsSearchPanel";
@@ -12,8 +12,15 @@ import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 export const StopsMenu = () => {
   const navigate = useNavigate();
   const stopsData = useDataFromLoader(stopsLoader);
-  const stopLoaderData = useDataFromRouteLoader("stop", stopLoader);
   const { viewStatePathname } = useViewStatePathname();
+  const matches = useMatches();
+  const stop = matches
+    .filter((match) => Boolean((match.handle as HandleType)?.stop))
+    .map((match) =>
+      (match.handle as HandleType)?.stop?.(
+        match.data as Awaited<ReturnType<typeof stopLoader>>
+      )
+    )[0];
 
   return (
     <>
@@ -24,7 +31,7 @@ export const StopsMenu = () => {
             navigate(`${viewStatePathname}/stops/${stop.stopId}`);
           }
         }}
-        stop={stopLoaderData?.data.stop}
+        stop={stop}
       />
       <Outlet />
     </>

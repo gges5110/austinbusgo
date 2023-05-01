@@ -51,7 +51,7 @@ class TestGTFSRTService(unittest.TestCase):
         vehicle_position2.trip.trip_id = "trip_2"
         self.client.load_vehicle_positions = MagicMock(return_value=[vehicle_position, vehicle_position2])
 
-        vehicle_positions = self.gtfs_rt_service.get_real_time_vehicle_positions('3', True)
+        vehicle_positions = self.gtfs_rt_service.get_real_time_vehicle_positions_on_route('3', True)
 
         self.assertEqual(len(vehicle_positions), 1)
 

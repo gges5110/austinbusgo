@@ -40,6 +40,21 @@ import {
   StopsByNameQueryVariables,
 } from "./schemas/StopsByName.generated";
 import { StopsMenu } from "./pages/page/routes/StopsMenu";
+import {
+  TripDocument,
+  TripQuery,
+  TripQueryVariables,
+} from "./schemas/Trip.generated";
+import {
+  StopTimesDocument,
+  StopTimesQuery,
+  StopTimesQueryVariables,
+} from "./schemas/StopTimes.generated";
+import dayjs from "dayjs";
+import LocalizedFormat from "dayjs/plugin/localizedFormat";
+import { TripMenu } from "./pages/trip/TripMenu";
+
+dayjs.extend(LocalizedFormat);
 
 const client = new ApolloClient({
   uri:
@@ -98,6 +113,31 @@ export const stopLoader = async ({ params }: LoaderFunctionArgs) => {
   });
 };
 
+export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
+  const tripId = params["tripId"];
+  const { data: stopTimesData } = await client.query<
+    StopTimesQuery,
+    StopTimesQueryVariables
+  >({
+    query: StopTimesDocument,
+    variables: {
+      tripId: tripId || "",
+    },
+  });
+
+  const { data: tripData } = await client.query<TripQuery, TripQueryVariables>({
+    query: TripDocument,
+    variables: {
+      tripId: tripId || "",
+    },
+  });
+
+  return {
+    trip: tripData.trip,
+    stopTimes: stopTimesData.stopTimes,
+  };
+};
+
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeId = Number(params["routeId"]);
   const directionId = toBoolean(params["directionId"]);
@@ -141,8 +181,15 @@ export const App: React.FunctionComponent = () => {
         >
           <Route
             path={"/:viewState/routes/:routeId/direction/:directionId"}
-            id={"route"}
             loader={routeLoader}
+            handle={{
+              route: (data: Awaited<ReturnType<typeof routeLoader>>) =>
+                data.route,
+              stops: (data: Awaited<ReturnType<typeof routeLoader>>) =>
+                data.stops,
+              shapes: (data: Awaited<ReturnType<typeof routeLoader>>) =>
+                data.shapes,
+            }}
           >
             <Route
               index={true}
@@ -153,10 +200,28 @@ export const App: React.FunctionComponent = () => {
               path={
                 "/:viewState/routes/:routeId/direction/:directionId/stops/:stopId"
               }
-              id={"stopOnRoute"}
-              element={<StopMenu />}
               loader={stopLoader}
-            ></Route>
+              handle={{
+                stop: (data: Awaited<ReturnType<typeof stopLoader>>) =>
+                  data.data.stop,
+              }}
+            >
+              <Route
+                path={
+                  "/:viewState/routes/:routeId/direction/:directionId/stops/:stopId"
+                }
+                index={true}
+                element={<StopMenu />}
+                loader={stopLoader}
+              ></Route>
+              <Route
+                path={
+                  "/:viewState/routes/:routeId/direction/:directionId/stops/:stopId/trips/:tripId"
+                }
+                loader={tripLoader}
+                element={<TripMenu />}
+              ></Route>
+            </Route>
           </Route>
         </Route>
         <Route
@@ -167,9 +232,24 @@ export const App: React.FunctionComponent = () => {
           <Route
             path={"/:viewState/stops/:stopId"}
             id={"stop"}
-            element={<StopMenu hideBackButton={true} />}
             loader={stopLoader}
-          ></Route>
+            handle={{
+              stop: (data: Awaited<ReturnType<typeof stopLoader>>) =>
+                data.data.stop,
+            }}
+          >
+            <Route
+              path={"/:viewState/stops/:stopId"}
+              index={true}
+              element={<StopMenu hideBackButton={true} />}
+              loader={stopLoader}
+            ></Route>
+            <Route
+              path={"/:viewState/stops/:stopId/trips/:tripId"}
+              loader={tripLoader}
+              element={<TripMenu />}
+            ></Route>
+          </Route>
         </Route>
       </Route>
     )
@@ -193,3 +273,16 @@ export const App: React.FunctionComponent = () => {
     </ApolloProvider>
   );
 };
+
+export interface HandleType {
+  stop?: (data: Awaited<ReturnType<typeof stopLoader>>) => StopQuery["stop"];
+  route?: (
+    data: Awaited<ReturnType<typeof routeLoader>>
+  ) => RouteQuery["route"];
+  stops?: (
+    data: Awaited<ReturnType<typeof routeLoader>>
+  ) => StopsAndShapesQuery["stopsAndShapes"]["stops"];
+  shapes?: (
+    data: Awaited<ReturnType<typeof routeLoader>>
+  ) => StopsAndShapesQuery["stopsAndShapes"]["shapes"];
+}

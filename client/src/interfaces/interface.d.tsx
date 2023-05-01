@@ -19,11 +19,12 @@ export interface Query {
   nearByStops: Array<Stop>;
   route: Route;
   routes?: Maybe<Array<Route>>;
-  trip: Trip;
+  trip: TripWithRoute;
   distinctTrips?: Maybe<Array<Trip>>;
   routeShapes?: Maybe<Array<Shape>>;
   vehiclePositions?: Maybe<Array<VehiclePosition>>;
   arrivalTimes?: Maybe<Array<ArrivalTime>>;
+  stopTimes?: Maybe<Array<StopTimes>>;
   realTimeVehiclePositions?: Maybe<Array<Maybe<VehiclePosition>>>;
 }
 
@@ -74,6 +75,10 @@ export interface QueryArrivalTimesArgs {
   date: Scalars["String"];
 }
 
+export interface QueryStopTimesArgs {
+  tripId: Scalars["String"];
+}
+
 export interface StopsAndShapes {
   __typename?: "StopsAndShapes";
   stops?: Maybe<Array<Stop>>;
@@ -120,6 +125,31 @@ export interface Route {
   routeDesc?: Maybe<Scalars["String"]>;
 }
 
+export interface TripWithRoute {
+  __typename?: "TripWithRoute";
+  /** Identifies a route. */
+  routeId: Scalars["String"];
+  /** Identifies a set of dates when service is available for one or more routes. */
+  serviceId: Scalars["String"];
+  /** Identifies a trip. */
+  tripId: Scalars["String"];
+  /** Text that appears on signage identifying the trip's destination to riders. */
+  tripHeadsign?: Maybe<Scalars["String"]>;
+  /** Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips. */
+  tripShortName?: Maybe<Scalars["String"]>;
+  /** Indicates the direction of travel for a trip. */
+  directionId?: Maybe<Scalars["Boolean"]>;
+  /** Identifies the block to which the trip belongs. */
+  blockId?: Maybe<Scalars["String"]>;
+  /** Identifies a geospatial shape describing the vehicle travel path for a trip. */
+  shapeId?: Maybe<Scalars["String"]>;
+  /** Indicates wheelchair accessibility. */
+  wheelchairAccessible?: Maybe<Scalars["Int"]>;
+  /** Indicates whether bikes are allowed. */
+  bikesAllowed?: Maybe<Scalars["Int"]>;
+  route: Route;
+}
+
 export interface Trip {
   __typename?: "Trip";
   /** Identifies a route. */
@@ -142,8 +172,6 @@ export interface Trip {
   wheelchairAccessible?: Maybe<Scalars["Int"]>;
   /** Indicates whether bikes are allowed. */
   bikesAllowed?: Maybe<Scalars["Int"]>;
-  /** Direction */
-  dirAbbr?: Maybe<Scalars["String"]>;
 }
 
 export interface VehiclePosition {
@@ -215,4 +243,20 @@ export interface ArrivalTime {
   scheduledArrivalTime: Scalars["String"];
   trip: Trip;
   updatedArrivalTime?: Maybe<Scalars["String"]>;
+}
+
+export interface StopTimes {
+  __typename?: "StopTimes";
+  tripId: Scalars["String"];
+  arrivalTime: Scalars["String"];
+  departureTime: Scalars["String"];
+  stopId: Scalars["Int"];
+  stopSequence: Scalars["Int"];
+  stopHeadsign?: Maybe<Scalars["String"]>;
+  pickupType?: Maybe<Scalars["Int"]>;
+  dropOffType?: Maybe<Scalars["Int"]>;
+  shapeDistTraveled?: Maybe<Scalars["Float"]>;
+  timepoint?: Maybe<Scalars["Int"]>;
+  supEstDelay?: Maybe<Scalars["String"]>;
+  stop: Stop;
 }

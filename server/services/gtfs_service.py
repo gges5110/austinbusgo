@@ -88,8 +88,10 @@ class GTFSService:
                & (Trips.direction_id == direction))]
 
     @staticmethod
-    def get_trip_by_id(trip_id: str) -> Trips:
-        return Trips.get(Trips.trip_id == trip_id)
+    def get_trip_by_id(trip_id: str) -> List[Trips]:
+        return Trips.select(Trips, Routes) \
+            .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route")) \
+            .where(Trips.trip_id == trip_id)
 
     # Shapes
     @staticmethod
@@ -107,13 +109,18 @@ class GTFSService:
         return StopTimes.get((StopTimes.trip_id == trip_id) & (StopTimes.stop_id == stop_id))
 
     @staticmethod
-    def get_stop_time_by_route_id(route_id: str, direction: bool, stop_id: str, date: str) -> List[StopTimes]:
+    def get_stop_times_by_trip_id(trip_id: str) -> List[StopTimes]:
+        return StopTimes.select(StopTimes, Stops) \
+            .join(Stops, on=(Stops.stop_id == StopTimes.stop_id).alias('stop')) \
+            .where((StopTimes.trip_id == trip_id))
+
+    @staticmethod
+    def get_stop_time_by_route_id(stop_id: str, date: str) -> List[StopTimes]:
         return StopTimes.select(StopTimes, Stops, Trips) \
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias('trip')) \
             .join(Stops, on=(Stops.stop_id == StopTimes.stop_id)) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
-            .where((Trips.direction_id == direction)
-                   & (StopTimes.stop_id == stop_id)
+            .where((StopTimes.stop_id == stop_id)
                    & (CalendarDates.date == date)
                    & (StopTimes.arrival_time > (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S"))
                    )
