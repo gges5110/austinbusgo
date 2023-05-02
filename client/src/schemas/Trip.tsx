@@ -13,6 +13,10 @@ export const TRIP_QUERY = gql`
       shapeId
       wheelchairAccessible
       bikesAllowed
+      route {
+        routeLongName
+        routeColor
+      }
     }
   }
 `;

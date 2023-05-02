@@ -1,4 +1,5 @@
-from peewee import TextField, IntegerField, FloatField, BooleanField
+import peewee
+from peewee import TextField, IntegerField, FloatField, BooleanField, DateTimeField, DateField, TimeField
 
 from server.database import db_wrapper
 
@@ -99,4 +100,31 @@ class Trips(db_wrapper.Model):
 
     class Meta:
         table_name = 'trips'
+        primary_key = False
+
+
+class Calendar(db_wrapper.Model):
+    service_id = TextField(index=True, null=True, primary_key=True, unique=True)
+    monday = BooleanField(index=True, null=True)
+    tuesday = BooleanField(index=True, null=True)
+    wednesday = BooleanField(index=True, null=True)
+    thursday = BooleanField(index=True, null=True)
+    friday = BooleanField(index=True, null=True)
+    saturday = BooleanField(index=True, null=True)
+    sunday = BooleanField(index=True, null=True)
+    start_date = DateField(null=True)
+    end_date = DateField(null=True)
+
+    class Meta:
+        table_name = 'calendar'
+        primary_key = False
+
+
+class CalendarDates(db_wrapper.Model):
+    service_id = TextField(null=True)
+    date = DateField(null=True)
+    exception_type = IntegerField(null=True)
+
+    class Meta:
+        table_name = 'calendar_dates'
         primary_key = False

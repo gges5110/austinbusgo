@@ -1,0 +1,32 @@
+import * as React from "react";
+import { Box, Typography } from "@mui/material";
+import { Route } from "../interfaces/interface.d";
+import { MouseEventHandler } from "react";
+
+interface RouteIdDisplayProps {
+  routeColor: Route["routeColor"];
+  routeId: string;
+  onClick?: MouseEventHandler;
+}
+
+export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
+  routeColor,
+  routeId,
+  onClick,
+}) => {
+  return (
+    <Box
+      sx={{
+        backgroundColor: `#${routeColor}`,
+        color: "white",
+        width: "fit-content",
+        height: "fit-content",
+        px: 1,
+        borderRadius: 1,
+      }}
+      onClick={onClick}
+    >
+      <Typography sx={{ fontWeight: "bold" }}>{routeId}</Typography>
+    </Box>
+  );
+};

@@ -4,19 +4,20 @@ import { StopMarker } from "./StopMarker";
 
 interface StopMarkersProps {
   readonly stops: Stop[];
-  readonly direction: boolean;
+  readonly selectedStop: Stop | undefined;
+
   setSelectedStop(stop: Stop): void;
 }
 
 export class StopMarkers extends PureComponent<StopMarkersProps> {
-  public render(): React.ReactNode {
-    const { stops, direction, setSelectedStop } = this.props;
+  public render() {
+    const { stops, setSelectedStop, selectedStop } = this.props;
     return stops.map((stop) => (
       <StopMarker
         key={stop.stopId}
-        direction={direction}
         stop={stop}
-        fetchArrivalTime={setSelectedStop}
+        setSelectedStop={setSelectedStop}
+        highlighted={selectedStop?.stopId === stop.stopId}
       />
     ));
   }

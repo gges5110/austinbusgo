@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from google.transit.gtfs_realtime_pb2 import FeedMessage, FeedEntity, TripUpdate, VehiclePosition, TripDescriptor
 
-from server.services.gtfs_rt_client import GTFSClient
+from server.services.gtfs_rt_client import GTFSRTClient
 
 mock_trip_updates_pb_file_url = 'http://url1'
 mock_vehicle_positions_pb_file_url = 'http://url2'
@@ -30,7 +30,7 @@ def get_mock_trip_update():
 
 class TestGTFSRTClient(unittest.TestCase):
     def setUp(self):
-        self.client = GTFSClient(mock_trip_updates_pb_file_url, mock_vehicle_positions_pb_file_url)
+        self.client = GTFSRTClient(mock_trip_updates_pb_file_url, mock_vehicle_positions_pb_file_url)
 
     @patch('server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url')
     def test_load_trip_updates(self, mock_gtfs_client_get_feed_message_entity_from_url):

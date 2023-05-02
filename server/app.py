@@ -6,6 +6,7 @@ from flask_graphql import GraphQLView
 from server.config import db_url
 from server.database import db_wrapper, database_sanity_check
 from server.gql.schema import schema
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 static_folder_root = os.path.join(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))), "client", "build")
@@ -13,6 +14,9 @@ static_folder_root = os.path.join(os.path.dirname(
 
 def create_app():
     austin_bus_go_app = Flask(__name__, static_folder=static_folder_root)
+
+    # if austin_bus_go_app.debug:
+    #     austin_bus_go_app.wsgi_app = ProfilerMiddleware(austin_bus_go_app.wsgi_app)
 
     @austin_bus_go_app.route("/", defaults={'path': ''})
     @austin_bus_go_app.route('/<path:path>')

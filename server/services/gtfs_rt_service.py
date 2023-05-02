@@ -3,7 +3,7 @@ from typing import List
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 
 from server.config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
-from server.services.gtfs_rt_client import GTFSClient
+from server.services.gtfs_rt_client import GTFSRTClient
 from server.services.gtfs_service import GTFSService
 
 
@@ -11,9 +11,10 @@ class GTFSRTService:
     """
     A class that handles retrieving information about real time GTFS data, including vehicle positions and trip updates.
     """
-    def __init__(self, gtfs_client: GTFSClient = None):
-        self.gtfs_client = gtfs_client or GTFSClient(capital_metro_trip_updates_pb_file_url,
-                                                     capital_metro_vehicle_positions_pb_file_url)
+
+    def __init__(self, gtfs_rt_client: GTFSRTClient = None):
+        self.gtfs_rt_client = gtfs_rt_client or GTFSRTClient(capital_metro_trip_updates_pb_file_url,
+                                                             capital_metro_vehicle_positions_pb_file_url)
 
     def get_real_time_vehicle_trip_ids(self, route_id: str = None) -> List[str]:
         """
@@ -22,17 +23,21 @@ class GTFSRTService:
         :return: running trip ids of a given route
         """
         return [self.get_trip_id(vehicle_position) for vehicle_position in
-                self.gtfs_client.load_vehicle_positions(route_id=route_id)]
+                self.gtfs_rt_client.load_vehicle_positions(route_id=route_id)]
 
-    def get_real_time_vehicle_positions(self, route_id: str, direction: bool) -> List[VehiclePosition]:
-        current_vehicle_positions = self.gtfs_client.load_vehicle_positions(route_id=route_id)
+    def get_real_time_vehicle_positions_on_route(self, route_id: str, direction: bool) -> List[VehiclePosition]:
+        current_vehicle_positions = self.gtfs_rt_client.load_vehicle_positions(route_id=route_id)
         trip_ids = [self.get_trip_id(vehicle_position)
                     for vehicle_position in current_vehicle_positions]
 
         trips_on_route = GTFSService.get_trips_with_direction_and_route(
             trip_ids, int(route_id), direction)
-        return [vehicle_position for vehicle_position in current_vehicle_positions if self.get_trip_id(vehicle_position)
+        return [vehicle_position for vehicle_position in current_vehicle_positions if
+                self.get_trip_id(vehicle_position)
                 in trips_on_route]
+
+    def get_real_time_vehicle_positions(self) -> List[VehiclePosition]:
+        return self.gtfs_rt_client.load_vehicle_positions()
 
     @staticmethod
     def get_trip_id(vehicle: VehiclePosition) -> str:
@@ -49,7 +54,7 @@ class GTFSRTService:
         :param trip_ids:
         :return: real time trip updates
         """
-        trip_updates = self.gtfs_client.load_trip_updates()
+        trip_updates = self.gtfs_rt_client.load_trip_updates()
 
         if trip_ids is None:
             return trip_updates

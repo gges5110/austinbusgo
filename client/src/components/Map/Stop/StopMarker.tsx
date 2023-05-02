@@ -5,8 +5,9 @@ import { StopPin } from "./StopPin";
 
 interface StopMarkerProps {
   readonly stop: Stop;
-  readonly direction: boolean;
-  fetchArrivalTime?(stop: Stop): void;
+  readonly highlighted?: boolean;
+
+  setSelectedStop(stop: Stop): void;
 }
 
 export class StopMarker extends React.PureComponent<StopMarkerProps> {
@@ -18,14 +19,18 @@ export class StopMarker extends React.PureComponent<StopMarkerProps> {
         latitude={stop.stopLat || 0}
         key={stop.stopId}
       >
-        <StopPin stopName={stop.stopName || ""} onClick={this.onClick} />
+        <StopPin
+          highlighted={this.props.highlighted}
+          stopName={stop.stopName || ""}
+          onClick={this.onClick}
+        />
       </Marker>
     );
   }
 
   private onClick = (): void => {
-    if (this.props.fetchArrivalTime) {
-      this.props.fetchArrivalTime(this.props.stop);
+    if (this.props.setSelectedStop) {
+      this.props.setSelectedStop(this.props.stop);
     }
   };
 }

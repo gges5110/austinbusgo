@@ -1,40 +1,22 @@
-import { createStyles, Theme } from "@material-ui/core";
-import Fab from "@material-ui/core/Fab";
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import MyLocationIcon from "@material-ui/icons/MyLocation";
+import { debounce, useTheme } from "@mui/material";
+import Fab from "@mui/material/Fab";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as GeoJSON from "geojson";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactMapGL, {
   Layer,
-  MapProvider,
   Source,
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
-import {
-  ArrivalTime,
-  RunningTrip,
-  Stop,
-  VehiclePosition,
-} from "../../interfaces/interface.d";
+import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
 import { ShapeData } from "../../interfaces/Shape";
-import { SearchPanel } from "../SearchPanel";
-import { StopDrawer } from "./Stop/StopDrawer";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
-import "./Map.css";
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    fab: {
-      position: "absolute",
-      bottom: theme.spacing(4),
-      right: theme.spacing(2),
-    },
-  })
-);
+import { useLocation, useNavigate, useNavigation } from "react-router-dom";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 
 type ViewState = {
   /** Longitude at map center */
@@ -45,15 +27,14 @@ type ViewState = {
   zoom: number;
 };
 
-interface MapProps {
-  readonly trip?: RunningTrip;
-  readonly routeShapes: ShapeData[];
+export interface MapProps {
+  readonly route?: Route;
+  readonly stop?: Stop;
+  readonly routeShapes: ShapeData[][];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
-  readonly runningTrips: RunningTrip[];
-  readonly loading?: boolean;
-  setTrip(trip?: RunningTrip): void;
-  openSettingsDialog(): void;
+
+  setSelectedStopId(stopId: number): void;
 }
 
 const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
@@ -70,99 +51,161 @@ const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
   ],
 };
 
-const vehicleZoomLevel = 15;
+const vehicleZoomLevel = 16;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
-const Map: React.FunctionComponent<MapProps> = ({
-  trip,
+export const Map: React.FunctionComponent<MapProps> = ({
+  route,
   stops,
+  stop,
+  setSelectedStopId,
   routeShapes,
   vehiclePositions,
-  runningTrips,
-  loading,
-  setTrip,
-  openSettingsDialog,
 }) => {
-  const classes = useStyles();
   const { mapId: map } = useMap();
+  const navigate = useNavigate();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
   >(geojson);
 
-  const setRouteShape = (coords: Coordinate[]): void => {
+  const setRouteShape = (shapeDataList: ShapeData[][]): void => {
     setRouteShapeGeoJSON({
       type: "FeatureCollection",
-      features: [
-        {
+      features: shapeDataList.map((shapeDatas) => {
+        return {
           type: "Feature",
           geometry: {
             type: "LineString",
-            coordinates: coords,
+            coordinates: shapeDatas.map(
+              (shapeData) =>
+                [shapeData.shapePtLon, shapeData.shapePtLat] as Coordinate
+            ),
           },
           properties: {},
-        },
-      ],
+        };
+      }),
     });
   };
 
   const { enqueueSnackbar } = useSnackbar();
+  const navigation = useNavigation();
+  const location = useLocation();
+  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
+
+  const {
+    latitude,
+    longitude,
+    zoom,
+    viewStatePathname,
+  } = useViewStatePathname();
 
   const [viewPort, setViewPort] = useState<ViewState>({
-    latitude: defaultCenter[1],
-    longitude: defaultCenter[0],
-    zoom: 11.5,
+    latitude: latitude || defaultCenter[1],
+    longitude: longitude || defaultCenter[0],
+    zoom: zoom || 11.5,
   });
 
   useEffect(() => {
-    if (routeShapes.length !== 0) {
-      setRouteShape(
-        routeShapes.map(
-          (routeShape: ShapeData) =>
-            [routeShape.shapePtLon, routeShape.shapePtLat] as Coordinate
-        )
-      );
+    if (viewStatePathname === "") {
+      const path = `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
+        viewPort.longitude.toFixed(7)
+      )},${parseFloat(viewPort.zoom.toFixed(2))}z`;
 
+      // hack to prevent navigation from failing on component mount
+      setTimeout(() => {
+        navigate(path);
+      });
+    }
+  }, []);
+
+  const flyToStop = (stop: Stop) => {
+    map?.flyTo({
+      center: [
+        stop.stopLon || viewPort.longitude,
+        stop.stopLat || viewPort.latitude,
+      ],
+      zoom: vehicleZoomLevel,
+      padding: {
+        top: 0,
+        left: 400,
+        right: 0,
+        bottom: 0,
+      },
+    });
+  };
+
+  const flyToRoute = () => {
+    if (routeShapes.length !== 0) {
+      const flatShapes = routeShapes.flat();
       map?.fitBounds(
         [
           [
-            Math.min(...routeShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.min(...routeShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
+            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
           [
-            Math.max(...routeShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.max(...routeShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
+            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
           ],
         ],
-        { padding: 80 }
+        {
+          padding: {
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: 10,
+          },
+        }
       );
+    }
+  };
+
+  useEffect(() => {
+    if (stop) {
+      flyToStop(stop);
+    } else {
+      flyToRoute();
+    }
+  }, [stop]);
+
+  useEffect(() => {
+    if (routeShapes.length !== 0) {
+      flyToRoute();
+
+      setRouteShape(routeShapes);
     } else {
       setRouteShape([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(routeShapes)]);
 
-  const [selectedStop, setSelectedStop] = useState<Stop | undefined>(undefined);
+  const delayedQuery = useCallback(
+    debounce((viewState: ViewState) => {
+      const restOfPathname = location.pathname.match(re)?.[2];
+      let path = `/@${parseFloat(viewState.latitude.toFixed(7))},${parseFloat(
+        viewState.longitude.toFixed(7)
+      )},${parseFloat(viewState.zoom.toFixed(2))}z`;
+      if (restOfPathname !== "" && restOfPathname !== undefined) {
+        path += restOfPathname;
+      }
 
-  const closeStopDrawer = (): void => {
-    setSelectedStop(undefined);
-  };
+      // TODO: prevent quick navigation from infinite loop
+      delayedQuery.clear();
+      if (navigation.location === undefined) {
+        navigate(path, { replace: true });
+      }
+    }, 50),
+    [location.pathname, navigation.location]
+  );
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
     setViewPort(event.viewState);
   };
 
-  const arrivalTimeOnClick = (arrivalTime: ArrivalTime) => {
-    map?.flyTo({
-      center: [
-        arrivalTime.vehicle.position?.longitude || viewPort.longitude,
-        arrivalTime.vehicle.position?.latitude || viewPort.latitude,
-      ],
-      zoom: vehicleZoomLevel,
-    });
-
-    setSelectedStop(undefined);
+  const onMoveEnd = (event: ViewStateChangeEvent) => {
+    delayedQuery(event.viewState);
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
@@ -177,7 +220,15 @@ const Map: React.FunctionComponent<MapProps> = ({
 
   const useUserLocation = () => {
     if (navigator.geolocation) {
+      enqueueSnackbar("Retrieving current location...", {
+        variant: "info",
+      });
+
       const geoSuccess: PositionCallback = (position) => {
+        enqueueSnackbar("Location obtained", {
+          variant: "success",
+        });
+
         map?.flyTo({
           center: [
             position.coords.longitude || viewPort.longitude,
@@ -198,7 +249,7 @@ const Map: React.FunctionComponent<MapProps> = ({
       console.log("Geolocation is not supported for this Browser/OS.");
     }
   };
-
+  const theme = useTheme();
   return (
     <>
       <ReactMapGL
@@ -206,29 +257,27 @@ const Map: React.FunctionComponent<MapProps> = ({
         {...viewPort}
         mapStyle={"mapbox://styles/mapbox/streets-v9"}
         onMove={onViewportChange}
+        onMoveEnd={onMoveEnd}
       >
         <Fab
           color="primary"
           aria-label="add"
-          className={classes.fab}
+          sx={{
+            position: "absolute",
+            bottom: theme.spacing(4),
+            right: theme.spacing(2),
+          }}
           onClick={useUserLocation}
         >
           <MyLocationIcon />
         </Fab>
         <StopMarkers
           stops={stops}
-          setSelectedStop={setSelectedStop}
-          direction={trip?.direction || false}
+          setSelectedStop={(stop) => {
+            setSelectedStopId(stop.stopId);
+          }}
+          selectedStop={stop}
         />
-
-        {trip && selectedStop && (
-          <StopDrawer
-            stop={selectedStop}
-            runningTrip={trip}
-            arrivalTimeOnClick={arrivalTimeOnClick}
-            onClose={closeStopDrawer}
-          />
-        )}
 
         {
           // Render Bus Vehicle Marker
@@ -246,47 +295,12 @@ const Map: React.FunctionComponent<MapProps> = ({
             id="point"
             type="line"
             paint={{
-              "line-color": `#${trip?.color || "a5a5a5"}`,
+              "line-color": `#${route?.routeColor || "a5a5a5"}`,
               "line-width": 5,
             }}
           />
         </Source>
       </ReactMapGL>
-      <div className="map-overlay-container">
-        <div className="map-overlay">
-          <SearchPanel
-            runningTrips={runningTrips}
-            setTrip={setTrip}
-            trip={trip}
-            loading={loading}
-            openSettingsDialog={openSettingsDialog}
-          />
-        </div>
-      </div>
     </>
   );
 };
-
-export const MapWrapper: React.FunctionComponent<MapProps> = ({
-  trip,
-  stops,
-  routeShapes,
-  vehiclePositions,
-  runningTrips,
-  loading,
-  setTrip,
-  openSettingsDialog,
-}) => (
-  <MapProvider>
-    <Map
-      trip={trip}
-      loading={loading}
-      routeShapes={routeShapes}
-      stops={stops}
-      vehiclePositions={vehiclePositions}
-      runningTrips={runningTrips}
-      setTrip={setTrip}
-      openSettingsDialog={openSettingsDialog}
-    />
-  </MapProvider>
-);

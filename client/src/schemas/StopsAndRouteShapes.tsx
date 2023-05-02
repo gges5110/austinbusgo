@@ -1,18 +1,24 @@
 import { gql } from "@apollo/client";
 
 export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
-  query Stops($tripId: String!) {
-    stops(tripId: $tripId) {
-      stopId
-      stopCode
-      stopName
-      stopLat
-      stopLon
+  query StopsAndShapes($routeId: Int!, $directionId: Boolean!, $date: String!) {
+    stopsAndShapes(routeId: $routeId, directionId: $directionId, date: $date) {
+      stops {
+        stopId
+        stopCode
+        stopName
+        stopLat
+        stopLon
+      }
+      shapes {
+        shapePtLat
+        shapePtLon
+      }
     }
-
-    routeShapes(tripId: $tripId) {
-      shapePtLat
-      shapePtLon
+    distinctTrips(routeId: $routeId) {
+      tripId
+      tripShortName
+      directionId
     }
   }
 `;

@@ -5,8 +5,8 @@ from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from pytz import timezone
 
 from server.config import capital_metro_trip_updates_pb_file_url, capital_metro_vehicle_positions_pb_file_url
-from server.models.gtfs_models import Stops, Trips, Shapes
-from server.services.gtfs_rt_client import GTFSClient
+from server.models.gtfs_models import Stops, Trips, Shapes, Routes
+from server.services.gtfs_rt_client import GTFSRTClient
 from server.services.gtfs_rt_service import GTFSRTService
 from server.services.gtfs_service import GTFSService
 
@@ -20,47 +20,51 @@ class ArrivalTimeInfo:
 
 class Resolver:
     def __init__(self, gtfs_service: GTFSService = None):
-        self.gtfs_client = GTFSClient(capital_metro_trip_updates_pb_file_url,
-                                      capital_metro_vehicle_positions_pb_file_url)
+        self.gtfs_client = GTFSRTClient(capital_metro_trip_updates_pb_file_url,
+                                        capital_metro_vehicle_positions_pb_file_url)
         self.gtfs_service = gtfs_service or GTFSService()
         self.gtfs_rt_service = GTFSRTService(self.gtfs_client)
 
     def resolve_trip(self, query, info, trip_id) -> Trips:
-        return self.gtfs_service.get_trip_by_id(trip_id)
+        trips = self.gtfs_service.get_trip_by_id(trip_id)
+        return trips[0]
 
-    def resolve_trips(self, query, info):
-        trip_ids = self.gtfs_rt_service.get_real_time_vehicle_trip_ids()
-        trips_with_distinct_headsign = self.gtfs_service.get_distinct_trip_headsigns(trip_ids)
-        unique_trip_headsigns = [trip.trip_headsign for trip in trips_with_distinct_headsign]
+    def resolve_distinct_trips(self, query, info, route_id: int) -> List[Trips]:
+        return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
 
-        trip_info_list = [{
-            'trip_id': trip.trip_id,
-            'route_id': trip.route_id,
-            'direction': trip.direction_id,
-            'route_long_name': trip.routes.route_long_name,
-            'color': trip.routes.route_color,
-            'trip_headsign': trip.trip_headsign,
-            'running': trip.trip_headsign in unique_trip_headsigns,
-            'dir_abbr': trip.dir_abbr,
-        } for trip in self.gtfs_service.get_trips()]
-
-        # Alphabetically sort trips by trip_headsign
-        trip_info_list.sort(key=lambda trip_info: (-trip_info['running'], trip_info['trip_headsign']))
-        return trip_info_list
-
-    def resolve_stops(self, query, info, trip_id) -> List[Stops]:
-        return self.gtfs_service.get_stops_by_trip_id(trip_id)
+    def resolve_stops_and_shapes(self, query, info, route_id: str, direction_id: bool, date: str):
+        stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
+        stops_and_shapes = {'stops': [stop for stop in stops], 'shapes': []}
+        shape_id_set = set([stop.stoptime.trip.shape_id for stop in stops])
+        for shape_id in shape_id_set:
+            stops_and_shapes['shapes'].append(self.gtfs_service.get_shapes_by_shape_id(shape_id))
+        return stops_and_shapes
 
     def resolve_stop(self, query, info, stop_id) -> Stops:
         return self.gtfs_service.get_stop(stop_id)
+
+    def resolve_near_by_stops(self, query, info, lat: float, lon: float, distance: float = 0.01):
+        return self.gtfs_service.get_near_by_stops(lat, lon, distance) or []
+
+    def resolve_stops_by_name(self, query, info, stop_name):
+        return self.gtfs_service.get_stops_by_name(stop_name) or []
+
+    def resolve_route(self, query, info, route_id) -> Routes:
+        return self.gtfs_service.get_route(route_id)
+
+    def resolve_routes(self, query, info) -> List[Routes]:
+        return self.gtfs_service.get_routes()
 
     def resolve_route_shapes(self, query, info, trip_id) -> List[Shapes]:
         return self.gtfs_service.get_shapes_by_trip_id(trip_id)
 
     def resolve_vehicle_positions(self, query, info, route_id: int, direction: bool) -> List[VehiclePosition]:
-        return self.gtfs_rt_service.get_real_time_vehicle_positions(str(route_id), direction)
+        return self.gtfs_rt_service.get_real_time_vehicle_positions_on_route(str(route_id), direction)
 
-    def resolve_arrival_times(self, query, info, route_id: int, direction: bool, stop_id: str):
+    def resolve_stop_times(self, query, info, trip_id: str):
+        return self.gtfs_service.get_stop_times_by_trip_id(trip_id)
+
+    def resolve_arrival_times(self, query, info, stop_id: str, date: str):
         """Finds the arrival times of a route at a given stop.
 
         Args:
@@ -76,57 +80,34 @@ class Resolver:
               :param stop_id:
               :param direction:
         """
-
-        # TODO: load arrival time for scheduled trips (non-running trips)
-
-        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions(
-            str(route_id), direction)
+        # get trip ids from gtfs
+        stop_times = self.gtfs_service.get_stop_time_by_route_id(stop_id, date)
+        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions()
         vehicle_by_trip_id: Dict[str, VehiclePosition] = {
             self.gtfs_rt_service.get_trip_id(v): v for v in vehicles
         }
-
-        self._remove_past_vehicles(vehicle_by_trip_id, stop_id)
-
-        arrival_time_info_by_trip_id: Dict[str, ArrivalTimeInfo] = {}
-
-        trip_ids = list(set(vehicle_by_trip_id.keys()))
-        for trip_id in trip_ids:
-            self._populate_scheduled_arrival_time(arrival_time_info_by_trip_id, stop_id, trip_id)
-
+        trip_ids = [stop_time.trip.trip_id for stop_time in stop_times]
         trip_updates = self.gtfs_rt_service.get_real_time_trip_updates(trip_ids)
-        for trip_update in trip_updates:
-            arrival_time = arrival_time_info_by_trip_id[trip_update.trip.trip_id]
-            self._populate_updated_arrival_time(arrival_time, stop_id, trip_update.stop_time_update)
+        updates = {
+            trip_update.trip.trip_id: self._populate_updated_arrival_time(stop_id, trip_update.stop_time_update) for
+            trip_update in trip_updates
+        }
 
         arrival_times = [{
-            'vehicle': vehicle_position,
-            'scheduled_arrival_time': arrival_time_info_by_trip_id[trip_id].scheduled_arrival_time,
-            'updated_arrival_time': arrival_time_info_by_trip_id[trip_id].updated_arrival_time,
-            'trip': self.gtfs_service.get_trip_by_id(trip_id),
-        } for (trip_id, vehicle_position) in vehicle_by_trip_id.items()]
-
+            'vehicle': vehicle_by_trip_id.get(stop_time.trip.trip_id, None),
+            'scheduled_arrival_time': stop_time.arrival_time,
+            'updated_arrival_time': updates.get(stop_time.trip.trip_id, None),
+            'trip': stop_time.trip,
+        } for stop_time in stop_times]
         # Sort the arrival times by timestamp
         arrival_times.sort(key=lambda x: x['scheduled_arrival_time'], reverse=False)
         return arrival_times
 
-    def _remove_past_vehicles(self, vehicle_by_trip_id: Dict[str, VehiclePosition], stop_id: str) -> None:
-        past_vehicle_trip_ids: List[str] = []
-        for (trip_id, vehicle_position) in vehicle_by_trip_id.items():
-            stop_time = self.gtfs_service.get_stop_time(trip_id, stop_id)
-            current_stop_sequence = vehicle_by_trip_id[trip_id].current_stop_sequence
-            if stop_time.stop_sequence < current_stop_sequence:
-                past_vehicle_trip_ids.append(trip_id)
-
-        for trip_id in past_vehicle_trip_ids:
-            del vehicle_by_trip_id[trip_id]
-
-    def _populate_updated_arrival_time(self, arrival_time: ArrivalTimeInfo, stop_id: str,
-                                       stop_time_updates: List[TripUpdate.StopTimeUpdate]) -> None:
+    def _populate_updated_arrival_time(self, stop_id: str, stop_time_updates: List[TripUpdate.StopTimeUpdate]):
         stop_time_update = self.gtfs_rt_service.get_arrival_time_by_stop_id(stop_time_updates, stop_id)
 
         if stop_time_update is None:
-            arrival_time.updated_arrival_time = None
-            return
+            return None
 
         arrival_time_update = stop_time_update.arrival.time if stop_time_update.HasField('arrival') \
             else stop_time_update.departure.time
@@ -134,17 +115,7 @@ class Resolver:
         updated_arrival_time = datetime.fromtimestamp(arrival_time_update).astimezone(
             timezone('US/Central')).strftime('%H:%M:%S')
 
-        arrival_time.updated_arrival_time = updated_arrival_time
-
-    def _populate_scheduled_arrival_time(self, arrival_time_by_trip_id: Dict[str, ArrivalTimeInfo], stop_id, trip_id) \
-            -> None:
-        stop_time = self.gtfs_service.get_stop_time(trip_id, stop_id)
-
-        if trip_id not in arrival_time_by_trip_id:
-            arrival_time_by_trip_id[trip_id] = ArrivalTimeInfo()
-
-        arrival_time = arrival_time_by_trip_id[trip_id]
-        arrival_time.scheduled_arrival_time = stop_time.arrival_time
+        return updated_arrival_time
 
     # For debugging purposes
     def resolve_vehicle_positions_debug(self, query, info) -> List[VehiclePosition]:

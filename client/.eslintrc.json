@@ -6,7 +6,13 @@
     "prettier/@typescript-eslint",
     "plugin:prettier/recommended"
   ],
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
+  "plugins": [
+    "react",
+    "react-hooks",
+    "@typescript-eslint",
+    "prettier",
+    "unused-imports"
+  ],
   "env": {
     "browser": true,
     "jasmine": true,
@@ -19,7 +25,8 @@
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "import/no-webpack-loader-syntax": "off",
-    "prettier/prettier": ["error", { "singleQuote": false }]
+    "prettier/prettier": ["error", { "singleQuote": false }],
+    "unused-imports/no-unused-imports-ts": 2
   },
   "settings": {
     "react": {

@@ -3,9 +3,8 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type ArrivalTimesQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["Int"];
-  direction: Types.Scalars["Boolean"];
   stopId: Types.Scalars["String"];
+  date: Types.Scalars["String"];
 }>;
 
 export type ArrivalTimesQuery = { __typename?: "Query" } & {
@@ -15,8 +14,8 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
         Types.ArrivalTime,
         "updatedArrivalTime" | "scheduledArrivalTime"
       > & {
-          trip: { __typename?: "Trip" } & Pick<
-            Types.Trip,
+          trip: { __typename?: "TripWithRoute" } & Pick<
+            Types.TripWithRoute,
             | "routeId"
             | "serviceId"
             | "tripId"
@@ -27,38 +26,45 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
             | "shapeId"
             | "wheelchairAccessible"
             | "bikesAllowed"
-          >;
-          vehicle: { __typename?: "VehiclePosition" } & Pick<
-            Types.VehiclePosition,
-            "stopId" | "currentStatus" | "timestamp"
           > & {
-              trip?: Types.Maybe<
-                { __typename?: "TripDescriptor" } & Pick<
-                  Types.TripDescriptor,
-                  "tripId" | "routeId" | "startDate"
-                >
-              >;
-              vehicle?: Types.Maybe<
-                { __typename?: "VehicleDescriptor" } & Pick<
-                  Types.VehicleDescriptor,
-                  "id" | "label"
-                >
-              >;
-              position?: Types.Maybe<
-                { __typename?: "Position" } & Pick<
-                  Types.Position,
-                  "latitude" | "longitude"
-                >
+              route: { __typename?: "Route" } & Pick<
+                Types.Route,
+                "routeColor" | "routeLongName"
               >;
             };
+          vehicle?: Types.Maybe<
+            { __typename?: "VehiclePosition" } & Pick<
+              Types.VehiclePosition,
+              "stopId" | "currentStatus" | "timestamp"
+            > & {
+                trip?: Types.Maybe<
+                  { __typename?: "TripDescriptor" } & Pick<
+                    Types.TripDescriptor,
+                    "tripId" | "routeId" | "startDate"
+                  >
+                >;
+                vehicle?: Types.Maybe<
+                  { __typename?: "VehicleDescriptor" } & Pick<
+                    Types.VehicleDescriptor,
+                    "id" | "label"
+                  >
+                >;
+                position?: Types.Maybe<
+                  { __typename?: "Position" } & Pick<
+                    Types.Position,
+                    "latitude" | "longitude"
+                  >
+                >;
+              }
+          >;
         }
     >
   >;
 };
 
 export const ArrivalTimesDocument = gql`
-  query ArrivalTimes($routeId: Int!, $direction: Boolean!, $stopId: String!) {
-    arrivalTimes(routeId: $routeId, direction: $direction, stopId: $stopId) {
+  query ArrivalTimes($stopId: String!, $date: String!) {
+    arrivalTimes(stopId: $stopId, date: $date) {
       updatedArrivalTime
       scheduledArrivalTime
       trip {
@@ -72,6 +78,10 @@ export const ArrivalTimesDocument = gql`
         shapeId
         wheelchairAccessible
         bikesAllowed
+        route {
+          routeColor
+          routeLongName
+        }
       }
       vehicle {
         trip {
@@ -107,9 +117,8 @@ export const ArrivalTimesDocument = gql`
  * @example
  * const { data, loading, error } = useArrivalTimesQuery({
  *   variables: {
- *      routeId: // value for 'routeId'
- *      direction: // value for 'direction'
  *      stopId: // value for 'stopId'
+ *      date: // value for 'date'
  *   },
  * });
  */
