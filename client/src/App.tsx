@@ -1,4 +1,4 @@
-import { ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import * as React from "react";
 import { getDate, Page, toBoolean } from "./pages/page/Page";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
@@ -258,6 +258,7 @@ export const App: React.FunctionComponent = () => {
   return (
     <ApolloProvider client={client}>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <SnackbarProvider
           maxSnack={3}
           anchorOrigin={{
