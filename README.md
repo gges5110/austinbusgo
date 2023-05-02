@@ -1,5 +1,3 @@
-[![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://gerrywu.gitlab.io/AustinBusLocation)
-
 # AustinBusLocation
 
 This is a project that aim to provide real-time bus location in Austin, Texas
