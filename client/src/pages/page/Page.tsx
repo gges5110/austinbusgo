@@ -1,7 +1,7 @@
 import { Box, Popper } from "@mui/material";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useVehiclePositionsLazyQuery } from "../../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "../../components/LoadingSnackbarMessage";
 import { SettingsDialog } from "../../components/SettingsDialog";
@@ -63,6 +63,17 @@ export const Page: React.FunctionComponent = () => {
       }
     },
   });
+
+  useEffect(() => {
+    if (selectedRoute) {
+      getVehiclePositions({
+        variables: {
+          routeId: Number(selectedRoute.routeId),
+          direction: toBoolean(directionId),
+        },
+      });
+    }
+  }, [selectedRoute]);
 
   const reloadVehiclePositions = (): void => {
     if (selectedRoute) {

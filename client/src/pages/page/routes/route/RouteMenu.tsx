@@ -6,14 +6,16 @@ import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimelin
 import * as React from "react";
 import { toBoolean } from "../../Page";
 import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
+import { useTitle } from "../../../../hooks/UseTitle";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
-  const { stops, distinctTrips } = useDataFromLoader(routeLoader);
+  const { stops, distinctTrips, route } = useDataFromLoader(routeLoader);
   const { routeId, directionId } = useParams();
 
   const { viewStatePathname } = useViewStatePathname();
 
+  useTitle(`${route.routeId} ${route.routeLongName} - Austin Bus Go`);
   return (
     <Box
       sx={{

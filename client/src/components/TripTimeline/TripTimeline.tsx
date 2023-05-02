@@ -43,6 +43,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
 
+  // TODO: fix timeline rail styling of border radius
   return (
     <Box
       sx={{
@@ -61,7 +62,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
           paddingRight: 0,
         }}
       >
-        {stopTimes?.map((stopTime, index) => {
+        {stopTimes?.map((stopTime) => {
           const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
           const isSelectedStop = stopTime.stopId === stop?.stopId;
 

@@ -36,6 +36,7 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
 export interface SearchPanelProps {
   routes: Route[];
   route?: Route;
+
   setRoute(route?: Route): void;
 }
 
@@ -212,7 +213,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             ref={params.InputProps.ref}
             inputRef={ref}
             inputProps={params.inputProps}
-            autoFocus={true}
+            autoFocus={route === undefined}
             sx={{
               paddingLeft: 2.5,
               paddingRight: 3,
