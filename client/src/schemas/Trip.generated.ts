@@ -19,7 +19,12 @@ export type TripQuery = { __typename?: "Query" } & {
     | "shapeId"
     | "wheelchairAccessible"
     | "bikesAllowed"
-  > & { route: { __typename?: "Route" } & Pick<Types.Route, "routeLongName"> };
+  > & {
+      route: { __typename?: "Route" } & Pick<
+        Types.Route,
+        "routeLongName" | "routeColor"
+      >;
+    };
 };
 
 export const TripDocument = gql`
@@ -37,6 +42,7 @@ export const TripDocument = gql`
       bikesAllowed
       route {
         routeLongName
+        routeColor
       }
     }
   }

@@ -209,7 +209,7 @@ class TripWithRoute(graphene.ObjectType):
 class ArrivalTime(graphene.ObjectType):
     vehicle = graphene.Field(VehiclePosition)
     scheduled_arrival_time = graphene.String(required=True)
-    trip = graphene.Field(Trip, required=True)
+    trip = graphene.Field(TripWithRoute, required=True)
     updated_arrival_time = graphene.String()
 
 
@@ -257,8 +257,8 @@ class Query(graphene.ObjectType):
 
     vehicle_positions = graphene.Field(graphene.List(graphene.NonNull(VehiclePosition)), route_id=graphene.Int(
         required=True), direction=graphene.Boolean(required=True), resolver=resolver.resolve_vehicle_positions)
-    arrival_times = graphene.Field(graphene.List(graphene.NonNull(ArrivalTime)), route_id=graphene.Int(
-        required=True), direction=graphene.Boolean(required=True), stop_id=graphene.String(required=True),
+    arrival_times = graphene.Field(graphene.List(graphene.NonNull(ArrivalTime)),
+                                   stop_id=graphene.String(required=True),
                                    date=graphene.String(required=True),
                                    resolver=resolver.resolve_arrival_times)
     stop_times = graphene.Field(graphene.List(graphene.NonNull(StopTimes)), trip_id=graphene.String(required=True),

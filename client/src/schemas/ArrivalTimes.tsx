@@ -1,18 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const ARRIVAL_TIMES_QUERY = gql`
-  query ArrivalTimes(
-    $routeId: Int!
-    $direction: Boolean!
-    $stopId: String!
-    $date: String!
-  ) {
-    arrivalTimes(
-      routeId: $routeId
-      direction: $direction
-      stopId: $stopId
-      date: $date
-    ) {
+  query ArrivalTimes($stopId: String!, $date: String!) {
+    arrivalTimes(stopId: $stopId, date: $date) {
       updatedArrivalTime
       scheduledArrivalTime
       trip {
@@ -26,6 +16,10 @@ export const ARRIVAL_TIMES_QUERY = gql`
         shapeId
         wheelchairAccessible
         bikesAllowed
+        route {
+          routeColor
+          routeLongName
+        }
       }
       vehicle {
         trip {

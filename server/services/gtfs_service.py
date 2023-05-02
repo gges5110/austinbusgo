@@ -116,8 +116,9 @@ class GTFSService:
 
     @staticmethod
     def get_stop_time_by_route_id(stop_id: str, date: str) -> List[StopTimes]:
-        return StopTimes.select(StopTimes, Stops, Trips) \
+        return StopTimes.select(StopTimes, Stops, Trips, Routes) \
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias('trip')) \
+            .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route")) \
             .join(Stops, on=(Stops.stop_id == StopTimes.stop_id)) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
             .where((StopTimes.stop_id == stop_id)

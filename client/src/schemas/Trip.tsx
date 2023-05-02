@@ -15,6 +15,7 @@ export const TRIP_QUERY = gql`
       bikesAllowed
       route {
         routeLongName
+        routeColor
       }
     }
   }

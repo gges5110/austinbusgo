@@ -276,7 +276,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
           setSelectedStop={(stop) => {
             setSelectedStopId(stop.stopId);
           }}
-          direction={false}
+          selectedStop={stop}
         />
 
         {

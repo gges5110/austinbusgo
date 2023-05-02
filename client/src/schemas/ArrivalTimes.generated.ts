@@ -3,8 +3,6 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type ArrivalTimesQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["Int"];
-  direction: Types.Scalars["Boolean"];
   stopId: Types.Scalars["String"];
   date: Types.Scalars["String"];
 }>;
@@ -16,8 +14,8 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
         Types.ArrivalTime,
         "updatedArrivalTime" | "scheduledArrivalTime"
       > & {
-          trip: { __typename?: "Trip" } & Pick<
-            Types.Trip,
+          trip: { __typename?: "TripWithRoute" } & Pick<
+            Types.TripWithRoute,
             | "routeId"
             | "serviceId"
             | "tripId"
@@ -28,7 +26,12 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
             | "shapeId"
             | "wheelchairAccessible"
             | "bikesAllowed"
-          >;
+          > & {
+              route: { __typename?: "Route" } & Pick<
+                Types.Route,
+                "routeColor" | "routeLongName"
+              >;
+            };
           vehicle?: Types.Maybe<
             { __typename?: "VehiclePosition" } & Pick<
               Types.VehiclePosition,
@@ -60,18 +63,8 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
 };
 
 export const ArrivalTimesDocument = gql`
-  query ArrivalTimes(
-    $routeId: Int!
-    $direction: Boolean!
-    $stopId: String!
-    $date: String!
-  ) {
-    arrivalTimes(
-      routeId: $routeId
-      direction: $direction
-      stopId: $stopId
-      date: $date
-    ) {
+  query ArrivalTimes($stopId: String!, $date: String!) {
+    arrivalTimes(stopId: $stopId, date: $date) {
       updatedArrivalTime
       scheduledArrivalTime
       trip {
@@ -85,6 +78,10 @@ export const ArrivalTimesDocument = gql`
         shapeId
         wheelchairAccessible
         bikesAllowed
+        route {
+          routeColor
+          routeLongName
+        }
       }
       vehicle {
         trip {
@@ -120,8 +117,6 @@ export const ArrivalTimesDocument = gql`
  * @example
  * const { data, loading, error } = useArrivalTimesQuery({
  *   variables: {
- *      routeId: // value for 'routeId'
- *      direction: // value for 'direction'
  *      stopId: // value for 'stopId'
  *      date: // value for 'date'
  *   },

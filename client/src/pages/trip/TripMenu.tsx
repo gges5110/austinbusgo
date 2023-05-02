@@ -1,15 +1,14 @@
 import { useMatches, useNavigate } from "react-router-dom";
 import { Params } from "@remix-run/router";
-import { Box, Divider, IconButton, Slide, Tooltip } from "@mui/material";
+import {
+  Box,
+  Divider,
+  IconButton,
+  Slide,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Timeline from "@mui/lab/Timeline";
-import { timelineItemClasses } from "@mui/lab";
-import dayjs from "dayjs";
-import TimelineItem from "@mui/lab/TimelineItem";
-import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import TimelineDot from "@mui/lab/TimelineDot";
-import TimelineConnector from "@mui/lab/TimelineConnector";
-import TimelineContent from "@mui/lab/TimelineContent";
 import * as React from "react";
 import {
   HandleType,
@@ -17,6 +16,9 @@ import {
   tripLoader,
   useDataFromLoader,
 } from "../../App";
+import { TripTimeline } from "../../components/TripTimeline/TripTimeline";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import { RouteIdDisplay } from "../../components/RouteIdDisplay";
 
 export const TripMenu = () => {
   const { trip, stopTimes } = useDataFromLoader(tripLoader);
@@ -41,7 +43,7 @@ export const TripMenu = () => {
     <Box
       sx={{
         backgroundColor: "#FFF",
-        maxHeight: "80vh",
+        maxHeight: "82vh",
         width: "408px",
         m: 4,
         mt: 2,
@@ -58,49 +60,45 @@ export const TripMenu = () => {
               width: "100%",
             }}
           >
-            <Tooltip title={"Back"}>
-              <IconButton onClick={onBack}>
-                <ArrowBackIcon />
-              </IconButton>
-            </Tooltip>
-            {stop?.stopName}
-            {trip.routeId} {trip.route.routeLongName}
-            <Divider />
-            <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
-              <Timeline
-                sx={{
-                  [`& .${timelineItemClasses.root}:before`]: {
-                    flex: 0,
-                    padding: 0,
-                  },
-                }}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                py: 1,
+                position: "sticky",
+                overflow: "hidden",
+              }}
+            >
+              <Tooltip
+                title={"Back"}
+                sx={{ position: "absolute", left: "6px" }}
               >
-                {stopTimes?.map((stopTime, index) => {
-                  const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
-                  return (
-                    <TimelineItem key={stopTime.stopId}>
-                      <TimelineSeparator>
-                        <TimelineDot color={"primary"} />
-                        {index !== stopTimes.length - 1 && (
-                          <TimelineConnector />
-                        )}
-                      </TimelineSeparator>
-                      <TimelineContent>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span>{stopTime.stop.stopName}</span>{" "}
-                          <span>{arrivalTime.format("LT")}</span>
-                        </Box>
-                      </TimelineContent>
-                    </TimelineItem>
-                  );
-                })}
-              </Timeline>
+                <IconButton onClick={onBack}>
+                  <ArrowBackIcon />
+                </IconButton>
+              </Tooltip>
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                  <DirectionsBusIcon />
+                  <RouteIdDisplay
+                    routeId={trip.routeId}
+                    routeColor={trip.route.routeColor}
+                  />
+                  <Typography sx={{ fontSize: "18px" }}>
+                    {trip.route.routeLongName}
+                  </Typography>
+                </Box>
+                <Typography
+                  variant={"subtitle1"}
+                  sx={{ color: "gray", textAlign: "center" }}
+                >
+                  from {stop?.stopName}
+                </Typography>
+              </Box>
             </Box>
+
+            <Divider />
+            <TripTimeline stopTimes={stopTimes} stop={stop} trip={trip} />
           </Box>
         </div>
       </Slide>

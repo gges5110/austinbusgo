@@ -2,7 +2,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { stopLoader, useDataFromLoader } from "../../../../../App";
 import { Box, Slide } from "@mui/material";
 import * as React from "react";
-import { toBoolean } from "../../../Page";
 import { StopInfoAndArrivalTimes } from "../../../../../components/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 import { useTitle } from "../../../../../hooks/UseTitle";
 
@@ -13,7 +12,7 @@ interface StopMenuProps {
 export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { routeId, directionId } = useParams();
+  const { routeId } = useParams();
   const {
     data: { stop },
   } = useDataFromLoader(stopLoader);
@@ -35,8 +34,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
         <div>
           <StopInfoAndArrivalTimes
             stop={stop}
-            routeId={Number(routeId) || 318}
-            direction={toBoolean(directionId)}
+            routeId={routeId}
             onBack={() => {
               navigate(-1);
             }}

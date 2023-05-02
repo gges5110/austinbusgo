@@ -11,9 +11,9 @@ import { ArrivalTime } from "../../interfaces/interface.d";
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
 
-  direction: boolean;
-  routeId: number;
+  routeId?: string;
   hideBackButton?: boolean;
+
   onBack(): void;
 
   arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
@@ -22,7 +22,6 @@ interface StopInfoAndArrivalTimesProps {
 export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = ({
   stop,
   routeId,
-  direction,
   hideBackButton,
   onBack,
   arrivalTimeOnClick,
@@ -31,8 +30,6 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
     fetchPolicy: "network-only",
     variables: {
       stopId: String(stop.stopId),
-      direction,
-      routeId,
       date: getDate(),
     },
     onCompleted: (data) => {
@@ -41,7 +38,11 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
       );
       const uniqueRouteIds =
         routeIds?.filter((item, pos, arr) => arr.indexOf(item) == pos) || [];
-      setSelectedRouteIds(uniqueRouteIds);
+      if (routeId !== undefined) {
+        setSelectedRouteIds([routeId]);
+      } else {
+        setSelectedRouteIds(uniqueRouteIds);
+      }
     },
   });
 
@@ -49,9 +50,13 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
 
   const routeIds = arrivalTimes.map((arrivalTime) => arrivalTime.trip.routeId);
   const uniqueRouteIds =
-    routeIds?.filter((item, pos, arr) => arr.indexOf(item) == pos) || [];
+    routeIds
+      ?.filter((item, pos, arr) => arr.indexOf(item) == pos)
+      .sort((a, b) => {
+        return Number(a) - Number(b);
+      }) || [];
   const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>(
-    uniqueRouteIds
+    routeId ? [routeId] : uniqueRouteIds
   );
 
   return (
@@ -89,41 +94,57 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
             </Typography>
           </Box>
         </Box>
-      </Box>
-      {!loading && arrivalTimes.length > 0 && (
-        <Box sx={{ overflowX: "auto", py: 1, px: 1, boxShadow: 1 }}>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            {uniqueRouteIds.map((uniqueRouteId) => (
-              <Button
-                key={uniqueRouteId}
-                size="small"
-                variant={
-                  selectedRouteIds.includes(uniqueRouteId)
-                    ? "contained"
-                    : "outlined"
-                }
-                color={"primary"}
-                sx={{ my: 1 }}
-                onClick={() => {
-                  setSelectedRouteIds((prevState) => {
-                    if (prevState.includes(uniqueRouteId)) {
-                      const newArr = [...prevState];
-                      newArr.splice(newArr.indexOf(uniqueRouteId), 1);
-                      return newArr;
-                    } else {
-                      const newArr = [...prevState];
-                      newArr.push(uniqueRouteId);
-                      return newArr;
-                    }
-                  });
-                }}
-              >
-                {uniqueRouteId}
-              </Button>
-            ))}
+
+        {!loading && arrivalTimes.length > 0 && (
+          <Box sx={{ overflowX: "auto", py: 1 }}>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {uniqueRouteIds.map((uniqueRouteId) => {
+                const routeColor = arrivalTimes.find(
+                  (arrivalTime) => arrivalTime.trip.routeId === uniqueRouteId
+                )?.trip.route.routeColor;
+                const isSelected = selectedRouteIds.includes(uniqueRouteId);
+                // TODO: fix hover styles
+                return (
+                  <Button
+                    sx={{
+                      backgroundColor: `#${routeColor}`,
+                      color: "white",
+                      width: "fit-content",
+                      height: "fit-content",
+                      px: 1,
+                      py: 0,
+                      minWidth: 0,
+                      borderRadius: 1,
+                      opacity: isSelected ? "100%" : "50%",
+                    }}
+                    key={uniqueRouteId}
+                    onClick={() => {
+                      setSelectedRouteIds((prevState) => {
+                        if (
+                          prevState.includes(uniqueRouteId) &&
+                          prevState.length > 1
+                        ) {
+                          const newArr = [...prevState];
+                          newArr.splice(newArr.indexOf(uniqueRouteId), 1);
+                          return newArr;
+                        } else {
+                          const newArr = [...prevState];
+                          newArr.push(uniqueRouteId);
+                          return newArr;
+                        }
+                      });
+                    }}
+                  >
+                    <Typography sx={{ fontWeight: "bold" }}>
+                      {uniqueRouteId}
+                    </Typography>
+                  </Button>
+                );
+              })}
+            </Box>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
 
       <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
         <ArrivalTimeList

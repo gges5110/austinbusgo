@@ -1,18 +1,20 @@
-import { List, ListItem, ListItemText, Skeleton } from "@mui/material";
+import { Divider, List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
 import { ArrivalTime } from "../../../interfaces/interface.d";
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
+import { ArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 
 dayjs.extend(relativeTime);
 dayjs.extend(customParseFormat);
 
 export interface ArrivalTimeListProps {
-  readonly arrivalTimes: ArrivalTime[];
+  readonly arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];
   readonly loading: boolean;
   selectedRouteIds: string[];
+
   arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
 }
 
@@ -27,20 +29,23 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
       <ListItem>
         <ListItemText primary={<Skeleton height={56} />} />
       </ListItem>
-    ) : arrivalTimes.length === 0 ? (
+    ) : arrivalTimes?.length === 0 ? (
       <ListItem key={"no-more-buses"}>
         <ListItemText primary={"No more running buses"} />
       </ListItem>
     ) : (
-      arrivalTimes.map((arrivalTime, index) => {
+      arrivalTimes?.map((arrivalTime, index) => {
         return (
           <>
             {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
-              <ArrivalTimeListItem
-                key={index}
-                arrivalTime={arrivalTime}
-                arrivalTimeOnClick={arrivalTimeOnClick}
-              />
+              <>
+                <ArrivalTimeListItem
+                  key={index}
+                  arrivalTime={arrivalTime}
+                  arrivalTimeOnClick={arrivalTimeOnClick}
+                />
+                <Divider />
+              </>
             )}
           </>
         );

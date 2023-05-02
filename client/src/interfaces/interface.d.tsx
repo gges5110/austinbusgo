@@ -69,8 +69,6 @@ export interface QueryVehiclePositionsArgs {
 }
 
 export interface QueryArrivalTimesArgs {
-  routeId: Scalars["Int"];
-  direction: Scalars["Boolean"];
   stopId: Scalars["String"];
   date: Scalars["String"];
 }
@@ -241,7 +239,7 @@ export interface ArrivalTime {
   __typename?: "ArrivalTime";
   vehicle?: Maybe<VehiclePosition>;
   scheduledArrivalTime: Scalars["String"];
-  trip: Trip;
+  trip: TripWithRoute;
   updatedArrivalTime?: Maybe<Scalars["String"]>;
 }
 
