@@ -243,16 +243,12 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props, option, { inputValue }) => {
           const stopOption = option as StopOption;
-          const routeLongNameMatches = match(
+          const stopNameMatches = match(stopOption.stopName || "", inputValue, {
+            insideWords: true,
+          });
+          const stopNameParts = parse(
             stopOption.stopName || "",
-            inputValue,
-            {
-              insideWords: true,
-            }
-          );
-          const routeLongNameParts = parse(
-            stopOption.stopName || "",
-            routeLongNameMatches
+            stopNameMatches
           );
 
           const routeIdMatches = match(String(stopOption.stopId), inputValue, {
@@ -294,7 +290,7 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
                     fontWeight: "bold",
                   }}
                 >
-                  {routeLongNameParts.map((part, index) => (
+                  {stopNameParts.map((part, index) => (
                     <span
                       key={index}
                       style={{

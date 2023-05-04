@@ -114,7 +114,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
       sx={{ py: 1.5 }}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
-        <Box display={"flex"} flexDirection={"column"}>
+        <Box display={"flex"} flexDirection={"column"} gap={1}>
           <Box display={"flex"} gap={1}>
             <DirectionsBusIcon fontSize={"small"} />
             <RouteIdDisplay
@@ -125,7 +125,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               {tripName}
             </Typography>
           </Box>
-          <Box color={"gray"}>
+          <Box color={"gray"} display={"flex"} alignItems={"center"}>
             <Typography
               className={updatedArrivalTime ? textColor : undefined}
               component={"span"}

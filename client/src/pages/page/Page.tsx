@@ -1,4 +1,4 @@
-import { Box, Popper, useTheme } from "@mui/material";
+import { Box, Paper, Popper, useTheme } from "@mui/material";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
 import { useEffect, useState } from "react";
@@ -143,9 +143,8 @@ export const Page: React.FunctionComponent = () => {
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
-      <Box
+      <Paper
         sx={{
-          backgroundColor: "background.default",
           color: "text.primary",
           borderRadius: 1,
           position: "absolute",
@@ -155,7 +154,7 @@ export const Page: React.FunctionComponent = () => {
         }}
       >
         <ColorModeToggle />
-      </Box>
+      </Paper>
       <MapWrapper
         stops={stops}
         routeShapes={routeShapes}

@@ -7,6 +7,7 @@ import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
 import { StopQuery } from "../../schemas/Stop.generated";
 import { useState } from "react";
 import { ArrivalTime } from "../../interfaces/interface.d";
+import ClearIcon from "@mui/icons-material/Clear";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -58,12 +59,17 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
     routeId ? [routeId] : uniqueRouteIds
   );
 
+  const clearSelection = () => {
+    setSelectedRouteIds(uniqueRouteIds);
+  };
+
   return (
     <div>
       <Box
         sx={{
           py: 1,
           pl: 2,
+          pr: 1,
           boxShadow: 2,
           width: "100%",
         }}
@@ -96,52 +102,72 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
 
         {!loading && arrivalTimes.length > 0 && (
           <Box sx={{ overflowX: "auto", py: 1 }}>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {uniqueRouteIds.map((uniqueRouteId) => {
-                const routeColor = arrivalTimes.find(
-                  (arrivalTime) => arrivalTime.trip.routeId === uniqueRouteId
-                )?.trip.route.routeColor;
-                const isSelected = selectedRouteIds.includes(uniqueRouteId);
-                // TODO: fix hover styles
-                return (
-                  <Button
-                    sx={{
-                      backgroundColor: `#${routeColor}`,
-                      color: "white",
-                      width: "fit-content",
-                      height: "fit-content",
-                      px: 1,
-                      py: 0,
-                      minWidth: 0,
-                      borderRadius: 1,
-                      opacity: isSelected ? "100%" : "50%",
-                    }}
-                    key={uniqueRouteId}
+            <Box
+              display={"flex"}
+              justifyContent={"space-between"}
+              alignItems={"center"}
+            >
+              <Box sx={{ display: "flex", gap: 1 }}>
+                {uniqueRouteIds.map((uniqueRouteId) => {
+                  const routeColor = arrivalTimes.find(
+                    (arrivalTime) => arrivalTime.trip.routeId === uniqueRouteId
+                  )?.trip.route.routeColor;
+                  const isSelected = selectedRouteIds.includes(uniqueRouteId);
+                  // TODO: fix hover styles
+                  return (
+                    <Button
+                      sx={{
+                        backgroundColor: `#${routeColor}`,
+                        "&:hover": {
+                          backgroundColor: `#${routeColor}`,
+                          opacity: isSelected ? "80%" : "40%",
+                        },
+                        color: "white",
+                        width: "fit-content",
+                        height: "fit-content",
+                        px: 1,
+                        py: 0,
+                        minWidth: 0,
+                        borderRadius: 1,
+                        opacity: isSelected ? "100%" : "50%",
+                      }}
+                      key={uniqueRouteId}
+                      onClick={() => {
+                        setSelectedRouteIds((prevState) => {
+                          if (prevState.length === uniqueRouteIds.length) {
+                            return [uniqueRouteId];
+                          } else if (
+                            prevState.includes(uniqueRouteId) &&
+                            prevState.length > 1
+                          ) {
+                            const newArr = [...prevState];
+                            newArr.splice(newArr.indexOf(uniqueRouteId), 1);
+                            return newArr;
+                          } else {
+                            const newArr = [...prevState];
+                            newArr.push(uniqueRouteId);
+                            return newArr;
+                          }
+                        });
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: "bold" }}>
+                        {uniqueRouteId}
+                      </Typography>
+                    </Button>
+                  );
+                })}
+              </Box>
+              {uniqueRouteIds.length !== selectedRouteIds.length && (
+                <IconButton sx={{ padding: "4px" }}>
+                  <ClearIcon
+                    sx={{ fontSize: 16 }}
                     onClick={() => {
-                      setSelectedRouteIds((prevState) => {
-                        if (prevState.length === uniqueRouteIds.length) {
-                          return [uniqueRouteId];
-                        } else if (
-                          prevState.includes(uniqueRouteId) &&
-                          prevState.length > 1
-                        ) {
-                          const newArr = [...prevState];
-                          newArr.splice(newArr.indexOf(uniqueRouteId), 1);
-                          return newArr;
-                        } else {
-                          const newArr = [...prevState];
-                          newArr.push(uniqueRouteId);
-                          return newArr;
-                        }
-                      });
+                      clearSelection();
                     }}
-                  >
-                    <Typography sx={{ fontWeight: "bold" }}>
-                      {uniqueRouteId}
-                    </Typography>
-                  </Button>
-                );
-              })}
+                  />
+                </IconButton>
+              )}
             </Box>
           </Box>
         )}

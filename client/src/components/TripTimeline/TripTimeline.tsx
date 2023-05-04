@@ -114,7 +114,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 sx={{
                   position: "relative",
                   pl: 6,
-                  py: 1.5,
+                  py: 2.5,
                 }}
               >
                 <Box
@@ -132,7 +132,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                     }}
                   >
                     <Box display={"flex"} flexDirection={"column"}>
-                      <Typography fontWeight={isSelectedStop ? 500 : 400}>
+                      <Typography fontWeight={isSelectedStop ? 600 : 400}>
                         {stopTime.stop.stopName}
                       </Typography>
                       <Typography color={"gray"} fontSize={14}>

@@ -4,6 +4,7 @@ import {
   Box,
   Divider,
   IconButton,
+  Paper,
   Slide,
   Tab,
   Tabs,
@@ -80,10 +81,13 @@ export const TripMenu = () => {
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  const tripName = trip.tripHeadsign?.split("-")[
+    trip.tripHeadsign?.split("-").length - 1
+  ];
   return (
-    <Box
+    <Paper
       sx={{
-        backgroundColor: "background.default",
         maxHeight: "82vh",
         width: "408px",
         m: 4,
@@ -125,12 +129,9 @@ export const TripMenu = () => {
                     routeId={trip.routeId}
                     routeColor={trip.route.routeColor}
                   />
-                  <Typography sx={{ fontSize: "18px" }}>
-                    {trip.route.routeLongName}
-                  </Typography>
+                  <Typography sx={{ fontSize: "18px" }}>{tripName}</Typography>
                 </Box>
                 <Typography
-                  variant={"subtitle1"}
                   sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
                 >
                   from {stop?.stopName}
@@ -172,7 +173,7 @@ export const TripMenu = () => {
           </Box>
         </div>
       </Slide>
-    </Box>
+    </Paper>
   );
 };
 

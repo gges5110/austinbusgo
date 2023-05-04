@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Slide } from "@mui/material";
+import { Paper, Slide } from "@mui/material";
 import * as React from "react";
 import { StopInfoAndArrivalTimes } from "../../../../../components/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 import { useTitle } from "../../../../../hooks/UseTitle";
@@ -35,9 +35,8 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const { viewStatePathname } = useViewStatePathname();
 
   return (
-    <Box
+    <Paper
       sx={{
-        backgroundColor: "background.default",
         maxHeight: "80vh",
         width: "408px",
         m: 4,
@@ -67,6 +66,6 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
           />
         </div>
       </Slide>
-    </Box>
+    </Paper>
   );
 };

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Slide } from "@mui/material";
+import { Box, Slide, Paper } from "@mui/material";
 import { DirectionToggle } from "../../../../components/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
 import * as React from "react";
@@ -59,9 +59,8 @@ export const RouteMenu = () => {
 
   useTitle(`${route.routeId} ${route.routeLongName} - Austin Bus Go`);
   return (
-    <Box
+    <Paper
       sx={{
-        backgroundColor: "background.default",
         maxHeight: "80vh",
         width: "408px",
         m: 4,
@@ -108,6 +107,6 @@ export const RouteMenu = () => {
           </Box>
         </div>
       </Slide>
-    </Box>
+    </Paper>
   );
 };
