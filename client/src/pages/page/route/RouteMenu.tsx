@@ -1,23 +1,24 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Slide, Paper } from "@mui/material";
-import { DirectionToggle } from "../../../../components/Route/DirectionToggle/DirectionToggle";
-import { StopsTimeline } from "../../../../components/Route/StopsTimeline/StopsTimeline";
+import { DirectionToggle } from "../../../components/Route/DirectionToggle/DirectionToggle";
+import { StopsTimeline } from "../../../components/Route/StopsTimeline/StopsTimeline";
 import * as React from "react";
-import { getDate, toBoolean } from "../../RootLayout";
-import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
-import { useTitle } from "../../../../hooks/UseTitle";
-import { client, useDataFromLoader } from "../../../../Router";
+import { getDate, toBoolean } from "../RootLayout";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { useTitle } from "../../../hooks/UseTitle";
+import { client, useDataFromLoader } from "../../../Router";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
   RouteDocument,
   RouteQuery,
   RouteQueryVariables,
-} from "../../../../schemas/Route.generated";
+} from "../../../schemas/Route.generated";
 import {
   StopsAndShapesDocument,
   StopsAndShapesQuery,
   StopsAndShapesQueryVariables,
-} from "../../../../schemas/StopsAndRouteShapes.generated";
+} from "../../../schemas/StopsAndRouteShapes.generated";
+import { SEARCH_PANEL_WIDTH } from "../../../components/Route/SearchPanel";
 
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeId = Number(params["routeId"]);
@@ -62,7 +63,7 @@ export const RouteMenu = () => {
     <Paper
       sx={{
         maxHeight: "80vh",
-        width: "408px",
+        width: SEARCH_PANEL_WIDTH,
         m: 4,
         mt: 2,
         overflow: "hidden",

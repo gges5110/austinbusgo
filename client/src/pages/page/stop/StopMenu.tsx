@@ -1,16 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Paper, Slide } from "@mui/material";
 import * as React from "react";
-import { StopInfoAndArrivalTimes } from "../../../../../components/Stop/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
-import { useTitle } from "../../../../../hooks/UseTitle";
-import { useViewStatePathname } from "../../../../../hooks/UseViewStatePathname";
-import { client, useDataFromLoader } from "../../../../../Router";
+import { StopInfoAndArrivalTimes } from "../../../components/Stop/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
+import { useTitle } from "../../../hooks/UseTitle";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { client, useDataFromLoader } from "../../../Router";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
   StopDocument,
   StopQuery,
   StopQueryVariables,
-} from "../../../../../schemas/Stop.generated";
+} from "../../../schemas/Stop.generated";
+import { SEARCH_PANEL_WIDTH } from "../../../components/Route/SearchPanel";
 
 interface StopMenuProps {
   hideBackButton?: boolean;
@@ -38,7 +39,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
     <Paper
       sx={{
         maxHeight: "80vh",
-        width: "408px",
+        width: SEARCH_PANEL_WIDTH,
         m: 4,
         mt: 2,
         overflow: "hidden",

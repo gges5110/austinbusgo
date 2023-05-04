@@ -18,7 +18,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { RouteIdDisplay } from "../../../components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { client, HandleType, useDataFromLoader } from "../../../Router";
-import { stopLoader } from "../routes/route/stop/StopMenu";
+import { stopLoader } from "../stop/StopMenu";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
   StopTimesDocument,
@@ -30,6 +30,7 @@ import {
   TripQuery,
   TripQueryVariables,
 } from "../../../schemas/Trip.generated";
+import { SEARCH_PANEL_WIDTH } from "../../../components/Route/SearchPanel";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
   const tripId = params["tripId"];
@@ -89,7 +90,7 @@ export const TripMenu = () => {
     <Paper
       sx={{
         maxHeight: "82vh",
-        width: "408px",
+        width: SEARCH_PANEL_WIDTH,
         m: 4,
         mt: 2,
         overflow: "hidden",

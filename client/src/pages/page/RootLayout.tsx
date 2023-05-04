@@ -16,8 +16,8 @@ import { MapWrapper } from "../../components/Map/MapWrapper";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
 import { HandleType } from "../../Router";
-import { stopLoader } from "./routes/route/stop/StopMenu";
-import { routeLoader } from "./routes/route/RouteMenu";
+import { stopLoader } from "./stop/StopMenu";
+import { routeLoader } from "./route/RouteMenu";
 import { ColorModeToggle } from "../../components/ColorModeToggle/ColorModeToggle";
 
 const defaultAutoPollingInterval = 15000;

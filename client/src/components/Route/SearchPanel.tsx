@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  debounce,
   Divider,
   IconButton,
   Popper,
@@ -11,63 +12,112 @@ import {
 } from "@mui/material";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
-import ClearIcon from "@mui/icons-material/Clear";
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
-import { Route } from "../../interfaces/interface.d";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Route, Stop } from "../../interfaces/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
-import parse from "autosuggest-highlight/parse";
-import match from "autosuggest-highlight/match";
-import { SearchModeToggle } from "../SearchModeToggle/SearchModeToggle";
 import { useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { Highlight } from "./Highlight";
+import { useStopsByNameLazyQuery } from "../../schemas/StopsByName.generated";
+import { useRecentSearches } from "../../hooks/UseRecentSearches";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import RouteIcon from "@mui/icons-material/Route";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+
+export const SEARCH_PANEL_WIDTH = "392px";
 
 const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   <Popper
     {...props}
     style={{
-      width: 408,
-      paddingTop: 10,
+      width: SEARCH_PANEL_WIDTH,
+      paddingTop: 12,
     }}
     placement="bottom-start"
   />
 );
 
+enum SearchType {
+  "recent",
+  "search",
+}
+
+export interface SearchOption {
+  type: SearchType;
+  optionValue: Stop | Route;
+}
+
+export const isRoute = (option: Stop | Route): option is Route => {
+  return option.__typename === "Route";
+};
+
+export const isStop = (option: Stop | Route): option is Stop => {
+  return option.__typename === "Stop";
+};
+
 export interface SearchPanelProps {
   routes: Route[];
   route?: Route;
+  stop?: Stop;
 
   setRoute(route?: Route): void;
+
+  setStop(stop?: Stop): void;
 }
 
 export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
-  routes,
   route,
+  routes,
   setRoute,
+  stop,
+  setStop,
 }) => {
   const navigation = useNavigation();
   const navigate = useNavigate();
+  const { viewStatePathname, isBasePath } = useViewStatePathname();
 
   const routeLoading = navigation.location !== undefined;
 
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
-
+  const [inputString, setInputString] = useState<string>("");
+  const [stops, setStops] = useState<Stop[]>([]);
   useEffect(() => {
     if (route) {
-      setInputString(getOptionLabel(route));
+      setInputString(getRouteOptionLabel(route));
     }
   }, [route]);
 
-  const searchRouteOnChange = (
+  useEffect(() => {
+    if (isBasePath) {
+      setSearchPanelOpen(true);
+    }
+  }, [isBasePath]);
+
+  useEffect(() => {
+    if (stop) {
+      setInputString(getStopOptionLabel(stop));
+      addToRecentSearches(stop);
+    }
+  }, [stop]);
+
+  const searchOnChange = (
     event: React.SyntheticEvent,
-    newValue: Route | null
+    newValue: SearchOption | null
   ) => {
     if (newValue != null) {
-      if (route?.routeId !== newValue.routeId) {
-        setRoute(newValue);
+      const { optionValue } = newValue;
+      if (isRoute(optionValue)) {
+        if (route?.routeId !== optionValue.routeId) {
+          setRoute(optionValue);
+        }
+      } else if (isStop(optionValue)) {
+        setStop(optionValue);
       }
-    } else {
-      setRoute(undefined);
+
+      addToRecentSearches(optionValue);
     }
   };
   const ref = useRef<HTMLInputElement | null>(null);
@@ -96,19 +146,71 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       return;
     }
     setInputString(value);
+
+    if (event.type === "change") {
+      delayedQuery(value);
+    }
   };
 
-  const { viewStatePathname } = useViewStatePathname();
   const clearSelection = () => {
     navigate(viewStatePathname);
     setInputString("");
     setSearchPanelOpen(true);
   };
 
-  const [inputString, setInputString] = useState<string>("");
-  const getOptionLabel = (route: Route) => {
+  const getRouteOptionLabel = (route: Route) => {
     return `${route.routeId} ${route.routeLongName}`;
   };
+
+  const getStopOptionLabel = (stop: Stop) => {
+    return `${stop.stopId} ${stop.stopName}`;
+  };
+
+  // TODO: fix onCompleted isn't fired when fetching from cached values
+  // https://github.com/apollographql/react-apollo/issues/2177
+  const [getStopsByName, { loading }] = useStopsByNameLazyQuery({
+    notifyOnNetworkStatusChange: true,
+    onCompleted: (data) => {
+      if (data.stopsByName) {
+        setStops(data.stopsByName);
+      }
+    },
+  });
+
+  const search = (value: string): void => {
+    getStopsByName({
+      variables: {
+        stopName: value,
+      },
+    });
+  };
+
+  const delayedQuery = useCallback(
+    debounce((value: string) => {
+      if (value !== "") {
+        search(value);
+      } else {
+        setStops([]);
+      }
+    }, 500),
+    []
+  );
+
+  const { recentSearches, addToRecentSearches } = useRecentSearches();
+  const options = [
+    ...recentSearches.map((search) => ({
+      type: SearchType.recent,
+      optionValue: search,
+    })),
+    ...routes.map((route) => ({
+      type: SearchType.search,
+      optionValue: route,
+    })),
+    ...stops.map((stop) => ({
+      type: SearchType.search,
+      optionValue: stop,
+    })),
+  ];
 
   return (
     <Paper
@@ -122,10 +224,9 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         boxShadow: 2,
       }}
     >
-      <Autocomplete
-        options={routes || []}
-        sx={{ width: "300px" }}
-        value={route || null}
+      <Autocomplete<SearchOption>
+        options={options}
+        sx={{ width: SEARCH_PANEL_WIDTH }}
         blurOnSelect={true}
         autoComplete={true}
         open={searchPanelOpen}
@@ -148,62 +249,74 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         autoHighlight={true}
         openOnFocus={true}
         selectOnFocus={true}
-        onChange={searchRouteOnChange}
+        onChange={searchOnChange}
         isOptionEqualToValue={(option, value) => {
-          return option.routeId === value.routeId;
+          const { optionValue } = option;
+
+          if (isRoute(optionValue)) {
+            return (
+              isRoute(value.optionValue) &&
+              optionValue.routeId === value.optionValue.routeId
+            );
+          } else if (isStop(optionValue)) {
+            return (
+              isStop(value.optionValue) &&
+              optionValue.stopId === value.optionValue.stopId
+            );
+          }
+
+          return false;
         }}
-        getOptionLabel={getOptionLabel}
+        getOptionLabel={(option: SearchOption) => {
+          const { optionValue } = option;
+          if (isRoute(optionValue)) {
+            return getRouteOptionLabel(optionValue);
+          } else if (isStop(optionValue)) {
+            return getStopOptionLabel(optionValue);
+          }
+
+          return "";
+        }}
         ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props, option, { inputValue }) => {
-          const routeLongNameMatches = match(option.routeLongName, inputValue, {
-            insideWords: true,
-          });
-          const routeLongNameParts = parse(
-            option.routeLongName,
-            routeLongNameMatches
-          );
-
-          const routeIdMatches = match(String(option.routeId), inputValue, {
-            insideWords: true,
-          });
-          const routeIdParts = parse(String(option.routeId), routeIdMatches);
+          const { optionValue } = option;
 
           return (
             <li {...props}>
-              <Box
-                component="span"
-                sx={{
-                  width: "30px",
-                  display: "inline-block",
-                }}
-              >
-                {routeIdParts.map((part, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      fontWeight: part.highlight ? 700 : 400,
-                    }}
-                  >
-                    {part.text}
-                  </span>
-                ))}
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  fontWeight: "bold",
-                }}
-              >
-                {routeLongNameParts.map((part, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      fontWeight: part.highlight ? 700 : 400,
-                    }}
-                  >
-                    {part.text}
-                  </span>
-                ))}
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Box sx={{ pr: 2 }}>
+                  {option.type === SearchType.recent ? (
+                    <AccessTimeOutlinedIcon color={"neutral"} />
+                  ) : isRoute(optionValue) ? (
+                    <RouteIcon color={"neutral"} />
+                  ) : (
+                    <PlaceOutlinedIcon color={"neutral"} />
+                  )}
+                </Box>
+                {isRoute(optionValue) && (
+                  <>
+                    <Highlight
+                      text={String(optionValue.routeId)}
+                      query={inputValue}
+                    />
+                    <Highlight
+                      text={optionValue.routeLongName}
+                      query={inputValue}
+                    />
+                  </>
+                )}
+                {isStop(optionValue) && (
+                  <>
+                    <Highlight
+                      text={String(optionValue.stopId)}
+                      query={inputValue}
+                    />
+                    <Highlight
+                      text={String(optionValue.stopName || "")}
+                      query={inputValue}
+                    />
+                  </>
+                )}
               </Box>
             </li>
           );
@@ -215,9 +328,76 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             inputRef={ref}
             inputProps={params.inputProps}
             autoFocus={route === undefined}
+            endAdornment={
+              <>
+                <Tooltip title="Search" placement="bottom-end">
+                  <IconButton
+                    sx={{
+                      "&:hover": {
+                        color: "#2196f3",
+                        backgroundColor: "unset",
+                      },
+                      padding: "12px 15px",
+                    }}
+                    onClick={() => {
+                      if (inputString !== "") {
+                        search(inputString);
+                      }
+                    }}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </Tooltip>
+                <Divider style={{ height: 28 }} orientation="vertical" />
+
+                {inputString === "" ? (
+                  <Box component={"div"} sx={{ padding: "10px 10px" }}>
+                    <Tooltip title="Start search" placement="bottom-end">
+                      <Button
+                        variant="outlined"
+                        color={"neutral"}
+                        size="small"
+                        onClick={() => {
+                          focusAutocomplete();
+                        }}
+                        sx={{
+                          width: 34,
+                          height: 28,
+                          minWidth: "unset",
+                          borderRadius: "7px",
+                          "&:hover": {
+                            color: "#2196f3",
+                          },
+                        }}
+                      >
+                        <div>⌘K</div>
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                ) : loading ? (
+                  <Box sx={{ padding: "9px 15px" }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Tooltip title="Clear search" placement="bottom-end">
+                    <IconButton
+                      sx={{
+                        "&:hover": {
+                          color: "#2196f3",
+                          backgroundColor: "unset",
+                        },
+                        padding: "12px 15px",
+                      }}
+                      onClick={clearSelection}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </>
+            }
             sx={{
               paddingLeft: 2.5,
-              paddingRight: 3,
               flex: 1,
               width: "100%",
             }}
@@ -229,49 +409,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           />
         )}
       />
-
-      <Box component={"div"} sx={{ p: 1.5 }}>
-        <Tooltip title="Start search" placement="bottom-end">
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => {
-              focusAutocomplete();
-            }}
-            sx={{
-              minWidth: "unset",
-              borderRadius: "7px",
-              "&:hover": {
-                color: "#2196f3",
-              },
-            }}
-          >
-            <div>⌘K</div>
-          </Button>
-        </Tooltip>
-      </Box>
-      <Divider style={{ height: 28 }} orientation="vertical" />
-
-      {inputString === "" ? (
-        <SearchModeToggle />
-      ) : routeLoading ? (
-        <Box sx={{ p: 0.5, px: 1 }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : (
-        <Tooltip title="Clear search" placement="bottom-end">
-          <IconButton
-            sx={{
-              "&:hover": {
-                color: "#2196f3",
-              },
-            }}
-            onClick={clearSelection}
-          >
-            <ClearIcon />
-          </IconButton>
-        </Tooltip>
-      )}
     </Paper>
   );
 };
