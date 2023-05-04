@@ -1,15 +1,30 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { stopLoader, useDataFromLoader } from "../../../../../App";
 import { Box, Slide } from "@mui/material";
 import * as React from "react";
 import { StopInfoAndArrivalTimes } from "../../../../../components/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 import { useTitle } from "../../../../../hooks/UseTitle";
 import { useViewStatePathname } from "../../../../../hooks/UseViewStatePathname";
+import { client, useDataFromLoader } from "../../../../../Router";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import {
+  StopDocument,
+  StopQuery,
+  StopQueryVariables,
+} from "../../../../../schemas/Stop.generated";
 
 interface StopMenuProps {
   hideBackButton?: boolean;
 }
 
+export const stopLoader = async ({ params }: LoaderFunctionArgs) => {
+  const stopId = params["stopId"];
+  return await client.query<StopQuery, StopQueryVariables>({
+    query: StopDocument,
+    variables: {
+      stopId: stopId || "0",
+    },
+  });
+};
 export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const navigate = useNavigate();
   const { routeId } = useParams();
@@ -22,7 +37,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   return (
     <Box
       sx={{
-        backgroundColor: "#FFF",
+        backgroundColor: "background.default",
         maxHeight: "80vh",
         width: "408px",
         m: 4,

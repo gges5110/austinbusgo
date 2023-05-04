@@ -27,7 +27,7 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
     {...props}
     style={{
       width: 408,
-      paddingTop: 20,
+      paddingTop: 10,
     }}
     placement="bottom-start"
   />
@@ -118,7 +118,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         display: "flex",
         alignItems: "center",
         width: "fit-content",
-        borderRadius: "10px",
+        borderRadius: searchPanelOpen ? "10px 10px 0 0" : "10px",
+        boxShadow: 2,
       }}
     >
       <Autocomplete
@@ -137,7 +138,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         componentsProps={{
           paper: {
             sx: {
-              borderRadius: "10px",
+              borderRadius: "0 0 10px 10px",
             },
           },
         }}
@@ -233,7 +234,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         <Tooltip title="Start search" placement="bottom-end">
           <Button
             variant="outlined"
-            color={"neutral"}
             size="small"
             onClick={() => {
               focusAutocomplete();
@@ -242,7 +242,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               minWidth: "unset",
               borderRadius: "7px",
               "&:hover": {
-                backgroundColor: "#fff",
                 color: "#2196f3",
               },
             }}
@@ -264,11 +263,9 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           <IconButton
             sx={{
               "&:hover": {
-                backgroundColor: "#fff",
                 color: "#2196f3",
               },
             }}
-            color={"neutral"}
             onClick={clearSelection}
           >
             <ClearIcon />

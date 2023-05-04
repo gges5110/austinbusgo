@@ -1,13 +1,55 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { routeLoader, useDataFromLoader } from "../../../../App";
 import { Box, Slide } from "@mui/material";
 import { DirectionToggle } from "../../../../components/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
 import * as React from "react";
-import { toBoolean } from "../../Page";
+import { getDate, toBoolean } from "../../Page";
 import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
 import { useTitle } from "../../../../hooks/UseTitle";
+import { client, useDataFromLoader } from "../../../../Router";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import {
+  RouteDocument,
+  RouteQuery,
+  RouteQueryVariables,
+} from "../../../../schemas/Route.generated";
+import {
+  StopsAndShapesDocument,
+  StopsAndShapesQuery,
+  StopsAndShapesQueryVariables,
+} from "../../../../schemas/StopsAndRouteShapes.generated";
 
+export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
+  const routeId = Number(params["routeId"]);
+  const directionId = toBoolean(params["directionId"]);
+  const { data: routeData } = await client.query<
+    RouteQuery,
+    RouteQueryVariables
+  >({
+    query: RouteDocument,
+    variables: {
+      routeId,
+    },
+  });
+
+  const { data: stopsAndShapesData } = await client.query<
+    StopsAndShapesQuery,
+    StopsAndShapesQueryVariables
+  >({
+    query: StopsAndShapesDocument,
+    variables: {
+      routeId,
+      directionId,
+      date: getDate(),
+    },
+  });
+  return {
+    route: routeData.route,
+    shapes: stopsAndShapesData.stopsAndShapes.shapes,
+    stops: stopsAndShapesData.stopsAndShapes.stops,
+    distinctTrips: stopsAndShapesData.distinctTrips,
+  };
+};
 export const RouteMenu = () => {
   const navigate = useNavigate();
   const { stops, distinctTrips, route } = useDataFromLoader(routeLoader);
@@ -19,7 +61,7 @@ export const RouteMenu = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#FFF",
+        backgroundColor: "background.default",
         maxHeight: "80vh",
         width: "408px",
         m: 4,

@@ -65,6 +65,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
 }) => {
   const { mapId: map } = useMap();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
     GeoJSON.FeatureCollection<GeoJSON.Geometry>
@@ -249,13 +250,16 @@ export const Map: React.FunctionComponent<MapProps> = ({
       console.log("Geolocation is not supported for this Browser/OS.");
     }
   };
-  const theme = useTheme();
   return (
     <>
       <ReactMapGL
         id="mapId"
         {...viewPort}
-        mapStyle={"mapbox://styles/mapbox/streets-v9"}
+        mapStyle={
+          theme.palette.mode === "dark"
+            ? "mapbox://styles/mapbox/dark-v11"
+            : "mapbox://styles/mapbox/streets-v12"
+        }
         onMove={onViewportChange}
         onMoveEnd={onMoveEnd}
       >

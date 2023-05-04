@@ -24,7 +24,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useStopsByNameLazyQuery } from "../schemas/StopsByName.generated";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
 import { useAtom } from "jotai";
-import { recentSearchStopsAtom } from "../Atoms";
+import { recentStopsAtom } from "../Atoms";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 
@@ -46,8 +46,29 @@ interface StopOption extends Stop {
 export interface SearchPanelProps {
   stops: Stop[];
   stop?: Stop;
+
   setStop(stop?: Stop): void;
 }
+
+const useRecentStops = () => {
+  const [recentStops, setRecentStops] = useAtom(recentStopsAtom);
+
+  const addToRecentStops = (stop: Stop): void => {
+    const newValueInRecentSearchStops = recentStops.some((stop) => {
+      return stop.stopId === stop.stopId;
+    });
+    if (!newValueInRecentSearchStops) {
+      setRecentStops((prev) => {
+        return [...prev, stop];
+      });
+    }
+  };
+
+  return {
+    recentStops,
+    addToRecentStops,
+  };
+};
 
 export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   stop,
@@ -63,6 +84,7 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   useEffect(() => {
     if (stop) {
       setInputString(getOptionLabel(stop));
+      addToRecentStops(stop);
     }
   }, [stop]);
 
@@ -73,6 +95,8 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     }
   }, [location.pathname]);
 
+  const { recentStops, addToRecentStops } = useRecentStops();
+
   const searchRouteOnChange = (
     event: React.SyntheticEvent,
     newValue: Stop | null
@@ -80,14 +104,7 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     if (newValue != null) {
       if (stop?.stopId !== newValue.stopId) {
         setStop(newValue);
-        const newValueInRecentSearchStops = recentSearchStops.some((stop) => {
-          return stop.stopId === newValue.stopId;
-        });
-        if (!newValueInRecentSearchStops) {
-          setRecentSearchStops((prev) => {
-            return [...prev, newValue];
-          });
-        }
+        addToRecentStops(newValue);
       }
     } else {
       setStop(undefined);
@@ -167,10 +184,6 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     return `${stop.stopId} ${stop.stopName}`;
   };
 
-  const [recentSearchStops, setRecentSearchStops] = useAtom(
-    recentSearchStopsAtom
-  );
-
   return (
     <Paper
       sx={{
@@ -188,7 +201,7 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             ...stops.map((stop) => {
               return { ...stop, type: "search" } as StopOption;
             }),
-            ...recentSearchStops.map((stop) => {
+            ...recentStops.map((stop) => {
               return { ...stop, type: "recent" } as StopOption;
             }),
           ] || []
@@ -252,9 +265,9 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Box>
                   {stopOption.type === "recent" ? (
-                    <AccessTimeOutlinedIcon color={"neutral"} />
+                    <AccessTimeOutlinedIcon />
                   ) : (
-                    <PlaceOutlinedIcon color={"neutral"} />
+                    <PlaceOutlinedIcon />
                   )}
                 </Box>
                 <Box
@@ -321,7 +334,6 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         <Tooltip title="Start search" placement="bottom-end">
           <Button
             variant="outlined"
-            color={"neutral"}
             size="small"
             onClick={() => {
               focusAutocomplete();
@@ -330,7 +342,6 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               minWidth: "unset",
               borderRadius: "7px",
               "&:hover": {
-                backgroundColor: "#fff",
                 color: "#2196f3",
               },
             }}
@@ -351,11 +362,9 @@ export const StopsSearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           <IconButton
             sx={{
               "&:hover": {
-                backgroundColor: "#fff",
                 color: "#2196f3",
               },
             }}
-            color={"neutral"}
             onClick={clearSelection}
           >
             <ClearIcon />
