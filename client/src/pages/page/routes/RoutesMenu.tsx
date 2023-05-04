@@ -1,5 +1,5 @@
 import { Outlet, useMatches, useNavigate } from "react-router-dom";
-import { SearchPanel } from "../../../components/SearchPanel";
+import { SearchPanel } from "../../../components/Route/SearchPanel";
 import * as React from "react";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";

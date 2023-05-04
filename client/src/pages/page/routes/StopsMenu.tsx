@@ -1,6 +1,6 @@
 import { Outlet, useMatches, useNavigate } from "react-router-dom";
 import * as React from "react";
-import { StopsSearchPanel } from "../../../components/StopsSearchPanel";
+import { StopsSearchPanel } from "../../../components/Stop/StopsSearchPanel";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { client, HandleType, useDataFromLoader } from "../../../Router";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";

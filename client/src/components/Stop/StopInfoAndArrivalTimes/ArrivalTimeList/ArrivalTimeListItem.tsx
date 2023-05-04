@@ -5,8 +5,8 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
 import { Bullet } from "./Bullet";
-import * as Types from "../../../interfaces/interface.d";
-import { RouteIdDisplay } from "../../RouteIdDisplay";
+import * as Types from "../../../../interfaces/interface.d";
+import { RouteIdDisplay } from "../../../RouteIdDisplay/RouteIdDisplay";
 
 type ArrivalTime = { __typename?: "ArrivalTime" } & Pick<
   Types.ArrivalTime,

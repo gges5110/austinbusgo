@@ -1,10 +1,10 @@
 import * as React from "react";
 import dayjs from "dayjs";
 import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
-import { StopTimesQuery } from "../../schemas/StopTimes.generated";
+import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
-import { StopQuery } from "../../schemas/Stop.generated";
-import { TripQuery } from "../../schemas/Trip.generated";
+import { StopQuery } from "../../../schemas/Stop.generated";
+import { TripQuery } from "../../../schemas/Trip.generated";
 
 type ArrayElement<
   ArrayType extends readonly unknown[] | null | undefined

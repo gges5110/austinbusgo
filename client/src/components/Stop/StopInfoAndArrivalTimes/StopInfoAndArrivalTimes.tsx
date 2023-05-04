@@ -1,12 +1,12 @@
 import * as React from "react";
-import { useArrivalTimesQuery } from "../../schemas/ArrivalTimes.generated";
-import { getDate } from "../../pages/page/RootLayout";
+import { useArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
+import { getDate } from "../../../pages/page/RootLayout";
 import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
-import { StopQuery } from "../../schemas/Stop.generated";
+import { StopQuery } from "../../../schemas/Stop.generated";
 import { useState } from "react";
-import { ArrivalTime } from "../../interfaces/interface.d";
+import { ArrivalTime } from "../../../interfaces/interface.d";
 import ClearIcon from "@mui/icons-material/Clear";
 
 interface StopInfoAndArrivalTimesProps {

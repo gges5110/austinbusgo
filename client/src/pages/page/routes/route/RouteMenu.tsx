@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Slide, Paper } from "@mui/material";
-import { DirectionToggle } from "../../../../components/DirectionToggle/DirectionToggle";
-import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
+import { DirectionToggle } from "../../../../components/Route/DirectionToggle/DirectionToggle";
+import { StopsTimeline } from "../../../../components/Route/StopsTimeline/StopsTimeline";
 import * as React from "react";
 import { getDate, toBoolean } from "../../RootLayout";
 import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";

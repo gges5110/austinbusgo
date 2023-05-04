@@ -13,9 +13,9 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import * as React from "react";
-import { TripTimeline } from "../../../components/TripTimeline/TripTimeline";
+import { TripTimeline } from "../../../components/Trip/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../../../components/RouteIdDisplay";
+import { RouteIdDisplay } from "../../../components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { client, HandleType, useDataFromLoader } from "../../../Router";
 import { stopLoader } from "../routes/route/stop/StopMenu";

@@ -14,13 +14,13 @@ import Paper from "@mui/material/Paper";
 import ClearIcon from "@mui/icons-material/Clear";
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
-import { Route } from "../interfaces/interface.d";
+import { Route } from "../../interfaces/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
-import { SearchModeToggle } from "./SearchModeToggle/SearchModeToggle";
+import { SearchModeToggle } from "../SearchModeToggle/SearchModeToggle";
 import { useNavigate, useNavigation } from "react-router-dom";
-import { useViewStatePathname } from "../hooks/UseViewStatePathname";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 
 const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
   <Popper
@@ -210,7 +210,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         }}
         renderInput={(params) => (
           <InputBase
-            placeholder={"Search Routes"}
+            placeholder={"Search Routes or Stops"}
             ref={params.InputProps.ref}
             inputRef={ref}
             inputProps={params.inputProps}

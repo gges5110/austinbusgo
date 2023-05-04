@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Paper, Slide } from "@mui/material";
 import * as React from "react";
-import { StopInfoAndArrivalTimes } from "../../../../../components/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
+import { StopInfoAndArrivalTimes } from "../../../../../components/Stop/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 import { useTitle } from "../../../../../hooks/UseTitle";
 import { useViewStatePathname } from "../../../../../hooks/UseViewStatePathname";
 import { client, useDataFromLoader } from "../../../../../Router";
