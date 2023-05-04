@@ -12,7 +12,7 @@ import { RootLayout } from "./pages/page/RootLayout";
 import { routesLoader, RoutesMenu } from "./pages/page/routes/RoutesMenu";
 import { routeLoader, RouteMenu } from "./pages/page/routes/route/RouteMenu";
 import { stopLoader, StopMenu } from "./pages/page/routes/route/stop/StopMenu";
-import { tripLoader, TripMenu } from "./pages/trip/TripMenu";
+import { tripLoader, TripMenu } from "./pages/page/trip/TripMenu";
 import { stopsLoader, StopsMenu } from "./pages/page/routes/StopsMenu";
 import * as React from "react";
 import { ApolloClient, InMemoryCache } from "@apollo/client";

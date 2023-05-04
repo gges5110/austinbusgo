@@ -13,23 +13,23 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import * as React from "react";
-import { TripTimeline } from "../../components/TripTimeline/TripTimeline";
+import { TripTimeline } from "../../../components/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../../components/RouteIdDisplay";
-import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { client, HandleType, useDataFromLoader } from "../../Router";
-import { stopLoader } from "../page/routes/route/stop/StopMenu";
+import { RouteIdDisplay } from "../../../components/RouteIdDisplay";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { client, HandleType, useDataFromLoader } from "../../../Router";
+import { stopLoader } from "../routes/route/stop/StopMenu";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
   StopTimesDocument,
   StopTimesQuery,
   StopTimesQueryVariables,
-} from "../../schemas/StopTimes.generated";
+} from "../../../schemas/StopTimes.generated";
 import {
   TripDocument,
   TripQuery,
   TripQueryVariables,
-} from "../../schemas/Trip.generated";
+} from "../../../schemas/Trip.generated";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
   const tripId = params["tripId"];
