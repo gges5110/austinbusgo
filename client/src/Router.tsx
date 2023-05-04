@@ -8,7 +8,7 @@ import {
   Route,
   useLoaderData,
 } from "react-router-dom";
-import { Page } from "./pages/page/Page";
+import { RootLayout } from "./pages/page/RootLayout";
 import { routesLoader, RoutesMenu } from "./pages/page/routes/RoutesMenu";
 import { routeLoader, RouteMenu } from "./pages/page/routes/route/RouteMenu";
 import { stopLoader, StopMenu } from "./pages/page/routes/route/stop/StopMenu";
@@ -31,7 +31,7 @@ export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   useLoaderData() as Awaited<ReturnType<typeof loaderFn>>;
 export const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path={"/"} element={<Page />}>
+    <Route path={"/"} element={<RootLayout />}>
       <Route
         path={"/:viewState?"}
         element={<RoutesMenu />}

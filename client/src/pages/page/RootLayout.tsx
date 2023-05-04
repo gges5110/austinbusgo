@@ -22,7 +22,7 @@ import { ColorModeToggle } from "../../components/ColorModeToggle/ColorModeToggl
 
 const defaultAutoPollingInterval = 15000;
 
-export const Page: React.FunctionComponent = () => {
+export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
   const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
     settingsDialogOpenAtom

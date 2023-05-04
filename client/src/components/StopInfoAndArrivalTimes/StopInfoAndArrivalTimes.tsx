@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useArrivalTimesQuery } from "../../schemas/ArrivalTimes.generated";
-import { getDate } from "../../pages/page/Page";
+import { getDate } from "../../pages/page/RootLayout";
 import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";

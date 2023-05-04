@@ -3,7 +3,7 @@ import { Box, Slide, Paper } from "@mui/material";
 import { DirectionToggle } from "../../../../components/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../../../components/StopsTimeline/StopsTimeline";
 import * as React from "react";
-import { getDate, toBoolean } from "../../Page";
+import { getDate, toBoolean } from "../../RootLayout";
 import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
 import { useTitle } from "../../../../hooks/UseTitle";
 import { client, useDataFromLoader } from "../../../../Router";
