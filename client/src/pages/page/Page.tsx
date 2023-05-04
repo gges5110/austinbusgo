@@ -1,4 +1,4 @@
-import { Box, Popper } from "@mui/material";
+import { Box, Popper, useTheme } from "@mui/material";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
 import { useEffect, useState } from "react";
@@ -13,9 +13,12 @@ import {
   settingsDialogOpenAtom,
 } from "../../Atoms";
 import { MapWrapper } from "../../components/Map/MapWrapper";
-import { HandleType, routeLoader, stopLoader } from "../../App";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
+import { HandleType } from "../../Router";
+import { stopLoader } from "./routes/route/stop/StopMenu";
+import { routeLoader } from "./routes/route/RouteMenu";
+import { ColorModeToggle } from "../../components/ColorModeToggle/ColorModeToggle";
 
 const defaultAutoPollingInterval = 15000;
 
@@ -29,6 +32,7 @@ export const Page: React.FunctionComponent = () => {
   const { routeId, directionId } = useParams();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
+  const theme = useTheme();
 
   const setStop = (stopId: number | undefined) => {
     if (stopId !== undefined && location.pathname.includes("/routes")) {
@@ -137,9 +141,21 @@ export const Page: React.FunctionComponent = () => {
   setSelectedRoute(route);
   const vehiclePositions =
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
-
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
+      <Box
+        sx={{
+          backgroundColor: "background.default",
+          color: "text.primary",
+          borderRadius: 1,
+          position: "absolute",
+          zIndex: 1,
+          top: theme.spacing(2),
+          right: theme.spacing(2),
+        }}
+      >
+        <ColorModeToggle />
+      </Box>
       <MapWrapper
         stops={stops}
         routeShapes={routeShapes}

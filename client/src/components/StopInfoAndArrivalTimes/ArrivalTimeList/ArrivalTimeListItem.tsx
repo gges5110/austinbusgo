@@ -102,7 +102,9 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   }
 
   const timeDiff = scheduledArrivalTimeInMoment.diff(dayjs(), "minute");
-
+  const tripName = arrivalTime.trip.tripHeadsign?.split("-")[
+    arrivalTime.trip.tripHeadsign?.split("-").length - 1
+  ];
   return (
     <ListItemButton
       key={scheduledArrivalTime}
@@ -120,7 +122,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               routeId={arrivalTime.trip.routeId}
             />
             <Typography display={"inline"} variant={"body2"}>
-              {arrivalTime.trip.tripHeadsign?.split("-")?.[1]}
+              {tripName}
             </Typography>
           </Box>
           <Box color={"gray"}>

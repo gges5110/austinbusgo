@@ -1,15 +1,15 @@
 import { Outlet, useMatches, useNavigate } from "react-router-dom";
-import {
-  HandleType,
-  routeLoader,
-  routesLoader,
-  useDataFromLoader,
-} from "../../../App";
 import { SearchPanel } from "../../../components/SearchPanel";
 import * as React from "react";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
+import { client, HandleType, useDataFromLoader } from "../../../Router";
+import { RoutesDocument, RoutesQuery } from "../../../schemas/Routes.generated";
+import { routeLoader } from "./route/RouteMenu";
 
+export const routesLoader = async () => {
+  return await client.query<RoutesQuery>({ query: RoutesDocument });
+};
 export const RoutesMenu = () => {
   const navigate = useNavigate();
   const {

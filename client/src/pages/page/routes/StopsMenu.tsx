@@ -1,14 +1,38 @@
 import { Outlet, useMatches, useNavigate } from "react-router-dom";
-import {
-  HandleType,
-  stopLoader,
-  stopsLoader,
-  useDataFromLoader,
-} from "../../../App";
 import * as React from "react";
 import { StopsSearchPanel } from "../../../components/StopsSearchPanel";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { client, HandleType, useDataFromLoader } from "../../../Router";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import {
+  StopsByNameDocument,
+  StopsByNameQuery,
+  StopsByNameQueryVariables,
+} from "../../../schemas/StopsByName.generated";
+import { stopLoader } from "./route/stop/StopMenu";
 
+export const stopsLoader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+
+  let stopsByName = undefined;
+  if (q) {
+    stopsByName = await client.query<
+      StopsByNameQuery,
+      StopsByNameQueryVariables
+    >({
+      query: StopsByNameDocument,
+      variables: {
+        stopName: q,
+      },
+    });
+  }
+
+  return {
+    stopsByName,
+    q,
+  };
+};
 export const StopsMenu = () => {
   const navigate = useNavigate();
   const stopsData = useDataFromLoader(stopsLoader);

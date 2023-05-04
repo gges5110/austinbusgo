@@ -19,7 +19,7 @@ export const StopPin: React.FunctionComponent<StopPinProps> = ({
   return (
     <Tooltip
       title={stopName}
-      open={highlighted || open}
+      open={false || open}
       onOpen={() => {
         setOpen(true);
       }}

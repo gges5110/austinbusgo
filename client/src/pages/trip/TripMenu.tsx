@@ -5,23 +5,58 @@ import {
   Divider,
   IconButton,
   Slide,
+  Tab,
+  Tabs,
   Tooltip,
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import * as React from "react";
-import {
-  HandleType,
-  stopLoader,
-  tripLoader,
-  useDataFromLoader,
-} from "../../App";
 import { TripTimeline } from "../../components/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { RouteIdDisplay } from "../../components/RouteIdDisplay";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { client, HandleType, useDataFromLoader } from "../../Router";
+import { stopLoader } from "../page/routes/route/stop/StopMenu";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import {
+  StopTimesDocument,
+  StopTimesQuery,
+  StopTimesQueryVariables,
+} from "../../schemas/StopTimes.generated";
+import {
+  TripDocument,
+  TripQuery,
+  TripQueryVariables,
+} from "../../schemas/Trip.generated";
 
+export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
+  const tripId = params["tripId"];
+  const { data: stopTimesData } = await client.query<
+    StopTimesQuery,
+    StopTimesQueryVariables
+  >({
+    query: StopTimesDocument,
+    variables: {
+      tripId: tripId || "",
+    },
+  });
+
+  const { data: tripData } = await client.query<TripQuery, TripQueryVariables>({
+    query: TripDocument,
+    variables: {
+      tripId: tripId || "",
+    },
+  });
+
+  return {
+    trip: tripData.trip,
+    stopTimes: stopTimesData.stopTimes,
+  };
+};
 export const TripMenu = () => {
   const { trip, stopTimes } = useDataFromLoader(tripLoader);
+  const { viewStatePathname } = useViewStatePathname();
   const matches = useMatches() as {
     id: string;
     pathname: string;
@@ -39,10 +74,16 @@ export const TripMenu = () => {
   const onBack = () => {
     navigate(-1);
   };
+
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
   return (
     <Box
       sx={{
-        backgroundColor: "#FFF",
+        backgroundColor: "background.default",
         maxHeight: "82vh",
         width: "408px",
         m: 4,
@@ -90,18 +131,73 @@ export const TripMenu = () => {
                 </Box>
                 <Typography
                   variant={"subtitle1"}
-                  sx={{ color: "gray", textAlign: "center" }}
+                  sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
                 >
                   from {stop?.stopName}
                 </Typography>
               </Box>
             </Box>
+            <Box sx={{ width: "100%", display: "none" }}>
+              <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <Tabs
+                  value={value}
+                  onChange={handleChange}
+                  aria-label="basic tabs example"
+                >
+                  <Tab label="Item One" />
+                  <Tab label="Item Two" />
+                  <Tab label="Item Three" />
+                </Tabs>
+              </Box>
+              <TabPanel value={value} index={0}>
+                Item One
+              </TabPanel>
+              <TabPanel value={value} index={1}>
+                Item Two
+              </TabPanel>
+              <TabPanel value={value} index={2}>
+                Item Three
+              </TabPanel>
+            </Box>
 
             <Divider />
-            <TripTimeline stopTimes={stopTimes} stop={stop} trip={trip} />
+            <TripTimeline
+              stopTimes={stopTimes}
+              stop={stop}
+              trip={trip}
+              stopTimeOnClick={(stopTime) => {
+                navigate(`${viewStatePathname}/stops/${stopTime.stopId}`);
+              }}
+            />
           </Box>
         </div>
       </Slide>
     </Box>
   );
 };
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}

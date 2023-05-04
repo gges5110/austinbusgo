@@ -26,7 +26,7 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
 }) => (
   <List>
     {loading ? (
-      <ListItem>
+      <ListItem key={"loading"}>
         <ListItemText primary={<Skeleton height={56} />} />
       </ListItem>
     ) : arrivalTimes?.length === 0 ? (
@@ -38,14 +38,14 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
         return (
           <>
             {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
-              <>
+              <div key={index}>
                 <ArrivalTimeListItem
-                  key={index}
+                  key={arrivalTime.trip.tripId}
                   arrivalTime={arrivalTime}
                   arrivalTimeOnClick={arrivalTimeOnClick}
                 />
                 <Divider />
-              </>
+              </div>
             )}
           </>
         );

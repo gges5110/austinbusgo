@@ -27,7 +27,6 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
   arrivalTimeOnClick,
 }) => {
   const { data: arrivalTimesData, loading } = useArrivalTimesQuery({
-    fetchPolicy: "network-only",
     variables: {
       stopId: String(stop.stopId),
       date: getDate(),
@@ -120,7 +119,9 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
                     key={uniqueRouteId}
                     onClick={() => {
                       setSelectedRouteIds((prevState) => {
-                        if (
+                        if (prevState.length === uniqueRouteIds.length) {
+                          return [uniqueRouteId];
+                        } else if (
                           prevState.includes(uniqueRouteId) &&
                           prevState.length > 1
                         ) {
@@ -146,7 +147,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
         )}
       </Box>
 
-      <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
+      <Box sx={{ overflowY: "auto", maxHeight: "calc(80vh - 113px)" }}>
         <ArrivalTimeList
           arrivalTimes={arrivalTimes}
           arrivalTimeOnClick={arrivalTimeOnClick}

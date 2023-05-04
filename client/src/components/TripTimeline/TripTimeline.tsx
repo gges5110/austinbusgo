@@ -1,29 +1,30 @@
 import * as React from "react";
-import Timeline from "@mui/lab/Timeline";
-import { timelineItemClasses } from "@mui/lab";
 import dayjs from "dayjs";
-import TimelineItem from "@mui/lab/TimelineItem";
-import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import TimelineDot from "@mui/lab/TimelineDot";
-import TimelineContent from "@mui/lab/TimelineContent";
-import { Box, Typography } from "@mui/material";
+import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
 import { StopTimesQuery } from "../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
 import { StopQuery } from "../../schemas/Stop.generated";
 import { TripQuery } from "../../schemas/Trip.generated";
 
+type ArrayElement<
+  ArrayType extends readonly unknown[] | null | undefined
+> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
+
+  stopTimeOnClick(stopTime: ArrayElement<StopTimesQuery["stopTimes"]>): void;
 }
 
 export const TripTimeline: React.FC<TripTimelineProps> = ({
   stopTimes,
   stop,
   trip,
+  stopTimeOnClick,
 }) => {
-  const stopTimelineItemRef = useRef<HTMLLIElement | null>(null);
+  const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
@@ -48,89 +49,179 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
     <Box
       sx={{
         overflowY: "auto",
-        maxHeight: "80vh",
+        maxHeight: "calc(82vh - 70px - 71px)",
       }}
       component={"div"}
       ref={containerRef}
     >
-      <Timeline
-        sx={{
-          [`& .${timelineItemClasses.root}:before`]: {
-            flex: 0,
-            padding: 0,
-          },
-          paddingRight: 0,
-        }}
-      >
-        {stopTimes?.map((stopTime) => {
+      <List>
+        {stopTimes?.map((stopTime, index) => {
           const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
           const isSelectedStop = stopTime.stopId === stop?.stopId;
 
           return (
-            <TimelineItem
+            <Box
               key={stopTime.stopId}
+              component={"div"}
               ref={isSelectedStop ? stopTimelineItemRef : undefined}
-            >
-              <TimelineSeparator
-                sx={{
+              sx={{
+                position: "relative",
+                [`&.selected::before`]: {
+                  content: "''",
+                  width: "18px",
                   backgroundColor: `#${trip?.route.routeColor}`,
+                  position: "absolute",
+                  top: "calc(50% - 10px)",
+                  bottom: 0,
+                  left: 10,
+                  borderTopLeftRadius: "20px 20px",
+                  borderTopRightRadius: "20px 20px",
                   opacity:
                     stopTime.stopSequence < selectedStopSequence
                       ? "50%"
-                      : "unset",
-                  minWidth: "20px",
+                      : "100%",
+                },
+                [`&::after`]: {
+                  content: "''",
+                  width: "8px",
+                  height: "8px",
+                  backgroundColor: `#FFF`,
+                  position: "absolute",
+                  top: "calc(50% - 5px)",
+                  left: 10 + 5,
+                  borderRadius: "50%",
+                  opacity: "60%",
+                },
+                [`&.selected::after`]: {
+                  content: "''",
+                  width: "12px",
+                  height: "12px",
+                  backgroundColor: `#FFF`,
+                  position: "absolute",
+                  top: "calc(50% - 5px)",
+                  left: 10 + 3,
+                  borderRadius: "50%",
+                  opacity: "100%",
+                },
+              }}
+              className={isSelectedStop ? "selected" : undefined}
+            >
+              <ListItemButton
+                key={stopTime.stopId}
+                onClick={() => {
+                  stopTimeOnClick(stopTime);
                 }}
-              >
-                <TimelineDot
-                  sx={{
-                    backgroundColor: "white",
-                    m: "auto",
-                    p: isSelectedStop ? "4px" : "2px",
-                  }}
-                />
-              </TimelineSeparator>
-              <TimelineContent
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
+                  position: "relative",
+                  pl: 6,
+                  py: 1.5,
                 }}
               >
                 <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
+                  display={"flex"}
+                  justifyContent={"space-between"}
+                  width={"100%"}
                 >
-                  <Typography fontWeight={isSelectedStop ? 500 : 400}>
-                    {stopTime.stop.stopName}
-                  </Typography>
-                  {isSelectedStop ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "flex-end",
-                        flexDirection: "column",
-                      }}
-                    >
-                      <Typography fontSize={24} lineHeight={1}>
-                        {arrivalTime.format("h:mm")}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      height: "100%",
+                      width: "100%",
+                    }}
+                  >
+                    <Box display={"flex"} flexDirection={"column"}>
+                      <Typography fontWeight={isSelectedStop ? 500 : 400}>
+                        {stopTime.stop.stopName}
                       </Typography>
                       <Typography color={"gray"} fontSize={14}>
-                        {arrivalTime.format("A")}
+                        Scheduled
                       </Typography>
                     </Box>
-                  ) : (
-                    <Typography whiteSpace={"nowrap"}>
-                      {arrivalTime.format("LT")}
-                    </Typography>
-                  )}
+
+                    {isSelectedStop ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-end",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <Typography fontSize={24} lineHeight={1}>
+                          {arrivalTime.format("h:mm")}
+                        </Typography>
+                        <Typography color={"gray"} fontSize={14}>
+                          {arrivalTime.format("A")}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography whiteSpace={"nowrap"}>
+                        {arrivalTime.format("LT")}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
-              </TimelineContent>
-            </TimelineItem>
+              </ListItemButton>
+              <Divider
+                sx={{
+                  ml: 6,
+                  [`&::before`]: {
+                    content: "''",
+                    width: "18px",
+                    backgroundColor: `#${trip?.route.routeColor}`,
+                    position: "absolute",
+                    top: 0,
+                    bottom: 0,
+                    left: 10,
+                    opacity:
+                      stopTime.stopSequence <= selectedStopSequence
+                        ? "50%"
+                        : "100%",
+                  },
+                  [`&.first::before`]: {
+                    content: "''",
+                    width: "18px",
+                    backgroundColor: `#${trip?.route.routeColor}`,
+                    position: "absolute",
+                    top: "calc(50% - 10px)",
+                    bottom: 0,
+                    left: 10,
+                    borderTopLeftRadius: "20px 20px",
+                    borderTopRightRadius: "20px 20px",
+                    opacity:
+                      stopTime.stopSequence < selectedStopSequence
+                        ? "50%"
+                        : "100%",
+                  },
+                  [`&.last::before`]: {
+                    content: "''",
+                    width: "18px",
+                    backgroundColor: `#${trip?.route.routeColor}`,
+                    position: "absolute",
+                    top: 0,
+                    bottom: "calc(50% - 10px)",
+                    left: 10,
+                    borderBottomLeftRadius: "20px 20px",
+                    borderBottomRightRadius: "20px 20px",
+                    opacity:
+                      stopTime.stopSequence < selectedStopSequence
+                        ? "50%"
+                        : "100%",
+                  },
+                }}
+                className={
+                  index === 0
+                    ? "first"
+                    : index === stopTimes?.length - 1
+                    ? "last"
+                    : undefined
+                }
+              />
+            </Box>
           );
         })}
-      </Timeline>
+      </List>
     </Box>
   );
 };

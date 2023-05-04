@@ -8,7 +8,8 @@ export const isAutoPollingAtom = atomWithStorage<boolean>(
   "vehiclePositionAutoPolling",
   false
 );
-export const recentSearchStopsAtom = atomWithStorage<Stop[]>(
-  "recentSearchStops",
-  []
+export const recentStopsAtom = atomWithStorage<Stop[]>("recentSearchStops", []);
+export const colorModeAtom = atomWithStorage<"light" | "dark">(
+  "colorMode",
+  "light"
 );

@@ -23,11 +23,9 @@ export const SearchModeToggle: React.FunctionComponent = () => {
     <IconButton
       sx={{
         "&:hover": {
-          backgroundColor: "#fff",
           color: "#2196f3",
         },
       }}
-      color={"neutral"}
       onClick={() => {
         if (searchMode == SearchMode.Route) {
           navigate(`${viewStatePathname}/stops`);

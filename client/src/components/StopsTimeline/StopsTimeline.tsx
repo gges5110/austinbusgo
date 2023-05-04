@@ -42,7 +42,6 @@ export const StopsTimeline: React.FC<StopsTimelineProps> = ({
             </TimelineSeparator>
             <TimelineContent>
               <Button
-                color={"neutral"}
                 size={"small"}
                 variant="outlined"
                 onClick={() => {
