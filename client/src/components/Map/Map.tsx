@@ -100,6 +100,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
     longitude,
     zoom,
     viewStatePathname,
+    restOfPathname,
   } = useViewStatePathname();
 
   const [viewPort, setViewPort] = useState<ViewState>({
@@ -184,7 +185,6 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   const delayedQuery = useCallback(
     debounce((viewState: ViewState) => {
-      const restOfPathname = location.pathname.match(re)?.[2];
       let path = `/@${parseFloat(viewState.latitude.toFixed(7))},${parseFloat(
         viewState.longitude.toFixed(7)
       )},${parseFloat(viewState.zoom.toFixed(2))}z`;
@@ -198,7 +198,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         navigate(path, { replace: true });
       }
     }, 50),
-    [location.pathname, navigation.location]
+    [location.pathname, navigation.location, restOfPathname]
   );
 
   const onViewportChange = (event: ViewStateChangeEvent) => {

@@ -7,13 +7,13 @@ import {
   LoaderFunction,
   Route,
   useLoaderData,
+  useRouteLoaderData,
 } from "react-router-dom";
-import { Page } from "./pages/page/Page";
-import { routesLoader, RoutesMenu } from "./pages/page/routes/RoutesMenu";
-import { routeLoader, RouteMenu } from "./pages/page/routes/route/RouteMenu";
-import { stopLoader, StopMenu } from "./pages/page/routes/route/stop/StopMenu";
-import { tripLoader, TripMenu } from "./pages/trip/TripMenu";
-import { stopsLoader, StopsMenu } from "./pages/page/routes/StopsMenu";
+import { RootLayout } from "./pages/page/RootLayout";
+import { routesLoader, RootSearchMenu } from "./pages/page/RootSearchMenu";
+import { routeLoader, RouteMenu } from "./pages/page/route/RouteMenu";
+import { stopLoader, StopMenu } from "./pages/page/stop/StopMenu";
+import { tripLoader, TripMenu } from "./pages/page/trip/TripMenu";
 import * as React from "react";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
@@ -29,14 +29,43 @@ export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn
 ): Awaited<ReturnType<typeof loaderFn>> =>
   useLoaderData() as Awaited<ReturnType<typeof loaderFn>>;
+
+export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
+  routeId: string,
+  loaderFn: LoaderFn
+): Awaited<ReturnType<typeof loaderFn>> | undefined => {
+  return useRouteLoaderData(routeId) as Awaited<ReturnType<typeof loaderFn>>;
+};
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path={"/"} element={<Page />}>
+    <Route path={"/"} element={<RootLayout />}>
       <Route
         path={"/:viewState?"}
-        element={<RoutesMenu />}
+        element={<RootSearchMenu />}
         loader={routesLoader}
       >
+        <Route
+          path={"/:viewState/stops/:stopId"}
+          id={"stop"}
+          loader={stopLoader}
+          handle={{
+            stop: (data: Awaited<ReturnType<typeof stopLoader>>) =>
+              data.data.stop,
+          }}
+        >
+          <Route
+            path={"/:viewState/stops/:stopId"}
+            index={true}
+            element={<StopMenu />}
+            loader={stopLoader}
+          ></Route>
+          <Route
+            path={"/:viewState/stops/:stopId/trips/:tripId"}
+            loader={tripLoader}
+            element={<TripMenu />}
+          ></Route>
+        </Route>
         <Route
           path={"/:viewState/routes/:routeId/direction/:directionId"}
           loader={routeLoader}
@@ -80,33 +109,6 @@ export const router = createBrowserRouter(
               element={<TripMenu />}
             ></Route>
           </Route>
-        </Route>
-      </Route>
-      <Route
-        path={"/:viewState/stops"}
-        loader={stopsLoader}
-        element={<StopsMenu />}
-      >
-        <Route
-          path={"/:viewState/stops/:stopId"}
-          id={"stop"}
-          loader={stopLoader}
-          handle={{
-            stop: (data: Awaited<ReturnType<typeof stopLoader>>) =>
-              data.data.stop,
-          }}
-        >
-          <Route
-            path={"/:viewState/stops/:stopId"}
-            index={true}
-            element={<StopMenu />}
-            loader={stopLoader}
-          ></Route>
-          <Route
-            path={"/:viewState/stops/:stopId/trips/:tripId"}
-            loader={tripLoader}
-            element={<TripMenu />}
-          ></Route>
         </Route>
       </Route>
     </Route>

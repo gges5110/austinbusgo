@@ -1,16 +1,17 @@
 import { Outlet, useMatches, useNavigate } from "react-router-dom";
-import { SearchPanel } from "../../../components/SearchPanel";
+import { SearchPanel } from "../../components/Route/SearchPanel";
 import * as React from "react";
-import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
-import { client, HandleType, useDataFromLoader } from "../../../Router";
-import { RoutesDocument, RoutesQuery } from "../../../schemas/Routes.generated";
+import { client, HandleType, useDataFromLoader } from "../../Router";
+import { RoutesDocument, RoutesQuery } from "../../schemas/Routes.generated";
 import { routeLoader } from "./route/RouteMenu";
+import { stopLoader } from "./stop/StopMenu";
 
 export const routesLoader = async () => {
   return await client.query<RoutesQuery>({ query: RoutesDocument });
 };
-export const RoutesMenu = () => {
+export const RootSearchMenu = () => {
   const navigate = useNavigate();
   const {
     data: { routes },
@@ -30,12 +31,20 @@ export const RoutesMenu = () => {
         match.data as Awaited<ReturnType<typeof routeLoader>>
       )
     )[0];
+  const stop = matches
+    .filter((match) => Boolean((match.handle as HandleType)?.stop))
+    .map((match) =>
+      (match.handle as HandleType)?.stop?.(
+        match.data as Awaited<ReturnType<typeof stopLoader>>
+      )
+    )[0];
   const { viewStatePathname } = useViewStatePathname();
 
   return (
     <>
       <SearchPanel
         routes={routes || []}
+        route={route}
         setRoute={(route) => {
           if (route) {
             navigate(
@@ -43,7 +52,12 @@ export const RoutesMenu = () => {
             );
           }
         }}
-        route={route}
+        stop={stop}
+        setStop={(stop) => {
+          if (stop) {
+            navigate(`${viewStatePathname}/stops/${stop.stopId}`);
+          }
+        }}
       />
       <Outlet />
     </>

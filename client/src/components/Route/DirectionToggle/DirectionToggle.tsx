@@ -6,8 +6,8 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
-import { StopsAndShapesQuery } from "../../schemas/StopsAndRouteShapes.generated";
-import { toBoolean } from "../../pages/page/Page";
+import { StopsAndShapesQuery } from "../../../schemas/StopsAndRouteShapes.generated";
+import { toBoolean } from "../../../pages/page/RootLayout";
 import { useEffect, useState } from "react";
 
 interface DirectionToggleProps {

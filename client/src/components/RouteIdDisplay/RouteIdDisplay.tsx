@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Box, Typography } from "@mui/material";
-import { Route } from "../interfaces/interface.d";
+import { Route } from "../../interfaces/interface.d";
 import { MouseEventHandler } from "react";
 
 interface RouteIdDisplayProps {

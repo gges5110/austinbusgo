@@ -1,4 +1,4 @@
-import { StopsAndShapesQuery } from "../../schemas/StopsAndRouteShapes.generated";
+import { StopsAndShapesQuery } from "../../../schemas/StopsAndRouteShapes.generated";
 import * as React from "react";
 import Timeline from "@mui/lab/Timeline";
 import TimelineItem from "@mui/lab/TimelineItem";

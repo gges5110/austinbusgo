@@ -4,6 +4,7 @@ import {
   Box,
   Divider,
   IconButton,
+  Paper,
   Slide,
   Tab,
   Tabs,
@@ -12,23 +13,24 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import * as React from "react";
-import { TripTimeline } from "../../components/TripTimeline/TripTimeline";
+import { TripTimeline } from "../../../components/Trip/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../../components/RouteIdDisplay";
-import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { client, HandleType, useDataFromLoader } from "../../Router";
-import { stopLoader } from "../page/routes/route/stop/StopMenu";
+import { RouteIdDisplay } from "../../../components/RouteIdDisplay/RouteIdDisplay";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { client, HandleType, useDataFromLoader } from "../../../Router";
+import { stopLoader } from "../stop/StopMenu";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
   StopTimesDocument,
   StopTimesQuery,
   StopTimesQueryVariables,
-} from "../../schemas/StopTimes.generated";
+} from "../../../schemas/StopTimes.generated";
 import {
   TripDocument,
   TripQuery,
   TripQueryVariables,
-} from "../../schemas/Trip.generated";
+} from "../../../schemas/Trip.generated";
+import { SEARCH_PANEL_WIDTH } from "../../../components/Route/SearchPanel";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
   const tripId = params["tripId"];
@@ -80,12 +82,15 @@ export const TripMenu = () => {
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  const tripName = trip.tripHeadsign?.split("-")[
+    trip.tripHeadsign?.split("-").length - 1
+  ];
   return (
-    <Box
+    <Paper
       sx={{
-        backgroundColor: "background.default",
         maxHeight: "82vh",
-        width: "408px",
+        width: SEARCH_PANEL_WIDTH,
         m: 4,
         mt: 2,
         overflow: "hidden",
@@ -125,12 +130,9 @@ export const TripMenu = () => {
                     routeId={trip.routeId}
                     routeColor={trip.route.routeColor}
                   />
-                  <Typography sx={{ fontSize: "18px" }}>
-                    {trip.route.routeLongName}
-                  </Typography>
+                  <Typography sx={{ fontSize: "18px" }}>{tripName}</Typography>
                 </Box>
                 <Typography
-                  variant={"subtitle1"}
                   sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
                 >
                   from {stop?.stopName}
@@ -172,7 +174,7 @@ export const TripMenu = () => {
           </Box>
         </div>
       </Slide>
-    </Box>
+    </Paper>
   );
 };
 
