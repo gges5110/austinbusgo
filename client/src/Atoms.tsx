@@ -16,3 +16,5 @@ export const colorModeAtom = atomWithStorage<"light" | "dark">(
   "colorMode",
   "light"
 );
+
+export const selectedRouteIdsAtStopAtom = atom<string[]>([]);

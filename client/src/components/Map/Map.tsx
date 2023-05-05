@@ -17,6 +17,7 @@ import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import { useLocation, useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { useNearByStopsLazyQuery } from "../../schemas/NearByStops.generated";
 
 type ViewState = {
   /** Longitude at map center */
@@ -34,7 +35,7 @@ export interface MapProps {
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
 
-  setSelectedStopId(stopId: number): void;
+  setSelectedStopId(stopId: string): void;
 }
 
 const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
@@ -93,7 +94,13 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const navigation = useNavigation();
   const location = useLocation();
-  const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
+
+  const [nearByStops, setNearByStops] = useState<Stop[]>([]);
+  const [getNearByStops] = useNearByStopsLazyQuery({
+    onCompleted: (data) => {
+      setNearByStops(data.nearByStops);
+    },
+  });
 
   const {
     latitude,
@@ -197,6 +204,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
       if (navigation.location === undefined) {
         navigate(path, { replace: true });
       }
+      getNearByStops({
+        variables: {
+          lat: parseFloat(viewState.latitude.toFixed(7)),
+          lon: parseFloat(viewState.longitude.toFixed(7)),
+        },
+      });
     }, 50),
     [location.pathname, navigation.location, restOfPathname]
   );
@@ -276,7 +289,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
           <MyLocationIcon />
         </Fab>
         <StopMarkers
-          stops={stops}
+          stops={[...stops, ...nearByStops]}
           setSelectedStop={(stop) => {
             setSelectedStopId(stop.stopId);
           }}

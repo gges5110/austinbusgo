@@ -21,8 +21,8 @@ import {
 import { SEARCH_PANEL_WIDTH } from "../../../components/Route/SearchPanel";
 
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
-  const routeId = Number(params["routeId"]);
-  const directionId = toBoolean(params["directionId"]);
+  const routeId = params["routeId"] || "";
+  const directionId = Number(params["directionId"]);
   const { data: routeData } = await client.query<
     RouteQuery,
     RouteQueryVariables

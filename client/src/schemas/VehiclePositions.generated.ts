@@ -3,8 +3,8 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type VehiclePositionsQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["Int"];
-  direction: Types.Scalars["Boolean"];
+  routeId: Types.Scalars["String"];
+  direction: Types.Scalars["Int"];
 }>;
 
 export type VehiclePositionsQuery = { __typename?: "Query" } & {
@@ -38,7 +38,7 @@ export type VehiclePositionsQuery = { __typename?: "Query" } & {
 };
 
 export const VehiclePositionsDocument = gql`
-  query VehiclePositions($routeId: Int!, $direction: Boolean!) {
+  query VehiclePositions($routeId: String!, $direction: Int!) {
     vehiclePositions(routeId: $routeId, direction: $direction) {
       trip {
         tripId

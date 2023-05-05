@@ -3,7 +3,7 @@ import * as Types from "../interfaces/interface.d";
 import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type DistinctTripsQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["Int"];
+  routeId: Types.Scalars["String"];
 }>;
 
 export type DistinctTripsQuery = { __typename?: "Query" } & {
@@ -18,7 +18,7 @@ export type DistinctTripsQuery = { __typename?: "Query" } & {
 };
 
 export const DistinctTripsDocument = gql`
-  query DistinctTrips($routeId: Int!) {
+  query DistinctTrips($routeId: String!) {
     distinctTrips(routeId: $routeId) {
       tripId
       tripShortName

@@ -34,7 +34,7 @@ export const RootLayout: React.FunctionComponent = () => {
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
 
-  const setStop = (stopId: number | undefined) => {
+  const setStop = (stopId: string | undefined) => {
     if (stopId !== undefined && location.pathname.includes("/routes")) {
       navigate(
         `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
@@ -72,8 +72,8 @@ export const RootLayout: React.FunctionComponent = () => {
     if (selectedRoute) {
       getVehiclePositions({
         variables: {
-          routeId: Number(selectedRoute.routeId),
-          direction: toBoolean(directionId),
+          routeId: selectedRoute.routeId,
+          direction: Number(directionId),
         },
       });
     }
@@ -91,8 +91,8 @@ export const RootLayout: React.FunctionComponent = () => {
       setVehiclePositionsLoadingSnackbarKey(key);
       getVehiclePositions({
         variables: {
-          routeId: Number(selectedRoute.routeId),
-          direction: toBoolean(directionId),
+          routeId: selectedRoute.routeId,
+          direction: Number(directionId),
         },
       });
       setSettingsDialogOpen(false);
