@@ -29,8 +29,8 @@ export interface Query {
 }
 
 export interface QueryStopsAndShapesArgs {
-  routeId: Scalars["Int"];
-  directionId: Scalars["Boolean"];
+  routeId: Scalars["String"];
+  directionId: Scalars["Int"];
   date: Scalars["String"];
 }
 
@@ -48,7 +48,7 @@ export interface QueryNearByStopsArgs {
 }
 
 export interface QueryRouteArgs {
-  routeId: Scalars["Int"];
+  routeId: Scalars["String"];
 }
 
 export interface QueryTripArgs {
@@ -56,7 +56,7 @@ export interface QueryTripArgs {
 }
 
 export interface QueryDistinctTripsArgs {
-  routeId: Scalars["Int"];
+  routeId: Scalars["String"];
 }
 
 export interface QueryRouteShapesArgs {
@@ -64,8 +64,8 @@ export interface QueryRouteShapesArgs {
 }
 
 export interface QueryVehiclePositionsArgs {
-  routeId: Scalars["Int"];
-  direction: Scalars["Boolean"];
+  routeId: Scalars["String"];
+  direction: Scalars["Int"];
 }
 
 export interface QueryArrivalTimesArgs {
@@ -86,7 +86,7 @@ export interface StopsAndShapes {
 export interface Stop {
   __typename?: "Stop";
   /** Identifies a stop, station, or station entrance. */
-  stopId: Scalars["Int"];
+  stopId: Scalars["String"];
   /** Short text or a number that identifies the location for riders. */
   stopCode?: Maybe<Scalars["String"]>;
   /** Name of the location. Use a name that people will understand in the local and tourist vernacular. */
@@ -110,7 +110,7 @@ export interface Shape {
 export interface Route {
   __typename?: "Route";
   /** Identifies a route. */
-  routeId: Scalars["Int"];
+  routeId: Scalars["String"];
   /** Agency for the specified route. */
   agencyId?: Maybe<Scalars["Int"]>;
   /** Short name of a route. */
@@ -248,7 +248,7 @@ export interface StopTimes {
   tripId: Scalars["String"];
   arrivalTime: Scalars["String"];
   departureTime: Scalars["String"];
-  stopId: Scalars["Int"];
+  stopId: Scalars["String"];
   stopSequence: Scalars["Int"];
   stopHeadsign?: Maybe<Scalars["String"]>;
   pickupType?: Maybe<Scalars["Int"]>;

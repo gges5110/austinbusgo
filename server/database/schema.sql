@@ -8,8 +8,8 @@ DROP TABLE IF EXISTS calendar_dates;
 
 CREATE TABLE stops
 (
-  stop_id           integer UNIQUE NOT NULL PRIMARY KEY,
-  stop_code         integer NULL,
+  stop_id           text UNIQUE NOT NULL PRIMARY KEY,
+  stop_code         text NULL,
   stop_name         text NOT NULL,
   stop_desc         text NULL,
   stop_lat          double precision NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE stops
 
 CREATE TABLE routes
 (
-  route_id          integer UNIQUE NOT NULL PRIMARY KEY,
+  route_id          text UNIQUE NOT NULL PRIMARY KEY,
   agency_id         integer NULL,
   route_short_name  integer UNIQUE NOT NULL,
   route_long_name   text NULL,
@@ -52,17 +52,17 @@ CREATE TABLE shapes
 
 CREATE TABLE trips
 (
-  route_id          integer NOT NULL,
+  route_id          text NOT NULL,
   service_id        text NOT NULL,
   trip_id           text UNIQUE NOT NULL PRIMARY KEY,
   trip_headsign     text NULL,
   trip_short_name   text NULL,
-  direction_id      boolean NULL,
+  direction_id      integer NULL,
   block_id          text NULL,
   shape_id          text NULL,
   wheelchair_accessible integer NULL,
   bikes_allowed     integer NULL,
-  dir_abbr          text NULL,
+  dir_abbr          text NULL, -- capital metro specific column
   sup_service_mod   integer NULL
 );
 
@@ -71,7 +71,7 @@ CREATE TABLE stop_times
   trip_id           text NOT NULL,
   arrival_time      text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
   departure_time    text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
-  stop_id           integer NOT NULL,
+  stop_id           text NOT NULL,
   stop_sequence     integer NOT NULL,
   stop_headsign     text NULL,
   pickup_type       integer NULL CHECK(pickup_type >= 0 and pickup_type <=3),

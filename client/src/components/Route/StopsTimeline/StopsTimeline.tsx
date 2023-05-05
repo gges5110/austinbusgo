@@ -15,7 +15,7 @@ import {
 interface StopsTimelineProps {
   stops: StopsAndShapesQuery["stopsAndShapes"]["stops"];
 
-  setSelectedStopId(stopId: number): void;
+  setSelectedStopId(stopId: string): void;
 }
 
 export const StopsTimeline: React.FC<StopsTimelineProps> = ({

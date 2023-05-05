@@ -29,10 +29,10 @@ class Resolver:
         trips = self.gtfs_service.get_trip_by_id(trip_id)
         return trips[0]
 
-    def resolve_distinct_trips(self, query, info, route_id: int) -> List[Trips]:
+    def resolve_distinct_trips(self, query, info, route_id: str) -> List[Trips]:
         return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
 
-    def resolve_stops_and_shapes(self, query, info, route_id: str, direction_id: bool, date: str):
+    def resolve_stops_and_shapes(self, query, info, route_id: str, direction_id: int, date: str):
         stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
         stops_and_shapes = {'stops': [stop for stop in stops], 'shapes': []}
         shape_id_set = set([stop.stoptime.trip.shape_id for stop in stops])
@@ -58,8 +58,8 @@ class Resolver:
     def resolve_route_shapes(self, query, info, trip_id) -> List[Shapes]:
         return self.gtfs_service.get_shapes_by_trip_id(trip_id)
 
-    def resolve_vehicle_positions(self, query, info, route_id: int, direction: bool) -> List[VehiclePosition]:
-        return self.gtfs_rt_service.get_real_time_vehicle_positions_on_route(str(route_id), direction)
+    def resolve_vehicle_positions(self, query, info, route_id: str, direction: int) -> List[VehiclePosition]:
+        return self.gtfs_rt_service.get_real_time_vehicle_positions_on_route(route_id, direction)
 
     def resolve_stop_times(self, query, info, trip_id: str):
         return self.gtfs_service.get_stop_times_by_trip_id(trip_id)

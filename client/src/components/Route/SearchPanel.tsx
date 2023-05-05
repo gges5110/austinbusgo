@@ -374,7 +374,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
                       </Button>
                     </Tooltip>
                   </Box>
-                ) : loading ? (
+                ) : loading || routeLoading ? (
                   <Box sx={{ padding: "9px 15px" }}>
                     <CircularProgress size={24} />
                   </Box>

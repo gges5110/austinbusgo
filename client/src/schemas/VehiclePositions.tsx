@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const VEHICLE_POSITIONS_QUERY = gql`
-  query VehiclePositions($routeId: Int!, $direction: Boolean!) {
+  query VehiclePositions($routeId: String!, $direction: Int!) {
     vehiclePositions(routeId: $routeId, direction: $direction) {
       trip {
         tripId

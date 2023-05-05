@@ -42,7 +42,7 @@ class GTFSService:
                                          (lon + distance >= Stops.stop_lon) & (Stops.stop_lon >= lon - distance))
 
     @staticmethod
-    def get_stops_by_route_id(route_id: str, direction_id: bool, date: str) -> List[Stops]:
+    def get_stops_by_route_id(route_id: str, direction_id: int, date: str) -> List[Stops]:
         # using subquery here to allow "distinct on" and "order by" different columns.
         # https://stackoverflow.com/a/9796104/4816922
         subquery = Stops.select(Stops.stop_id) \
@@ -67,7 +67,7 @@ class GTFSService:
 
     # Trips
     @staticmethod
-    def get_trips_by_distinct_short_name(route_id: int) -> List[Trips]:
+    def get_trips_by_distinct_short_name(route_id: str) -> List[Trips]:
         return Trips \
             .select(Trips) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
@@ -92,11 +92,11 @@ class GTFSService:
             .where(CalendarDates.date == date)
 
     @staticmethod
-    def get_trips_with_direction_and_route(trip_ids: List[str], route_id: int, direction: bool) -> List[Trips]:
+    def get_trips_with_direction_and_route(trip_ids: List[str], route_id: str, direction: int) -> List[Trips]:
         return [trip.trip_id for trip in Trips.select(Trips.trip_id)
-        .where((Trips.trip_id.in_(trip_ids))
-               & (Trips.route_id == route_id)
-               & (Trips.direction_id == direction))]
+                .where((Trips.trip_id.in_(trip_ids))
+                       & (Trips.route_id == route_id)
+                       & (Trips.direction_id == direction))]
 
     @staticmethod
     def get_trip_by_id(trip_id: str) -> List[Trips]:
