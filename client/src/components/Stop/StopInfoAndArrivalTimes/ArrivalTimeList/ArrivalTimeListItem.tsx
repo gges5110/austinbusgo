@@ -115,7 +115,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>
-          <Box display={"flex"} gap={1}>
+          <Box display={"flex"} gap={1} alignItems={"center"}>
             <DirectionsBusIcon fontSize={"small"} />
             <RouteIdDisplay
               routeColor={arrivalTime.trip.route.routeColor}

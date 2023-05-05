@@ -40,10 +40,14 @@ export const RootLayout: React.FunctionComponent = () => {
   const theme = useTheme();
 
   const setStop = (stopId: string | undefined) => {
-    if (stopId !== undefined && location.pathname.includes("/routes")) {
-      navigate(
-        `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
-      );
+    if (stopId !== undefined) {
+      if (location.pathname.includes("/routes")) {
+        navigate(
+          `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
+        );
+      } else {
+        navigate(`${viewStatePathname}/stops/${stopId}`);
+      }
     }
   };
   const [
@@ -200,11 +204,6 @@ export const RootLayout: React.FunctionComponent = () => {
     </Box>
   );
 };
-
-export const toBoolean = (value: string | undefined): boolean => {
-  return value === "true" || value === "1";
-};
-
 export const getDate = () => {
   const d = new Date();
   return [

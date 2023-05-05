@@ -86,8 +86,6 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
       <Box
         sx={{
           py: 1,
-          pl: 2,
-          pr: 1,
           boxShadow: 2,
           width: "100%",
         }}
@@ -95,33 +93,47 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "flex-start",
-            gap: 1,
+            py: 1,
+            position: "relative",
+            overflow: "hidden",
           }}
         >
           {!hideBackButton && (
-            <Tooltip title={"Back"}>
+            <Tooltip title={"Back"} sx={{ position: "absolute", left: "6px" }}>
               <IconButton onClick={onBack}>
                 <ArrowBackIcon />
               </IconButton>
             </Tooltip>
           )}
 
-          <Box component={"div"}>
-            <Box display={"flex"} gap={1} justifyContent={"center"}>
+          <Box sx={{ flex: 1 }}>
+            <Box
+              display={"flex"}
+              gap={1}
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
               <PlaceIcon />
               <Typography sx={{ fontSize: "18px" }}>{stop.stopName}</Typography>
             </Box>
 
-            <Typography variant="body2" gutterBottom>
+            <Typography
+              sx={{ color: "gray", textAlign: "center", fontSize: "15px" }}
+            >
               Stop ID: {stop.stopId}
             </Typography>
           </Box>
         </Box>
 
         {!loading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (
-          <Box sx={{ overflowX: "auto", py: 1 }}>
+          <Box
+            sx={{
+              overflowX: "auto",
+              py: 1,
+              pl: 2,
+              pr: 1,
+            }}
+          >
             <RoutesSelector
               selectedRouteIds={selectedRouteIds}
               setSelectedRouteIds={setSelectedRouteIds}

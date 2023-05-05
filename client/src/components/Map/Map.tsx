@@ -289,7 +289,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
           <MyLocationIcon />
         </Fab>
         <StopMarkers
-          stops={[...stops, ...nearByStops]}
+          stops={[
+            ...stops,
+            ...nearByStops.filter(
+              (stop) => !stops.map((stop) => stop.stopId).includes(stop.stopId)
+            ),
+          ]}
           setSelectedStop={(stop) => {
             setSelectedStopId(stop.stopId);
           }}

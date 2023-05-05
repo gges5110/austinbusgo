@@ -95,9 +95,8 @@ export const TripMenu = () => {
         <Box
           sx={{
             display: "flex",
-            flexDirection: "row",
             py: 1,
-            position: "sticky",
+            position: "relative",
             overflow: "hidden",
           }}
         >
