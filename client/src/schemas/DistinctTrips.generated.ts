@@ -4,6 +4,7 @@ import { gql } from "@apollo/client";
 import * as Apollo from "@apollo/client";
 export type DistinctTripsQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
+  date: Types.Scalars["String"];
 }>;
 
 export type DistinctTripsQuery = { __typename?: "Query" } & {
@@ -18,8 +19,8 @@ export type DistinctTripsQuery = { __typename?: "Query" } & {
 };
 
 export const DistinctTripsDocument = gql`
-  query DistinctTrips($routeId: String!) {
-    distinctTrips(routeId: $routeId) {
+  query DistinctTrips($routeId: String!, $date: String!) {
+    distinctTrips(routeId: $routeId, date: $date) {
       tripId
       tripShortName
       directionId
@@ -40,6 +41,7 @@ export const DistinctTripsDocument = gql`
  * const { data, loading, error } = useDistinctTripsQuery({
  *   variables: {
  *      routeId: // value for 'routeId'
+ *      date: // value for 'date'
  *   },
  * });
  */

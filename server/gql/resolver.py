@@ -29,8 +29,8 @@ class Resolver:
         trips = self.gtfs_service.get_trip_by_id(trip_id)
         return trips[0]
 
-    def resolve_distinct_trips(self, query, info, route_id: str) -> List[Trips]:
-        return self.gtfs_service.get_trips_by_distinct_short_name(route_id)
+    def resolve_distinct_trips(self, query, info, route_id: str, date: str) -> List[Trips]:
+        return self.gtfs_service.get_trips_by_distinct_short_name(route_id, date)
 
     def resolve_stops_and_shapes(self, query, info, route_id: str, direction_id: int, date: str):
         stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)

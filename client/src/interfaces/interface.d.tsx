@@ -57,6 +57,7 @@ export interface QueryTripArgs {
 
 export interface QueryDistinctTripsArgs {
   routeId: Scalars["String"];
+  date: Scalars["String"];
 }
 
 export interface QueryRouteShapesArgs {
@@ -136,7 +137,7 @@ export interface TripWithRoute {
   /** Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips. */
   tripShortName?: Maybe<Scalars["String"]>;
   /** Indicates the direction of travel for a trip. */
-  directionId?: Maybe<Scalars["Boolean"]>;
+  directionId?: Maybe<Scalars["Int"]>;
   /** Identifies the block to which the trip belongs. */
   blockId?: Maybe<Scalars["String"]>;
   /** Identifies a geospatial shape describing the vehicle travel path for a trip. */
@@ -161,7 +162,7 @@ export interface Trip {
   /** Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips. */
   tripShortName?: Maybe<Scalars["String"]>;
   /** Indicates the direction of travel for a trip. */
-  directionId?: Maybe<Scalars["Boolean"]>;
+  directionId?: Maybe<Scalars["Int"]>;
   /** Identifies the block to which the trip belongs. */
   blockId?: Maybe<Scalars["String"]>;
   /** Identifies a geospatial shape describing the vehicle travel path for a trip. */

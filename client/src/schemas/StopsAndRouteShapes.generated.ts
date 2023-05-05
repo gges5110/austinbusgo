@@ -54,7 +54,7 @@ export const StopsAndShapesDocument = gql`
         shapePtLon
       }
     }
-    distinctTrips(routeId: $routeId) {
+    distinctTrips(routeId: $routeId, date: $date) {
       tripId
       tripShortName
       directionId

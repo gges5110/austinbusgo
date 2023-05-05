@@ -180,7 +180,7 @@ class Trip(graphene.ObjectType):
                                                 "riders.")
     trip_short_name = graphene.String(description="Public facing text used to identify the trip to riders, "
                                                   "for instance, to identify train numbers for commuter rail trips.")
-    direction_id = graphene.Boolean(description="Indicates the direction of travel for a trip.")
+    direction_id = graphene.Int(description="Indicates the direction of travel for a trip.")
     block_id = graphene.String(description="Identifies the block to which the trip belongs.")
     shape_id = graphene.String(description="Identifies a geospatial shape describing the vehicle travel path for a "
                                            "trip.")
@@ -197,7 +197,7 @@ class TripWithRoute(graphene.ObjectType):
                                                 "riders.")
     trip_short_name = graphene.String(description="Public facing text used to identify the trip to riders, "
                                                   "for instance, to identify train numbers for commuter rail trips.")
-    direction_id = graphene.Boolean(description="Indicates the direction of travel for a trip.")
+    direction_id = graphene.Int(description="Indicates the direction of travel for a trip.")
     block_id = graphene.String(description="Identifies the block to which the trip belongs.")
     shape_id = graphene.String(description="Identifies a geospatial shape describing the vehicle travel path for a "
                                            "trip.")
@@ -237,7 +237,7 @@ class Query(graphene.ObjectType):
     resolver = Resolver()
     stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.String(
         required=True), direction_id=graphene.Int(required=True), date=graphene.String(required=True),
-        resolver=resolver.resolve_stops_and_shapes)
+                                      resolver=resolver.resolve_stops_and_shapes)
     stop = graphene.Field(graphene.NonNull(Stop), stop_id=graphene.String(
         required=True), resolver=resolver.resolve_stop)
     stops_by_name = graphene.Field(graphene.List(graphene.NonNull(Stop)), stop_name=graphene.String(
@@ -251,6 +251,7 @@ class Query(graphene.ObjectType):
     trip = graphene.Field(graphene.NonNull(TripWithRoute), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_trip)
     distinct_trips = graphene.Field(graphene.List(graphene.NonNull(Trip)), route_id=graphene.String(required=True),
+                                    date=graphene.String(required=True),
                                     resolver=resolver.resolve_distinct_trips)
     route_shapes = graphene.Field(graphene.List(graphene.NonNull(Shape)), trip_id=graphene.String(
         required=True), resolver=resolver.resolve_route_shapes)
