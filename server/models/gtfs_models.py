@@ -8,7 +8,8 @@ from server.database import db_wrapper
 
 
 class UnknownField(object):
-    def __init__(self, *_, **__): pass
+    def __init__(self, *_, **__):
+        pass
 
 
 class Routes(db_wrapper.Model):

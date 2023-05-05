@@ -237,7 +237,7 @@ class Query(graphene.ObjectType):
     resolver = Resolver()
     stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.String(
         required=True), direction_id=graphene.Int(required=True), date=graphene.String(required=True),
-                                      resolver=resolver.resolve_stops_and_shapes)
+        resolver=resolver.resolve_stops_and_shapes)
     stop = graphene.Field(graphene.NonNull(Stop), stop_id=graphene.String(
         required=True), resolver=resolver.resolve_stop)
     stops_by_name = graphene.Field(graphene.List(graphene.NonNull(Stop)), stop_name=graphene.String(
