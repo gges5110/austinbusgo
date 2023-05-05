@@ -17,7 +17,7 @@ jobs:
       - name: Set autopep8 branch name
         id: vars
         run: |
-          echo $branch_name >> $GITHUB_OUTPUT
+          echo "$branch_name" >> $GITHUB_OUTPUT
         env:
           branch_name: "autopep8-patches/${{ github.head_ref }}"
       - name: Create Pull Request
