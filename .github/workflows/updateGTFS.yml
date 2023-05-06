@@ -1,0 +1,38 @@
+name: Update GTFS database on a CRON Schedule
+
+#on:
+#  schedule:
+#    # Runs "At 00:00." (see https://crontab.guru)
+#    - cron: '0 0 * * *'
+
+on: pull_request
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ci-job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.x'
+          # Optional - x64 or x86 architecture, defaults to x64
+          architecture: 'x64'
+      - name: Install PostgresClient
+        run: |
+          apt-get update
+          apt --assume-yes install postgresql-common
+          sh /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          apt -y install postgresql-client-13
+          export DATABASE_URL=$DBURI
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Prepare GTFS Files
+        run: python prepareGTFSFiles.py
+      - name: Upload GTFS Files
+        run: ./uploadGTFS.sh
+        env:
+          DATABASE_URL: ${{ secrets.DBURI }}
