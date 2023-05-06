@@ -34,9 +34,8 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
     {...props}
     style={{
       width: SEARCH_PANEL_WIDTH,
-      paddingTop: 12,
+      zIndex: 1,
     }}
-    placement="bottom-start"
   />
 );
 
@@ -222,11 +221,9 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   return (
     <Paper
       sx={{
-        ml: 4,
-        mt: 2,
-        width: "fit-content",
+        m: 1,
         borderRadius: searchPanelOpen ? "10px 10px 0 0" : "10px",
-        boxShadow: 2,
+        boxShadow: searchPanelOpen ? 1 : 5,
       }}
     >
       <Autocomplete<SearchOption>

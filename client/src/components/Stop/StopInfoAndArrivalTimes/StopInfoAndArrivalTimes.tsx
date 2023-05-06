@@ -143,7 +143,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
         )}
       </Box>
 
-      <Box sx={{ overflowY: "auto", maxHeight: "calc(80vh - 113px)" }}>
+      <Box>
         <ArrivalTimeList
           arrivalTimes={arrivalTimes}
           arrivalTimeOnClick={arrivalTimeOnClick}

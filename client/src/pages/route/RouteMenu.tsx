@@ -108,7 +108,7 @@ export const RouteMenu = () => {
         </Box>
       </Box>
 
-      <Box sx={{ overflowY: "auto", maxHeight: "80vh" }}>
+      <Box sx={{}}>
         <StopsTimeline
           stops={stops}
           setSelectedStopId={(stopId) => {

@@ -175,6 +175,9 @@ export const RootLayout: React.FunctionComponent = () => {
         setSelectedStopId={setStop}
       />
       <Popper open={true}>
+        <Outlet />
+      </Popper>
+      <Popper open={true} sx={{ zIndex: 2 }}>
         <SearchPanel
           routes={routesData?.data.routes || []}
           route={route}
@@ -192,8 +195,8 @@ export const RootLayout: React.FunctionComponent = () => {
             }
           }}
         />
-        <Outlet />
       </Popper>
+
       <SettingsDialog
         open={settingsDialogOpen}
         autoPolling={autoPolling}
