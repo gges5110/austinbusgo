@@ -23,10 +23,10 @@ jobs:
           architecture: 'x64'
       - name: Install PostgresClient
         run: |
-          apt-get update
-          apt --assume-yes install postgresql-common
+          sudo apt-get update
+          sudo apt --assume-yes install postgresql-common
           sh /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          apt -y install postgresql-client-13
+          sudo apt -y install postgresql-client-13
           export DATABASE_URL=$DBURI
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
