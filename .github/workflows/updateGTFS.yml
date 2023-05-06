@@ -24,10 +24,7 @@ jobs:
       - name: Install PostgresClient
         run: |
           sudo apt-get update
-          sudo apt --assume-yes install postgresql-common
-          sh /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt -y install postgresql-client-13
-          export DATABASE_URL=$DBURI
+          sudo apt-get install --yes postgresql-client
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Prepare GTFS Files
