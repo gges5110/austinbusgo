@@ -98,7 +98,11 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const [nearByStops, setNearByStops] = useState<Stop[]>([]);
   const [getNearByStops] = useNearByStopsLazyQuery({
     onCompleted: (data) => {
-      setNearByStops(data.nearByStops);
+      const stopIds = stops.map((stop) => stop.stopId);
+      const filteredNearByStops = data.nearByStops.filter(
+        (stop) => !stopIds.includes(stop.stopId)
+      );
+      setNearByStops(filteredNearByStops);
     },
   });
 

@@ -34,22 +34,20 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
         <ListItemText primary={"No more running buses"} />
       </ListItem>
     ) : (
-      arrivalTimes?.map((arrivalTime, index) => {
-        return (
-          <>
-            {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
-              <div key={index}>
-                <ArrivalTimeListItem
-                  key={arrivalTime.trip.tripId}
-                  arrivalTime={arrivalTime}
-                  arrivalTimeOnClick={arrivalTimeOnClick}
-                />
-                <Divider />
-              </div>
-            )}
-          </>
-        );
-      })
+      arrivalTimes?.map((arrivalTime, index) => (
+        <>
+          {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
+            <div key={index}>
+              <ArrivalTimeListItem
+                key={arrivalTime.trip.tripId}
+                arrivalTime={arrivalTime}
+                arrivalTimeOnClick={arrivalTimeOnClick}
+              />
+              <Divider />
+            </div>
+          )}
+        </>
+      ))
     )}
   </List>
 );

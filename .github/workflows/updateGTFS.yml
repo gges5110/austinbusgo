@@ -1,0 +1,29 @@
+name: Update GTFS database on a CRON Schedule
+
+on:
+  schedule:
+    # Runs "At 00:00." (see https://crontab.guru)
+    - cron: '0 0 * * *'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ci-job
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install PostgresClient
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Prepare GTFS Files
+        run: python prepareGTFSFiles.py
+      - name: Upload GTFS Files
+        run: ./uploadGTFS.sh
+        env:
+          DATABASE_URL: ${{ secrets.DBURI }}

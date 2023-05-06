@@ -24,7 +24,7 @@ type Position {
 
 type Query {
     arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]
-    distinctTrips(routeId: String!): [Trip!]
+    distinctTrips(date: String!, routeId: String!): [Trip!]
     nearByStops(lat: Float!, lon: Float!): [Stop!]!
     realTimeVehiclePositions: [VehiclePosition]
     route(routeId: String!): Route!
@@ -46,7 +46,7 @@ type Route {
     "Description of a route that provides useful, quality information."
     routeDesc: String
     "Identifies a route."
-    routeId: Int!
+    routeId: String!
     "Full name of a route."
     routeLongName: String!
     "Short name of a route."
@@ -66,7 +66,7 @@ type Stop {
     "Short text or a number that identifies the location for riders."
     stopCode: String
     "Identifies a stop, station, or station entrance."
-    stopId: Int!
+    stopId: String!
     "Latitude of the location."
     stopLat: Float
     "Longitude of the location."
@@ -83,7 +83,7 @@ type StopTimes {
     shapeDistTraveled: Float
     stop: Stop!
     stopHeadsign: String
-    stopId: Int!
+    stopId: String!
     stopSequence: Int!
     supEstDelay: String
     timepoint: Int

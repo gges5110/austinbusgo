@@ -18,7 +18,7 @@ import { Route, Stop } from "../../interfaces/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { Highlight } from "./Highlight";
+import { Highlight } from "./Highlight/Highlight";
 import { useStopsByNameLazyQuery } from "../../schemas/StopsByName.generated";
 import { useRecentSearches } from "../../hooks/UseRecentSearches";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
@@ -34,9 +34,8 @@ const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
     {...props}
     style={{
       width: SEARCH_PANEL_WIDTH,
-      paddingTop: 12,
+      zIndex: 1,
     }}
-    placement="bottom-start"
   />
 );
 
@@ -102,6 +101,13 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       addToRecentSearches(stop);
     }
   }, [stop]);
+
+  useEffect(() => {
+    if (route) {
+      setInputString(getRouteOptionLabel(route));
+      addToRecentSearches(route);
+    }
+  }, [route]);
 
   const searchOnChange = (
     event: React.SyntheticEvent,
@@ -215,13 +221,9 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   return (
     <Paper
       sx={{
-        ml: 4,
-        mt: 2,
-        display: "flex",
-        alignItems: "center",
-        width: "fit-content",
+        m: 1,
         borderRadius: searchPanelOpen ? "10px 10px 0 0" : "10px",
-        boxShadow: 2,
+        boxShadow: searchPanelOpen ? 1 : 5,
       }}
     >
       <Autocomplete<SearchOption>
@@ -230,10 +232,15 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         blurOnSelect={true}
         autoComplete={true}
         open={searchPanelOpen}
-        onClose={() => {
-          setSearchPanelOpen(false);
+        onClose={(event, reason) => {
+          if (reason !== "toggleInput") {
+            setSearchPanelOpen(false);
+          }
         }}
         onFocus={() => {
+          setSearchPanelOpen(true);
+        }}
+        onOpen={() => {
           setSearchPanelOpen(true);
         }}
         componentsProps={{
@@ -286,11 +293,17 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Box sx={{ pr: 2 }}>
                   {option.type === SearchType.recent ? (
-                    <AccessTimeOutlinedIcon color={"neutral"} />
+                    <AccessTimeOutlinedIcon
+                      color={"neutral"}
+                      sx={{ fontSize: 20 }}
+                    />
                   ) : isRoute(optionValue) ? (
-                    <RouteIcon color={"neutral"} />
+                    <RouteIcon color={"neutral"} sx={{ fontSize: 20 }} />
                   ) : (
-                    <PlaceOutlinedIcon color={"neutral"} />
+                    <PlaceOutlinedIcon
+                      color={"neutral"}
+                      sx={{ fontSize: 20 }}
+                    />
                   )}
                 </Box>
                 {isRoute(optionValue) && (

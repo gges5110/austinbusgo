@@ -9,11 +9,10 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
-import { RootLayout } from "./pages/page/RootLayout";
-import { routesLoader, RootSearchMenu } from "./pages/page/RootSearchMenu";
-import { routeLoader, RouteMenu } from "./pages/page/route/RouteMenu";
-import { stopLoader, StopMenu } from "./pages/page/stop/StopMenu";
-import { tripLoader, TripMenu } from "./pages/page/trip/TripMenu";
+import { RootLayout, routesLoader } from "./pages/RootLayout";
+import { routeLoader, RouteMenu } from "./pages/route/RouteMenu";
+import { stopLoader, StopMenu } from "./pages/stop/StopMenu";
+import { tripLoader, TripMenu } from "./pages/trip/TripMenu";
 import * as React from "react";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
@@ -40,11 +39,7 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path={"/"} element={<RootLayout />}>
-      <Route
-        path={"/:viewState?"}
-        element={<RootSearchMenu />}
-        loader={routesLoader}
-      >
+      <Route path={"/:viewState?"} id={"routes"} loader={routesLoader}>
         <Route
           path={"/:viewState/stops/:stopId"}
           id={"stop"}

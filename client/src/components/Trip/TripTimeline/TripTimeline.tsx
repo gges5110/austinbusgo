@@ -46,14 +46,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
 
   // TODO: fix timeline rail styling of border radius
   return (
-    <Box
-      sx={{
-        overflowY: "auto",
-        maxHeight: "calc(82vh - 70px - 71px)",
-      }}
-      component={"div"}
-      ref={containerRef}
-    >
+    <Box component={"div"} ref={containerRef}>
       <List>
         {stopTimes?.map((stopTime, index) => {
           const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");

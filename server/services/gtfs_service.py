@@ -67,12 +67,12 @@ class GTFSService:
 
     # Trips
     @staticmethod
-    def get_trips_by_distinct_short_name(route_id: str) -> List[Trips]:
+    def get_trips_by_distinct_short_name(route_id: str, date: str) -> List[Trips]:
         return Trips \
             .select(Trips) \
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id)) \
             .distinct(Trips.direction_id, Trips.trip_short_name) \
-            .where((Trips.route_id == route_id) & (CalendarDates.date == "20230427")) \
+            .where((Trips.route_id == route_id) & (CalendarDates.date == date)) \
             .order_by(Trips.direction_id, Trips.trip_short_name)
 
     @staticmethod

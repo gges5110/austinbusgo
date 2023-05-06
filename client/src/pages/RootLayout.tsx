@@ -2,26 +2,31 @@ import { Box, Paper, Popper, useTheme } from "@mui/material";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { useVehiclePositionsLazyQuery } from "../../schemas/VehiclePositions.generated";
-import { LoadingSnackbarMessage } from "../../components/LoadingSnackbarMessage";
-import { SettingsDialog } from "../../components/SettingsDialog";
+import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
+import { LoadingSnackbarMessage } from "../components/LoadingSnackbarMessage";
+import { SettingsDialog } from "../components/SettingsDialog";
 import { Outlet, useMatches, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
   selectedRouteAtom,
   settingsDialogOpenAtom,
-} from "../../Atoms";
-import { MapWrapper } from "../../components/Map/MapWrapper";
-import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+} from "../Atoms";
+import { MapWrapper } from "../components/Map/MapWrapper";
+import { useViewStatePathname } from "../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
-import { HandleType } from "../../Router";
+import { client, HandleType, useDataFromRouteLoader } from "../Router";
 import { stopLoader } from "./stop/StopMenu";
 import { routeLoader } from "./route/RouteMenu";
-import { ColorModeToggle } from "../../components/ColorModeToggle/ColorModeToggle";
+import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
+import { SearchPanel } from "../components/Route/SearchPanel";
+import { RoutesDocument, RoutesQuery } from "../schemas/Routes.generated";
 
 const defaultAutoPollingInterval = 15000;
 
+export const routesLoader = async () => {
+  return await client.query<RoutesQuery>({ query: RoutesDocument });
+};
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
   const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
@@ -35,10 +40,14 @@ export const RootLayout: React.FunctionComponent = () => {
   const theme = useTheme();
 
   const setStop = (stopId: string | undefined) => {
-    if (stopId !== undefined && location.pathname.includes("/routes")) {
-      navigate(
-        `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
-      );
+    if (stopId !== undefined) {
+      if (location.pathname.includes("/routes")) {
+        navigate(
+          `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
+        );
+      } else {
+        navigate(`${viewStatePathname}/stops/${stopId}`);
+      }
     }
   };
   const [
@@ -138,6 +147,8 @@ export const RootLayout: React.FunctionComponent = () => {
         )
       )[0] || [];
 
+  const routesData = useDataFromRouteLoader("routes", routesLoader);
+
   setSelectedRoute(route);
   const vehiclePositions =
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
@@ -166,6 +177,26 @@ export const RootLayout: React.FunctionComponent = () => {
       <Popper open={true}>
         <Outlet />
       </Popper>
+      <Popper open={true} sx={{ zIndex: 2 }}>
+        <SearchPanel
+          routes={routesData?.data.routes || []}
+          route={route}
+          setRoute={(route) => {
+            if (route) {
+              navigate(
+                `${viewStatePathname}/routes/${route?.routeId}/direction/0`
+              );
+            }
+          }}
+          stop={stop}
+          setStop={(stop) => {
+            if (stop) {
+              navigate(`${viewStatePathname}/stops/${stop.stopId}`);
+            }
+          }}
+        />
+      </Popper>
+
       <SettingsDialog
         open={settingsDialogOpen}
         autoPolling={autoPolling}
@@ -176,11 +207,6 @@ export const RootLayout: React.FunctionComponent = () => {
     </Box>
   );
 };
-
-export const toBoolean = (value: string | undefined): boolean => {
-  return value === "true" || value === "1";
-};
-
 export const getDate = () => {
   const d = new Date();
   return [
