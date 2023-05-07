@@ -233,8 +233,15 @@ class StopTimes(graphene.ObjectType):
     stop = graphene.Field(graphene.NonNull(Stop))
 
 
+class Search(graphene.ObjectType):
+    stops = graphene.Field(graphene.NonNull(graphene.List(graphene.NonNull(Stop))))
+    routes = graphene.Field(graphene.List(graphene.NonNull(Route)))
+
+
 class Query(graphene.ObjectType):
     resolver = Resolver()
+    search = graphene.Field(graphene.NonNull(Search),
+                            search_term=graphene.String(required=True), resolver=resolver.resolve_search)
     stops_and_shapes = graphene.Field(graphene.NonNull(StopsAndShapes), route_id=graphene.String(
         required=True), direction_id=graphene.Int(required=True), date=graphene.String(required=True),
                                       resolver=resolver.resolve_stops_and_shapes)

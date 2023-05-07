@@ -31,7 +31,7 @@ CREATE TABLE routes
 (
   route_id          text UNIQUE NOT NULL PRIMARY KEY,
   agency_id         integer NULL,
-  route_short_name  integer UNIQUE NOT NULL,
+  route_short_name  text UNIQUE NOT NULL,
   route_long_name   text NULL,
   route_desc        text NULL,
   route_type        integer NULL,

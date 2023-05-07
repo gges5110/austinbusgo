@@ -20,6 +20,16 @@ class GTFSService:
     def get_routes() -> List[Routes]:
         return Routes.select(Routes)
 
+    @staticmethod
+    def get_routes_by_name(term: str) -> List[Routes]:
+        term.replace('/', '')
+
+        return Routes.select(Routes).where(
+            Match(Routes.route_id, term) |
+            Match(Routes.route_long_name, term) |
+            Match(Routes.route_short_name, term)
+        )
+
     # Stops
     @staticmethod
     def get_stop(stop_id: int) -> Stops:
@@ -94,9 +104,9 @@ class GTFSService:
     @staticmethod
     def get_trips_with_direction_and_route(trip_ids: List[str], route_id: str, direction: int) -> List[Trips]:
         return [trip.trip_id for trip in Trips.select(Trips.trip_id)
-                .where((Trips.trip_id.in_(trip_ids))
-                       & (Trips.route_id == route_id)
-                       & (Trips.direction_id == direction))]
+        .where((Trips.trip_id.in_(trip_ids))
+               & (Trips.route_id == route_id)
+               & (Trips.direction_id == direction))]
 
     @staticmethod
     def get_trip_by_id(trip_id: str) -> List[Trips]:

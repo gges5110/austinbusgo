@@ -16,7 +16,7 @@ class Routes(db_wrapper.Model):
     route_id = TextField(index=True, null=True,
                          primary_key=True, unique=True)
     agency_id = IntegerField(null=True)
-    route_short_name = IntegerField(null=True, unique=True)
+    route_short_name = TextField(null=True, unique=True)
     route_long_name = TextField(null=True)
     route_desc = TextField(null=True)
     route_type = IntegerField(null=True)

@@ -64,6 +64,12 @@ class Resolver:
     def resolve_stop_times(self, query, info, trip_id: str):
         return self.gtfs_service.get_stop_times_by_trip_id(trip_id)
 
+    def resolve_search(self, query, info, search_term: str):
+        return {
+            'stops': self.gtfs_service.get_stops_by_name(search_term),
+            'routes': self.gtfs_service.get_routes_by_name(search_term),
+        }
+
     def resolve_arrival_times(self, query, info, stop_id: str, date: str):
         """Finds the arrival times of a route at a given stop.
 
