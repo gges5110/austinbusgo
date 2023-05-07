@@ -13,6 +13,7 @@ export interface Scalars {
 
 export interface Query {
   __typename?: "Query";
+  search: Search;
   stopsAndShapes: StopsAndShapes;
   stop: Stop;
   stopsByName?: Maybe<Array<Stop>>;
@@ -26,6 +27,10 @@ export interface Query {
   arrivalTimes?: Maybe<Array<ArrivalTime>>;
   stopTimes?: Maybe<Array<StopTimes>>;
   realTimeVehiclePositions?: Maybe<Array<Maybe<VehiclePosition>>>;
+}
+
+export interface QuerySearchArgs {
+  searchTerm: Scalars["String"];
 }
 
 export interface QueryStopsAndShapesArgs {
@@ -78,10 +83,10 @@ export interface QueryStopTimesArgs {
   tripId: Scalars["String"];
 }
 
-export interface StopsAndShapes {
-  __typename?: "StopsAndShapes";
-  stops?: Maybe<Array<Stop>>;
-  shapes?: Maybe<Array<Array<Shape>>>;
+export interface Search {
+  __typename?: "Search";
+  stops: Array<Stop>;
+  routes?: Maybe<Array<Route>>;
 }
 
 export interface Stop {
@@ -98,16 +103,6 @@ export interface Stop {
   stopLon?: Maybe<Scalars["Float"]>;
 }
 
-export interface Shape {
-  __typename?: "Shape";
-  /** Identifies a shape. */
-  shapeId: Scalars["String"];
-  /** Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape. */
-  shapePtLat: Scalars["Float"];
-  /** Longitude of a shape point. */
-  shapePtLon: Scalars["Float"];
-}
-
 export interface Route {
   __typename?: "Route";
   /** Identifies a route. */
@@ -122,6 +117,22 @@ export interface Route {
   routeColor?: Maybe<Scalars["String"]>;
   /** Description of a route that provides useful, quality information. */
   routeDesc?: Maybe<Scalars["String"]>;
+}
+
+export interface StopsAndShapes {
+  __typename?: "StopsAndShapes";
+  stops?: Maybe<Array<Stop>>;
+  shapes?: Maybe<Array<Array<Shape>>>;
+}
+
+export interface Shape {
+  __typename?: "Shape";
+  /** Identifies a shape. */
+  shapeId: Scalars["String"];
+  /** Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape. */
+  shapePtLat: Scalars["Float"];
+  /** Longitude of a shape point. */
+  shapePtLon: Scalars["Float"];
 }
 
 export interface TripWithRoute {

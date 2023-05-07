@@ -30,6 +30,7 @@ type Query {
     route(routeId: String!): Route!
     routeShapes(tripId: String!): [Shape!]
     routes: [Route!]
+    search(searchTerm: String!): Search!
     stop(stopId: String!): Stop!
     stopTimes(tripId: String!): [StopTimes!]
     stopsAndShapes(date: String!, directionId: Int!, routeId: String!): StopsAndShapes!
@@ -51,6 +52,11 @@ type Route {
     routeLongName: String!
     "Short name of a route."
     routeShortName: String
+}
+
+type Search {
+    routes: [Route!]
+    stops: [Stop!]!
 }
 
 type Shape {
@@ -101,7 +107,7 @@ type Trip {
     "Identifies the block to which the trip belongs."
     blockId: String
     "Indicates the direction of travel for a trip."
-    directionId: Boolean
+    directionId: Int
     "Identifies a route."
     routeId: String!
     "Identifies a set of dates when service is available for one or more routes."
@@ -136,7 +142,7 @@ type TripWithRoute {
     "Identifies the block to which the trip belongs."
     blockId: String
     "Indicates the direction of travel for a trip."
-    directionId: Boolean
+    directionId: Int
     route: Route!
     "Identifies a route."
     routeId: String!
