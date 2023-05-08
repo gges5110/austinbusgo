@@ -235,7 +235,7 @@ class StopTimes(graphene.ObjectType):
 
 class Search(graphene.ObjectType):
     stops = graphene.Field(graphene.NonNull(graphene.List(graphene.NonNull(Stop))))
-    routes = graphene.Field(graphene.List(graphene.NonNull(Route)))
+    routes = graphene.Field(graphene.NonNull(graphene.List(graphene.NonNull(Route))))
 
 
 class Query(graphene.ObjectType):

@@ -86,7 +86,7 @@ export interface QueryStopTimesArgs {
 export interface Search {
   __typename?: "Search";
   stops: Array<Stop>;
-  routes?: Maybe<Array<Route>>;
+  routes: Array<Route>;
 }
 
 export interface Stop {

@@ -3,11 +3,10 @@ import {
   Box,
   Button,
   CircularProgress,
+  createFilterOptions,
   debounce,
   Divider,
   IconButton,
-  Popper,
-  PopperProps,
   Tooltip,
 } from "@mui/material";
 import InputBase from "@mui/material/InputBase";
@@ -19,57 +18,66 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { Highlight } from "./Highlight/Highlight";
-import { useStopsByNameLazyQuery } from "../../schemas/StopsByName.generated";
 import { useRecentSearches } from "../../hooks/UseRecentSearches";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import RouteIcon from "@mui/icons-material/Route";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
+import { useSearchLazyQuery } from "../../schemas/Search.generated";
 
 export const SEARCH_PANEL_WIDTH = "392px";
-
-const StyledPopper: React.FunctionComponent<PopperProps> = (props) => (
-  <Popper
-    {...props}
-    style={{
-      width: SEARCH_PANEL_WIDTH,
-      zIndex: 1,
-    }}
-  />
-);
 
 enum SearchType {
   "recent",
   "search",
 }
 
-export interface SearchOption {
-  type: SearchType;
-  optionValue: Stop | Route;
+export interface SearchTerm {
+  value: string;
 }
 
-export const isRoute = (option: Stop | Route): option is Route => {
+export type OptionValue = Stop | Route | SearchTerm;
+
+export interface SearchOption {
+  type: SearchType;
+  optionValue: OptionValue;
+}
+
+export const isRoute = (option: OptionValue): option is Route => {
+  if (!("__typename" in option)) {
+    return false;
+  }
+
   return option.__typename === "Route";
 };
 
-export const isStop = (option: Stop | Route): option is Stop => {
+export const isStop = (option: OptionValue): option is Stop => {
+  if (!("__typename" in option)) {
+    return false;
+  }
+
   return option.__typename === "Stop";
 };
 
+export const isSearchTerm = (option: OptionValue): option is SearchTerm => {
+  return "value" in option;
+};
+
 export interface SearchPanelProps {
-  routes: Route[];
   route?: Route;
   stop?: Stop;
 
   setRoute(route?: Route): void;
 
   setStop(stop?: Stop): void;
+
+  searchTerm?: string;
 }
 
 export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
+  searchTerm,
   route,
-  routes,
   setRoute,
   stop,
   setStop,
@@ -81,13 +89,10 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const routeLoading = navigation.location !== undefined;
 
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
+  const [value, setValue] = useState<SearchOption | null>(null);
   const [inputString, setInputString] = useState<string>("");
   const [stops, setStops] = useState<Stop[]>([]);
-  useEffect(() => {
-    if (route) {
-      setInputString(getRouteOptionLabel(route));
-    }
-  }, [route]);
+  const [routes, setRoutes] = useState<Route[]>([]);
 
   useEffect(() => {
     if (isBasePath) {
@@ -96,15 +101,25 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   }, [isBasePath]);
 
   useEffect(() => {
+    if (searchTerm) {
+      setInputString(searchTerm);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
     if (stop) {
-      setInputString(getStopOptionLabel(stop));
+      const input = getStopOptionLabel(stop);
+      setInputString(input);
+      search(input);
       addToRecentSearches(stop);
     }
   }, [stop]);
 
   useEffect(() => {
     if (route) {
-      setInputString(getRouteOptionLabel(route));
+      const input = getRouteOptionLabel(route);
+      setInputString(input);
+      search(input);
       addToRecentSearches(route);
     }
   }, [route]);
@@ -113,6 +128,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     event: React.SyntheticEvent,
     newValue: SearchOption | null
   ) => {
+    setValue(newValue);
     if (newValue != null) {
       const { optionValue } = newValue;
       if (isRoute(optionValue)) {
@@ -161,6 +177,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const clearSelection = () => {
     navigate(viewStatePathname);
     setInputString("");
+    setValue(null);
     setSearchPanelOpen(true);
   };
 
@@ -174,21 +191,30 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 
   // TODO: fix onCompleted isn't fired when fetching from cached values
   // https://github.com/apollographql/react-apollo/issues/2177
-  const [getStopsByName, { loading }] = useStopsByNameLazyQuery({
+  const [doSearch, { loading }] = useSearchLazyQuery({
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      if (data.stopsByName) {
-        setStops(data.stopsByName);
+      if (data.search) {
+        setStops(data.search.stops);
+        setRoutes(data.search.routes);
       }
     },
   });
 
   const search = (value: string): void => {
-    getStopsByName({
+    doSearch({
       variables: {
-        stopName: value,
+        searchTerm: value,
       },
     });
+  };
+
+  const goToSearchPage = () => {
+    ref?.current?.blur?.();
+    addToRecentSearches({
+      value: inputString.trim(),
+    });
+    navigate(`${viewStatePathname}/search/${encodeURIComponent(inputString)}`);
   };
 
   const delayedQuery = useCallback(
@@ -203,20 +229,23 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   );
 
   const { recentSearches, addToRecentSearches } = useRecentSearches();
-  const options = [
-    ...recentSearches.map((search) => ({
-      type: SearchType.recent,
-      optionValue: search,
-    })),
-    ...routes.map((route) => ({
-      type: SearchType.search,
-      optionValue: route,
-    })),
-    ...stops.map((stop) => ({
-      type: SearchType.search,
-      optionValue: stop,
-    })),
-  ];
+
+  const options =
+    inputString === ""
+      ? recentSearches.map((search) => ({
+          type: SearchType.recent,
+          optionValue: search,
+        }))
+      : [
+          ...stops.map((stop) => ({
+            type: SearchType.search,
+            optionValue: stop,
+          })),
+          ...routes.map((route) => ({
+            type: SearchType.search,
+            optionValue: route,
+          })),
+        ];
 
   return (
     <Paper
@@ -227,15 +256,19 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       }}
     >
       <Autocomplete<SearchOption>
+        loading={loading}
         options={options}
         sx={{ width: SEARCH_PANEL_WIDTH }}
+        value={value}
         blurOnSelect={true}
-        autoComplete={true}
         open={searchPanelOpen}
         onClose={(event, reason) => {
           if (reason !== "toggleInput") {
             setSearchPanelOpen(false);
           }
+        }}
+        onBlur={() => {
+          setSearchPanelOpen(false);
         }}
         onFocus={() => {
           setSearchPanelOpen(true);
@@ -249,14 +282,19 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               borderRadius: "0 0 10px 10px",
             },
           },
+          popper: {
+            sx: {
+              width: SEARCH_PANEL_WIDTH,
+              zIndex: 1,
+            },
+          },
         }}
         inputValue={inputString}
         onInputChange={handleInputValueChange}
-        PopperComponent={StyledPopper}
-        autoHighlight={true}
         openOnFocus={true}
         selectOnFocus={true}
         onChange={searchOnChange}
+        filterOptions={filterOptions}
         isOptionEqualToValue={(option, value) => {
           const { optionValue } = option;
 
@@ -270,6 +308,11 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               isStop(value.optionValue) &&
               optionValue.stopId === value.optionValue.stopId
             );
+          } else if (isSearchTerm(optionValue)) {
+            return (
+              isSearchTerm(value.optionValue) &&
+              optionValue.value === value.optionValue.value
+            );
           }
 
           return false;
@@ -280,18 +323,19 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             return getRouteOptionLabel(optionValue);
           } else if (isStop(optionValue)) {
             return getStopOptionLabel(optionValue);
+          } else if (isSearchTerm(optionValue)) {
+            return optionValue.value;
           }
 
           return "";
         }}
-        ListboxProps={{ style: { maxHeight: "60vh" } }}
         renderOption={(props, option, { inputValue }) => {
           const { optionValue } = option;
 
           return (
             <li {...props}>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Box sx={{ pr: 2 }}>
+                <Box sx={{ pr: 2, display: "flex", alignItems: "center" }}>
                   {option.type === SearchType.recent ? (
                     <AccessTimeOutlinedIcon
                       color={"neutral"}
@@ -330,6 +374,12 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
                     />
                   </>
                 )}
+                {isSearchTerm(optionValue) && (
+                  <Highlight
+                    text={String(optionValue.value)}
+                    query={inputValue}
+                  />
+                )}
               </Box>
             </li>
           );
@@ -340,7 +390,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             ref={params.InputProps.ref}
             inputRef={ref}
             inputProps={params.inputProps}
-            autoFocus={route === undefined}
             endAdornment={
               <>
                 <Tooltip title="Search" placement="bottom-end">
@@ -354,7 +403,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
                     }}
                     onClick={() => {
                       if (inputString !== "") {
-                        search(inputString);
+                        goToSearchPage();
                       }
                     }}
                   >
@@ -418,6 +467,9 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
               if (event.key === "Escape") {
                 ref?.current?.blur?.();
               }
+              if (event.key === "Enter") {
+                goToSearchPage();
+              }
             }}
           />
         )}
@@ -425,3 +477,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     </Paper>
   );
 };
+
+const filterOptions = createFilterOptions<SearchOption>({
+  limit: 5,
+});

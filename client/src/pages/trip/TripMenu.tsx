@@ -29,6 +29,7 @@ import {
   TripQueryVariables,
 } from "../../schemas/Trip.generated";
 import { MenuPanel } from "../../components/MenuPanel";
+import { useRef } from "react";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
   const tripId = params["tripId"];
@@ -83,8 +84,10 @@ export const TripMenu = () => {
   const tripName = trip.tripHeadsign?.split("-")[
     trip.tripHeadsign?.split("-").length - 1
   ];
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
   return (
-    <MenuPanel>
+    <MenuPanel innerRef={containerRef}>
       <Box
         sx={{
           py: 1,
@@ -152,6 +155,7 @@ export const TripMenu = () => {
           stopTimeOnClick={(stopTime) => {
             navigate(`${viewStatePathname}/stops/${stopTime.stopId}`);
           }}
+          containerRef={containerRef}
         />
       </Box>
     </MenuPanel>

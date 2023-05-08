@@ -37,13 +37,13 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
       arrivalTimes?.map((arrivalTime, index) => (
         <>
           {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
-            <div key={index}>
+            <div key={arrivalTime.trip.tripId}>
               <ArrivalTimeListItem
                 key={arrivalTime.trip.tripId}
                 arrivalTime={arrivalTime}
                 arrivalTimeOnClick={arrivalTimeOnClick}
               />
-              <Divider />
+              <Divider key={`${arrivalTime.trip.tripId}-divider`} />
             </div>
           )}
         </>

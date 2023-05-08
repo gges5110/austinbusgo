@@ -142,7 +142,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
       zoom: vehicleZoomLevel,
       padding: {
         top: 0,
-        left: 400,
+        left: 420,
         right: 0,
         bottom: 0,
       },
@@ -166,7 +166,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         {
           padding: {
             top: 10,
-            left: 10,
+            left: 420,
             right: 10,
             bottom: 10,
           },

@@ -15,6 +15,10 @@ import { stopLoader, StopMenu } from "./pages/stop/StopMenu";
 import { tripLoader, TripMenu } from "./pages/trip/TripMenu";
 import * as React from "react";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
+import {
+  searchLoader,
+  SearchResultsMenu,
+} from "./pages/search/SearchResultsMenu";
 
 export const client = new ApolloClient({
   uri:
@@ -36,10 +40,16 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
   return useRouteLoaderData(routeId) as Awaited<ReturnType<typeof loaderFn>>;
 };
 
+// TODO: move StopMenu and TripMenu out of RouteMenu
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path={"/"} element={<RootLayout />}>
       <Route path={"/:viewState?"} id={"routes"} loader={routesLoader}>
+        <Route
+          path={"/:viewState/search/:searchTerm"}
+          element={<SearchResultsMenu />}
+          loader={searchLoader}
+        ></Route>
         <Route
           path={"/:viewState/stops/:stopId"}
           id={"stop"}

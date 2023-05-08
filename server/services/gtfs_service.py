@@ -22,8 +22,6 @@ class GTFSService:
 
     @staticmethod
     def get_routes_by_name(term: str) -> List[Routes]:
-        term.replace('/', '')
-
         return Routes.select(Routes).where(
             Match(Routes.route_id, term) |
             Match(Routes.route_long_name, term) |
@@ -37,13 +35,11 @@ class GTFSService:
 
     @staticmethod
     def get_stops_by_name(stop_name: str) -> List[Stops]:
-        stop_name.replace('/', '')
-
         return Stops.select(Stops).where(
             Match(Stops.at_street, stop_name) |
             Match(Stops.on_street, stop_name) |
             Match(Stops.stop_name, stop_name) |
-            Match(Stops.stop_code.cast("text"), stop_name)
+            Match(Stops.stop_code, stop_name)
         )
 
     @staticmethod
@@ -109,10 +105,11 @@ class GTFSService:
                & (Trips.direction_id == direction))]
 
     @staticmethod
-    def get_trip_by_id(trip_id: str) -> List[Trips]:
-        return Trips.select(Trips, Routes) \
-            .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route")) \
-            .where(Trips.trip_id == trip_id)
+    def get_trip_by_id(trip_id: str) -> Trips:
+        trips = list(Trips.select(Trips, Routes)
+                     .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route"))
+                     .where(Trips.trip_id == trip_id))
+        return trips[0]
 
     # Shapes
     @staticmethod

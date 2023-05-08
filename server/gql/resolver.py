@@ -25,9 +25,8 @@ class Resolver:
         self.gtfs_service = gtfs_service or GTFSService()
         self.gtfs_rt_service = GTFSRTService(self.gtfs_client)
 
-    def resolve_trip(self, query, info, trip_id) -> Trips:
-        trips = self.gtfs_service.get_trip_by_id(trip_id)
-        return trips[0]
+    def resolve_trip(self, query, info, trip_id: str) -> Trips:
+        return self.gtfs_service.get_trip_by_id(trip_id)
 
     def resolve_distinct_trips(self, query, info, route_id: str, date: str) -> List[Trips]:
         return self.gtfs_service.get_trips_by_distinct_short_name(route_id, date)
@@ -65,31 +64,17 @@ class Resolver:
         return self.gtfs_service.get_stop_times_by_trip_id(trip_id)
 
     def resolve_search(self, query, info, search_term: str):
+        search_term = search_term.replace(" ", "&")
         return {
             'stops': self.gtfs_service.get_stops_by_name(search_term),
             'routes': self.gtfs_service.get_routes_by_name(search_term),
         }
 
     def resolve_arrival_times(self, query, info, stop_id: str, date: str):
-        """Finds the arrival times of a route at a given stop.
-
-        Args:
-          route_id: The route_id to find arrival times for.
-          stop_id: The bus stop.
-
-        Returns:
-          A json object with fields
-            'arrival_times': An array of arrival info, each item is an object:
-              'vehicle_info': Vehicle information.
-              'arrival_time': The time the vehicle arrives at the given stop
-              :param route_id:
-              :param stop_id:
-              :param direction:
-        """
         # get trip ids from gtfs
         stop_times = self.gtfs_service.get_stop_time_by_route_id(stop_id, date)
-        vehicles: List[VehiclePosition] = self.gtfs_rt_service.get_real_time_vehicle_positions()
-        vehicle_by_trip_id: Dict[str, VehiclePosition] = {
+        vehicles = self.gtfs_rt_service.get_real_time_vehicle_positions()
+        vehicle_by_trip_id = {
             self.gtfs_rt_service.get_trip_id(v): v for v in vehicles
         }
         trip_ids = [stop_time.trip.trip_id for stop_time in stop_times]

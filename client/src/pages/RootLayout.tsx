@@ -15,11 +15,11 @@ import {
 import { MapWrapper } from "../components/Map/MapWrapper";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
 import { Params } from "@remix-run/router";
-import { client, HandleType, useDataFromRouteLoader } from "../Router";
+import { client, HandleType } from "../Router";
 import { stopLoader } from "./stop/StopMenu";
 import { routeLoader } from "./route/RouteMenu";
 import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
-import { SearchPanel } from "../components/Route/SearchPanel";
+import { SearchPanel } from "../components/SearchPanel/SearchPanel";
 import { RoutesDocument, RoutesQuery } from "../schemas/Routes.generated";
 
 const defaultAutoPollingInterval = 15000;
@@ -34,7 +34,7 @@ export const RootLayout: React.FunctionComponent = () => {
   );
   const [selectedRoute, setSelectedRoute] = useAtom(selectedRouteAtom);
 
-  const { routeId, directionId } = useParams();
+  const { routeId, directionId, searchTerm } = useParams();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
@@ -147,8 +147,6 @@ export const RootLayout: React.FunctionComponent = () => {
         )
       )[0] || [];
 
-  const routesData = useDataFromRouteLoader("routes", routesLoader);
-
   setSelectedRoute(route);
   const vehiclePositions =
     (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
@@ -179,7 +177,7 @@ export const RootLayout: React.FunctionComponent = () => {
       </Popper>
       <Popper open={true} sx={{ zIndex: 2 }}>
         <SearchPanel
-          routes={routesData?.data.routes || []}
+          searchTerm={searchTerm}
           route={route}
           setRoute={(route) => {
             if (route) {

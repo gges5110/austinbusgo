@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
-import { DirectionToggle } from "../../components/Route/DirectionToggle/DirectionToggle";
+import { DirectionToggle } from "../../components/SearchPanel/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../components/Route/StopsTimeline/StopsTimeline";
 import * as React from "react";
 import { getDate } from "../RootLayout";
@@ -64,7 +64,7 @@ export const RouteMenu = () => {
   useTitle(`${route.routeId} ${route.routeLongName} - Austin Bus Go`);
 
   const setDirection = (directionId: Trip["directionId"]) => {
-    if (directionId) {
+    if (directionId !== undefined) {
       navigate(
         `${viewStatePathname}/routes/${routeId}/direction/${directionId}`,
         {

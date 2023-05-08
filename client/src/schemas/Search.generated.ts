@@ -11,12 +11,10 @@ export type SearchQuery = { __typename?: "Query" } & {
     stops: Array<
       { __typename?: "Stop" } & Pick<Types.Stop, "stopId" | "stopName">
     >;
-    routes?: Types.Maybe<
-      Array<
-        { __typename?: "Route" } & Pick<
-          Types.Route,
-          "routeId" | "routeLongName" | "routeShortName" | "routeColor"
-        >
+    routes: Array<
+      { __typename?: "Route" } & Pick<
+        Types.Route,
+        "routeId" | "routeLongName" | "routeShortName" | "routeColor"
       >
     >;
   };

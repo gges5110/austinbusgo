@@ -3,7 +3,15 @@ import { PropsWithChildren } from "react";
 import { Box, Paper, Slide } from "@mui/material";
 
 export const PANEL_WIDTH = "408px";
-export const MenuPanel = ({ children }: PropsWithChildren) => {
+
+interface MenuPanelProps {
+  innerRef?: React.MutableRefObject<HTMLDivElement | null>;
+}
+
+export const MenuPanel = ({
+  children,
+  innerRef,
+}: PropsWithChildren<MenuPanelProps>) => {
   return (
     <Paper
       sx={{
@@ -11,6 +19,7 @@ export const MenuPanel = ({ children }: PropsWithChildren) => {
         width: PANEL_WIDTH,
         overflowY: "auto",
       }}
+      ref={innerRef}
     >
       <Slide direction="right" in={true} mountOnEnter unmountOnExit>
         <Box component={"div"} sx={{ pt: 8 }}>

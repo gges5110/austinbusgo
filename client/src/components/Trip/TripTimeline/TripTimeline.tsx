@@ -16,6 +16,8 @@ interface TripTimelineProps {
   trip: TripQuery["trip"];
 
   stopTimeOnClick(stopTime: ArrayElement<StopTimesQuery["stopTimes"]>): void;
+
+  containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
 export const TripTimeline: React.FC<TripTimelineProps> = ({
@@ -23,9 +25,9 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   stop,
   trip,
   stopTimeOnClick,
+  containerRef,
 }) => {
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
       if (stopTimelineItemRef.current && containerRef.current) {
@@ -46,7 +48,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
 
   // TODO: fix timeline rail styling of border radius
   return (
-    <Box component={"div"} ref={containerRef}>
+    <Box component={"div"}>
       <List>
         {stopTimes?.map((stopTime, index) => {
           const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
