@@ -11,8 +11,12 @@ import ReactMapGL, {
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
-import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
-import { ShapeData } from "../../interfaces/Shape";
+import {
+  LineString,
+  Route,
+  Stop,
+  VehiclePosition,
+} from "../../interfaces/interface.d";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import { useLocation, useNavigate, useNavigation } from "react-router-dom";
@@ -31,14 +35,14 @@ type ViewState = {
 export interface MapProps {
   readonly route?: Route;
   readonly stop?: Stop;
-  readonly routeShapes: ShapeData[][];
+  readonly routeShapes: LineString[];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
 
   setSelectedStopId(stopId: string): void;
 }
 
-const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
   type: "FeatureCollection",
   features: [
     {
@@ -69,25 +73,17 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const theme = useTheme();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
-    GeoJSON.FeatureCollection<GeoJSON.Geometry>
+    GeoJSON.FeatureCollection<GeoJSON.LineString>
   >(geojson);
 
-  const setRouteShape = (shapeDataList: ShapeData[][]): void => {
+  const setRouteShape = (lineStrings: LineString[]): void => {
     setRouteShapeGeoJSON({
       type: "FeatureCollection",
-      features: shapeDataList.map((shapeDatas) => {
-        return {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: shapeDatas.map(
-              (shapeData) =>
-                [shapeData.shapePtLon, shapeData.shapePtLat] as Coordinate
-            ),
-          },
-          properties: {},
-        };
-      }),
+      features: lineStrings.map((lineString) => ({
+        type: "Feature",
+        geometry: lineString as GeoJSON.LineString,
+        properties: {},
+      })),
     });
   };
 
@@ -111,6 +107,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
     longitude,
     zoom,
     viewStatePathname,
+    searchParams,
     restOfPathname,
   } = useViewStatePathname();
 
@@ -122,9 +119,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   useEffect(() => {
     if (viewStatePathname === "") {
-      const path = `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
-        viewPort.longitude.toFixed(7)
-      )},${parseFloat(viewPort.zoom.toFixed(2))}z`;
+      const path =
+        `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
+          viewPort.longitude.toFixed(7)
+        )},${parseFloat(viewPort.zoom.toFixed(2))}z` + searchParams;
 
       // hack to prevent navigation from failing on component mount
       setTimeout(() => {
@@ -136,8 +134,8 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const flyToStop = (stop: Stop) => {
     map?.flyTo({
       center: [
-        stop.stopLon || viewPort.longitude,
-        stop.stopLat || viewPort.latitude,
+        stop.stopLoc?.coordinates?.[0] || viewPort.longitude,
+        stop.stopLoc?.coordinates?.[1] || viewPort.latitude,
       ],
       zoom: vehicleZoomLevel,
       padding: {
@@ -151,16 +149,17 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   const flyToRoute = () => {
     if (routeShapes.length !== 0) {
-      const flatShapes = routeShapes.flat();
+      const flatLineString = routeShapes.flat();
+      const coordinates = flatLineString.map((s) => s.coordinates).flat();
       map?.fitBounds(
         [
           [
-            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.min(...coordinates.map((coord) => coord[0])),
+            Math.min(...coordinates.map((coord) => coord[1])),
           ],
           [
-            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.max(...coordinates.map((coord) => coord[0])),
+            Math.max(...coordinates.map((coord) => coord[1])),
           ],
         ],
         {
@@ -200,7 +199,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         viewState.longitude.toFixed(7)
       )},${parseFloat(viewState.zoom.toFixed(2))}z`;
       if (restOfPathname !== "" && restOfPathname !== undefined) {
-        path += restOfPathname;
+        path += restOfPathname + searchParams;
       }
 
       // TODO: prevent quick navigation from infinite loop
@@ -215,7 +214,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         },
       });
     }, 50),
-    [location.pathname, navigation.location, restOfPathname]
+    [location.pathname, navigation.location, restOfPathname, searchParams]
   );
 
   const onViewportChange = (event: ViewStateChangeEvent) => {

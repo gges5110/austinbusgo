@@ -12,8 +12,7 @@ CREATE TABLE stops
   stop_code         text NULL,
   stop_name         text NOT NULL,
   stop_desc         text NULL,
-  stop_lat          double precision NOT NULL,
-  stop_lon          double precision NOT NULL,
+  stop_loc          geography(POINT) NOT NULL, -- stop_lat/stop_lon
   zone_id           text NULL,
   stop_url          text NULL,
   location_type     boolean NULL,
@@ -43,12 +42,24 @@ CREATE TABLE routes
 CREATE TABLE shapes
 (
   shape_id          text,
-  shape_pt_lat      double precision NOT NULL,
-  shape_pt_lon      double precision NOT NULL,
+  shape_pt_loc       geography(POINT) NOT NULL, -- shape_pt_lat/shape_pt_lon
   shape_pt_sequence integer NOT NULL,
   shape_dist_traveled double precision NULL,
   sup_detour_flag text NULL
 );
+
+CREATE OR REPLACE VIEW shapes_aggregated AS
+SELECT
+	shape_id,
+	ST_MakeLine(array_agg(shape_pt_loc)) AS shape
+FROM (
+	SELECT
+		shape_id,
+		ST_AsText(shape_pt_loc)::geometry AS shape_pt_loc
+	FROM shapes
+	ORDER by shape_id, shape_pt_sequence
+) shapes
+GROUP BY shape_id;
 
 CREATE TABLE trips
 (

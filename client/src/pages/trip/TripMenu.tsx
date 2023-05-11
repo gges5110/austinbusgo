@@ -1,5 +1,4 @@
-import { useMatches, useNavigate } from "react-router-dom";
-import { Params } from "@remix-run/router";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Divider,
@@ -14,8 +13,11 @@ import * as React from "react";
 import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
-import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { client, HandleType, useDataFromLoader } from "../../Router";
+import {
+  client,
+  useDataFromLoader,
+  useDataFromRouteLoader,
+} from "../../Router";
 import { stopLoader } from "../stop/StopMenu";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
@@ -30,6 +32,7 @@ import {
 } from "../../schemas/Trip.generated";
 import { MenuPanel } from "../../components/MenuPanel";
 import { useRef } from "react";
+import { useTitle } from "../../hooks/UseTitle";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
   const tripId = params["tripId"];
@@ -56,19 +59,8 @@ export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
 };
 export const TripMenu = () => {
   const { trip, stopTimes } = useDataFromLoader(tripLoader);
-  const { viewStatePathname } = useViewStatePathname();
-  const matches = useMatches() as {
-    id: string;
-    pathname: string;
-    params: Params;
-    data: unknown;
-    handle: HandleType;
-  }[];
-  const stop = matches
-    .filter((match) => Boolean(match.handle?.stop))
-    .map((match) =>
-      match.handle?.stop?.(match.data as Awaited<ReturnType<typeof stopLoader>>)
-    )[0];
+  const stopData = useDataFromRouteLoader("stop", stopLoader);
+  const stop = stopData?.data.stop;
 
   const navigate = useNavigate();
   const onBack = () => {
@@ -84,6 +76,8 @@ export const TripMenu = () => {
   const tripName = trip.tripHeadsign?.split("-")[
     trip.tripHeadsign?.split("-").length - 1
   ];
+
+  useTitle(`${tripName} - Austin Bus Go`);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   return (
@@ -152,9 +146,6 @@ export const TripMenu = () => {
           stopTimes={stopTimes}
           stop={stop}
           trip={trip}
-          stopTimeOnClick={(stopTime) => {
-            navigate(`${viewStatePathname}/stops/${stopTime.stopId}`);
-          }}
           containerRef={containerRef}
         />
       </Box>

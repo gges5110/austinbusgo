@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
 import { LoadingSnackbarMessage } from "../components/LoadingSnackbarMessage";
 import { SettingsDialog } from "../components/SettingsDialog";
-import { Outlet, useMatches, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
@@ -14,18 +14,66 @@ import {
 } from "../Atoms";
 import { MapWrapper } from "../components/Map/MapWrapper";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
-import { Params } from "@remix-run/router";
-import { client, HandleType } from "../Router";
+import { client, useDataFromRouteLoader } from "../Router";
 import { stopLoader } from "./stop/StopMenu";
 import { routeLoader } from "./route/RouteMenu";
 import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
 import { SearchPanel } from "../components/SearchPanel/SearchPanel";
-import { RoutesDocument, RoutesQuery } from "../schemas/Routes.generated";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import {
+  RouteDocument,
+  RouteQuery,
+  RouteQueryVariables,
+} from "../schemas/Route.generated";
+import {
+  StopsAndShapesDocument,
+  StopsAndShapesQuery,
+  StopsAndShapesQueryVariables,
+} from "../schemas/StopsAndRouteShapes.generated";
 
 const defaultAutoPollingInterval = 15000;
 
-export const routesLoader = async () => {
-  return await client.query<RoutesQuery>({ query: RoutesDocument });
+export const routeSearchParamsLoader = async ({
+  request,
+}: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const routeId = url.searchParams.get("routeId") || "";
+  const directionId = Number(url.searchParams.get("directionId") || "");
+
+  if (routeId === "") {
+    return {};
+  }
+
+  const routeQuery = client.query<RouteQuery, RouteQueryVariables>({
+    query: RouteDocument,
+    variables: {
+      routeId,
+    },
+  });
+  const stopsAndShapesQuery = client.query<
+    StopsAndShapesQuery,
+    StopsAndShapesQueryVariables
+  >({
+    query: StopsAndShapesDocument,
+    variables: {
+      routeId,
+      directionId,
+      date: getDate(),
+    },
+  });
+
+  let routeData, stopsAndShapesData;
+  if (routeId !== "") {
+    routeData = (await routeQuery).data;
+    stopsAndShapesData = (await stopsAndShapesQuery).data;
+  }
+
+  return {
+    route: routeData?.route,
+    shapes: stopsAndShapesData?.stopsAndShapes.shapes,
+    stops: stopsAndShapesData?.stopsAndShapes.stops,
+    distinctTrips: stopsAndShapesData?.distinctTrips,
+  };
 };
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
@@ -41,12 +89,12 @@ export const RootLayout: React.FunctionComponent = () => {
 
   const setStop = (stopId: string | undefined) => {
     if (stopId !== undefined) {
-      if (location.pathname.includes("/routes")) {
+      if (location.pathname.includes("/route")) {
         navigate(
-          `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
+          `${viewStatePathname}/stop/${stopId}?routeId=${routeId}&directionId=${directionId}`
         );
       } else {
-        navigate(`${viewStatePathname}/stops/${stopId}`);
+        navigate(`${viewStatePathname}/stop/${stopId}`);
       }
     }
   };
@@ -108,44 +156,21 @@ export const RootLayout: React.FunctionComponent = () => {
     }
   };
 
-  const matches = useMatches() as {
-    id: string;
-    pathname: string;
-    params: Params;
-    data: unknown;
-    handle: HandleType;
-  }[];
-  const stop = matches
-    .filter((match) => Boolean(match.handle?.stop))
-    .map((match) =>
-      match.handle?.stop?.(match.data as Awaited<ReturnType<typeof stopLoader>>)
-    )[0];
+  const stopData = useDataFromRouteLoader("stop", stopLoader);
+  const stop = stopData?.data.stop;
 
-  const route = matches
-    .filter((match) => Boolean(match.handle?.route))
-    .map((match) =>
-      match.handle?.route?.(
-        match.data as Awaited<ReturnType<typeof routeLoader>>
-      )
-    )[0];
+  const routeData = useDataFromRouteLoader("route", routeLoader);
+  const routeSearchParamsData = useDataFromRouteLoader(
+    "routeSearchParams",
+    routeSearchParamsLoader
+  );
 
+  const route = routeSearchParamsData?.route || routeData?.route;
   const stops =
-    matches
-      .filter((match) => Boolean(match.handle?.stops))
-      .map((match) =>
-        match.handle?.stops?.(
-          match.data as Awaited<ReturnType<typeof routeLoader>>
-        )
-      )[0] || (stop ? [stop] : []);
-
-  const routeShapes =
-    matches
-      .filter((match) => Boolean(match.handle?.shapes))
-      .map((match) =>
-        match.handle?.shapes?.(
-          match.data as Awaited<ReturnType<typeof routeLoader>>
-        )
-      )[0] || [];
+    routeSearchParamsData?.stops ||
+    routeData?.stops ||
+    (stop !== undefined ? [stop] : []);
+  const routeShapes = routeSearchParamsData?.shapes || routeData?.shapes || [];
 
   setSelectedRoute(route);
   const vehiclePositions =
@@ -182,14 +207,14 @@ export const RootLayout: React.FunctionComponent = () => {
           setRoute={(route) => {
             if (route) {
               navigate(
-                `${viewStatePathname}/routes/${route?.routeId}/direction/0`
+                `${viewStatePathname}/route/${route?.routeId}/direction/0`
               );
             }
           }}
           stop={stop}
           setStop={(stop) => {
             if (stop) {
-              navigate(`${viewStatePathname}/stops/${stop.stopId}`);
+              navigate(`${viewStatePathname}/stop/${stop.stopId}`);
             }
           }}
         />

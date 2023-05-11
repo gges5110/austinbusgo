@@ -22,7 +22,7 @@ export interface Query {
   routes?: Maybe<Array<Route>>;
   trip: TripWithRoute;
   distinctTrips?: Maybe<Array<Trip>>;
-  routeShapes?: Maybe<Array<Shape>>;
+  routeShapes: LineString;
   vehiclePositions?: Maybe<Array<VehiclePosition>>;
   arrivalTimes?: Maybe<Array<ArrivalTime>>;
   stopTimes?: Maybe<Array<StopTimes>>;
@@ -97,10 +97,25 @@ export interface Stop {
   stopCode?: Maybe<Scalars["String"]>;
   /** Name of the location. Use a name that people will understand in the local and tourist vernacular. */
   stopName?: Maybe<Scalars["String"]>;
-  /** Latitude of the location. */
-  stopLat?: Maybe<Scalars["Float"]>;
-  /** Longitude of the location. */
-  stopLon?: Maybe<Scalars["Float"]>;
+  /** Stop Location. GeoJSON string. */
+  stopLoc?: Maybe<Point>;
+}
+
+/** Point Scalar Description */
+export interface Point {
+  __typename?: "Point";
+  type: GeometryType;
+  coordinates: Array<Scalars["Float"]>;
+}
+
+export enum GeometryType {
+  Point = "Point",
+  LineString = "LineString",
+  MultiPoint = "MultiPoint",
+  MultiLineString = "MultiLineString",
+  Polygon = "Polygon",
+  MultiPolygon = "MultiPolygon",
+  GeometryCollection = "GeometryCollection",
 }
 
 export interface Route {
@@ -121,18 +136,15 @@ export interface Route {
 
 export interface StopsAndShapes {
   __typename?: "StopsAndShapes";
-  stops?: Maybe<Array<Stop>>;
-  shapes?: Maybe<Array<Array<Shape>>>;
+  stops: Array<Stop>;
+  shapes: Array<LineString>;
 }
 
-export interface Shape {
-  __typename?: "Shape";
-  /** Identifies a shape. */
-  shapeId: Scalars["String"];
-  /** Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape. */
-  shapePtLat: Scalars["Float"];
-  /** Longitude of a shape point. */
-  shapePtLon: Scalars["Float"];
+/** LineString Scalar Description */
+export interface LineString {
+  __typename?: "LineString";
+  type: GeometryType;
+  coordinates: Array<Array<Scalars["Float"]>>;
 }
 
 export interface TripWithRoute {

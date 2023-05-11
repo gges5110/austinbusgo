@@ -93,6 +93,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const [inputString, setInputString] = useState<string>("");
   const [stops, setStops] = useState<Stop[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [options, setOptions] = useState<SearchOption[]>([]);
 
   useEffect(() => {
     if (isBasePath) {
@@ -111,7 +112,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       const input = getStopOptionLabel(stop);
       setInputString(input);
       search(input);
-      addToRecentSearches(stop);
     }
   }, [stop]);
 
@@ -120,7 +120,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       const input = getRouteOptionLabel(route);
       setInputString(input);
       search(input);
-      addToRecentSearches(route);
     }
   }, [route]);
 
@@ -137,6 +136,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         }
       } else if (isStop(optionValue)) {
         setStop(optionValue);
+      } else if (isSearchTerm(optionValue)) {
+        goToSearchPage(optionValue);
       }
 
       addToRecentSearches(optionValue);
@@ -209,12 +210,13 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     });
   };
 
-  const goToSearchPage = () => {
+  const goToSearchPage = (searchTerm?: SearchTerm) => {
     ref?.current?.blur?.();
+    const value = searchTerm?.value || inputString.trim();
     addToRecentSearches({
-      value: inputString.trim(),
+      value,
     });
-    navigate(`${viewStatePathname}/search/${encodeURIComponent(inputString)}`);
+    navigate(`${viewStatePathname}/search/${encodeURIComponent(value)}`);
   };
 
   const delayedQuery = useCallback(
@@ -230,22 +232,32 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 
   const { recentSearches, addToRecentSearches } = useRecentSearches();
 
-  const options =
-    inputString === ""
-      ? recentSearches.map((search) => ({
-          type: SearchType.recent,
-          optionValue: search,
-        }))
-      : [
-          ...stops.map((stop) => ({
-            type: SearchType.search,
-            optionValue: stop,
-          })),
-          ...routes.map((route) => ({
-            type: SearchType.search,
-            optionValue: route,
-          })),
-        ];
+  useEffect(() => {
+    let options: SearchOption[];
+    if (inputString === "") {
+      options = recentSearches.map((search) => ({
+        type: SearchType.recent,
+        optionValue: search,
+      }));
+    } else {
+      options = [
+        ...stops.map((stop) => ({
+          type: SearchType.search,
+          optionValue: stop,
+        })),
+        ...routes.map((route) => ({
+          type: SearchType.search,
+          optionValue: route,
+        })),
+      ];
+
+      if (value && options.length === 0) {
+        options.push(value);
+      }
+    }
+
+    setOptions(options);
+  }, [inputString, stops, routes, value, recentSearches]);
 
   return (
     <Paper
@@ -335,12 +347,22 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           return (
             <li {...props}>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Box sx={{ pr: 2, display: "flex", alignItems: "center" }}>
-                  {option.type === SearchType.recent ? (
+                <Box
+                  sx={{
+                    pr: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.8,
+                  }}
+                >
+                  {option.type === SearchType.recent && (
                     <AccessTimeOutlinedIcon
                       color={"neutral"}
                       sx={{ fontSize: 20 }}
                     />
+                  )}
+                  {isSearchTerm(optionValue) ? (
+                    <SearchIcon color={"neutral"} sx={{ fontSize: 20 }} />
                   ) : isRoute(optionValue) ? (
                     <RouteIcon color={"neutral"} sx={{ fontSize: 20 }} />
                   ) : (
@@ -479,5 +501,5 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 };
 
 const filterOptions = createFilterOptions<SearchOption>({
-  limit: 5,
+  limit: 500,
 });

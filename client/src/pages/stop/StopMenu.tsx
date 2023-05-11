@@ -1,8 +1,7 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import * as React from "react";
 import { StopInfoAndArrivalTimes } from "../../components/Stop/StopInfoAndArrivalTimes/StopInfoAndArrivalTimes";
 import { useTitle } from "../../hooks/UseTitle";
-import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { client, useDataFromLoader } from "../../Router";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import {
@@ -27,30 +26,22 @@ export const stopLoader = async ({ params }: LoaderFunctionArgs) => {
 };
 export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const navigate = useNavigate();
-  const { routeId } = useParams();
+  const [searchParams] = useSearchParams();
   const {
     data: { stop },
   } = useDataFromLoader(stopLoader);
   useTitle(`${stop.stopName} - Austin Bus Go`);
-  const { viewStatePathname } = useViewStatePathname();
+
+  const onBack = () => {
+    navigate(-1);
+  };
 
   return (
     <MenuPanel>
       <StopInfoAndArrivalTimes
         stop={stop}
-        routeId={routeId}
-        onBack={() => {
-          navigate(-1);
-        }}
-        arrivalTimeOnClick={(arrivalTime) => {
-          navigate(
-            `${viewStatePathname}/routes/${
-              arrivalTime.trip.routeId
-            }/direction/${arrivalTime.trip.directionId ? 1 : 0}/stops/${
-              stop.stopId
-            }/trips/${arrivalTime.trip.tripId}`
-          );
-        }}
+        routeId={searchParams.get("routeId") || ""}
+        onBack={onBack}
         hideBackButton={hideBackButton}
       />
     </MenuPanel>

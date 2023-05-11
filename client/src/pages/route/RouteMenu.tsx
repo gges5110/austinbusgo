@@ -66,7 +66,7 @@ export const RouteMenu = () => {
   const setDirection = (directionId: Trip["directionId"]) => {
     if (directionId !== undefined) {
       navigate(
-        `${viewStatePathname}/routes/${routeId}/direction/${directionId}`,
+        `${viewStatePathname}/route/${routeId}/direction/${directionId}`,
         {
           replace: true,
         }
@@ -108,16 +108,7 @@ export const RouteMenu = () => {
         </Box>
       </Box>
 
-      <Box sx={{}}>
-        <StopsTimeline
-          stops={stops}
-          setSelectedStopId={(stopId) => {
-            navigate(
-              `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
-            );
-          }}
-        />
-      </Box>
+      <StopsTimeline stops={stops} />
     </MenuPanel>
   );
 };

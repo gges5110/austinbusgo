@@ -11,6 +11,10 @@ export const useRecentSearches = () => {
   const [recentSearches, setRecentSearches] = useAtom(recentSearchesAtom);
 
   const addToRecentSearches = (search: OptionValue): void => {
+    if (isSearchTerm(search) && search.value === "") {
+      return;
+    }
+
     const newValueInRecentSearchStops = recentSearches.some((recentSearch) => {
       if (isRoute(search)) {
         return isRoute(recentSearch) && search.routeId === recentSearch.routeId;
@@ -24,6 +28,7 @@ export const useRecentSearches = () => {
 
       return false;
     });
+
     if (!newValueInRecentSearchStops) {
       setRecentSearches((prev) => {
         return [search, ...prev];

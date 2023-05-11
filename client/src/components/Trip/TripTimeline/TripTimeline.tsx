@@ -5,17 +5,13 @@ import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { TripQuery } from "../../../schemas/Trip.generated";
-
-type ArrayElement<
-  ArrayType extends readonly unknown[] | null | undefined
-> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+import { Link as RouterLink } from "react-router-dom";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
-
-  stopTimeOnClick(stopTime: ArrayElement<StopTimesQuery["stopTimes"]>): void;
 
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
@@ -24,9 +20,9 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   stopTimes,
   stop,
   trip,
-  stopTimeOnClick,
   containerRef,
 }) => {
+  const { viewStatePathname } = useViewStatePathname();
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
@@ -103,11 +99,9 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
             >
               <ListItemButton
                 key={stopTime.stopId}
-                onClick={() => {
-                  stopTimeOnClick(stopTime);
-                }}
+                component={RouterLink}
+                to={`${viewStatePathname}/stop/${stopTime.stopId}`}
                 sx={{
-                  position: "relative",
                   pl: 6,
                   py: 2.5,
                 }}

@@ -1,10 +1,30 @@
-import peewee
-from peewee import TextField, IntegerField, FloatField, BooleanField, DateTimeField, DateField, TimeField
+import json
+
+from peewee import (
+    TextField,
+    IntegerField,
+    FloatField,
+    BooleanField,
+    DateField,
+    Field,
+    fn,
+)
+from shapely import wkb, to_geojson
 
 from server.database import db_wrapper
 
 
 # GTFS reference: https://developers.google.com/transit/gtfs/reference
+
+
+class GeometryField(Field):
+    field_type = "geometry"
+
+    def db_value(self, value):
+        return fn.ST_GeomFromGeoJSON(value)
+
+    def python_value(self, value):
+        return json.loads(to_geojson(wkb.loads(value, hex=True)))
 
 
 class UnknownField(object):
@@ -13,8 +33,7 @@ class UnknownField(object):
 
 
 class Routes(db_wrapper.Model):
-    route_id = TextField(index=True, null=True,
-                         primary_key=True, unique=True)
+    route_id = TextField(index=True, null=True, primary_key=True, unique=True)
     agency_id = IntegerField(null=True)
     route_short_name = TextField(null=True, unique=True)
     route_long_name = TextField(null=True)
@@ -25,20 +44,28 @@ class Routes(db_wrapper.Model):
     route_text_color = TextField(null=True)
 
     class Meta:
-        table_name = 'routes'
+        table_name = "routes"
         primary_key = False
 
 
 class Shapes(db_wrapper.Model):
     shape_id = TextField(index=True, null=True)
-    shape_pt_lat = FloatField(null=True)
-    shape_pt_lon = FloatField(null=True)
+    shape_pt_loc = GeometryField(null=True)
     shape_pt_sequence = IntegerField(index=True, null=True)
     shape_dist_traveled = FloatField(null=True)
     sup_detour_flag = TextField(null=True)
 
     class Meta:
-        table_name = 'shapes'
+        table_name = "shapes"
+        primary_key = False
+
+
+class AggregatedShape(db_wrapper.Model):
+    shape_id = TextField(index=True, null=True)
+    shape = GeometryField(null=True)
+
+    class Meta:
+        table_name = "aggregated_shape"
         primary_key = False
 
 
@@ -56,18 +83,16 @@ class StopTimes(db_wrapper.Model):
     sup_est_delay = TextField(null=True)
 
     class Meta:
-        table_name = 'stop_times'
+        table_name = "stop_times"
         primary_key = False
 
 
 class Stops(db_wrapper.Model):
-    stop_id = TextField(index=True, null=True,
-                        primary_key=True, unique=True)
+    stop_id = TextField(index=True, null=True, primary_key=True, unique=True)
     stop_code = TextField(null=True)
     stop_name = TextField(null=True)
     stop_desc = TextField(null=True)
-    stop_lat = FloatField(null=True)
-    stop_lon = FloatField(null=True)
+    stop_loc = GeometryField(null=True)
     zone_id = TextField(null=True)
     stop_url = TextField(null=True)
     location_type = IntegerField(null=True)
@@ -81,7 +106,7 @@ class Stops(db_wrapper.Model):
     heading = IntegerField(null=True)
 
     class Meta:
-        table_name = 'stops'
+        table_name = "stops"
         primary_key = False
 
 
@@ -100,7 +125,7 @@ class Trips(db_wrapper.Model):
     sup_service_mod = IntegerField(null=True)
 
     class Meta:
-        table_name = 'trips'
+        table_name = "trips"
         primary_key = False
 
 
@@ -117,7 +142,7 @@ class Calendar(db_wrapper.Model):
     end_date = DateField(null=True)
 
     class Meta:
-        table_name = 'calendar'
+        table_name = "calendar"
         primary_key = False
 
 
@@ -127,5 +152,5 @@ class CalendarDates(db_wrapper.Model):
     exception_type = IntegerField(null=True)
 
     class Meta:
-        table_name = 'calendar_dates'
+        table_name = "calendar_dates"
         primary_key = False

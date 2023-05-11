@@ -3,25 +3,24 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
-import { ArrivalTime } from "../../../../interfaces/interface.d";
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
 import { ArrivalTimesQuery } from "../../../../schemas/ArrivalTimes.generated";
+import { StopQuery } from "../../../../schemas/Stop.generated";
 
 dayjs.extend(relativeTime);
 dayjs.extend(customParseFormat);
 
 export interface ArrivalTimeListProps {
-  readonly arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];
-  readonly loading: boolean;
+  arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];
+  loading: boolean;
   selectedRouteIds: string[];
-
-  arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
+  stop: StopQuery["stop"];
 }
 
 export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
   arrivalTimes,
   loading,
-  arrivalTimeOnClick,
+  stop,
   selectedRouteIds,
 }) => (
   <List>
@@ -34,14 +33,14 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
         <ListItemText primary={"No more running buses"} />
       </ListItem>
     ) : (
-      arrivalTimes?.map((arrivalTime, index) => (
+      arrivalTimes?.map((arrivalTime) => (
         <>
           {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
             <div key={arrivalTime.trip.tripId}>
               <ArrivalTimeListItem
                 key={arrivalTime.trip.tripId}
                 arrivalTime={arrivalTime}
-                arrivalTimeOnClick={arrivalTimeOnClick}
+                stop={stop}
               />
               <Divider key={`${arrivalTime.trip.tripId}-divider`} />
             </div>

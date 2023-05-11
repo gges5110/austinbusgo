@@ -6,11 +6,10 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
 import { StopQuery } from "../../../schemas/Stop.generated";
-import { ArrivalTime } from "../../../interfaces/interface.d";
 import { useAtom } from "jotai";
 import { selectedRouteIdsAtStopAtom } from "../../../Atoms";
 import { RoutesSelector } from "./RoutesSelector/RoutesSelector";
-import PlaceIcon from "@mui/icons-material/Place";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -19,8 +18,6 @@ interface StopInfoAndArrivalTimesProps {
   hideBackButton?: boolean;
 
   onBack(): void;
-
-  arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
 }
 
 export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = ({
@@ -28,7 +25,6 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
   routeId,
   hideBackButton,
   onBack,
-  arrivalTimeOnClick,
 }) => {
   const { data: arrivalTimesData, loading } = useArrivalTimesQuery({
     variables: {
@@ -113,7 +109,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
               justifyContent={"center"}
               alignItems={"center"}
             >
-              <PlaceIcon />
+              <PlaceOutlinedIcon />
               <Typography sx={{ fontSize: "18px" }}>{stop.stopName}</Typography>
             </Box>
 
@@ -146,7 +142,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
       <Box>
         <ArrivalTimeList
           arrivalTimes={arrivalTimes}
-          arrivalTimeOnClick={arrivalTimeOnClick}
+          stop={stop}
           loading={loading}
           selectedRouteIds={selectedRouteIds}
         />

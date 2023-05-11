@@ -9,8 +9,12 @@ export type StopQueryVariables = Types.Exact<{
 export type StopQuery = { __typename?: "Query" } & {
   stop: { __typename?: "Stop" } & Pick<
     Types.Stop,
-    "stopId" | "stopCode" | "stopName" | "stopLat" | "stopLon"
-  >;
+    "stopId" | "stopCode" | "stopName"
+  > & {
+      stopLoc?: Types.Maybe<
+        { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+      >;
+    };
 };
 
 export const StopDocument = gql`
@@ -19,8 +23,10 @@ export const StopDocument = gql`
       stopId
       stopCode
       stopName
-      stopLat
-      stopLon
+      stopLoc {
+        type
+        coordinates
+      }
     }
   }
 `;

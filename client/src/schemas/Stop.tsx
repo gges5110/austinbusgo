@@ -6,8 +6,10 @@ export const STOP_QUERY = gql`
       stopId
       stopCode
       stopName
-      stopLat
-      stopLon
+      stopLoc {
+        type
+        coordinates
+      }
     }
   }
 `;

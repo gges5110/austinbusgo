@@ -10,22 +10,20 @@ export type StopsAndShapesQueryVariables = Types.Exact<{
 
 export type StopsAndShapesQuery = { __typename?: "Query" } & {
   stopsAndShapes: { __typename?: "StopsAndShapes" } & {
-    stops?: Types.Maybe<
-      Array<
-        { __typename?: "Stop" } & Pick<
-          Types.Stop,
-          "stopId" | "stopCode" | "stopName" | "stopLat" | "stopLon"
-        >
-      >
+    stops: Array<
+      { __typename?: "Stop" } & Pick<
+        Types.Stop,
+        "stopId" | "stopCode" | "stopName"
+      > & {
+          stopLoc?: Types.Maybe<
+            { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+          >;
+        }
     >;
-    shapes?: Types.Maybe<
-      Array<
-        Array<
-          { __typename?: "Shape" } & Pick<
-            Types.Shape,
-            "shapePtLat" | "shapePtLon"
-          >
-        >
+    shapes: Array<
+      { __typename?: "LineString" } & Pick<
+        Types.LineString,
+        "type" | "coordinates"
       >
     >;
   };
@@ -46,12 +44,14 @@ export const StopsAndShapesDocument = gql`
         stopId
         stopCode
         stopName
-        stopLat
-        stopLon
+        stopLoc {
+          type
+          coordinates
+        }
       }
       shapes {
-        shapePtLat
-        shapePtLon
+        type
+        coordinates
       }
     }
     distinctTrips(routeId: $routeId, date: $date) {

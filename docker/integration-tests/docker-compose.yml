@@ -1,0 +1,17 @@
+version: '3.7'
+name: austin-bus-go-local-integration
+services:
+  postgresIntegration:
+    image: postgis/postgis:14-3.3
+    restart: always
+
+    environment:
+      - POSTGRES_USER=local-user
+      - POSTGRES_PASSWORD=local-password
+      - POSTGRES_DB=local-db
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5439:5432'

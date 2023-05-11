@@ -6,8 +6,10 @@ export const NEAR_BY_STOPS_QUERY = gql`
       stopId
       stopCode
       stopName
-      stopLat
-      stopLon
+      stopLoc {
+        type
+        coordinates
+      }
     }
   }
 `;

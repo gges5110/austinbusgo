@@ -11,8 +11,12 @@ export type NearByStopsQuery = { __typename?: "Query" } & {
   nearByStops: Array<
     { __typename?: "Stop" } & Pick<
       Types.Stop,
-      "stopId" | "stopCode" | "stopName" | "stopLat" | "stopLon"
-    >
+      "stopId" | "stopCode" | "stopName"
+    > & {
+        stopLoc?: Types.Maybe<
+          { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+        >;
+      }
   >;
 };
 
@@ -22,8 +26,10 @@ export const NearByStopsDocument = gql`
       stopId
       stopCode
       stopName
-      stopLat
-      stopLon
+      stopLoc {
+        type
+        coordinates
+      }
     }
   }
 `;

@@ -7,12 +7,14 @@ export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
         stopId
         stopCode
         stopName
-        stopLat
-        stopLon
+        stopLoc {
+          type
+          coordinates
+        }
       }
       shapes {
-        shapePtLat
-        shapePtLon
+        type
+        coordinates
       }
     }
     distinctTrips(routeId: $routeId, date: $date) {
