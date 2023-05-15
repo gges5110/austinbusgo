@@ -26,6 +26,6 @@ services:
     ports:
       - '5438:5432'
     volumes:
-      - ./ci-job/capmetro:/capmetro
+      - ../ci-job/capmetro:/capmetro
       #     copy the sql script to create tables
-      - ./server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ../server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql

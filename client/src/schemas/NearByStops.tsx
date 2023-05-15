@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const NEAR_BY_STOPS_QUERY = gql`
   query NearByStops($lat: Float!, $lon: Float!) {

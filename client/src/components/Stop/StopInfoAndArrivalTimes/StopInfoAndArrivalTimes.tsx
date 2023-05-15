@@ -5,11 +5,11 @@ import { getDate } from "../../../pages/RootLayout";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
-import { StopQuery } from "../../../schemas/Stop.generated";
 import { useAtom } from "jotai";
 import { selectedRouteIdsAtStopAtom } from "../../../Atoms";
 import { RoutesSelector } from "./RoutesSelector/RoutesSelector";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import { StopQuery } from "../../../schemas/Stop.generated";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -26,17 +26,20 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
   hideBackButton,
   onBack,
 }) => {
-  const { data: arrivalTimesData, loading } = useArrivalTimesQuery({
-    variables: {
+  const { data: arrivalTimesData, isLoading } = useArrivalTimesQuery(
+    {
       stopId: String(stop.stopId),
       date: getDate(),
     },
-    onCompleted: (data) => {
-      const routeIds =
-        data.arrivalTimes?.map((arrivalTime) => arrivalTime.trip.routeId) || [];
-      setSelectedRouteInitialValues(routeIds);
-    },
-  });
+    {
+      onSuccess: (data) => {
+        const routeIds =
+          data.arrivalTimes?.map((arrivalTime) => arrivalTime.trip.routeId) ||
+          [];
+        setSelectedRouteInitialValues(routeIds);
+      },
+    }
+  );
 
   const arrivalTimes = arrivalTimesData?.arrivalTimes || [];
 
@@ -121,7 +124,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
           </Box>
         </Box>
 
-        {!loading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (
+        {!isLoading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (
           <Box
             sx={{
               overflowX: "auto",
@@ -143,7 +146,7 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
         <ArrivalTimeList
           arrivalTimes={arrivalTimes}
           stop={stop}
-          loading={loading}
+          loading={isLoading}
           selectedRouteIds={selectedRouteIds}
         />
       </Box>

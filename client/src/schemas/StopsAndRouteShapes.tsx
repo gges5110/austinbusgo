@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
   query StopsAndShapes($routeId: String!, $directionId: Int!, $date: String!) {
@@ -10,6 +10,10 @@ export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
         stopLoc {
           type
           coordinates
+        }
+        routes {
+          routeId
+          routeColor
         }
       }
       shapes {

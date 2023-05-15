@@ -74,7 +74,10 @@ CREATE TABLE trips
   wheelchair_accessible integer NULL,
   bikes_allowed     integer NULL,
   dir_abbr          text NULL, -- capital metro specific column
-  sup_service_mod   integer NULL
+  sup_service_mod   integer NULL,
+  CONSTRAINT fk_route
+	FOREIGN KEY(route_id)
+      REFERENCES routes(route_id)
 );
 
 CREATE TABLE stop_times
@@ -89,7 +92,13 @@ CREATE TABLE stop_times
   drop_off_type     integer NULL CHECK(drop_off_type >= 0 and drop_off_type <=3),
   shape_dist_traveled double precision NULL,
   timepoint         integer NULL,
-  sup_est_delay     integer NULL
+  sup_est_delay     integer NULL,
+  CONSTRAINT fk_stop
+	FOREIGN KEY(stop_id)
+      REFERENCES stops(stop_id),
+  CONSTRAINT fk_trip
+	FOREIGN KEY(trip_id)
+      REFERENCES trips(trip_id)
 );
 
 CREATE TABLE calendar
@@ -122,9 +131,17 @@ CREATE TABLE calendar_dates
 \copy calendar from './capmetro/calendar.txt' with csv header
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 
+CREATE MATERIALIZED VIEW routes_at_stop AS
+SELECT routes.route_id, stop_times.stop_id
+FROM stop_times
+JOIN trips ON trips.trip_id = stop_times.trip_id
+JOIN routes ON routes.route_id = trips.route_id
+GROUP BY routes.route_id, stop_times.stop_id;
+
 CREATE INDEX SHAPES_shape_id ON shapes(shape_id);
 CREATE INDEX TRIPS_trip_id_route_id ON trips(trip_id, route_id);
 CREATE INDEX TRIPS_trip_id_direction_id ON trips(trip_id, direction_id);
 CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
 CREATE INDEX CALENDAR_service_id ON calendar(service_id);
+CREATE INDEX ROUTES_AT_STOP_stop_id_route_id ON routes_at_stop(stop_id, route_id);

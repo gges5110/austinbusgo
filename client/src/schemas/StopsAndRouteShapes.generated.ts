@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type StopsAndShapesQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   directionId: Types.Scalars["Int"];
@@ -17,6 +37,14 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
       > & {
           stopLoc?: Types.Maybe<
             { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+          >;
+          routes?: Types.Maybe<
+            Array<
+              { __typename?: "Route" } & Pick<
+                Types.Route,
+                "routeId" | "routeColor"
+              >
+            >
           >;
         }
     >;
@@ -37,74 +65,56 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
   >;
 };
 
-export const StopsAndShapesDocument = gql`
-  query StopsAndShapes($routeId: String!, $directionId: Int!, $date: String!) {
-    stopsAndShapes(routeId: $routeId, directionId: $directionId, date: $date) {
-      stops {
-        stopId
-        stopCode
-        stopName
-        stopLoc {
-          type
-          coordinates
-        }
-      }
-      shapes {
+export const StopsAndShapesDocument = `
+    query StopsAndShapes($routeId: String!, $directionId: Int!, $date: String!) {
+  stopsAndShapes(routeId: $routeId, directionId: $directionId, date: $date) {
+    stops {
+      stopId
+      stopCode
+      stopName
+      stopLoc {
         type
         coordinates
       }
+      routes {
+        routeId
+        routeColor
+      }
     }
-    distinctTrips(routeId: $routeId, date: $date) {
-      tripId
-      tripShortName
-      directionId
+    shapes {
+      type
+      coordinates
     }
   }
-`;
+  distinctTrips(routeId: $routeId, date: $date) {
+    tripId
+    tripShortName
+    directionId
+  }
+}
+    `;
+export const useStopsAndShapesQuery = <
+  TData = StopsAndShapesQuery,
+  TError = unknown
+>(
+  variables: StopsAndShapesQueryVariables,
+  options?: UseQueryOptions<StopsAndShapesQuery, TError, TData>
+) =>
+  useQuery<StopsAndShapesQuery, TError, TData>(
+    ["StopsAndShapes", variables],
+    fetcher<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
+      StopsAndShapesDocument,
+      variables
+    ),
+    options
+  );
 
-/**
- * __useStopsAndShapesQuery__
- *
- * To run a query within a React component, call `useStopsAndShapesQuery` and pass it any options that fit your needs.
- * When your component renders, `useStopsAndShapesQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useStopsAndShapesQuery({
- *   variables: {
- *      routeId: // value for 'routeId'
- *      directionId: // value for 'directionId'
- *      date: // value for 'date'
- *   },
- * });
- */
-export function useStopsAndShapesQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    StopsAndShapesQuery,
-    StopsAndShapesQueryVariables
-  >
-) {
-  return Apollo.useQuery<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
+useStopsAndShapesQuery.getKey = (variables: StopsAndShapesQueryVariables) => [
+  "StopsAndShapes",
+  variables,
+];
+useStopsAndShapesQuery.fetcher = (variables: StopsAndShapesQueryVariables) =>
+  fetcher<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
     StopsAndShapesDocument,
-    baseOptions
+    variables
   );
-}
-export function useStopsAndShapesLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    StopsAndShapesQuery,
-    StopsAndShapesQueryVariables
-  >
-) {
-  return Apollo.useLazyQuery<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
-    StopsAndShapesDocument,
-    baseOptions
-  );
-}
-export type StopsAndShapesQueryHookResult = ReturnType<
-  typeof useStopsAndShapesQuery
->;
-export type StopsAndShapesLazyQueryHookResult = ReturnType<
-  typeof useStopsAndShapesLazyQuery
->;

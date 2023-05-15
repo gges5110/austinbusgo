@@ -12,3 +12,5 @@ Werkzeug==2.2.2
 typing==3.7.4.3
 graphql_server===3.0.0b6
 black===23.3.0
+testcontainers==3.7.1
+shapely==2.0.1

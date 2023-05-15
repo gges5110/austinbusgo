@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const ARRIVAL_TIMES_QUERY = gql`
   query ArrivalTimes($stopId: String!, $date: String!) {

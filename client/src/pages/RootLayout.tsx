@@ -1,11 +1,14 @@
-import { Box, Paper, Popper, useTheme } from "@mui/material";
+import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
 import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { useVehiclePositionsLazyQuery } from "../schemas/VehiclePositions.generated";
-import { LoadingSnackbarMessage } from "../components/LoadingSnackbarMessage";
+import { useState } from "react";
 import { SettingsDialog } from "../components/SettingsDialog";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useAtom } from "jotai";
 import {
   isAutoPollingAtom,
@@ -14,67 +17,16 @@ import {
 } from "../Atoms";
 import { MapWrapper } from "../components/Map/MapWrapper";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
-import { client, useDataFromRouteLoader } from "../Router";
-import { stopLoader } from "./stop/StopMenu";
-import { routeLoader } from "./route/RouteMenu";
+import { useDataFromRouteLoader } from "../Router";
 import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
 import { SearchPanel } from "../components/SearchPanel/SearchPanel";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import {
-  RouteDocument,
-  RouteQuery,
-  RouteQueryVariables,
-} from "../schemas/Route.generated";
-import {
-  StopsAndShapesDocument,
-  StopsAndShapesQuery,
-  StopsAndShapesQueryVariables,
-} from "../schemas/StopsAndRouteShapes.generated";
+import { useVehiclePositionsQuery } from "../schemas/VehiclePositions.generated";
+import { routeLoader } from "./route/RouteLoader";
+import { stopLoader } from "./stop/StopLoader";
+import { rootLoader } from "./RootLoader";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useQueryClient } from "@tanstack/react-query";
 
-const defaultAutoPollingInterval = 15000;
-
-export const routeSearchParamsLoader = async ({
-  request,
-}: LoaderFunctionArgs) => {
-  const url = new URL(request.url);
-  const routeId = url.searchParams.get("routeId") || "";
-  const directionId = Number(url.searchParams.get("directionId") || "");
-
-  if (routeId === "") {
-    return {};
-  }
-
-  const routeQuery = client.query<RouteQuery, RouteQueryVariables>({
-    query: RouteDocument,
-    variables: {
-      routeId,
-    },
-  });
-  const stopsAndShapesQuery = client.query<
-    StopsAndShapesQuery,
-    StopsAndShapesQueryVariables
-  >({
-    query: StopsAndShapesDocument,
-    variables: {
-      routeId,
-      directionId,
-      date: getDate(),
-    },
-  });
-
-  let routeData, stopsAndShapesData;
-  if (routeId !== "") {
-    routeData = (await routeQuery).data;
-    stopsAndShapesData = (await stopsAndShapesQuery).data;
-  }
-
-  return {
-    route: routeData?.route,
-    shapes: stopsAndShapesData?.stopsAndShapes.shapes,
-    stops: stopsAndShapesData?.stopsAndShapes.stops,
-    distinctTrips: stopsAndShapesData?.distinctTrips,
-  };
-};
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
   const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
@@ -83,6 +35,7 @@ export const RootLayout: React.FunctionComponent = () => {
   const [selectedRoute, setSelectedRoute] = useAtom(selectedRouteAtom);
 
   const { routeId, directionId, searchTerm } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
@@ -104,77 +57,61 @@ export const RootLayout: React.FunctionComponent = () => {
   ] = useState<SnackbarKey | undefined>(undefined);
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const [
-    getVehiclePositions,
-    { data: vehiclePositionsData },
-  ] = useVehiclePositionsLazyQuery({
-    fetchPolicy: "network-only",
-    pollInterval: autoPolling ? defaultAutoPollingInterval : 0,
-    onCompleted: (vehiclePositions) => {
-      if (vehiclePositions) {
-        if (vehiclePositionsLoadingSnackbarKey) {
-          closeSnackbar(vehiclePositionsLoadingSnackbarKey);
-          setVehiclePositionsLoadingSnackbarKey(undefined);
-        }
-
-        enqueueSnackbar("Vehicle Position Updated", {
-          variant: "success",
-        });
-      }
+  const { data: vehiclePositionsData } = useVehiclePositionsQuery(
+    {
+      routeId: selectedRoute?.routeId || "1",
+      direction: Number(searchParams.get("directionId")),
     },
-  });
+    {
+      enabled: selectedRoute !== undefined,
+      refetchInterval: autoPolling ? 15000 : false,
+      onSuccess: (vehiclePositions) => {
+        if (vehiclePositions) {
+          if (vehiclePositionsLoadingSnackbarKey) {
+            closeSnackbar(vehiclePositionsLoadingSnackbarKey);
+            setVehiclePositionsLoadingSnackbarKey(undefined);
+          }
 
-  useEffect(() => {
-    if (selectedRoute) {
-      getVehiclePositions({
-        variables: {
-          routeId: selectedRoute.routeId,
-          direction: Number(directionId),
-        },
-      });
-    }
-  }, [selectedRoute]);
-
-  const reloadVehiclePositions = (): void => {
-    if (selectedRoute) {
-      const key = enqueueSnackbar(
-        <LoadingSnackbarMessage message={"Reloading..."} />,
-        {
-          variant: "info",
-          autoHideDuration: undefined,
+          enqueueSnackbar("Vehicle Position Updated", {
+            variant: "success",
+          });
         }
-      );
-      setVehiclePositionsLoadingSnackbarKey(key);
-      getVehiclePositions({
-        variables: {
-          routeId: selectedRoute.routeId,
+      },
+    }
+  );
+
+  const queryClient = useQueryClient();
+  const reloadVehiclePositions = () => {
+    const key = enqueueSnackbar("Reloading Vehicles...", {
+      variant: "info",
+    });
+    setVehiclePositionsLoadingSnackbarKey(key);
+    queryClient.invalidateQueries({
+      queryKey: [
+        "VehiclePositions",
+        {
+          routeId: routeId,
           direction: Number(directionId),
         },
-      });
-      setSettingsDialogOpen(false);
-    }
+      ],
+    });
   };
 
   const stopData = useDataFromRouteLoader("stop", stopLoader);
-  const stop = stopData?.data.stop;
+  const stop = stopData?.stop;
 
   const routeData = useDataFromRouteLoader("route", routeLoader);
-  const routeSearchParamsData = useDataFromRouteLoader(
-    "routeSearchParams",
-    routeSearchParamsLoader
-  );
+  const rootData = useDataFromRouteLoader("root", rootLoader);
 
-  const route = routeSearchParamsData?.route || routeData?.route;
+  const route = rootData?.route || routeData?.route;
   const stops =
-    routeSearchParamsData?.stops ||
-    routeData?.stops ||
-    (stop !== undefined ? [stop] : []);
-  const routeShapes = routeSearchParamsData?.shapes || routeData?.shapes || [];
+    rootData?.stops || routeData?.stops || (stop !== undefined ? [stop] : []);
+  const routeShapes = rootData?.shapes || routeData?.shapes || [];
 
   setSelectedRoute(route);
+
   const vehiclePositions =
-    (selectedRoute && vehiclePositionsData?.vehiclePositions) || [];
+    rootData?.vehiclePositions || vehiclePositionsData?.vehiclePositions || [];
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
       <Paper
@@ -188,6 +125,13 @@ export const RootLayout: React.FunctionComponent = () => {
         }}
       >
         <ColorModeToggle />
+        <IconButton
+          onClick={() => {
+            setSettingsDialogOpen(true);
+          }}
+        >
+          <SettingsIcon />
+        </IconButton>
       </Paper>
       <MapWrapper
         stops={stops}

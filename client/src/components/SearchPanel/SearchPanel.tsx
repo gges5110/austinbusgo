@@ -1,14 +1,4 @@
-import {
-  Autocomplete,
-  Box,
-  Button,
-  CircularProgress,
-  createFilterOptions,
-  debounce,
-  Divider,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Autocomplete, createFilterOptions, debounce } from "@mui/material";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
 import * as React from "react";
@@ -17,18 +7,14 @@ import { Route, Stop } from "../../interfaces/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { Highlight } from "./Highlight/Highlight";
 import { useRecentSearches } from "../../hooks/UseRecentSearches";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import RouteIcon from "@mui/icons-material/Route";
-import SearchIcon from "@mui/icons-material/Search";
-import ClearIcon from "@mui/icons-material/Clear";
-import { useSearchLazyQuery } from "../../schemas/Search.generated";
+import { SearchQuery, useSearchQuery } from "../../schemas/Search.generated";
+import { InputEndAdornment } from "./InputEndAdornment/InputEndAdornment";
+import { renderOption } from "./RenderOption";
 
 export const SEARCH_PANEL_WIDTH = "392px";
 
-enum SearchType {
+export enum SearchType {
   "recent",
   "search",
 }
@@ -37,7 +23,14 @@ export interface SearchTerm {
   value: string;
 }
 
-export type OptionValue = Stop | Route | SearchTerm;
+type ArrayElement<
+  ArrayType extends readonly unknown[]
+> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+export type OptionValue =
+  | ArrayElement<SearchQuery["search"]["stops"]>
+  | Route
+  | SearchTerm;
 
 export interface SearchOption {
   type: SearchType;
@@ -45,19 +38,11 @@ export interface SearchOption {
 }
 
 export const isRoute = (option: OptionValue): option is Route => {
-  if (!("__typename" in option)) {
-    return false;
-  }
-
-  return option.__typename === "Route";
+  return "routeLongName" in option;
 };
 
 export const isStop = (option: OptionValue): option is Stop => {
-  if (!("__typename" in option)) {
-    return false;
-  }
-
-  return option.__typename === "Stop";
+  return "stopName" in option;
 };
 
 export const isSearchTerm = (option: OptionValue): option is SearchTerm => {
@@ -91,7 +76,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
   const [value, setValue] = useState<SearchOption | null>(null);
   const [inputString, setInputString] = useState<string>("");
-  const [stops, setStops] = useState<Stop[]>([]);
+  const [stops, setStops] = useState<SearchQuery["search"]["stops"]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [options, setOptions] = useState<SearchOption[]>([]);
 
@@ -190,24 +175,27 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     return `${stop.stopId} ${stop.stopName}`;
   };
 
+  const [internalSearchTerm, setSearchTerm] = useState<string>("");
+
   // TODO: fix onCompleted isn't fired when fetching from cached values
   // https://github.com/apollographql/react-apollo/issues/2177
-  const [doSearch, { loading }] = useSearchLazyQuery({
-    notifyOnNetworkStatusChange: true,
-    onCompleted: (data) => {
-      if (data.search) {
-        setStops(data.search.stops);
-        setRoutes(data.search.routes);
-      }
+  const { isLoading } = useSearchQuery(
+    {
+      searchTerm: internalSearchTerm,
     },
-  });
+    {
+      enabled: internalSearchTerm !== "",
+      onSuccess: (data) => {
+        if (data.search) {
+          setStops(data.search.stops);
+          setRoutes(data.search.routes);
+        }
+      },
+    }
+  );
 
   const search = (value: string): void => {
-    doSearch({
-      variables: {
-        searchTerm: value,
-      },
-    });
+    setSearchTerm(value);
   };
 
   const goToSearchPage = (searchTerm?: SearchTerm) => {
@@ -268,7 +256,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       }}
     >
       <Autocomplete<SearchOption>
-        loading={loading}
+        loading={isLoading}
         options={options}
         sx={{ width: SEARCH_PANEL_WIDTH }}
         value={value}
@@ -341,71 +329,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 
           return "";
         }}
-        renderOption={(props, option, { inputValue }) => {
-          const { optionValue } = option;
-
-          return (
-            <li {...props}>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Box
-                  sx={{
-                    pr: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.8,
-                  }}
-                >
-                  {option.type === SearchType.recent && (
-                    <AccessTimeOutlinedIcon
-                      color={"neutral"}
-                      sx={{ fontSize: 20 }}
-                    />
-                  )}
-                  {isSearchTerm(optionValue) ? (
-                    <SearchIcon color={"neutral"} sx={{ fontSize: 20 }} />
-                  ) : isRoute(optionValue) ? (
-                    <RouteIcon color={"neutral"} sx={{ fontSize: 20 }} />
-                  ) : (
-                    <PlaceOutlinedIcon
-                      color={"neutral"}
-                      sx={{ fontSize: 20 }}
-                    />
-                  )}
-                </Box>
-                {isRoute(optionValue) && (
-                  <>
-                    <Highlight
-                      text={String(optionValue.routeId)}
-                      query={inputValue}
-                    />
-                    <Highlight
-                      text={optionValue.routeLongName}
-                      query={inputValue}
-                    />
-                  </>
-                )}
-                {isStop(optionValue) && (
-                  <>
-                    <Highlight
-                      text={String(optionValue.stopId)}
-                      query={inputValue}
-                    />
-                    <Highlight
-                      text={String(optionValue.stopName || "")}
-                      query={inputValue}
-                    />
-                  </>
-                )}
-                {isSearchTerm(optionValue) && (
-                  <Highlight
-                    text={String(optionValue.value)}
-                    query={inputValue}
-                  />
-                )}
-              </Box>
-            </li>
-          );
-        }}
+        renderOption={renderOption}
         renderInput={(params) => (
           <InputBase
             placeholder={"Search Routes or Stops"}
@@ -413,72 +337,15 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             inputRef={ref}
             inputProps={params.inputProps}
             endAdornment={
-              <>
-                <Tooltip title="Search" placement="bottom-end">
-                  <IconButton
-                    sx={{
-                      "&:hover": {
-                        color: "#2196f3",
-                        backgroundColor: "unset",
-                      },
-                      padding: "12px 15px",
-                    }}
-                    onClick={() => {
-                      if (inputString !== "") {
-                        goToSearchPage();
-                      }
-                    }}
-                  >
-                    <SearchIcon />
-                  </IconButton>
-                </Tooltip>
-                <Divider style={{ height: 28 }} orientation="vertical" />
-
-                {inputString === "" ? (
-                  <Box component={"div"} sx={{ padding: "10px 10px" }}>
-                    <Tooltip title="Start search" placement="bottom-end">
-                      <Button
-                        variant="outlined"
-                        color={"neutral"}
-                        size="small"
-                        onClick={() => {
-                          focusAutocomplete();
-                        }}
-                        sx={{
-                          width: 34,
-                          height: 28,
-                          minWidth: "unset",
-                          borderRadius: "7px",
-                          "&:hover": {
-                            color: "#2196f3",
-                          },
-                        }}
-                      >
-                        <div>⌘K</div>
-                      </Button>
-                    </Tooltip>
-                  </Box>
-                ) : loading || routeLoading ? (
-                  <Box sx={{ padding: "9px 15px" }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Tooltip title="Clear search" placement="bottom-end">
-                    <IconButton
-                      sx={{
-                        "&:hover": {
-                          color: "#2196f3",
-                          backgroundColor: "unset",
-                        },
-                        padding: "12px 15px",
-                      }}
-                      onClick={clearSelection}
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </>
+              <InputEndAdornment
+                inputString={inputString}
+                loading={
+                  (isLoading && internalSearchTerm !== "") || routeLoading
+                }
+                clearSelection={clearSelection}
+                goToSearchPage={goToSearchPage}
+                focusAutocomplete={focusAutocomplete}
+              />
             }
             sx={{
               paddingLeft: 2.5,

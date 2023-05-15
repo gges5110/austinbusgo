@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const SEARCH_QUERY = gql`
   query Search($searchTerm: String!) {
@@ -6,6 +6,10 @@ export const SEARCH_QUERY = gql`
       stops {
         stopId
         stopName
+        routes {
+          routeColor
+          routeId
+        }
       }
       routes {
         routeId

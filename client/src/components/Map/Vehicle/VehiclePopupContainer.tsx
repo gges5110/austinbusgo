@@ -11,16 +11,12 @@ export interface VehiclePopupContainerProps {
 export const VehiclePopupContainer: React.FunctionComponent<VehiclePopupContainerProps> = ({
   vehiclePosition,
 }) => {
-  const { data: stop, loading: stopLoading } = useStopQuery({
-    variables: {
-      stopId: vehiclePosition.stopId || "",
-    },
+  const { data: stop, isLoading: stopLoading } = useStopQuery({
+    stopId: vehiclePosition.stopId || "",
   });
 
-  const { data: trip, loading: tripLoading } = useTripQuery({
-    variables: {
-      tripId: vehiclePosition?.trip?.tripId || "",
-    },
+  const { data: trip, isLoading: tripLoading } = useTripQuery({
+    tripId: vehiclePosition?.trip?.tripId || "",
   });
 
   return (

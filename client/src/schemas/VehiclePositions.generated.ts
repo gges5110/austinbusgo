@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type VehiclePositionsQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   direction: Types.Scalars["Int"];
@@ -37,76 +57,56 @@ export type VehiclePositionsQuery = { __typename?: "Query" } & {
   >;
 };
 
-export const VehiclePositionsDocument = gql`
-  query VehiclePositions($routeId: String!, $direction: Int!) {
-    vehiclePositions(routeId: $routeId, direction: $direction) {
-      trip {
-        tripId
-        routeId
-        startDate
-        startTime
-      }
-      vehicle {
-        id
-        label
-        licensePlate
-      }
-      position {
-        latitude
-        longitude
-        bearing
-        speed
-      }
-      stopId
-      currentStatus
-      timestamp
-      congestionLevel
+export const VehiclePositionsDocument = `
+    query VehiclePositions($routeId: String!, $direction: Int!) {
+  vehiclePositions(routeId: $routeId, direction: $direction) {
+    trip {
+      tripId
+      routeId
+      startDate
+      startTime
     }
+    vehicle {
+      id
+      label
+      licensePlate
+    }
+    position {
+      latitude
+      longitude
+      bearing
+      speed
+    }
+    stopId
+    currentStatus
+    timestamp
+    congestionLevel
   }
-`;
-
-/**
- * __useVehiclePositionsQuery__
- *
- * To run a query within a React component, call `useVehiclePositionsQuery` and pass it any options that fit your needs.
- * When your component renders, `useVehiclePositionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useVehiclePositionsQuery({
- *   variables: {
- *      routeId: // value for 'routeId'
- *      direction: // value for 'direction'
- *   },
- * });
- */
-export function useVehiclePositionsQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    VehiclePositionsQuery,
-    VehiclePositionsQueryVariables
-  >
-) {
-  return Apollo.useQuery<VehiclePositionsQuery, VehiclePositionsQueryVariables>(
-    VehiclePositionsDocument,
-    baseOptions
+}
+    `;
+export const useVehiclePositionsQuery = <
+  TData = VehiclePositionsQuery,
+  TError = unknown
+>(
+  variables: VehiclePositionsQueryVariables,
+  options?: UseQueryOptions<VehiclePositionsQuery, TError, TData>
+) =>
+  useQuery<VehiclePositionsQuery, TError, TData>(
+    ["VehiclePositions", variables],
+    fetcher<VehiclePositionsQuery, VehiclePositionsQueryVariables>(
+      VehiclePositionsDocument,
+      variables
+    ),
+    options
   );
-}
-export function useVehiclePositionsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    VehiclePositionsQuery,
-    VehiclePositionsQueryVariables
-  >
-) {
-  return Apollo.useLazyQuery<
-    VehiclePositionsQuery,
-    VehiclePositionsQueryVariables
-  >(VehiclePositionsDocument, baseOptions);
-}
-export type VehiclePositionsQueryHookResult = ReturnType<
-  typeof useVehiclePositionsQuery
->;
-export type VehiclePositionsLazyQueryHookResult = ReturnType<
-  typeof useVehiclePositionsLazyQuery
->;
+
+useVehiclePositionsQuery.getKey = (
+  variables: VehiclePositionsQueryVariables
+) => ["VehiclePositions", variables];
+useVehiclePositionsQuery.fetcher = (
+  variables: VehiclePositionsQueryVariables
+) =>
+  fetcher<VehiclePositionsQuery, VehiclePositionsQueryVariables>(
+    VehiclePositionsDocument,
+    variables
+  );

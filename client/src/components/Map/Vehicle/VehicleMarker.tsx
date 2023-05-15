@@ -18,8 +18,16 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const handleOnClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    onClick(vehiclePosition);
     setAnchorEl(event.currentTarget);
+    onClick(vehiclePosition);
+  };
+
+  const handlePopoverOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
   };
 
   const handleClose = () => {
@@ -35,7 +43,12 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         latitude={position?.latitude || 0}
         key={vehiclePosition?.vehicle?.id || ""}
       >
-        <VehicleIcon bearing={position?.bearing || 0} onClick={handleOnClick} />
+        <VehicleIcon
+          bearing={Number(position?.bearing) || 0}
+          onClick={handleOnClick}
+          onMouseEnter={handlePopoverOpen}
+          onMouseLeave={handlePopoverClose}
+        />
       </Marker>
       <Popover
         open={open}
@@ -48,6 +61,9 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         transformOrigin={{
           vertical: "top",
           horizontal: "left",
+        }}
+        sx={{
+          pointerEvents: "none",
         }}
       >
         <VehiclePopupContainer vehiclePosition={vehiclePosition} />

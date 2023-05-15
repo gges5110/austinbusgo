@@ -24,7 +24,10 @@ class GeometryField(Field):
         return fn.ST_GeomFromGeoJSON(value)
 
     def python_value(self, value):
-        return json.loads(to_geojson(wkb.loads(value, hex=True)))
+        if value:
+            return json.loads(to_geojson(wkb.loads(value, hex=True)))
+        else:
+            return value
 
 
 class UnknownField(object):
@@ -65,7 +68,7 @@ class AggregatedShape(db_wrapper.Model):
     shape = GeometryField(null=True)
 
     class Meta:
-        table_name = "aggregated_shape"
+        table_name = "shapes_aggregated"
         primary_key = False
 
 
@@ -84,6 +87,15 @@ class StopTimes(db_wrapper.Model):
 
     class Meta:
         table_name = "stop_times"
+        primary_key = False
+
+
+class RoutesAtStop(db_wrapper.Model):
+    stop_id = TextField(null=True)
+    route_id = TextField(null=True)
+
+    class Meta:
+        table_name = "routes_at_stop"
         primary_key = False
 
 

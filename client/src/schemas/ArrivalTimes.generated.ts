@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type ArrivalTimesQueryVariables = Types.Exact<{
   stopId: Types.Scalars["String"];
   date: Types.Scalars["String"];
@@ -62,91 +82,70 @@ export type ArrivalTimesQuery = { __typename?: "Query" } & {
   >;
 };
 
-export const ArrivalTimesDocument = gql`
-  query ArrivalTimes($stopId: String!, $date: String!) {
-    arrivalTimes(stopId: $stopId, date: $date) {
-      updatedArrivalTime
-      scheduledArrivalTime
-      trip {
-        routeId
-        serviceId
-        tripId
-        tripHeadsign
-        tripShortName
-        directionId
-        blockId
-        shapeId
-        wheelchairAccessible
-        bikesAllowed
-        route {
-          routeColor
-          routeLongName
-        }
-      }
-      vehicle {
-        trip {
-          tripId
-          routeId
-          startDate
-        }
-        vehicle {
-          id
-          label
-        }
-        position {
-          latitude
-          longitude
-        }
-        stopId
-        currentStatus
-        timestamp
+export const ArrivalTimesDocument = `
+    query ArrivalTimes($stopId: String!, $date: String!) {
+  arrivalTimes(stopId: $stopId, date: $date) {
+    updatedArrivalTime
+    scheduledArrivalTime
+    trip {
+      routeId
+      serviceId
+      tripId
+      tripHeadsign
+      tripShortName
+      directionId
+      blockId
+      shapeId
+      wheelchairAccessible
+      bikesAllowed
+      route {
+        routeColor
+        routeLongName
       }
     }
+    vehicle {
+      trip {
+        tripId
+        routeId
+        startDate
+      }
+      vehicle {
+        id
+        label
+      }
+      position {
+        latitude
+        longitude
+      }
+      stopId
+      currentStatus
+      timestamp
+    }
   }
-`;
+}
+    `;
+export const useArrivalTimesQuery = <
+  TData = ArrivalTimesQuery,
+  TError = unknown
+>(
+  variables: ArrivalTimesQueryVariables,
+  options?: UseQueryOptions<ArrivalTimesQuery, TError, TData>
+) =>
+  useQuery<ArrivalTimesQuery, TError, TData>(
+    ["ArrivalTimes", variables],
+    fetcher<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
+      ArrivalTimesDocument,
+      variables
+    ),
+    options
+  );
 
-/**
- * __useArrivalTimesQuery__
- *
- * To run a query within a React component, call `useArrivalTimesQuery` and pass it any options that fit your needs.
- * When your component renders, `useArrivalTimesQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useArrivalTimesQuery({
- *   variables: {
- *      stopId: // value for 'stopId'
- *      date: // value for 'date'
- *   },
- * });
- */
-export function useArrivalTimesQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    ArrivalTimesQuery,
-    ArrivalTimesQueryVariables
-  >
-) {
-  return Apollo.useQuery<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
+useArrivalTimesQuery.getKey = (variables: ArrivalTimesQueryVariables) => [
+  "ArrivalTimes",
+  variables,
+];
+useArrivalTimesQuery.fetcher = (variables: ArrivalTimesQueryVariables) =>
+  fetcher<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
     ArrivalTimesDocument,
-    baseOptions
+    variables
   );
-}
-export function useArrivalTimesLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    ArrivalTimesQuery,
-    ArrivalTimesQueryVariables
-  >
-) {
-  return Apollo.useLazyQuery<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
-    ArrivalTimesDocument,
-    baseOptions
-  );
-}
-export type ArrivalTimesQueryHookResult = ReturnType<
-  typeof useArrivalTimesQuery
->;
-export type ArrivalTimesLazyQueryHookResult = ReturnType<
-  typeof useArrivalTimesLazyQuery
->;

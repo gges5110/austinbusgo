@@ -4,7 +4,7 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as GeoJSON from "geojson";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactMapGL, {
   Layer,
   Source,
@@ -21,7 +21,10 @@ import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import { useLocation, useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { useNearByStopsLazyQuery } from "../../schemas/NearByStops.generated";
+import {
+  NearByStopsQueryVariables,
+  useNearByStopsQuery,
+} from "../../schemas/NearByStops.generated";
 
 type ViewState = {
   /** Longitude at map center */
@@ -91,9 +94,13 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const navigation = useNavigation();
   const location = useLocation();
 
+  const [nearByStopsVariables, setNearByStopsVariables] = useState<
+    NearByStopsQueryVariables | undefined
+  >();
   const [nearByStops, setNearByStops] = useState<Stop[]>([]);
-  const [getNearByStops] = useNearByStopsLazyQuery({
-    onCompleted: (data) => {
+  useNearByStopsQuery(nearByStopsVariables as NearByStopsQueryVariables, {
+    enabled: nearByStopsVariables !== undefined,
+    onSuccess: (data) => {
       const stopIds = stops.map((stop) => stop.stopId);
       const filteredNearByStops = data.nearByStops.filter(
         (stop) => !stopIds.includes(stop.stopId)
@@ -207,11 +214,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
       if (navigation.location === undefined) {
         navigate(path, { replace: true });
       }
-      getNearByStops({
-        variables: {
-          lat: parseFloat(viewState.latitude.toFixed(7)),
-          lon: parseFloat(viewState.longitude.toFixed(7)),
-        },
+
+      setNearByStopsVariables({
+        lat: parseFloat(viewState.latitude.toFixed(7)),
+        lon: parseFloat(viewState.longitude.toFixed(7)),
       });
     }, 50),
     [location.pathname, navigation.location, restOfPathname, searchParams]
@@ -266,6 +272,44 @@ export const Map: React.FunctionComponent<MapProps> = ({
       console.log("Geolocation is not supported for this Browser/OS.");
     }
   };
+  const vehicleMarkers = useMemo(
+    () =>
+      vehiclePositions.map((vehiclePosition) => (
+        <VehicleMarker
+          key={vehiclePosition?.vehicle?.id || ""}
+          vehiclePosition={vehiclePosition}
+          onClick={vehicleMarkerOnClick}
+        />
+      )),
+    [vehiclePositions]
+  );
+
+  const stopMarkers = useMemo(
+    () => (
+      <StopMarkers
+        stops={stops}
+        setSelectedStop={(stop) => {
+          setSelectedStopId(stop.stopId);
+        }}
+        selectedStop={stop}
+      />
+    ),
+    [stops, stop]
+  );
+
+  const nearByStopMarkers = useMemo(
+    () => (
+      <StopMarkers
+        stops={nearByStops}
+        setSelectedStop={(stop) => {
+          setSelectedStopId(stop.stopId);
+        }}
+        selectedStop={stop}
+      />
+    ),
+    [nearByStops, stop]
+  );
+
   return (
     <>
       <ReactMapGL
@@ -291,24 +335,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
         >
           <MyLocationIcon />
         </Fab>
-        <StopMarkers
-          stops={[...stops, ...nearByStops]}
-          setSelectedStop={(stop) => {
-            setSelectedStopId(stop.stopId);
-          }}
-          selectedStop={stop}
-        />
 
-        {
-          // Render Bus Vehicle Marker
-          vehiclePositions.map((vehiclePosition) => (
-            <VehicleMarker
-              key={vehiclePosition?.vehicle?.id || ""}
-              vehiclePosition={vehiclePosition}
-              onClick={vehicleMarkerOnClick}
-            />
-          ))
-        }
+        {stopMarkers}
+        {nearByStopMarkers}
+        {vehicleMarkers}
 
         <Source id="route-shapes" type="geojson" data={routeShapeGeoJSON}>
           <Layer

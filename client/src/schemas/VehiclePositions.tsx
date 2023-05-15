@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const VEHICLE_POSITIONS_QUERY = gql`
   query VehiclePositions($routeId: String!, $direction: Int!) {

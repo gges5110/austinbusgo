@@ -48,6 +48,7 @@ type Query {
     stopsAndShapes(date: String!, directionId: Int!, routeId: String!): StopsAndShapes!
     stopsByName(stopName: String!): [Stop!]
     trip(tripId: String!): TripWithRoute!
+    tripIdsForRoute(date: String!, routeId: String!): TripIdsForRoute!
     vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]
 }
 
@@ -72,6 +73,7 @@ type Search {
 }
 
 type Stop {
+    routes: [Route!]
     "Short text or a number that identifies the location for riders."
     stopCode: String
     "Identifies a stop, station, or station entrance."
@@ -135,6 +137,10 @@ type TripDescriptor {
     startTime: String
     "The trip_id from the GTFS feed that this selector refers to."
     tripId: String
+}
+
+type TripIdsForRoute {
+    tripIds: [String!]!
 }
 
 type TripWithRoute {

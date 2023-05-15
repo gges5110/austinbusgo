@@ -10,57 +10,26 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import * as React from "react";
+import { useRef } from "react";
 import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
-import {
-  client,
-  useDataFromLoader,
-  useDataFromRouteLoader,
-} from "../../Router";
-import { stopLoader } from "../stop/StopMenu";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import {
-  StopTimesDocument,
-  StopTimesQuery,
-  StopTimesQueryVariables,
-} from "../../schemas/StopTimes.generated";
-import {
-  TripDocument,
-  TripQuery,
-  TripQueryVariables,
-} from "../../schemas/Trip.generated";
+import { useDataFromLoader, useDataFromRouteLoader } from "../../Router";
 import { MenuPanel } from "../../components/MenuPanel";
-import { useRef } from "react";
 import { useTitle } from "../../hooks/UseTitle";
+import { stopLoader } from "../stop/StopLoader";
+import { tripLoader } from "./TripLoader";
+import { rootLoader } from "../RootLoader";
 
-export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
-  const tripId = params["tripId"];
-  const stopTimesQuery = client.query<StopTimesQuery, StopTimesQueryVariables>({
-    query: StopTimesDocument,
-    variables: {
-      tripId: tripId || "",
-    },
-  });
-  const tripQuery = client.query<TripQuery, TripQueryVariables>({
-    query: TripDocument,
-    variables: {
-      tripId: tripId || "",
-    },
-  });
-
-  const { data: stopTimesData } = await stopTimesQuery;
-  const { data: tripData } = await tripQuery;
-
-  return {
-    trip: tripData.trip,
-    stopTimes: stopTimesData.stopTimes,
-  };
-};
 export const TripMenu = () => {
   const { trip, stopTimes } = useDataFromLoader(tripLoader);
   const stopData = useDataFromRouteLoader("stop", stopLoader);
-  const stop = stopData?.data.stop;
+  const stop = stopData?.stop;
+
+  const rootData = useDataFromRouteLoader("root", rootLoader);
+  const vehiclePosition = rootData?.vehiclePositions?.find(
+    (v) => v.trip?.tripId === trip.tripId
+  );
 
   const navigate = useNavigate();
   const onBack = () => {
@@ -143,6 +112,7 @@ export const TripMenu = () => {
 
         <Divider />
         <TripTimeline
+          vehiclePosition={vehiclePosition}
           stopTimes={stopTimes}
           stop={stop}
           trip={trip}

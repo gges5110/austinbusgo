@@ -1,4 +1,8 @@
+import asyncio
+from datetime import datetime
+
 import graphene
+from graphene import ObjectType, String
 
 from gql.geometry_types import LineString
 from gql.gtfs_rt_types import VehiclePosition
@@ -25,6 +29,10 @@ class StopsAndShapes(graphene.ObjectType):
 class Search(graphene.ObjectType):
     stops = graphene.List(graphene.NonNull(Stop), required=True)
     routes = graphene.List(graphene.NonNull(Route), required=True)
+
+
+class TripIdsForRoute(graphene.ObjectType):
+    tripIds = graphene.List(graphene.NonNull(graphene.String), required=True)
 
 
 class Query(graphene.ObjectType):
@@ -110,12 +118,28 @@ class Query(graphene.ObjectType):
         resolver=resolver.resolve_trip,
     )
 
+    trip_ids_for_route = graphene.Field(
+        graphene.NonNull(TripIdsForRoute),
+        route_id=graphene.String(required=True),
+        date=graphene.String(required=True),
+        resolver=resolver.resolve_trip_ids_for_route,
+    )
+
     vehicle_positions = graphene.Field(
         graphene.List(graphene.NonNull(VehiclePosition)),
         route_id=graphene.String(required=True),
         direction=graphene.Int(required=True),
         resolver=resolver.resolve_vehicle_positions,
     )
+
+
+class Subscription(ObjectType):
+    time_of_day = String()
+
+    async def subscribe_time_of_day(root, info):
+        while True:
+            yield datetime.now().isoformat()
+            await asyncio.sleep(1)
 
 
 schema = graphene.Schema(query=Query)

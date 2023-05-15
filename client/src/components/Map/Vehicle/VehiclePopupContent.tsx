@@ -5,13 +5,13 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { StopQuery } from "../../../schemas/Stop.generated";
+import { TripQuery } from "../../../schemas/Trip.generated";
+import { Skeleton } from "@mui/material";
 import {
   VehiclePosition,
   VehicleStopStatus,
 } from "../../../interfaces/interface.d";
-import { StopQuery } from "../../../schemas/Stop.generated";
-import { TripQuery } from "../../../schemas/Trip.generated";
-import { Skeleton } from "@mui/material";
 
 const PREFIX = "VehiclePopupContent";
 

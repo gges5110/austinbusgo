@@ -12,15 +12,21 @@ from testcontainers.compose import DockerCompose
 
 MODELS = [Stops]
 
-database = PostgresqlDatabase(user="local-user", password="local-password", port=5439, host="localhost",
-                              database="local-db")
-compose = DockerCompose(filepath="../docker/integration-tests")
+database = PostgresqlDatabase(
+    user="local-user",
+    password="local-password",
+    port=5439,
+    host="localhost",
+    database="local-db",
+)
+compose = DockerCompose(filepath="./docker/integration-tests")
 
 
 class TestCase(unittest.TestCase):
     """Internal integration test for graphql client"""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         compose.start()
 
         database.bind(MODELS)
@@ -31,27 +37,38 @@ class TestCase(unittest.TestCase):
                 database.connect()
                 break
             except OperationalError:
-                print("Waiting for database to start up...")
+                attempts += 1
+                print("Waiting for database to start up ({}s)...".format(attempts))
+                if attempts > 30:
+                    break
                 time.sleep(1)
 
         database.create_tables(MODELS)
 
-    def tearDown(self):
-        database.drop_tables(MODELS)
-        is_open = database.close()
+    @classmethod
+    def tearDownClass(cls):
+        database.close()
 
-        if not is_open:
-            compose.stop()
+        attempts = 0
+        while True:
+            try:
+                database.is_closed()
+                break
+            except OperationalError:
+                attempts += 1
+                print("Waiting for database to shut down ({}s)...".format(attempts))
+                if attempts > 30:
+                    break
+                time.sleep(1)
+
+        compose.stop()
 
     def test_stop(self):
         Stops.create(
             stop_id=2493,
             stop_code=2493,
             stop_name="3107 Red River/32nd",
-            stop_loc=json.dumps({
-                "type": "Point",
-                "coordinates": [125.6, 10.1]
-            })
+            stop_loc=json.dumps({"type": "Point", "coordinates": [125.6, 10.1]}),
         )
 
         client = Client(schema)

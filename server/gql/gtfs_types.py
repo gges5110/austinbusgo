@@ -1,6 +1,7 @@
 import graphene
 
 from gql.geometry_types import Point
+from services.gtfs_service import GTFSService
 
 
 class Route(graphene.ObjectType):
@@ -30,6 +31,11 @@ class Stop(graphene.ObjectType):
         "local and tourist vernacular."
     )
     stop_loc = graphene.Field(Point, description="Stop Location. GeoJSON string.")
+
+    routes = graphene.List(graphene.NonNull(Route))
+
+    def resolve_routes(self, info, **kwargs):
+        return GTFSService.get_routes_at_stop(self.stop_id)
 
 
 class Trip(graphene.ObjectType):

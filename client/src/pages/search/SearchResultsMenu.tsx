@@ -1,13 +1,9 @@
 import { MenuPanel } from "../../components/MenuPanel";
 import * as React from "react";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import { useEffect } from "react";
+import { useDataFromLoader } from "../../Router";
 import {
-  SearchDocument,
-  SearchQuery,
-  SearchQueryVariables,
-} from "../../schemas/Search.generated";
-import { client, useDataFromLoader } from "../../Router";
-import {
+  Box,
   Container,
   Divider,
   List,
@@ -20,33 +16,28 @@ import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import { useEffect } from "react";
+import { searchLoader } from "./SearchLoader";
 
-export const searchLoader = async ({ params }: LoaderFunctionArgs) => {
-  const searchTerm = decodeURIComponent(params["searchTerm"] || "");
-  return await client.query<SearchQuery, SearchQueryVariables>({
-    query: SearchDocument,
-    variables: {
-      searchTerm: searchTerm || "",
-    },
-  });
-};
 export const SearchResultsMenu = () => {
-  const { data } = useDataFromLoader(searchLoader);
+  const searchData = useDataFromLoader(searchLoader);
   const { searchTerm } = useParams();
   const { viewStatePathname } = useViewStatePathname();
   const navigate = useNavigate();
-  const length = data.search.stops.length + data.search.routes.length;
+  const length =
+    searchData.search.stops.length + searchData.search.routes.length;
   const noResults = length === 0;
   useEffect(() => {
     if (length === 1) {
-      if (data.search.stops.length) {
-        navigate(`${viewStatePathname}/stop/${data.search.stops[0].stopId}`, {
-          replace: true,
-        });
-      } else if (data.search.routes.length) {
+      if (searchData.search.stops.length) {
         navigate(
-          `${viewStatePathname}/route/${data.search.routes[0].routeId}/direction/0`,
+          `${viewStatePathname}/stop/${searchData.search.stops[0].stopId}`,
+          {
+            replace: true,
+          }
+        );
+      } else if (searchData.search.routes.length) {
+        navigate(
+          `${viewStatePathname}/route/${searchData.search.routes[0].routeId}/direction/0`,
           { replace: true }
         );
       }
@@ -57,23 +48,44 @@ export const SearchResultsMenu = () => {
     <MenuPanel>
       {!noResults ? (
         <List>
-          {data.search.stops.map((stop) => {
+          {searchData.search.stops.map((stop) => {
             return (
               <>
                 <ListItem disablePadding key={stop.stopId}>
                   <ListItemButton
+                    sx={{ py: 2 }}
                     component={RouterLink}
                     to={`${viewStatePathname}/stop/${stop.stopId}`}
                   >
-                    <PlaceOutlinedIcon />
-                    {stop.stopId} {stop.stopName}
+                    <Box display={"flex"} flexDirection={"column"} gap={1}>
+                      <Box display={"flex"} gap={1}>
+                        <PlaceOutlinedIcon />
+                        <Typography fontWeight={"bold"}>
+                          {stop.stopName}
+                        </Typography>
+                      </Box>
+
+                      <Typography color={"gray"} fontSize={14}>
+                        Stop Code: {stop.stopId}
+                      </Typography>
+
+                      <Box display={"flex"} gap={1} flexWrap={"wrap"}>
+                        {stop?.routes?.map((route) => (
+                          <RouteIdDisplay
+                            key={route.routeId}
+                            routeColor={route.routeColor}
+                            routeId={route.routeId}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
                   </ListItemButton>
                 </ListItem>
                 <Divider />
               </>
             );
           })}
-          {data.search.routes.map((route) => {
+          {searchData.search.routes.map((route) => {
             return (
               <>
                 <ListItem disablePadding key={route.routeId}>
@@ -81,12 +93,14 @@ export const SearchResultsMenu = () => {
                     component={RouterLink}
                     to={`${viewStatePathname}/route/${route.routeId}/direction/0`}
                   >
-                    <RouteIcon />
-                    <RouteIdDisplay
-                      routeColor={route.routeColor}
-                      routeId={route.routeId}
-                    />
-                    {route.routeLongName}
+                    <Box display={"flex"} gap={1}>
+                      <RouteIcon />
+                      <RouteIdDisplay
+                        routeColor={route.routeColor}
+                        routeId={route.routeId}
+                      />
+                      {route.routeLongName}
+                    </Box>
                   </ListItemButton>
                 </ListItem>
                 <Divider />

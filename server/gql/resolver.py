@@ -4,6 +4,7 @@ from typing import List
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from pytz import timezone
 from shapely import LineString
+from playhouse.shortcuts import model_to_dict
 
 from server.config import (
     capital_metro_trip_updates_pb_file_url,
@@ -24,6 +25,7 @@ class Resolver:
         self.gtfs_service = gtfs_service or GTFSService()
         self.gtfs_rt_service = GTFSRTService(self.gtfs_client)
 
+    # Trips
     def resolve_trip(self, query, info, trip_id: str) -> Trips:
         return self.gtfs_service.get_trip_by_id(trip_id)
 
@@ -32,11 +34,27 @@ class Resolver:
     ) -> List[Trips]:
         return self.gtfs_service.get_trips_by_distinct_short_name(route_id, date)
 
+    def resolve_trip_ids_for_route(self, query, info, route_id: str, date: str):
+        return {
+            "tripIds": [
+                trip.trip_id
+                for trip in self.gtfs_service.get_trips_for_date(route_id, date)
+            ]
+        }
+
+    # Stops
     def resolve_stops_and_shapes(
         self, query, info, route_id: str, direction_id: int, date: str
     ):
         stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
-        stops_and_shapes = {"stops": [stop for stop in stops], "shapes": []}
+        stops_and_shapes = {
+            "stops": [stop for stop in stops],
+            "shapes": [],
+        }
+        stop_ids = [stop.stop_id for stop in stops_and_shapes["stops"]]
+        routes_list = self.gtfs_service.get_routes_at_stops(stop_ids)
+        print(list(routes_list))
+
         shape_id_set = set([stop.stoptime.trip.shape_id for stop in stops])
         for shape_id in shape_id_set:
             stops_and_shapes["shapes"].append(
@@ -44,7 +62,7 @@ class Resolver:
             )
         return stops_and_shapes
 
-    def resolve_stop(self, query, info, stop_id) -> Stops:
+    def resolve_stop(self, query, info, stop_id: str) -> Stops:
         return self.gtfs_service.get_stop(stop_id)
 
     def resolve_near_by_stops(
@@ -55,6 +73,7 @@ class Resolver:
     def resolve_stops_by_name(self, query, info, stop_name) -> List[Stops]:
         return self.gtfs_service.get_stops_by_name(stop_name) or []
 
+    # Routes
     def resolve_route(self, query, info, route_id) -> Routes:
         return self.gtfs_service.get_route(route_id)
 

@@ -1,18 +1,28 @@
 import * as React from "react";
 import dayjs from "dayjs";
-import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
+import {
+  Box,
+  Divider,
+  IconButton,
+  List,
+  ListItemButton,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
-import { StopQuery } from "../../../schemas/Stop.generated";
 import { TripQuery } from "../../../schemas/Trip.generated";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { VehiclePosition } from "../../../interfaces/interface.d";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import { StopQuery } from "../../../schemas/Stop.generated";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
-
+  vehiclePosition: VehiclePosition | undefined;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
@@ -21,8 +31,10 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   stop,
   trip,
   containerRef,
+  vehiclePosition,
 }) => {
   const { viewStatePathname } = useViewStatePathname();
+  const [searchParams] = useSearchParams();
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
@@ -41,7 +53,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   const selectedStopSequence =
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
-
+  const vehicleStopId = vehiclePosition?.stopId;
+  console.log(vehicleStopId);
   // TODO: fix timeline rail styling of border radius
   return (
     <Box component={"div"}>
@@ -97,10 +110,32 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
               }}
               className={isSelectedStop ? "selected" : undefined}
             >
+              {vehicleStopId === stopTime.stopId && (
+                <Paper
+                  sx={{
+                    position: "absolute",
+                    top: "65px",
+                    zIndex: 1,
+                    borderRadius: "50%",
+                  }}
+                >
+                  <IconButton>
+                    <DirectionsBusIcon />
+                  </IconButton>
+                </Paper>
+              )}
               <ListItemButton
                 key={stopTime.stopId}
                 component={RouterLink}
-                to={`${viewStatePathname}/stop/${stopTime.stopId}`}
+                to={
+                  searchParams.get("routeId")
+                    ? `${viewStatePathname}/stop/${
+                        stopTime.stopId
+                      }?routeId=${searchParams.get(
+                        "routeId"
+                      )}&directionId=${searchParams.get("directionId")}`
+                    : `${viewStatePathname}/stop/${stopTime.stopId}`
+                }
                 sx={{
                   pl: 6,
                   py: 2.5,
@@ -122,6 +157,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   >
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
+                        {stopTime.stopId}
                         {stopTime.stop.stopName}
                       </Typography>
                       <Typography color={"gray"} fontSize={14}>
