@@ -203,7 +203,9 @@ class GTFSService:
         )
 
     @staticmethod
-    def get_stop_time_by_route_id(stop_id: str, date: str) -> List[StopTimes]:
+    def get_stop_time_by_route_id(
+        stop_id: str, date: str, page_number: int = 1
+    ) -> List[StopTimes]:
         return (
             StopTimes.select(StopTimes, Stops, Trips, Routes)
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
@@ -218,4 +220,5 @@ class GTFSService:
                     > (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
                 )
             )
+            .order_by(StopTimes.arrival_time)
         )

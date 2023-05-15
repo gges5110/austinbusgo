@@ -123,8 +123,6 @@ class Resolver:
             }
             for stop_time in stop_times
         ]
-        # Sort the arrival times by timestamp
-        arrival_times.sort(key=lambda x: x["scheduled_arrival_time"], reverse=False)
         return arrival_times
 
     def _populate_updated_arrival_time(
