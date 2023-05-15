@@ -2,7 +2,7 @@ import { Popper, useTheme } from "@mui/material";
 import Fab from "@mui/material/Fab";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ReactMapGL, {
   Layer,
   Source,
@@ -16,7 +16,6 @@ import {
   VehiclePosition,
 } from "../../interfaces/interface.d";
 import { StopMarkers } from "./Stop/StopMarkers";
-import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { useUserLocation } from "../../hooks/Map/UseUserLocation";
 import { useMapMotion } from "../../hooks/Map/UseMapMotion";
@@ -25,6 +24,7 @@ import { useViewStateSync } from "../../hooks/Map/UseViewStateSync";
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
 import { useAtomValue } from "jotai";
 import { nearByStopsAtom } from "../../Atoms";
+import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {
   /** Longitude at map center */
@@ -92,44 +92,6 @@ export const Map: React.FunctionComponent<MapProps> = ({
     });
   };
 
-  const vehicleMarkers = useMemo(
-    () =>
-      vehiclePositions.map((vehiclePosition) => (
-        <VehicleMarker
-          key={vehiclePosition?.vehicle?.id || ""}
-          vehiclePosition={vehiclePosition}
-          onClick={vehicleMarkerOnClick}
-        />
-      )),
-    [vehiclePositions]
-  );
-
-  const stopMarkers = useMemo(
-    () => (
-      <StopMarkers
-        stops={stops}
-        setSelectedStop={(stop) => {
-          setSelectedStopId(stop.stopId);
-        }}
-        selectedStop={stop}
-      />
-    ),
-    [stops, stop]
-  );
-
-  const nearByStopMarkers = useMemo(
-    () => (
-      <StopMarkers
-        stops={nearByStops}
-        setSelectedStop={(stop) => {
-          setSelectedStopId(stop.stopId);
-        }}
-        selectedStop={stop}
-      />
-    ),
-    [nearByStops, stop]
-  );
-
   return (
     <>
       <ReactMapGL
@@ -159,9 +121,24 @@ export const Map: React.FunctionComponent<MapProps> = ({
           <AssistiveChips stops={stops} viewState={viewState} />
         </Popper>
 
-        {stopMarkers}
-        {nearByStopMarkers}
-        {vehicleMarkers}
+        <StopMarkers
+          stops={stops}
+          setSelectedStop={(stop) => {
+            setSelectedStopId(stop.stopId);
+          }}
+          selectedStop={stop}
+        />
+        <StopMarkers
+          stops={nearByStops}
+          setSelectedStop={(stop) => {
+            setSelectedStopId(stop.stopId);
+          }}
+          selectedStop={stop}
+        />
+        <VehicleMarkers
+          onClick={vehicleMarkerOnClick}
+          vehiclePositions={vehiclePositions}
+        />
 
         <Source id={"route-shapes"} type={"geojson"} data={routeShapeGeoJSON}>
           <Layer
