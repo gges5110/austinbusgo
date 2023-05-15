@@ -27,8 +27,11 @@ const Transition = React.forwardRef(function Transition(
 export interface SettingsDialogProps {
   readonly open: boolean;
   readonly autoPolling: boolean;
+
   setOpen(open: boolean): void;
+
   setAutoPolling(autoPolling: boolean): void;
+
   reloadVehiclePositions(): void;
 }
 
@@ -52,6 +55,9 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
       event.target.checked ? "Auto Polling Enabled" : "Auto Polling Disabled"
     );
     setAutoPolling(event.target.checked);
+    if (event.target.checked) {
+      reloadVehiclePositions();
+    }
   };
 
   return (
@@ -61,7 +67,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
       onClose={handleClose}
       TransitionComponent={Transition}
     >
-      <AppBar sx={{ position: "relative" }}>
+      <AppBar sx={{ position: "relative", minWidth: "600px" }}>
         <Toolbar>
           <IconButton
             edge="start"

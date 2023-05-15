@@ -82,13 +82,13 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
         })}
       </Box>
       {uniqueRouteIds.length !== selectedRouteIds.length && (
-        <IconButton sx={{ padding: "4px" }}>
-          <ClearIcon
-            sx={{ fontSize: 16 }}
-            onClick={() => {
-              clearSelection();
-            }}
-          />
+        <IconButton
+          sx={{ padding: "4px" }}
+          onClick={() => {
+            clearSelection();
+          }}
+        >
+          <ClearIcon sx={{ fontSize: 16 }} />
         </IconButton>
       )}
     </Box>

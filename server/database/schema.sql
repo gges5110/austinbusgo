@@ -12,8 +12,7 @@ CREATE TABLE stops
   stop_code         text NULL,
   stop_name         text NOT NULL,
   stop_desc         text NULL,
-  stop_lat          double precision NOT NULL,
-  stop_lon          double precision NOT NULL,
+  stop_loc          geography(POINT) NOT NULL, -- stop_lat/stop_lon
   zone_id           text NULL,
   stop_url          text NULL,
   location_type     boolean NULL,
@@ -31,7 +30,7 @@ CREATE TABLE routes
 (
   route_id          text UNIQUE NOT NULL PRIMARY KEY,
   agency_id         integer NULL,
-  route_short_name  integer UNIQUE NOT NULL,
+  route_short_name  text UNIQUE NOT NULL,
   route_long_name   text NULL,
   route_desc        text NULL,
   route_type        integer NULL,
@@ -43,12 +42,24 @@ CREATE TABLE routes
 CREATE TABLE shapes
 (
   shape_id          text,
-  shape_pt_lat      double precision NOT NULL,
-  shape_pt_lon      double precision NOT NULL,
+  shape_pt_loc       geography(POINT) NOT NULL, -- shape_pt_lat/shape_pt_lon
   shape_pt_sequence integer NOT NULL,
   shape_dist_traveled double precision NULL,
   sup_detour_flag text NULL
 );
+
+CREATE OR REPLACE VIEW shapes_aggregated AS
+SELECT
+	shape_id,
+	ST_MakeLine(array_agg(shape_pt_loc)) AS shape
+FROM (
+	SELECT
+		shape_id,
+		ST_AsText(shape_pt_loc)::geometry AS shape_pt_loc
+	FROM shapes
+	ORDER by shape_id, shape_pt_sequence
+) shapes
+GROUP BY shape_id;
 
 CREATE TABLE trips
 (
@@ -63,7 +74,10 @@ CREATE TABLE trips
   wheelchair_accessible integer NULL,
   bikes_allowed     integer NULL,
   dir_abbr          text NULL, -- capital metro specific column
-  sup_service_mod   integer NULL
+  sup_service_mod   integer NULL,
+  CONSTRAINT fk_route
+	FOREIGN KEY(route_id)
+      REFERENCES routes(route_id)
 );
 
 CREATE TABLE stop_times
@@ -78,7 +92,13 @@ CREATE TABLE stop_times
   drop_off_type     integer NULL CHECK(drop_off_type >= 0 and drop_off_type <=3),
   shape_dist_traveled double precision NULL,
   timepoint         integer NULL,
-  sup_est_delay     integer NULL
+  sup_est_delay     integer NULL,
+  CONSTRAINT fk_stop
+	FOREIGN KEY(stop_id)
+      REFERENCES stops(stop_id),
+  CONSTRAINT fk_trip
+	FOREIGN KEY(trip_id)
+      REFERENCES trips(trip_id)
 );
 
 CREATE TABLE calendar
@@ -111,9 +131,17 @@ CREATE TABLE calendar_dates
 \copy calendar from './capmetro/calendar.txt' with csv header
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 
+CREATE MATERIALIZED VIEW routes_at_stop AS
+SELECT routes.route_id, stop_times.stop_id
+FROM stop_times
+JOIN trips ON trips.trip_id = stop_times.trip_id
+JOIN routes ON routes.route_id = trips.route_id
+GROUP BY routes.route_id, stop_times.stop_id;
+
 CREATE INDEX SHAPES_shape_id ON shapes(shape_id);
 CREATE INDEX TRIPS_trip_id_route_id ON trips(trip_id, route_id);
 CREATE INDEX TRIPS_trip_id_direction_id ON trips(trip_id, direction_id);
 CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
 CREATE INDEX CALENDAR_service_id ON calendar(service_id);
+CREATE INDEX ROUTES_AT_STOP_stop_id_route_id ON routes_at_stop(stop_id, route_id);

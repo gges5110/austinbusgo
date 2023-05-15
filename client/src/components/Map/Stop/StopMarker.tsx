@@ -15,8 +15,8 @@ export class StopMarker extends React.PureComponent<StopMarkerProps> {
     const { stop } = this.props;
     return (
       <Marker
-        longitude={stop.stopLon || 0}
-        latitude={stop.stopLat || 0}
+        longitude={stop.stopLoc?.coordinates?.[0] || 0}
+        latitude={stop.stopLoc?.coordinates?.[1] || 0}
         key={stop.stopId}
       >
         <StopPin

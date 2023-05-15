@@ -1,14 +1,15 @@
 version: '3.7'
+name: austin-bus-go-local
 services:
   setupGTFS_CSV_files:
     image: python:3.7-alpine
     command: sh -c "python prepareGTFSFiles.py"
     working_dir: /ci-job
     volumes:
-      - ./ci-job:/ci-job
+      - ../ci-job:/ci-job
 
   postgres:
-    image: postgres:14-alpine
+    image: postgis/postgis:14-3.3
     restart: always
     depends_on:
       setupGTFS_CSV_files:
@@ -25,6 +26,6 @@ services:
     ports:
       - '5438:5432'
     volumes:
-      - ./ci-job/capmetro:/capmetro
-      # copy the sql script to create tables
-      - ./server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ../ci-job/capmetro:/capmetro
+      #     copy the sql script to create tables
+      - ../server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql

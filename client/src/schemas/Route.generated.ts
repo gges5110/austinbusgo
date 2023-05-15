@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type RouteQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
 }>;
@@ -13,47 +33,25 @@ export type RouteQuery = { __typename?: "Query" } & {
   >;
 };
 
-export const RouteDocument = gql`
-  query Route($routeId: String!) {
-    route(routeId: $routeId) {
-      routeLongName
-      routeId
-      routeColor
-    }
+export const RouteDocument = `
+    query Route($routeId: String!) {
+  route(routeId: $routeId) {
+    routeLongName
+    routeId
+    routeColor
   }
-`;
+}
+    `;
+export const useRouteQuery = <TData = RouteQuery, TError = unknown>(
+  variables: RouteQueryVariables,
+  options?: UseQueryOptions<RouteQuery, TError, TData>
+) =>
+  useQuery<RouteQuery, TError, TData>(
+    ["Route", variables],
+    fetcher<RouteQuery, RouteQueryVariables>(RouteDocument, variables),
+    options
+  );
 
-/**
- * __useRouteQuery__
- *
- * To run a query within a React component, call `useRouteQuery` and pass it any options that fit your needs.
- * When your component renders, `useRouteQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useRouteQuery({
- *   variables: {
- *      routeId: // value for 'routeId'
- *   },
- * });
- */
-export function useRouteQuery(
-  baseOptions?: Apollo.QueryHookOptions<RouteQuery, RouteQueryVariables>
-) {
-  return Apollo.useQuery<RouteQuery, RouteQueryVariables>(
-    RouteDocument,
-    baseOptions
-  );
-}
-export function useRouteLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<RouteQuery, RouteQueryVariables>
-) {
-  return Apollo.useLazyQuery<RouteQuery, RouteQueryVariables>(
-    RouteDocument,
-    baseOptions
-  );
-}
-export type RouteQueryHookResult = ReturnType<typeof useRouteQuery>;
-export type RouteLazyQueryHookResult = ReturnType<typeof useRouteLazyQuery>;
+useRouteQuery.getKey = (variables: RouteQueryVariables) => ["Route", variables];
+useRouteQuery.fetcher = (variables: RouteQueryVariables) =>
+  fetcher<RouteQuery, RouteQueryVariables>(RouteDocument, variables);

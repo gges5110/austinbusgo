@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const STOP_TIMES_QUERY = gql`
   query StopTimes($tripId: String!) {

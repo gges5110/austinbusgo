@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const STOPS_BY_NAME_QUERY = gql`
   query StopsByName($stopName: String!) {
@@ -6,8 +6,10 @@ export const STOPS_BY_NAME_QUERY = gql`
       stopId
       stopCode
       stopName
-      stopLat
-      stopLon
+      stopLoc {
+        type
+        coordinates
+      }
     }
   }
 `;

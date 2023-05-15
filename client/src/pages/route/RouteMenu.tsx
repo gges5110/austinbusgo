@@ -1,59 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
-import { DirectionToggle } from "../../components/Route/DirectionToggle/DirectionToggle";
+import { DirectionToggle } from "../../components/SearchPanel/DirectionToggle/DirectionToggle";
 import { StopsTimeline } from "../../components/Route/StopsTimeline/StopsTimeline";
 import * as React from "react";
-import { getDate } from "../RootLayout";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { useTitle } from "../../hooks/UseTitle";
-import { client, useDataFromLoader } from "../../Router";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import {
-  RouteDocument,
-  RouteQuery,
-  RouteQueryVariables,
-} from "../../schemas/Route.generated";
-import {
-  StopsAndShapesDocument,
-  StopsAndShapesQuery,
-  StopsAndShapesQueryVariables,
-} from "../../schemas/StopsAndRouteShapes.generated";
+import { useDataFromLoader } from "../../Router";
 import RouteIcon from "@mui/icons-material/Route";
 import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
 import { Trip } from "../../interfaces/interface.d";
 import { MenuPanel } from "../../components/MenuPanel";
+import { routeLoader } from "./RouteLoader";
 
-export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
-  const routeId = params["routeId"] || "";
-  const directionId = Number(params["directionId"]);
-
-  const routeQuery = client.query<RouteQuery, RouteQueryVariables>({
-    query: RouteDocument,
-    variables: {
-      routeId,
-    },
-  });
-  const stopsAndShapesQuery = client.query<
-    StopsAndShapesQuery,
-    StopsAndShapesQueryVariables
-  >({
-    query: StopsAndShapesDocument,
-    variables: {
-      routeId,
-      directionId,
-      date: getDate(),
-    },
-  });
-  const { data: routeData } = await routeQuery;
-  const { data: stopsAndShapesData } = await stopsAndShapesQuery;
-
-  return {
-    route: routeData.route,
-    shapes: stopsAndShapesData.stopsAndShapes.shapes,
-    stops: stopsAndShapesData.stopsAndShapes.stops,
-    distinctTrips: stopsAndShapesData.distinctTrips,
-  };
-};
 export const RouteMenu = () => {
   const navigate = useNavigate();
   const { stops, distinctTrips, route } = useDataFromLoader(routeLoader);
@@ -64,9 +22,9 @@ export const RouteMenu = () => {
   useTitle(`${route.routeId} ${route.routeLongName} - Austin Bus Go`);
 
   const setDirection = (directionId: Trip["directionId"]) => {
-    if (directionId) {
+    if (directionId !== undefined) {
       navigate(
-        `${viewStatePathname}/routes/${routeId}/direction/${directionId}`,
+        `${viewStatePathname}/route/${routeId}/direction/${directionId}`,
         {
           replace: true,
         }
@@ -108,16 +66,7 @@ export const RouteMenu = () => {
         </Box>
       </Box>
 
-      <Box sx={{}}>
-        <StopsTimeline
-          stops={stops}
-          setSelectedStopId={(stopId) => {
-            navigate(
-              `${viewStatePathname}/routes/${routeId}/direction/${directionId}/stops/${stopId}`
-            );
-          }}
-        />
-      </Box>
+      <StopsTimeline stops={stops} />
     </MenuPanel>
   );
 };

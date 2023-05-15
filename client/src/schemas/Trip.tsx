@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const TRIP_QUERY = gql`
   query Trip($tripId: String!) {

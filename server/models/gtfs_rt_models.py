@@ -29,6 +29,7 @@ class VehicleDescriptor:
 class VehiclePosition:
     def __getitem__(self, key):
         return self[key]
+
     trip: TripDescriptor
     vehicle: VehicleDescriptor
     position: Position
@@ -60,6 +61,7 @@ class StopTimeUpdate:
 class TripUpdate:
     def __getitem__(self, key):
         return self[key]
+
     trip: TripDescriptor
     vehicle: VehicleDescriptor
     stop_time_update: [StopTimeUpdate]

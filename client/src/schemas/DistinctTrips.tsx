@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const DISTINCT_TRIPS_QUERY = gql`
   query DistinctTrips($routeId: String!, $date: String!) {

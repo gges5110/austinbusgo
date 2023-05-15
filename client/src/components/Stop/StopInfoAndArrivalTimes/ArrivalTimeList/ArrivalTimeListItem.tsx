@@ -7,6 +7,9 @@ import * as React from "react";
 import { Bullet } from "./Bullet";
 import * as Types from "../../../../interfaces/interface.d";
 import { RouteIdDisplay } from "../../../RouteIdDisplay/RouteIdDisplay";
+import { Link as RouterLink } from "react-router-dom";
+import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
+import { StopQuery } from "../../../../schemas/Stop.generated";
 
 type ArrivalTime = { __typename?: "ArrivalTime" } & Pick<
   Types.ArrivalTime,
@@ -58,16 +61,16 @@ type ArrivalTime = { __typename?: "ArrivalTime" } & Pick<
   };
 
 export interface ArrivalTimeListItemProps {
-  readonly arrivalTime: ArrivalTime;
-
-  arrivalTimeOnClick(arrivalTime: ArrivalTime): void;
+  arrivalTime: ArrivalTime;
+  stop: StopQuery["stop"];
 }
 
 export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemProps> = ({
   arrivalTime,
-  arrivalTimeOnClick,
+  stop,
 }) => {
   const { updatedArrivalTime, scheduledArrivalTime } = arrivalTime;
+  const { viewStatePathname } = useViewStatePathname();
 
   const scheduledArrivalTimeInMoment: Dayjs = dayjs(
     scheduledArrivalTime,
@@ -108,9 +111,8 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   return (
     <ListItemButton
       key={scheduledArrivalTime}
-      onClick={() => {
-        arrivalTimeOnClick(arrivalTime);
-      }}
+      component={RouterLink}
+      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
       sx={{ py: 1.5 }}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>

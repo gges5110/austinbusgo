@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "graphql-request";
 
 export const ROUTE_QUERY = gql`
   query Route($routeId: String!) {

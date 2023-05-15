@@ -1,21 +1,27 @@
 import unittest
 from unittest.mock import patch
 
-from google.transit.gtfs_realtime_pb2 import FeedMessage, FeedEntity, TripUpdate, VehiclePosition, TripDescriptor
+from google.transit.gtfs_realtime_pb2 import (
+    FeedMessage,
+    FeedEntity,
+    TripUpdate,
+    VehiclePosition,
+    TripDescriptor,
+)
 
 from server.services.gtfs_rt_client import GTFSRTClient
 
-mock_trip_updates_pb_file_url = 'http://url1'
-mock_vehicle_positions_pb_file_url = 'http://url2'
+mock_trip_updates_pb_file_url = "http://url1"
+mock_vehicle_positions_pb_file_url = "http://url2"
 
 
 def get_mock_feed_entity():
     feed_entity = FeedEntity()
-    feed_entity.id = '1'
+    feed_entity.id = "1"
     return feed_entity
 
 
-def get_mock_trip(route_id='2'):
+def get_mock_trip(route_id="2"):
     trip = TripDescriptor()
     trip.route_id = route_id
     return trip
@@ -30,9 +36,13 @@ def get_mock_trip_update():
 
 class TestGTFSRTClient(unittest.TestCase):
     def setUp(self):
-        self.client = GTFSRTClient(mock_trip_updates_pb_file_url, mock_vehicle_positions_pb_file_url)
+        self.client = GTFSRTClient(
+            mock_trip_updates_pb_file_url, mock_vehicle_positions_pb_file_url
+        )
 
-    @patch('server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url')
+    @patch(
+        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+    )
     def test_load_trip_updates(self, mock_gtfs_client_get_feed_message_entity_from_url):
         # Setup protobuf mock for trip update
         feed_message = FeedMessage()
@@ -41,16 +51,24 @@ class TestGTFSRTClient(unittest.TestCase):
         feed_entity.trip_update.CopyFrom(trip_update)
         feed_message.entity.append(feed_entity)
 
-        mock_gtfs_client_get_feed_message_entity_from_url.return_value = feed_message.entity
+        mock_gtfs_client_get_feed_message_entity_from_url.return_value = (
+            feed_message.entity
+        )
 
         trip_updates = self.client.load_trip_updates()
 
-        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(mock_trip_updates_pb_file_url)
+        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(
+            mock_trip_updates_pb_file_url
+        )
         self.assertEqual(len(trip_updates), 1)
         self.assertEqual(trip_updates[0], trip_update)
 
-    @patch('server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url')
-    def test_load_vehicle_positions(self, mock_gtfs_client_get_feed_message_entity_from_url):
+    @patch(
+        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+    )
+    def test_load_vehicle_positions(
+        self, mock_gtfs_client_get_feed_message_entity_from_url
+    ):
         # Setup protobuf mock for vehicle position
         feed_message = FeedMessage()
         feed_entity = get_mock_feed_entity()
@@ -60,33 +78,45 @@ class TestGTFSRTClient(unittest.TestCase):
         feed_entity.vehicle.CopyFrom(vehicle_position)
         feed_message.entity.append(feed_entity)
 
-        mock_gtfs_client_get_feed_message_entity_from_url.return_value = feed_message.entity
+        mock_gtfs_client_get_feed_message_entity_from_url.return_value = (
+            feed_message.entity
+        )
 
         vehicle_positions = self.client.load_vehicle_positions()
 
-        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(mock_vehicle_positions_pb_file_url)
+        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(
+            mock_vehicle_positions_pb_file_url
+        )
         self.assertEqual(len(vehicle_positions), 1)
         self.assertEqual(vehicle_positions[0], vehicle_position)
 
-    @patch('server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url')
-    def test_load_vehicle_positions_with_route_id(self, mock_gtfs_client_get_feed_message_entity_from_url):
+    @patch(
+        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+    )
+    def test_load_vehicle_positions_with_route_id(
+        self, mock_gtfs_client_get_feed_message_entity_from_url
+    ):
         # Setup protobuf mock for vehicle position
         feed_message = FeedMessage()
         feed_entity = get_mock_feed_entity()
         vehicle_position = VehiclePosition()
-        trip = get_mock_trip('3')
+        trip = get_mock_trip("3")
         vehicle_position.trip.CopyFrom(trip)
         feed_entity.vehicle.CopyFrom(vehicle_position)
         feed_message.entity.append(feed_entity)
 
-        mock_gtfs_client_get_feed_message_entity_from_url.return_value = feed_message.entity
+        mock_gtfs_client_get_feed_message_entity_from_url.return_value = (
+            feed_message.entity
+        )
 
-        vehicle_positions = self.client.load_vehicle_positions('3')
+        vehicle_positions = self.client.load_vehicle_positions("3")
 
-        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(mock_vehicle_positions_pb_file_url)
+        mock_gtfs_client_get_feed_message_entity_from_url.assert_called_with(
+            mock_vehicle_positions_pb_file_url
+        )
         self.assertEqual(len(vehicle_positions), 1)
         self.assertEqual(vehicle_positions[0], vehicle_position)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

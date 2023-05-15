@@ -11,6 +11,18 @@ type ArrivalTime {
     vehicle: VehiclePosition
 }
 
+"LineString Scalar Description"
+type LineString {
+    coordinates: [[Float!]!]!
+    type: GeometryType!
+}
+
+"Point Scalar Description"
+type Point {
+    coordinates: [Float!]!
+    type: GeometryType!
+}
+
 type Position {
     "Bearing, in degrees, clockwise from True North, i.e., 0 is North and 90 is East. This can be the compass bearing, or the direction towards the next stop or intermediate location. This should not be deduced from the sequence of previous positions, which clients can compute from previous data."
     bearing: Float
@@ -28,13 +40,15 @@ type Query {
     nearByStops(lat: Float!, lon: Float!): [Stop!]!
     realTimeVehiclePositions: [VehiclePosition]
     route(routeId: String!): Route!
-    routeShapes(tripId: String!): [Shape!]
+    routeShapes(tripId: String!): LineString!
     routes: [Route!]
+    search(searchTerm: String!): Search!
     stop(stopId: String!): Stop!
     stopTimes(tripId: String!): [StopTimes!]
     stopsAndShapes(date: String!, directionId: Int!, routeId: String!): StopsAndShapes!
     stopsByName(stopName: String!): [Stop!]
     trip(tripId: String!): TripWithRoute!
+    tripIdsForRoute(date: String!, routeId: String!): TripIdsForRoute!
     vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]
 }
 
@@ -53,24 +67,19 @@ type Route {
     routeShortName: String
 }
 
-type Shape {
-    "Identifies a shape."
-    shapeId: String!
-    "Latitude of a shape point. Each record in shapes.txt represents a shape point used to define the shape."
-    shapePtLat: Float!
-    "Longitude of a shape point."
-    shapePtLon: Float!
+type Search {
+    routes: [Route!]!
+    stops: [Stop!]!
 }
 
 type Stop {
+    routes: [Route!]
     "Short text or a number that identifies the location for riders."
     stopCode: String
     "Identifies a stop, station, or station entrance."
     stopId: String!
-    "Latitude of the location."
-    stopLat: Float
-    "Longitude of the location."
-    stopLon: Float
+    "Stop Location. GeoJSON string."
+    stopLoc: Point
     "Name of the location. Use a name that people will understand in the local and tourist vernacular."
     stopName: String
 }
@@ -91,8 +100,8 @@ type StopTimes {
 }
 
 type StopsAndShapes {
-    shapes: [[Shape!]!]
-    stops: [Stop!]
+    shapes: [LineString!]!
+    stops: [Stop!]!
 }
 
 type Trip {
@@ -101,7 +110,7 @@ type Trip {
     "Identifies the block to which the trip belongs."
     blockId: String
     "Indicates the direction of travel for a trip."
-    directionId: Boolean
+    directionId: Int
     "Identifies a route."
     routeId: String!
     "Identifies a set of dates when service is available for one or more routes."
@@ -130,13 +139,17 @@ type TripDescriptor {
     tripId: String
 }
 
+type TripIdsForRoute {
+    tripIds: [String!]!
+}
+
 type TripWithRoute {
     "Indicates whether bikes are allowed."
     bikesAllowed: Int
     "Identifies the block to which the trip belongs."
     blockId: String
     "Indicates the direction of travel for a trip."
-    directionId: Boolean
+    directionId: Int
     route: Route!
     "Identifies a route."
     routeId: String!
@@ -179,6 +192,16 @@ type VehiclePosition {
     trip: TripDescriptor
     "Additional information on the vehicle that is serving this trip. Each entry should have a unique vehicle id."
     vehicle: VehicleDescriptor
+}
+
+enum GeometryType {
+    GeometryCollection
+    LineString
+    MultiLineString
+    MultiPoint
+    MultiPolygon
+    Point
+    Polygon
 }
 
 enum VehicleStopStatus {

@@ -1,31 +1,41 @@
 import * as React from "react";
 import dayjs from "dayjs";
-import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
+import {
+  Box,
+  Divider,
+  IconButton,
+  List,
+  ListItemButton,
+  Paper,
+  Typography,
+} from "@mui/material";
 import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
-import { StopQuery } from "../../../schemas/Stop.generated";
 import { TripQuery } from "../../../schemas/Trip.generated";
-
-type ArrayElement<
-  ArrayType extends readonly unknown[] | null | undefined
-> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+import { Link as RouterLink, useSearchParams } from "react-router-dom";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { VehiclePosition } from "../../../interfaces/interface.d";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import { StopQuery } from "../../../schemas/Stop.generated";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
-
-  stopTimeOnClick(stopTime: ArrayElement<StopTimesQuery["stopTimes"]>): void;
+  vehiclePosition: VehiclePosition | undefined;
+  containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
 export const TripTimeline: React.FC<TripTimelineProps> = ({
   stopTimes,
   stop,
   trip,
-  stopTimeOnClick,
+  containerRef,
+  vehiclePosition,
 }) => {
+  const { viewStatePathname } = useViewStatePathname();
+  const [searchParams] = useSearchParams();
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     setTimeout(() => {
       if (stopTimelineItemRef.current && containerRef.current) {
@@ -43,10 +53,11 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   const selectedStopSequence =
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
-
+  const vehicleStopId = vehiclePosition?.stopId;
+  console.log(vehicleStopId);
   // TODO: fix timeline rail styling of border radius
   return (
-    <Box component={"div"} ref={containerRef}>
+    <Box component={"div"}>
       <List>
         {stopTimes?.map((stopTime, index) => {
           const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
@@ -99,13 +110,33 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
               }}
               className={isSelectedStop ? "selected" : undefined}
             >
+              {vehicleStopId === stopTime.stopId && (
+                <Paper
+                  sx={{
+                    position: "absolute",
+                    top: "65px",
+                    zIndex: 1,
+                    borderRadius: "50%",
+                  }}
+                >
+                  <IconButton>
+                    <DirectionsBusIcon />
+                  </IconButton>
+                </Paper>
+              )}
               <ListItemButton
                 key={stopTime.stopId}
-                onClick={() => {
-                  stopTimeOnClick(stopTime);
-                }}
+                component={RouterLink}
+                to={
+                  searchParams.get("routeId")
+                    ? `${viewStatePathname}/stop/${
+                        stopTime.stopId
+                      }?routeId=${searchParams.get(
+                        "routeId"
+                      )}&directionId=${searchParams.get("directionId")}`
+                    : `${viewStatePathname}/stop/${stopTime.stopId}`
+                }
                 sx={{
-                  position: "relative",
                   pl: 6,
                   py: 2.5,
                 }}
@@ -126,6 +157,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   >
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
+                        {stopTime.stopId}
                         {stopTime.stop.stopName}
                       </Typography>
                       <Typography color={"gray"} fontSize={14}>

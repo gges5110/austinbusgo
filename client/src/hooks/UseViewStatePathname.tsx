@@ -19,6 +19,7 @@ export const useViewStatePathname = () => {
     longitude,
     zoom,
     restOfPathname,
+    searchParams: location.search,
     isBasePath,
   };
 };

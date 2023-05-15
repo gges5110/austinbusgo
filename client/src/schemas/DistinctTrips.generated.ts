@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type DistinctTripsQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   date: Types.Scalars["String"];
@@ -18,58 +38,37 @@ export type DistinctTripsQuery = { __typename?: "Query" } & {
   >;
 };
 
-export const DistinctTripsDocument = gql`
-  query DistinctTrips($routeId: String!, $date: String!) {
-    distinctTrips(routeId: $routeId, date: $date) {
-      tripId
-      tripShortName
-      directionId
-    }
+export const DistinctTripsDocument = `
+    query DistinctTrips($routeId: String!, $date: String!) {
+  distinctTrips(routeId: $routeId, date: $date) {
+    tripId
+    tripShortName
+    directionId
   }
-`;
+}
+    `;
+export const useDistinctTripsQuery = <
+  TData = DistinctTripsQuery,
+  TError = unknown
+>(
+  variables: DistinctTripsQueryVariables,
+  options?: UseQueryOptions<DistinctTripsQuery, TError, TData>
+) =>
+  useQuery<DistinctTripsQuery, TError, TData>(
+    ["DistinctTrips", variables],
+    fetcher<DistinctTripsQuery, DistinctTripsQueryVariables>(
+      DistinctTripsDocument,
+      variables
+    ),
+    options
+  );
 
-/**
- * __useDistinctTripsQuery__
- *
- * To run a query within a React component, call `useDistinctTripsQuery` and pass it any options that fit your needs.
- * When your component renders, `useDistinctTripsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useDistinctTripsQuery({
- *   variables: {
- *      routeId: // value for 'routeId'
- *      date: // value for 'date'
- *   },
- * });
- */
-export function useDistinctTripsQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    DistinctTripsQuery,
-    DistinctTripsQueryVariables
-  >
-) {
-  return Apollo.useQuery<DistinctTripsQuery, DistinctTripsQueryVariables>(
+useDistinctTripsQuery.getKey = (variables: DistinctTripsQueryVariables) => [
+  "DistinctTrips",
+  variables,
+];
+useDistinctTripsQuery.fetcher = (variables: DistinctTripsQueryVariables) =>
+  fetcher<DistinctTripsQuery, DistinctTripsQueryVariables>(
     DistinctTripsDocument,
-    baseOptions
+    variables
   );
-}
-export function useDistinctTripsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    DistinctTripsQuery,
-    DistinctTripsQueryVariables
-  >
-) {
-  return Apollo.useLazyQuery<DistinctTripsQuery, DistinctTripsQueryVariables>(
-    DistinctTripsDocument,
-    baseOptions
-  );
-}
-export type DistinctTripsQueryHookResult = ReturnType<
-  typeof useDistinctTripsQuery
->;
-export type DistinctTripsLazyQueryHookResult = ReturnType<
-  typeof useDistinctTripsLazyQuery
->;

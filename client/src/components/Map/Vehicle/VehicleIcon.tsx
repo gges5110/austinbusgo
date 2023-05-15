@@ -1,6 +1,6 @@
 import IconButton from "@mui/material/IconButton";
 import SvgIcon from "@mui/material/SvgIcon";
-import React from "react";
+import React, { MouseEventHandler } from "react";
 
 const readBearing = (bearing: number): string => {
   let bearingStr = "N";
@@ -19,12 +19,18 @@ const readBearing = (bearing: number): string => {
 
 export interface VehicleIconProps {
   readonly bearing: number;
+
   onClick?(event: React.MouseEvent<HTMLButtonElement>): void;
+
+  onMouseEnter?: MouseEventHandler<HTMLButtonElement> | undefined;
+  onMouseLeave?: MouseEventHandler<HTMLButtonElement> | undefined;
 }
 
 export const VehicleIcon: React.FunctionComponent<VehicleIconProps> = ({
   onClick,
   bearing,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const bearingString: string = readBearing(bearing);
 
@@ -37,7 +43,19 @@ export const VehicleIcon: React.FunctionComponent<VehicleIconProps> = ({
   const isSW = bearingString === "SW";
   const isSE = bearingString === "SE";
   return (
-    <IconButton onClick={onClick} size={"small"}>
+    <IconButton
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      size={"small"}
+      sx={{
+        background: "white",
+        "&:hover": {
+          backgroundColor: `white`,
+          opacity: "80%",
+        },
+      }}
+    >
       <SvgIcon viewBox="0.299 123.962 595.28 595.28">
         <path
           d="M481.435,321.277h-6.27v-37.622c0-35.114-77.753-62.704-175.569-62.704c-97.818,0-175.569,27.59-175.569,62.704v37.622

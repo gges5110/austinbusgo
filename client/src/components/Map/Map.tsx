@@ -4,20 +4,27 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as GeoJSON from "geojson";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactMapGL, {
   Layer,
   Source,
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
-import { Route, Stop, VehiclePosition } from "../../interfaces/interface.d";
-import { ShapeData } from "../../interfaces/Shape";
+import {
+  LineString,
+  Route,
+  Stop,
+  VehiclePosition,
+} from "../../interfaces/interface.d";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarker } from "./Vehicle/VehicleMarker";
 import { useLocation, useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { useNearByStopsLazyQuery } from "../../schemas/NearByStops.generated";
+import {
+  NearByStopsQueryVariables,
+  useNearByStopsQuery,
+} from "../../schemas/NearByStops.generated";
 
 type ViewState = {
   /** Longitude at map center */
@@ -31,14 +38,14 @@ type ViewState = {
 export interface MapProps {
   readonly route?: Route;
   readonly stop?: Stop;
-  readonly routeShapes: ShapeData[][];
+  readonly routeShapes: LineString[];
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
 
   setSelectedStopId(stopId: string): void;
 }
 
-const geojson: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
   type: "FeatureCollection",
   features: [
     {
@@ -69,25 +76,17 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const theme = useTheme();
 
   const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
-    GeoJSON.FeatureCollection<GeoJSON.Geometry>
+    GeoJSON.FeatureCollection<GeoJSON.LineString>
   >(geojson);
 
-  const setRouteShape = (shapeDataList: ShapeData[][]): void => {
+  const setRouteShape = (lineStrings: LineString[]): void => {
     setRouteShapeGeoJSON({
       type: "FeatureCollection",
-      features: shapeDataList.map((shapeDatas) => {
-        return {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: shapeDatas.map(
-              (shapeData) =>
-                [shapeData.shapePtLon, shapeData.shapePtLat] as Coordinate
-            ),
-          },
-          properties: {},
-        };
-      }),
+      features: lineStrings.map((lineString) => ({
+        type: "Feature",
+        geometry: lineString as GeoJSON.LineString,
+        properties: {},
+      })),
     });
   };
 
@@ -95,9 +94,13 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const navigation = useNavigation();
   const location = useLocation();
 
+  const [nearByStopsVariables, setNearByStopsVariables] = useState<
+    NearByStopsQueryVariables | undefined
+  >();
   const [nearByStops, setNearByStops] = useState<Stop[]>([]);
-  const [getNearByStops] = useNearByStopsLazyQuery({
-    onCompleted: (data) => {
+  useNearByStopsQuery(nearByStopsVariables as NearByStopsQueryVariables, {
+    enabled: nearByStopsVariables !== undefined,
+    onSuccess: (data) => {
       const stopIds = stops.map((stop) => stop.stopId);
       const filteredNearByStops = data.nearByStops.filter(
         (stop) => !stopIds.includes(stop.stopId)
@@ -111,6 +114,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
     longitude,
     zoom,
     viewStatePathname,
+    searchParams,
     restOfPathname,
   } = useViewStatePathname();
 
@@ -122,9 +126,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   useEffect(() => {
     if (viewStatePathname === "") {
-      const path = `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
-        viewPort.longitude.toFixed(7)
-      )},${parseFloat(viewPort.zoom.toFixed(2))}z`;
+      const path =
+        `/@${parseFloat(viewPort.latitude.toFixed(7))},${parseFloat(
+          viewPort.longitude.toFixed(7)
+        )},${parseFloat(viewPort.zoom.toFixed(2))}z` + searchParams;
 
       // hack to prevent navigation from failing on component mount
       setTimeout(() => {
@@ -136,13 +141,13 @@ export const Map: React.FunctionComponent<MapProps> = ({
   const flyToStop = (stop: Stop) => {
     map?.flyTo({
       center: [
-        stop.stopLon || viewPort.longitude,
-        stop.stopLat || viewPort.latitude,
+        stop.stopLoc?.coordinates?.[0] || viewPort.longitude,
+        stop.stopLoc?.coordinates?.[1] || viewPort.latitude,
       ],
       zoom: vehicleZoomLevel,
       padding: {
         top: 0,
-        left: 400,
+        left: 420,
         right: 0,
         bottom: 0,
       },
@@ -151,22 +156,23 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   const flyToRoute = () => {
     if (routeShapes.length !== 0) {
-      const flatShapes = routeShapes.flat();
+      const flatLineString = routeShapes.flat();
+      const coordinates = flatLineString.map((s) => s.coordinates).flat();
       map?.fitBounds(
         [
           [
-            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.min(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.min(...coordinates.map((coord) => coord[0])),
+            Math.min(...coordinates.map((coord) => coord[1])),
           ],
           [
-            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLon)),
-            Math.max(...flatShapes.map((routeShape) => routeShape.shapePtLat)),
+            Math.max(...coordinates.map((coord) => coord[0])),
+            Math.max(...coordinates.map((coord) => coord[1])),
           ],
         ],
         {
           padding: {
             top: 10,
-            left: 10,
+            left: 420,
             right: 10,
             bottom: 10,
           },
@@ -200,7 +206,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
         viewState.longitude.toFixed(7)
       )},${parseFloat(viewState.zoom.toFixed(2))}z`;
       if (restOfPathname !== "" && restOfPathname !== undefined) {
-        path += restOfPathname;
+        path += restOfPathname + searchParams;
       }
 
       // TODO: prevent quick navigation from infinite loop
@@ -208,14 +214,13 @@ export const Map: React.FunctionComponent<MapProps> = ({
       if (navigation.location === undefined) {
         navigate(path, { replace: true });
       }
-      getNearByStops({
-        variables: {
-          lat: parseFloat(viewState.latitude.toFixed(7)),
-          lon: parseFloat(viewState.longitude.toFixed(7)),
-        },
+
+      setNearByStopsVariables({
+        lat: parseFloat(viewState.latitude.toFixed(7)),
+        lon: parseFloat(viewState.longitude.toFixed(7)),
       });
     }, 50),
-    [location.pathname, navigation.location, restOfPathname]
+    [location.pathname, navigation.location, restOfPathname, searchParams]
   );
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
@@ -267,6 +272,44 @@ export const Map: React.FunctionComponent<MapProps> = ({
       console.log("Geolocation is not supported for this Browser/OS.");
     }
   };
+  const vehicleMarkers = useMemo(
+    () =>
+      vehiclePositions.map((vehiclePosition) => (
+        <VehicleMarker
+          key={vehiclePosition?.vehicle?.id || ""}
+          vehiclePosition={vehiclePosition}
+          onClick={vehicleMarkerOnClick}
+        />
+      )),
+    [vehiclePositions]
+  );
+
+  const stopMarkers = useMemo(
+    () => (
+      <StopMarkers
+        stops={stops}
+        setSelectedStop={(stop) => {
+          setSelectedStopId(stop.stopId);
+        }}
+        selectedStop={stop}
+      />
+    ),
+    [stops, stop]
+  );
+
+  const nearByStopMarkers = useMemo(
+    () => (
+      <StopMarkers
+        stops={nearByStops}
+        setSelectedStop={(stop) => {
+          setSelectedStopId(stop.stopId);
+        }}
+        selectedStop={stop}
+      />
+    ),
+    [nearByStops, stop]
+  );
+
   return (
     <>
       <ReactMapGL
@@ -292,24 +335,10 @@ export const Map: React.FunctionComponent<MapProps> = ({
         >
           <MyLocationIcon />
         </Fab>
-        <StopMarkers
-          stops={[...stops, ...nearByStops]}
-          setSelectedStop={(stop) => {
-            setSelectedStopId(stop.stopId);
-          }}
-          selectedStop={stop}
-        />
 
-        {
-          // Render Bus Vehicle Marker
-          vehiclePositions.map((vehiclePosition) => (
-            <VehicleMarker
-              key={vehiclePosition?.vehicle?.id || ""}
-              vehiclePosition={vehiclePosition}
-              onClick={vehicleMarkerOnClick}
-            />
-          ))
-        }
+        {stopMarkers}
+        {nearByStopMarkers}
+        {vehicleMarkers}
 
         <Source id="route-shapes" type="geojson" data={routeShapeGeoJSON}>
           <Layer

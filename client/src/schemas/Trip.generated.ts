@@ -1,7 +1,27 @@
 import * as Types from "../interfaces/interface.d";
 
-import { gql } from "@apollo/client";
-import * as Apollo from "@apollo/client";
+import { graphQLEndpoint } from "../config";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
+  return async (): Promise<TData> => {
+    const res = await fetch(graphQLEndpoint as string, {
+      method: "POST",
+      ...{ headers: { "Content-Type": "application/json" } },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      const { message } = json.errors[0];
+
+      throw new Error(message);
+    }
+
+    return json.data;
+  };
+}
 export type TripQueryVariables = Types.Exact<{
   tripId: Types.Scalars["String"];
 }>;
@@ -27,58 +47,36 @@ export type TripQuery = { __typename?: "Query" } & {
     };
 };
 
-export const TripDocument = gql`
-  query Trip($tripId: String!) {
-    trip(tripId: $tripId) {
-      routeId
-      serviceId
-      tripId
-      tripHeadsign
-      tripShortName
-      directionId
-      blockId
-      shapeId
-      wheelchairAccessible
-      bikesAllowed
-      route {
-        routeLongName
-        routeColor
-      }
+export const TripDocument = `
+    query Trip($tripId: String!) {
+  trip(tripId: $tripId) {
+    routeId
+    serviceId
+    tripId
+    tripHeadsign
+    tripShortName
+    directionId
+    blockId
+    shapeId
+    wheelchairAccessible
+    bikesAllowed
+    route {
+      routeLongName
+      routeColor
     }
   }
-`;
+}
+    `;
+export const useTripQuery = <TData = TripQuery, TError = unknown>(
+  variables: TripQueryVariables,
+  options?: UseQueryOptions<TripQuery, TError, TData>
+) =>
+  useQuery<TripQuery, TError, TData>(
+    ["Trip", variables],
+    fetcher<TripQuery, TripQueryVariables>(TripDocument, variables),
+    options
+  );
 
-/**
- * __useTripQuery__
- *
- * To run a query within a React component, call `useTripQuery` and pass it any options that fit your needs.
- * When your component renders, `useTripQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useTripQuery({
- *   variables: {
- *      tripId: // value for 'tripId'
- *   },
- * });
- */
-export function useTripQuery(
-  baseOptions?: Apollo.QueryHookOptions<TripQuery, TripQueryVariables>
-) {
-  return Apollo.useQuery<TripQuery, TripQueryVariables>(
-    TripDocument,
-    baseOptions
-  );
-}
-export function useTripLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<TripQuery, TripQueryVariables>
-) {
-  return Apollo.useLazyQuery<TripQuery, TripQueryVariables>(
-    TripDocument,
-    baseOptions
-  );
-}
-export type TripQueryHookResult = ReturnType<typeof useTripQuery>;
-export type TripLazyQueryHookResult = ReturnType<typeof useTripLazyQuery>;
+useTripQuery.getKey = (variables: TripQueryVariables) => ["Trip", variables];
+useTripQuery.fetcher = (variables: TripQueryVariables) =>
+  fetcher<TripQuery, TripQueryVariables>(TripDocument, variables);

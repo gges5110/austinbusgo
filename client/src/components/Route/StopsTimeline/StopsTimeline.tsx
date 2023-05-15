@@ -11,17 +11,17 @@ import {
   TimelineOppositeContent,
   timelineOppositeContentClasses,
 } from "@mui/lab";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 
 interface StopsTimelineProps {
   stops: StopsAndShapesQuery["stopsAndShapes"]["stops"];
-
-  setSelectedStopId(stopId: string): void;
 }
 
-export const StopsTimeline: React.FC<StopsTimelineProps> = ({
-  stops,
-  setSelectedStopId,
-}) => {
+export const StopsTimeline: React.FC<StopsTimelineProps> = ({ stops }) => {
+  const { routeId, directionId } = useParams();
+  const { viewStatePathname } = useViewStatePathname();
+
   return (
     <Timeline
       sx={{
@@ -43,10 +43,9 @@ export const StopsTimeline: React.FC<StopsTimelineProps> = ({
             <TimelineContent>
               <Button
                 size={"small"}
-                variant="outlined"
-                onClick={() => {
-                  setSelectedStopId(stop.stopId);
-                }}
+                variant={"outlined"}
+                component={RouterLink}
+                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${routeId}&directionId=${directionId}`}
               >
                 {stop.stopName}
               </Button>

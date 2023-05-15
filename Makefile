@@ -31,11 +31,13 @@ test:
 	$(PYTHON) -m unittest discover -s tests
 
 coverage:
-	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests
-	$(VENV_ACTIVATE) coverage report -m
+	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage report -m
+
+coverage-html:
+	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage html
 
 lint:
-	$(VENV_ACTIVATE) autopep8 --in-place -v --recursive server tests
+	$(VENV_ACTIVATE) black server tests
 
 setup-local:
-	docker-compose up
+	docker-compose -f docker/docker-compose.yml up
