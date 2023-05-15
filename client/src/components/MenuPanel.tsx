@@ -2,7 +2,7 @@ import * as React from "react";
 import { PropsWithChildren } from "react";
 import { Box, Paper, Slide } from "@mui/material";
 
-export const PANEL_WIDTH = "408px";
+export const MENU_PANEL_WIDTH = "408px";
 
 interface MenuPanelProps {
   innerRef?: React.MutableRefObject<HTMLDivElement | null>;
@@ -16,7 +16,7 @@ export const MenuPanel = ({
     <Paper
       sx={{
         height: "100vh",
-        width: PANEL_WIDTH,
+        width: MENU_PANEL_WIDTH,
         overflowY: "auto",
       }}
       ref={innerRef}
