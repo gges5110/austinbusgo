@@ -67,7 +67,7 @@
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@graphql-codegen/typescript-react-query": "^4.1.0",
     "@testing-library/jest-dom": "5.11.4",
-    "@testing-library/react": "10.4.8",
+    "@testing-library/react": "^14.0.0",
     "@types/autosuggest-highlight": "^3.2.0",
     "@types/classnames": "2.2.11",
     "@types/jest": "26.0.15",

@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { Route } from "./interfaces/interface.d";
+import { Route, Stop } from "./interfaces/interface.d";
 import { atomWithStorage } from "jotai/utils";
 import { OptionValue } from "./components/SearchPanel/SearchPanel";
 
@@ -19,3 +19,4 @@ export const colorModeAtom = atomWithStorage<"light" | "dark">(
 );
 
 export const selectedRouteIdsAtStopAtom = atom<string[]>([]);
+export const nearByStopsAtom = atom<Stop[]>([]);
