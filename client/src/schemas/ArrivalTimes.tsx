@@ -21,24 +21,6 @@ export const ARRIVAL_TIMES_QUERY = gql`
           routeLongName
         }
       }
-      vehicle {
-        trip {
-          tripId
-          routeId
-          startDate
-        }
-        vehicle {
-          id
-          label
-        }
-        position {
-          latitude
-          longitude
-        }
-        stopId
-        currentStatus
-        timestamp
-      }
     }
   }
 `;

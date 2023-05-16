@@ -8,6 +8,7 @@ import {
   ListItemButton,
   Paper,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
@@ -18,12 +19,14 @@ import { VehiclePosition } from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { useUpdateViewState } from "../../../hooks/Map/UseViewStateSync";
+import { TripUpdateQuery } from "../../../schemas/TripUpdate.generated";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
   vehiclePosition: VehiclePosition | undefined;
+  tripUpdate: TripUpdateQuery["tripUpdate"];
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
@@ -33,6 +36,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   trip,
   containerRef,
   vehiclePosition,
+  tripUpdate,
 }) => {
   const { viewStatePathname } = useViewStatePathname();
   const [searchParams] = useSearchParams();
@@ -56,13 +60,57 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
   const vehicleStopId = vehiclePosition?.stopId;
+  const vehicleStopSequence = vehiclePosition?.currentStopSequence || 0;
+  console.log(vehiclePosition);
+  const theme = useTheme();
   // TODO: fix timeline rail styling of border radius
   return (
     <Box component={"div"}>
       <List>
         {stopTimes?.map((stopTime, index) => {
-          const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
+          const stopTimeUpdateIndex = tripUpdate?.stopTimeUpdate.findIndex(
+            (stopTimeUpdate) =>
+              stopTimeUpdate?.stopSequence === stopTime.stopSequence
+          );
+          const scheduledArrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
+          let updatedArrivalTime;
+          if (stopTimeUpdateIndex !== undefined && stopTimeUpdateIndex !== -1) {
+            updatedArrivalTime = dayjs.unix(
+              tripUpdate?.stopTimeUpdate[stopTimeUpdateIndex]?.arrival?.time ||
+                0
+            );
+          }
+
           const isSelectedStop = stopTime.stopId === stop?.stopId;
+          const isPastStop = vehicleStopSequence > stopTime.stopSequence;
+
+          let timeDiffString = "Scheduled";
+          let textColor = "gray";
+
+          if (updatedArrivalTime) {
+            const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
+
+            const isSame = scheduledArrivalTime.isSame(
+              updatedArrivalTime,
+              "minute"
+            );
+
+            const duration = scheduledArrivalTime.from(
+              updatedArrivalTime,
+              true
+            );
+            timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
+            if (early) {
+              textColor = "#f57c00";
+            } else {
+              textColor = theme.palette.error.light;
+            }
+
+            if (isSame) {
+              timeDiffString = "On time";
+              textColor = theme.palette.success.light;
+            }
+          }
 
           return (
             <Box
@@ -146,6 +194,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 sx={{
                   pl: 6,
                   py: 2.5,
+                  color: isPastStop ? "gray" : "unset",
                 }}
               >
                 <Box
@@ -166,8 +215,12 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
                         {stopTime.stop.stopName}
                       </Typography>
-                      <Typography color={"gray"} fontSize={14}>
-                        Scheduled
+                      <Typography
+                        color={textColor}
+                        fontSize={14}
+                        fontWeight={updatedArrivalTime ? 600 : undefined}
+                      >
+                        {timeDiffString}
                       </Typography>
                     </Box>
 
@@ -180,16 +233,24 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                         }}
                       >
                         <Typography fontSize={24} lineHeight={1}>
-                          {arrivalTime.format("h:mm")}
+                          {scheduledArrivalTime.format("h:mm")}
                         </Typography>
                         <Typography color={"gray"} fontSize={14}>
-                          {arrivalTime.format("A")}
+                          {scheduledArrivalTime.format("A")}
                         </Typography>
                       </Box>
                     ) : (
-                      <Typography whiteSpace={"nowrap"}>
-                        {arrivalTime.format("LT")}
-                      </Typography>
+                      <>
+                        {updatedArrivalTime !== undefined ? (
+                          <Typography whiteSpace={"nowrap"}>
+                            {updatedArrivalTime.format("LT")}
+                          </Typography>
+                        ) : (
+                          <Typography whiteSpace={"nowrap"}>
+                            {scheduledArrivalTime.format("LT")}
+                          </Typography>
+                        )}
+                      </>
                     )}
                   </Box>
                 </Box>

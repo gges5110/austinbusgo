@@ -11,6 +11,11 @@ import {
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "../../QueryClient";
 import { getDate } from "../RootLayout";
+import {
+  useVehiclePositionsQuery,
+  VehiclePositionsQuery,
+  VehiclePositionsQueryVariables,
+} from "../../schemas/VehiclePositions.generated";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),
@@ -19,6 +24,11 @@ const routeQuery = (id: RouteQueryVariables) => ({
 const stopsAndShapesQuery = (id: StopsAndShapesQueryVariables) => ({
   queryKey: useStopsAndShapesQuery.getKey(id),
   queryFn: useStopsAndShapesQuery.fetcher(id),
+});
+
+const vehiclePositionsQuery = (id: VehiclePositionsQueryVariables) => ({
+  queryKey: useVehiclePositionsQuery.getKey(id),
+  queryFn: useVehiclePositionsQuery.fetcher(id),
 });
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeId = params["routeId"] || "";
@@ -37,10 +47,20 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
     })
   );
 
+  const vehiclePositionsData = await queryClient.ensureQueryData<
+    VehiclePositionsQuery
+  >(
+    vehiclePositionsQuery({
+      routeId: routeId,
+      direction: directionId,
+    })
+  );
+
   return {
     route: routeData.route,
     shapes: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.shapes,
     stops: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.stops,
     distinctTrips: (stopsAndShapesData as StopsAndShapesQuery).distinctTrips,
+    vehiclePositions: vehiclePositionsData?.vehiclePositions,
   };
 };

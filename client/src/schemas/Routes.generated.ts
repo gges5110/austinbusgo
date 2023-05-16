@@ -25,12 +25,10 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
 export type RoutesQueryVariables = Types.Exact<{ [key: string]: never }>;
 
 export type RoutesQuery = { __typename?: "Query" } & {
-  routes?: Types.Maybe<
-    Array<
-      { __typename?: "Route" } & Pick<
-        Types.Route,
-        "routeLongName" | "routeId" | "routeColor"
-      >
+  routes: Array<
+    { __typename?: "Route" } & Pick<
+      Types.Route,
+      "routeLongName" | "routeId" | "routeColor"
     >
   >;
 };

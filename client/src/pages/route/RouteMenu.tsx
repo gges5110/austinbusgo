@@ -14,7 +14,9 @@ import { routeLoader } from "./RouteLoader";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
-  const { stops, distinctTrips, route } = useDataFromLoader(routeLoader);
+  const { stops, distinctTrips, route, vehiclePositions } = useDataFromLoader(
+    routeLoader
+  );
   const { routeId, directionId } = useParams();
 
   const { viewStatePathname } = useViewStatePathname();
@@ -66,7 +68,11 @@ export const RouteMenu = () => {
         </Box>
       </Box>
 
-      <StopsTimeline stops={stops} />
+      <StopsTimeline
+        route={route}
+        stops={stops}
+        vehiclePositions={vehiclePositions || []}
+      />
     </MenuPanel>
   );
 };

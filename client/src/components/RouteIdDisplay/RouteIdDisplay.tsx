@@ -20,9 +20,11 @@ export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
         backgroundColor: `#${routeColor}`,
         color: "white",
         width: "fit-content",
+        minWidth: 44,
         height: "fit-content",
         px: 1,
-        borderRadius: 1,
+        borderRadius: "7px",
+        textAlign: "center",
       }}
       onClick={onClick}
     >

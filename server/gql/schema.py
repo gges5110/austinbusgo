@@ -1,23 +1,14 @@
-import asyncio
-from datetime import datetime
-
 import graphene
-from graphene import ObjectType, String
 
 from server.gql.geometry_types import LineString
-from server.gql.gtfs_rt_types import VehiclePosition
+from server.gql.gtfs_rt_types import VehiclePosition, TripUpdate
 from server.gql.gtfs_types import Stop, Route, Trip, StopTimes
 from server.gql.resolver import Resolver
 
 
-class TripWithRoute(Trip):
-    route = graphene.Field(graphene.NonNull(Route))
-
-
 class ArrivalTime(graphene.ObjectType):
-    vehicle = graphene.Field(VehiclePosition)
     scheduled_arrival_time = graphene.String(required=True)
-    trip = graphene.Field(TripWithRoute, required=True)
+    trip = graphene.Field(Trip, required=True)
     updated_arrival_time = graphene.String()
 
 
@@ -35,18 +26,23 @@ class TripIdsForRoute(graphene.ObjectType):
     tripIds = graphene.List(graphene.NonNull(graphene.String), required=True)
 
 
+class TripUpdatesFilter(graphene.InputObjectType):
+    trip_id = graphene.String()
+    route_id = graphene.String()
+
+
 class Query(graphene.ObjectType):
     resolver = Resolver()
 
     arrival_times = graphene.Field(
-        graphene.List(graphene.NonNull(ArrivalTime)),
+        graphene.NonNull(graphene.List(graphene.NonNull(ArrivalTime))),
         stop_id=graphene.String(required=True),
         date=graphene.String(required=True),
         resolver=resolver.resolve_arrival_times,
     )
 
     distinct_trips = graphene.Field(
-        graphene.List(graphene.NonNull(Trip)),
+        graphene.NonNull(graphene.List(graphene.NonNull(Trip))),
         route_id=graphene.String(required=True),
         date=graphene.String(required=True),
         resolver=resolver.resolve_distinct_trips,
@@ -60,7 +56,7 @@ class Query(graphene.ObjectType):
     )
 
     real_time_vehicle_positions = graphene.Field(
-        graphene.List(VehiclePosition),
+        graphene.NonNull(graphene.List(VehiclePosition)),
         resolver=resolver.resolve_vehicle_positions_debug,
     )
 
@@ -71,7 +67,8 @@ class Query(graphene.ObjectType):
     )
 
     routes = graphene.Field(
-        graphene.List(graphene.NonNull(Route)), resolver=resolver.resolve_routes
+        graphene.NonNull(graphene.List(graphene.NonNull(Route))),
+        resolver=resolver.resolve_routes,
     )
 
     route_shapes = graphene.Field(
@@ -101,19 +98,19 @@ class Query(graphene.ObjectType):
     )
 
     stops_by_name = graphene.Field(
-        graphene.List(graphene.NonNull(Stop)),
+        graphene.NonNull(graphene.List(graphene.NonNull(Stop))),
         stop_name=graphene.String(required=True),
         resolver=resolver.resolve_stops_by_name,
     )
 
     stop_times = graphene.Field(
-        graphene.List(graphene.NonNull(StopTimes)),
+        graphene.NonNull(graphene.List(graphene.NonNull(StopTimes))),
         trip_id=graphene.String(required=True),
         resolver=resolver.resolve_stop_times,
     )
 
     trip = graphene.Field(
-        graphene.NonNull(TripWithRoute),
+        graphene.NonNull(Trip),
         trip_id=graphene.String(required=True),
         resolver=resolver.resolve_trip,
     )
@@ -125,21 +122,24 @@ class Query(graphene.ObjectType):
         resolver=resolver.resolve_trip_ids_for_route,
     )
 
+    trip_update = graphene.Field(
+        TripUpdate,
+        trip_id=graphene.String(required=True),
+        resolver=resolver.resolve_trip_update,
+    )
+
+    trip_updates = graphene.Field(
+        graphene.NonNull(graphene.List(graphene.NonNull(TripUpdate))),
+        filter=TripUpdatesFilter(),
+        resolver=resolver.resolve_trip_updates,
+    )
+
     vehicle_positions = graphene.Field(
-        graphene.List(graphene.NonNull(VehiclePosition)),
+        graphene.NonNull(graphene.List(graphene.NonNull(VehiclePosition))),
         route_id=graphene.String(required=True),
         direction=graphene.Int(required=True),
         resolver=resolver.resolve_vehicle_positions,
     )
-
-
-class Subscription(ObjectType):
-    time_of_day = String()
-
-    async def subscribe_time_of_day(root, info):
-        while True:
-            yield datetime.now().isoformat()
-            await asyncio.sleep(1)
 
 
 schema = graphene.Schema(query=Query)

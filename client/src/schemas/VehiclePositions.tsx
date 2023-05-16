@@ -24,6 +24,7 @@ export const VEHICLE_POSITIONS_QUERY = gql`
       currentStatus
       timestamp
       congestionLevel
+      currentStopSequence
     }
   }
 `;

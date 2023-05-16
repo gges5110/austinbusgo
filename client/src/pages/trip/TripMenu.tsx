@@ -22,7 +22,7 @@ import { tripLoader } from "./TripLoader";
 import { rootLoader } from "../RootLoader";
 
 export const TripMenu = () => {
-  const { trip, stopTimes } = useDataFromLoader(tripLoader);
+  const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);
   const stopData = useDataFromRouteLoader("stop", stopLoader);
   const stop = stopData?.stop;
 
@@ -113,6 +113,7 @@ export const TripMenu = () => {
         <Divider />
         <TripTimeline
           vehiclePosition={vehiclePosition}
+          tripUpdate={tripUpdate}
           stopTimes={stopTimes}
           stop={stop}
           trip={trip}

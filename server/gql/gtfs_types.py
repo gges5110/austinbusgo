@@ -34,7 +34,7 @@ class Stop(graphene.ObjectType):
 
     routes = graphene.List(graphene.NonNull(Route))
 
-    def resolve_routes(self, info, **kwargs):
+    def resolve_routes(self, info):
         return GTFSService.get_routes_at_stop(self.stop_id)
 
 
@@ -68,6 +68,7 @@ class Trip(graphene.ObjectType):
         description="Indicates wheelchair accessibility."
     )
     bikes_allowed = graphene.Int(description="Indicates whether bikes are allowed.")
+    route = graphene.Field(graphene.NonNull(Route))
 
 
 class StopTimes(graphene.ObjectType):

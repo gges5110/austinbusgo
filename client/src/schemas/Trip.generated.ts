@@ -27,8 +27,8 @@ export type TripQueryVariables = Types.Exact<{
 }>;
 
 export type TripQuery = { __typename?: "Query" } & {
-  trip: { __typename?: "TripWithRoute" } & Pick<
-    Types.TripWithRoute,
+  trip: { __typename?: "Trip" } & Pick<
+    Types.Trip,
     | "routeId"
     | "serviceId"
     | "tripId"

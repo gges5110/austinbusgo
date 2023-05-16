@@ -22,39 +22,40 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
     return json.data;
   };
 }
-
 export type VehiclePositionsQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   direction: Types.Scalars["Int"];
 }>;
 
 export type VehiclePositionsQuery = { __typename?: "Query" } & {
-  vehiclePositions?: Types.Maybe<
-    Array<
-      { __typename?: "VehiclePosition" } & Pick<
-        Types.VehiclePosition,
-        "stopId" | "currentStatus" | "timestamp" | "congestionLevel"
-      > & {
-          trip?: Types.Maybe<
-            { __typename?: "TripDescriptor" } & Pick<
-              Types.TripDescriptor,
-              "tripId" | "routeId" | "startDate" | "startTime"
-            >
-          >;
-          vehicle?: Types.Maybe<
-            { __typename?: "VehicleDescriptor" } & Pick<
-              Types.VehicleDescriptor,
-              "id" | "label" | "licensePlate"
-            >
-          >;
-          position?: Types.Maybe<
-            { __typename?: "Position" } & Pick<
-              Types.Position,
-              "latitude" | "longitude" | "bearing" | "speed"
-            >
-          >;
-        }
-    >
+  vehiclePositions: Array<
+    { __typename?: "VehiclePosition" } & Pick<
+      Types.VehiclePosition,
+      | "stopId"
+      | "currentStatus"
+      | "timestamp"
+      | "congestionLevel"
+      | "currentStopSequence"
+    > & {
+        trip?: Types.Maybe<
+          { __typename?: "TripDescriptor" } & Pick<
+            Types.TripDescriptor,
+            "tripId" | "routeId" | "startDate" | "startTime"
+          >
+        >;
+        vehicle?: Types.Maybe<
+          { __typename?: "VehicleDescriptor" } & Pick<
+            Types.VehicleDescriptor,
+            "id" | "label" | "licensePlate"
+          >
+        >;
+        position?: Types.Maybe<
+          { __typename?: "Position" } & Pick<
+            Types.Position,
+            "latitude" | "longitude" | "bearing" | "speed"
+          >
+        >;
+      }
   >;
 };
 
@@ -82,6 +83,7 @@ export const VehiclePositionsDocument = `
     currentStatus
     timestamp
     congestionLevel
+    currentStopSequence
   }
 }
     `;

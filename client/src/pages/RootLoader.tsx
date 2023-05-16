@@ -47,12 +47,12 @@ export const rootLoader = async ({ request }: LoaderFunctionArgs) => {
     })
   );
 
-  const vq = queryClient.ensureQueryData<VehiclePositionsQuery>({
-    ...vehiclePositionsQuery({
+  const vq = queryClient.ensureQueryData<VehiclePositionsQuery>(
+    vehiclePositionsQuery({
       routeId: routeId,
       direction: directionId,
-    }),
-  });
+    })
+  );
 
   let routeData, stopsAndShapesData, vehiclePositionsData;
   if (routeId !== "") {
