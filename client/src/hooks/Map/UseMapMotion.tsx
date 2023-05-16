@@ -10,19 +10,21 @@ export const useMapMotion = (
 ) => {
   const { mapId: map } = useMap();
   const flyToStop = (stop: Stop) => {
-    map?.flyTo({
-      center: [
-        stop.stopLoc?.coordinates?.[0] || viewState.longitude,
-        stop.stopLoc?.coordinates?.[1] || viewState.latitude,
-      ],
-      zoom: vehicleZoomLevel,
-      padding: {
-        top: 0,
-        left: 420,
-        right: 0,
-        bottom: 0,
-      },
-    });
+    if (map && stop.stopLoc?.coordinates) {
+      map.flyTo({
+        center: [
+          stop.stopLoc.coordinates?.[0] || viewState.longitude,
+          stop.stopLoc.coordinates?.[1] || viewState.latitude,
+        ],
+        zoom: vehicleZoomLevel,
+        padding: {
+          top: 0,
+          left: 420,
+          right: 0,
+          bottom: 0,
+        },
+      });
+    }
   };
 
   const flyToRoute = () => {
@@ -53,17 +55,11 @@ export const useMapMotion = (
   };
 
   useEffect(() => {
-    if (stop) {
+    if (map && stop) {
       flyToStop(stop);
-    } else {
-      flyToRoute();
-    }
-  }, [stop]);
-
-  useEffect(() => {
-    if (routeShapes.length !== 0) {
+    } else if (map && routeShapes.length !== 0) {
       flyToRoute();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(routeShapes)]);
+  }, [map, stop, JSON.stringify(routeShapes)]);
 };

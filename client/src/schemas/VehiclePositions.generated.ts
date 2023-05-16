@@ -22,6 +22,7 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
     return json.data;
   };
 }
+
 export type VehiclePositionsQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   direction: Types.Scalars["Int"];

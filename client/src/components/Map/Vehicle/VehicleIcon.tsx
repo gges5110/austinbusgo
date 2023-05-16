@@ -49,9 +49,9 @@ export const VehicleIcon: React.FunctionComponent<VehicleIconProps> = ({
       onMouseLeave={onMouseLeave}
       size={"small"}
       sx={{
-        background: "white",
+        backgroundColor: "background.default",
         "&:hover": {
-          backgroundColor: `white`,
+          backgroundColor: "background.default",
           opacity: "80%",
         },
       }}

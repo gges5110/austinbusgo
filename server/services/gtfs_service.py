@@ -101,28 +101,13 @@ class GTFSService:
     def get_stops_by_route_id(
         route_id: str, direction_id: int, date: str
     ) -> List[Stops]:
-        # using subquery here to allow "distinct on" and "order by" different columns.
-        # https://stackoverflow.com/a/9796104/4816922
-        subquery = (
-            Stops.select(Stops.stop_id)
-            .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id))
-            .join(Trips, on=(StopTimes.trip_id == Trips.trip_id))
-            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .where((Trips.route_id == route_id) & (Trips.direction_id == direction_id))
-            .order_by(StopTimes.stop_sequence)
-            .alias("subquery")
-        )
         return (
             Stops.select(Stops, StopTimes, Trips)
             .distinct(Stops.stop_id)
-            .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id).alias("stoptime"))
+            .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id).alias("stop_time"))
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .where(
-                (Trips.route_id == route_id)
-                & (Trips.direction_id == direction_id)
-                & Stops.stop_id.in_(subquery)
-            )
+            .where((Trips.route_id == route_id) & (Trips.direction_id == direction_id))
         )
 
     # Trips

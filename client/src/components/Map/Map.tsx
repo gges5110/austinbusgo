@@ -42,7 +42,7 @@ export interface MapProps {
   readonly stops: Stop[];
   readonly vehiclePositions: VehiclePosition[];
 
-  setSelectedStopId(stopId: string): void;
+  setSelectedStop(stop: Stop): void;
 }
 
 export const vehicleZoomLevel = 16;
@@ -53,7 +53,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
   route,
   stops,
   stop,
-  setSelectedStopId,
+  setSelectedStop,
   routeShapes,
   vehiclePositions,
 }) => {
@@ -83,13 +83,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
-    map?.flyTo({
-      center: [
-        vehicle.position?.longitude || viewState.longitude,
-        vehicle.position?.latitude || viewState.latitude,
-      ],
-      zoom: vehicleZoomLevel,
-    });
+    if (map && vehicle.position) {
+      map.flyTo({
+        center: [vehicle.position.longitude, vehicle.position.latitude],
+        zoom: vehicleZoomLevel,
+      });
+    }
   };
 
   return (
@@ -123,16 +122,12 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
         <StopMarkers
           stops={stops}
-          setSelectedStop={(stop) => {
-            setSelectedStopId(stop.stopId);
-          }}
+          setSelectedStop={setSelectedStop}
           selectedStop={stop}
         />
         <StopMarkers
           stops={nearByStops}
-          setSelectedStop={(stop) => {
-            setSelectedStopId(stop.stopId);
-          }}
+          setSelectedStop={setSelectedStop}
           selectedStop={stop}
         />
         <VehicleMarkers

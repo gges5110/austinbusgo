@@ -14,6 +14,9 @@ import { TransitionProps } from "@mui/material/transitions";
 import CloseIcon from "@mui/icons-material/Close";
 import { useSnackbar } from "notistack";
 import * as React from "react";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
+import { useSetAtom } from "jotai/index";
+import { recentSearchesAtom } from "../Atoms";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -60,6 +63,8 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
     }
   };
 
+  const setRecentSearches = useSetAtom(recentSearchesAtom);
+
   return (
     <Dialog
       fullScreen={false}
@@ -103,18 +108,30 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemText primary="Reload Vehicles" />
         </ListItemButton>
 
-        <ListSubheader>About Austin Bus Go</ListSubheader>
-        <ListItem
-          button={true}
+        <ListSubheader>Search</ListSubheader>
+        <ListItemButton
           onClick={() => {
-            window.open("https://gitlab.com/gerrywu/AustinBusLocation");
+            setRecentSearches([]);
+            enqueueSnackbar("Recent searches cleared", { variant: "success" });
+          }}
+        >
+          <ListItemIcon>
+            <SearchOffIcon />
+          </ListItemIcon>
+          <ListItemText primary="Clear recent searches" />
+        </ListItemButton>
+
+        <ListSubheader>About Austin Bus Go</ListSubheader>
+        <ListItemButton
+          onClick={() => {
+            window.open("https://github.com/gges5110/austinbusgo");
           }}
         >
           <ListItemIcon>
             <CodeIcon />
           </ListItemIcon>
-          <ListItemText primary="GitLab Repository" />
-        </ListItem>
+          <ListItemText primary="GitHub Repository" />
+        </ListItemButton>
       </List>
     </Dialog>
   );

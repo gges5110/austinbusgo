@@ -10,6 +10,30 @@ const convertViewStateToPath = (viewState: ViewState) => {
   )},${parseFloat(viewState.zoom.toFixed(2))}z`;
 };
 
+export const useUpdateViewState = () => {
+  const {
+    latitude,
+    longitude,
+    zoom,
+    searchParams,
+    restOfPathname,
+  } = useViewStatePathname();
+  const getViewStateURL = (viewState: Partial<ViewState>) => {
+    let path = convertViewStateToPath({
+      latitude: viewState.latitude || latitude,
+      longitude: viewState.longitude || longitude,
+      zoom: viewState.zoom || zoom,
+    });
+    if (restOfPathname !== "" && restOfPathname !== undefined) {
+      path += restOfPathname + searchParams;
+    }
+
+    return path;
+  };
+
+  return { getViewStateURL };
+};
+
 export const useViewStateSync = (viewState: ViewState) => {
   const navigation = useNavigation();
   const navigate = useNavigate();

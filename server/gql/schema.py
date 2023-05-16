@@ -4,9 +4,9 @@ from datetime import datetime
 import graphene
 from graphene import ObjectType, String
 
-from gql.geometry_types import LineString
-from gql.gtfs_rt_types import VehiclePosition
-from gql.gtfs_types import Stop, Route, Trip, StopTimes
+from server.gql.geometry_types import LineString
+from server.gql.gtfs_rt_types import VehiclePosition
+from server.gql.gtfs_types import Stop, Route, Trip, StopTimes
 from server.gql.resolver import Resolver
 
 

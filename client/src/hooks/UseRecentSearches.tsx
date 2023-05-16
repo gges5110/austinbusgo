@@ -7,6 +7,11 @@ import {
   OptionValue,
 } from "../components/SearchPanel/SearchPanel";
 
+export interface RecentSearch {
+  timestamp: number;
+  value: OptionValue;
+}
+
 export const useRecentSearches = () => {
   const [recentSearches, setRecentSearches] = useAtom(recentSearchesAtom);
 
@@ -15,29 +20,39 @@ export const useRecentSearches = () => {
       return;
     }
 
-    const newValueInRecentSearchStops = recentSearches.some((recentSearch) => {
-      if (isRoute(search)) {
-        return isRoute(recentSearch) && search.routeId === recentSearch.routeId;
-      } else if (isStop(search)) {
-        return isStop(recentSearch) && search.stopId === recentSearch.stopId;
-      } else if (isSearchTerm(search)) {
-        return (
-          isSearchTerm(recentSearch) && search.value === recentSearch.value
-        );
-      }
+    setRecentSearches((recentSearches) => {
+      const index = recentSearches.findIndex((recentSearch) => {
+        const { value } = recentSearch;
 
-      return false;
-    });
+        if (isRoute(search)) {
+          return isRoute(value) && search.routeId === value.routeId;
+        } else if (isStop(search)) {
+          return isStop(value) && search.stopId === value.stopId;
+        } else if (isSearchTerm(search)) {
+          return isSearchTerm(value) && search.value === value.value;
+        }
 
-    if (!newValueInRecentSearchStops) {
-      setRecentSearches((prev) => {
-        return [search, ...prev];
+        return false;
       });
-    }
+
+      if (index === -1) {
+        return [{ timestamp: Date.now(), value: search }, ...recentSearches];
+      } else {
+        const arrExcludingTarget = [
+          ...recentSearches.slice(0, index),
+          ...recentSearches.slice(index + 1),
+        ];
+
+        return [
+          { timestamp: Date.now(), value: search },
+          ...arrExcludingTarget,
+        ];
+      }
+    });
   };
 
   return {
-    recentSearches,
+    recentSearches: recentSearches,
     addToRecentSearches,
   };
 };

@@ -26,6 +26,8 @@ import { stopLoader } from "./stop/StopLoader";
 import { rootLoader } from "./RootLoader";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useQueryClient } from "@tanstack/react-query";
+import { Stop } from "../interfaces/interface.d";
+import { useRecentSearches } from "../hooks/UseRecentSearches";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
@@ -39,9 +41,13 @@ export const RootLayout: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
+  const { addToRecentSearches } = useRecentSearches();
 
-  const setStop = (stopId: string | undefined) => {
+  const setSelectedStop = (stop: Stop) => {
+    const { stopId } = stop;
+
     if (stopId !== undefined) {
+      addToRecentSearches(stop);
       if (location.pathname.includes("/route")) {
         navigate(
           `${viewStatePathname}/stop/${stopId}?routeId=${routeId}&directionId=${directionId}`
@@ -139,7 +145,7 @@ export const RootLayout: React.FunctionComponent = () => {
         vehiclePositions={vehiclePositions}
         route={selectedRoute}
         stop={stop}
-        setSelectedStopId={setStop}
+        setSelectedStop={setSelectedStop}
       />
       <Popper open={true}>
         <Outlet />
