@@ -17,6 +17,7 @@ import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import { VehiclePosition } from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { StopQuery } from "../../../schemas/Stop.generated";
+import { useUpdateViewState } from "../../../hooks/Map/UseViewStateSync";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
@@ -49,12 +50,12 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
       }
     }, 200);
   }, [containerRef, stopTimelineItemRef]);
+  const { getViewStateURL } = useUpdateViewState();
 
   const selectedStopSequence =
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
   const vehicleStopId = vehiclePosition?.stopId;
-  console.log(vehicleStopId);
   // TODO: fix timeline rail styling of border radius
   return (
     <Box component={"div"}>
@@ -119,7 +120,13 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                     borderRadius: "50%",
                   }}
                 >
-                  <IconButton>
+                  <IconButton
+                    component={RouterLink}
+                    to={getViewStateURL({
+                      latitude: vehiclePosition?.position?.latitude,
+                      longitude: vehiclePosition?.position?.longitude,
+                    })}
+                  >
                     <DirectionsBusIcon />
                   </IconButton>
                 </Paper>
@@ -157,7 +164,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   >
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
-                        {stopTime.stopId}
                         {stopTime.stop.stopName}
                       </Typography>
                       <Typography color={"gray"} fontSize={14}>

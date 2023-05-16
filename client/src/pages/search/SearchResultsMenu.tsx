@@ -17,6 +17,7 @@ import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { searchLoader } from "./SearchLoader";
+import { useRecentSearches } from "../../hooks/UseRecentSearches";
 
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
@@ -43,7 +44,7 @@ export const SearchResultsMenu = () => {
       }
     }
   }, []);
-
+  const { addToRecentSearches } = useRecentSearches();
   return (
     <MenuPanel>
       {!noResults ? (
@@ -51,11 +52,14 @@ export const SearchResultsMenu = () => {
           {searchData.search.stops.map((stop) => {
             return (
               <>
-                <ListItem disablePadding key={stop.stopId}>
+                <ListItem disablePadding key={`stop-${stop.stopId}`}>
                   <ListItemButton
                     sx={{ py: 2 }}
                     component={RouterLink}
                     to={`${viewStatePathname}/stop/${stop.stopId}`}
+                    onClick={() => {
+                      addToRecentSearches(stop);
+                    }}
                   >
                     <Box display={"flex"} flexDirection={"column"} gap={1}>
                       <Box display={"flex"} gap={1}>
@@ -88,10 +92,13 @@ export const SearchResultsMenu = () => {
           {searchData.search.routes.map((route) => {
             return (
               <>
-                <ListItem disablePadding key={route.routeId}>
+                <ListItem disablePadding key={`route-${route.routeId}`}>
                   <ListItemButton
                     component={RouterLink}
                     to={`${viewStatePathname}/route/${route.routeId}/direction/0`}
+                    onClick={() => {
+                      addToRecentSearches(route);
+                    }}
                   >
                     <Box display={"flex"} gap={1}>
                       <RouteIcon />

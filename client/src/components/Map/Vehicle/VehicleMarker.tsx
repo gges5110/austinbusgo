@@ -1,4 +1,4 @@
-import { Popover } from "@mui/material";
+import { Badge, Popover } from "@mui/material";
 import { useState } from "react";
 import * as React from "react";
 import { Marker } from "react-map-gl";
@@ -43,12 +43,19 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         latitude={position?.latitude || 0}
         key={vehiclePosition?.vehicle?.id || ""}
       >
-        <VehicleIcon
-          bearing={Number(position?.bearing) || 0}
-          onClick={handleOnClick}
-          onMouseEnter={handlePopoverOpen}
-          onMouseLeave={handlePopoverClose}
-        />
+        <Badge
+          badgeContent={vehiclePosition?.trip?.routeId}
+          color={"primary"}
+          overlap="circular"
+          max={999}
+        >
+          <VehicleIcon
+            bearing={Number(position?.bearing) || 0}
+            onClick={handleOnClick}
+            onMouseEnter={handlePopoverOpen}
+            onMouseLeave={handlePopoverClose}
+          />
+        </Badge>
       </Marker>
       <Popover
         open={open}

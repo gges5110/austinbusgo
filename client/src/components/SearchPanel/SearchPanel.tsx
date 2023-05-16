@@ -89,24 +89,35 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   useEffect(() => {
     if (searchTerm) {
       setInputString(searchTerm);
-    }
-  }, [searchTerm]);
-
-  useEffect(() => {
-    if (stop) {
+      setValue({
+        type: SearchType.recent,
+        optionValue: {
+          value: searchTerm,
+        },
+      });
+      setSearchPanelOpen(false);
+    } else if (stop) {
       const input = getStopOptionLabel(stop);
       setInputString(input);
+      setValue({
+        type: SearchType.recent,
+        optionValue: stop,
+      });
       search(input);
-    }
-  }, [stop]);
-
-  useEffect(() => {
-    if (route) {
+      setSearchPanelOpen(false);
+    } else if (route) {
       const input = getRouteOptionLabel(route);
       setInputString(input);
+      setValue({
+        type: SearchType.recent,
+        optionValue: route,
+      });
       search(input);
+      setSearchPanelOpen(false);
+    } else {
+      setInputString("");
     }
-  }, [route]);
+  }, [searchTerm, stop, route]);
 
   const searchOnChange = (
     event: React.SyntheticEvent,
@@ -175,7 +186,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     return `${stop.stopId} ${stop.stopName}`;
   };
 
-  const [internalSearchTerm, setSearchTerm] = useState<string>("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
 
   // TODO: fix onCompleted isn't fired when fetching from cached values
   // https://github.com/apollographql/react-apollo/issues/2177
@@ -195,7 +206,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   );
 
   const search = (value: string): void => {
-    setSearchTerm(value);
+    setInternalSearchTerm(value);
   };
 
   const goToSearchPage = (searchTerm?: SearchTerm) => {
@@ -225,7 +236,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     if (inputString === "") {
       options = recentSearches.map((search) => ({
         type: SearchType.recent,
-        optionValue: search,
+        optionValue: search.value,
       }));
     } else {
       options = [
@@ -256,7 +267,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       }}
     >
       <Autocomplete<SearchOption>
-        loading={isLoading}
+        loading={isLoading && internalSearchTerm !== ""}
         options={options}
         sx={{ width: SEARCH_PANEL_WIDTH }}
         value={value}
@@ -368,5 +379,5 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 };
 
 const filterOptions = createFilterOptions<SearchOption>({
-  limit: 500,
+  limit: 5,
 });

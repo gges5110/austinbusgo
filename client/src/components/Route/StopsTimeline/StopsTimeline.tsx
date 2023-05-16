@@ -13,6 +13,9 @@ import {
 } from "@mui/lab";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { useSetAtom } from "jotai";
+import { hoveringStopAtom } from "../../../Atoms";
+import { Stop } from "../../../interfaces/interface.d";
 
 interface StopsTimelineProps {
   stops: StopsAndShapesQuery["stopsAndShapes"]["stops"];
@@ -21,7 +24,7 @@ interface StopsTimelineProps {
 export const StopsTimeline: React.FC<StopsTimelineProps> = ({ stops }) => {
   const { routeId, directionId } = useParams();
   const { viewStatePathname } = useViewStatePathname();
-
+  const setHoveringStop = useSetAtom(hoveringStopAtom);
   return (
     <Timeline
       sx={{
@@ -43,6 +46,12 @@ export const StopsTimeline: React.FC<StopsTimelineProps> = ({ stops }) => {
             <TimelineContent>
               <Button
                 size={"small"}
+                onMouseEnter={() => {
+                  setHoveringStop(stop as Stop);
+                }}
+                onMouseLeave={() => {
+                  setHoveringStop(undefined);
+                }}
                 variant={"outlined"}
                 component={RouterLink}
                 to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${routeId}&directionId=${directionId}`}

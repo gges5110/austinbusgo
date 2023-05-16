@@ -48,14 +48,16 @@ class Resolver:
     ):
         stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
         stops_and_shapes = {
-            "stops": [stop for stop in stops],
+            "stops": sorted(
+                [stop for stop in stops], key=lambda stop: stop.stop_time.stop_sequence
+            ),
             "shapes": [],
         }
         stop_ids = [stop.stop_id for stop in stops_and_shapes["stops"]]
         routes_list = self.gtfs_service.get_routes_at_stops(stop_ids)
         print(list(routes_list))
 
-        shape_id_set = set([stop.stoptime.trip.shape_id for stop in stops])
+        shape_id_set = set([stop.stop_time.trip.shape_id for stop in stops])
         for shape_id in shape_id_set:
             stops_and_shapes["shapes"].append(
                 self.gtfs_service.get_shapes_by_shape_id(shape_id).shape
@@ -123,8 +125,6 @@ class Resolver:
             }
             for stop_time in stop_times
         ]
-        # Sort the arrival times by timestamp
-        arrival_times.sort(key=lambda x: x["scheduled_arrival_time"], reverse=False)
         return arrival_times
 
     def _populate_updated_arrival_time(

@@ -16,10 +16,12 @@ export const StopPin: React.FunctionComponent<StopPinProps> = ({
   highlighted,
 }: StopPinProps) => {
   const [open, setOpen] = useState(false);
+  // Consider showing stop name when zoom is below 12
   return (
     <Tooltip
       title={stopName}
-      open={false || open}
+      placement={"left"}
+      open={highlighted || open}
       onOpen={() => {
         setOpen(true);
       }}

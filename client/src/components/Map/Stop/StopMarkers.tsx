@@ -1,4 +1,4 @@
-import { PureComponent, default as React } from "react";
+import { default as React, useMemo } from "react";
 import { Stop } from "../../../interfaces/interface.d";
 import { StopMarker } from "./StopMarker";
 
@@ -9,16 +9,23 @@ interface StopMarkersProps {
   setSelectedStop(stop: Stop): void;
 }
 
-export class StopMarkers extends PureComponent<StopMarkersProps> {
-  public render() {
-    const { stops, setSelectedStop, selectedStop } = this.props;
-    return stops.map((stop) => (
-      <StopMarker
-        key={stop.stopId}
-        stop={stop}
-        setSelectedStop={setSelectedStop}
-        highlighted={selectedStop?.stopId === stop.stopId}
-      />
-    ));
-  }
-}
+export const StopMarkers: React.FC<StopMarkersProps> = ({
+  stops,
+  setSelectedStop,
+  selectedStop,
+}) => {
+  const stopMarkers = useMemo(
+    () =>
+      stops.map((stop) => (
+        <StopMarker
+          key={stop.stopId}
+          stop={stop}
+          setSelectedStop={setSelectedStop}
+          highlighted={selectedStop?.stopId === stop.stopId}
+        />
+      )),
+    [stops, stop]
+  );
+
+  return <>{stopMarkers}</>;
+};
