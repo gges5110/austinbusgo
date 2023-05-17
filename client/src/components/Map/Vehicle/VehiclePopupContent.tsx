@@ -1,5 +1,4 @@
 import * as React from "react";
-import { styled } from "@mui/material/styles";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -7,27 +6,14 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { TripQuery } from "../../../schemas/Trip.generated";
-import { Skeleton } from "@mui/material";
+import { Box, Skeleton } from "@mui/material";
 import {
   VehiclePosition,
   VehicleStopStatus,
 } from "../../../interfaces/interface.d";
-
-const PREFIX = "VehiclePopupContent";
-
-const classes = {
-  root: `${PREFIX}-root`,
-  title: `${PREFIX}-title`,
-};
-
-const StyledCard = styled(Card)({
-  [`&.${classes.root}`]: {
-    minWidth: 275,
-  },
-  [`& .${classes.title}`]: {
-    fontSize: 14,
-  },
-});
+import { RouteIdDisplay } from "../../RouteIdDisplay/RouteIdDisplay";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import RouteIcon from "@mui/icons-material/Route";
 
 dayjs.extend(relativeTime);
 
@@ -62,25 +48,38 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
   tripLoading,
 }) => {
   return (
-    <StyledCard className={classes.root} variant="outlined">
-      <CardContent>
-        <Typography className={classes.title} color="textSecondary">
-          {vehiclePosition.trip?.routeId || ""}
-        </Typography>
-        <Typography variant="body2" component="p" display={"inline"}>
-          {tripLoading ? <Skeleton /> : trip?.trip.tripHeadsign}
-        </Typography>
-        <Typography variant="body2" display={"block"}>
-          {vehiclePosition.currentStatus &&
-            getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
-        </Typography>{" "}
-        <Typography variant="body2" display={"block"}>
-          {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
-        </Typography>
-        <Typography className={classes.title} color="textSecondary">
-          Updated {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
-        </Typography>
+    <Card variant="outlined">
+      <CardContent sx={{ minWidth: 275, borderRadius: 6 }}>
+        <Box display={"flex"} gap={1} flexDirection={"column"}>
+          <Box display={"flex"} gap={1} alignItems={"center"}>
+            <RouteIcon />
+            <RouteIdDisplay
+              routeColor={trip?.trip.route.routeColor}
+              routeId={trip?.trip.routeId || ""}
+            />
+            <Typography variant="body2" component="p" fontSize={14}>
+              {tripLoading ? <Skeleton /> : trip?.trip.route.routeLongName}
+            </Typography>
+          </Box>
+          <Typography variant="body2" display={"block"}>
+            {vehiclePosition.currentStatus &&
+              getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
+          </Typography>
+          <Box display={"flex"} gap={1} alignItems={"center"}>
+            <PlaceOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
+            <Typography fontSize={16} variant="body2" fontWeight={600}>
+              {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
+            </Typography>
+          </Box>
+          <Typography
+            fontSize={14}
+            color="textSecondary"
+            alignSelf={"flex-end"}
+          >
+            Updated {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
+          </Typography>
+        </Box>
       </CardContent>
-    </StyledCard>
+    </Card>
   );
 };

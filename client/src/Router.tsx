@@ -16,7 +16,7 @@ import { routeLoader } from "./pages/route/RouteLoader";
 import { stopLoader } from "./pages/stop/StopLoader";
 import { tripLoader } from "./pages/trip/TripLoader";
 import { searchLoader } from "./pages/search/SearchLoader";
-import { rootLoader } from "./pages/RootLoader";
+import { searchParamsDataLoader } from "./pages/SearchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn
@@ -34,8 +34,8 @@ export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route
       path={"/:viewState?"}
-      id={"root"}
-      loader={rootLoader}
+      id={"searchParams"}
+      loader={searchParamsDataLoader}
       element={<RootLayout />}
     >
       <Route

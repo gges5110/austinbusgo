@@ -45,16 +45,13 @@ class Resolver:
     def resolve_stops_and_shapes(
         self, query, info, route_id: str, direction_id: int, date: str
     ):
-        stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id, date)
+        stops = self.gtfs_service.get_stops_by_route_id(route_id, direction_id)
         stops_and_shapes = {
             "stops": sorted(
                 [stop for stop in stops], key=lambda stop: stop.stop_time.stop_sequence
             ),
             "shapes": [],
         }
-        stop_ids = [stop.stop_id for stop in stops_and_shapes["stops"]]
-        routes_list = self.gtfs_service.get_routes_at_stops(stop_ids)
-        print(list(routes_list))
 
         shape_id_set = set([stop.stop_time.trip.shape_id for stop in stops])
         for shape_id in shape_id_set:
@@ -101,9 +98,42 @@ class Resolver:
             "routes": self.gtfs_service.get_routes_by_name(search_terms),
         }
 
+    def resolve_earliest_arrival_times_on_route(
+        self, query, info, route_id: str, direction_id: int, date: str, time: str
+    ):
+        earliest_arrival_times_on_route = (
+            self.gtfs_service.get_earliest_arrival_times_on_route(
+                route_id, direction_id, date, time
+            )
+        )
+
+        trip_updates = self.gtfs_rt_service.get_real_time_trip_updates_on_route(
+            route_id, direction_id
+        )
+
+        stop_time_update_by_trip = {
+            trip_update.trip.trip_id: trip_update.stop_time_update
+            for trip_update in trip_updates
+        }
+
+        arrival_times = [
+            {
+                "scheduled_arrival_time": r.arrival_time,
+                "stop_id": r.stop_id,
+                "stop_sequence": r.stop_sequence,
+                "trip_id": r.trip_id,
+                "updated_arrival_time": self._populate_updated_arrival_time(
+                    r.stop_id, stop_time_update_by_trip.get(r.trip_id, [])
+                ),
+            }
+            for r in earliest_arrival_times_on_route
+        ]
+
+        return arrival_times
+
     def resolve_arrival_times(self, query, info, stop_id: str, date: str):
         # get trip ids from gtfs
-        stop_times = self.gtfs_service.get_stop_time_by_route_id(stop_id, date)
+        stop_times = self.gtfs_service.get_stop_times_by_stop_id(stop_id, date)
         trip_ids = [stop_time.trip.trip_id for stop_time in stop_times]
         trip_updates = self.gtfs_rt_service.get_real_time_trip_updates(trip_ids)
         trip_updates_by_trip_id = {

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Divider,
@@ -19,15 +19,31 @@ import { MenuPanel } from "../../components/MenuPanel";
 import { useTitle } from "../../hooks/UseTitle";
 import { stopLoader } from "../stop/StopLoader";
 import { tripLoader } from "./TripLoader";
-import { rootLoader } from "../RootLoader";
+import { searchParamsDataLoader } from "../SearchParamsDataLoader";
+import { useTripUpdateQuery } from "../../schemas/TripUpdate.generated";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);
   const stopData = useDataFromRouteLoader("stop", stopLoader);
   const stop = stopData?.stop;
 
-  const rootData = useDataFromRouteLoader("root", rootLoader);
-  const vehiclePosition = rootData?.vehiclePositions?.find(
+  const params = useParams();
+  const tripId = params["tripId"];
+
+  useTripUpdateQuery(
+    {
+      tripId: tripId || "",
+    },
+    {
+      refetchInterval: 15000,
+    }
+  );
+
+  const searchParamsData = useDataFromRouteLoader(
+    "searchParams",
+    searchParamsDataLoader
+  );
+  const vehiclePosition = searchParamsData?.vehiclePositions?.find(
     (v) => v.trip?.tripId === trip.tripId
   );
 

@@ -22,6 +22,8 @@ export interface VehicleIconProps {
 
   onClick?(event: React.MouseEvent<HTMLButtonElement>): void;
 
+  highlighted?: boolean;
+
   onMouseEnter?: MouseEventHandler<HTMLButtonElement> | undefined;
   onMouseLeave?: MouseEventHandler<HTMLButtonElement> | undefined;
 }
@@ -29,6 +31,7 @@ export interface VehicleIconProps {
 export const VehicleIcon: React.FunctionComponent<VehicleIconProps> = ({
   onClick,
   bearing,
+  highlighted,
   onMouseEnter,
   onMouseLeave,
 }) => {
@@ -47,7 +50,7 @@ export const VehicleIcon: React.FunctionComponent<VehicleIconProps> = ({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      size={"small"}
+      size={highlighted ? "medium" : "small"}
       sx={{
         backgroundColor: "background.default",
         "&:hover": {

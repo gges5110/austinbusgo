@@ -33,11 +33,10 @@ const vehiclePositionsQuery = (id: VehiclePositionsQueryVariables) => ({
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeId = params["routeId"] || "";
   const directionId = Number(params["directionId"]);
-
-  const routeData = await queryClient.ensureQueryData<RouteQuery>(
+  const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
     routeQuery({ routeId })
   );
-  const stopsAndShapesData = await queryClient.ensureQueryData<
+  const stopsAndShapesDataQuery = queryClient.ensureQueryData<
     StopsAndShapesQuery
   >(
     stopsAndShapesQuery({
@@ -47,7 +46,7 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
     })
   );
 
-  const vehiclePositionsData = await queryClient.ensureQueryData<
+  const vehiclePositionsDataQuery = queryClient.ensureQueryData<
     VehiclePositionsQuery
   >(
     vehiclePositionsQuery({
@@ -55,6 +54,10 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
       direction: directionId,
     })
   );
+
+  const routeData = await routeDataQuery;
+  const stopsAndShapesData = await stopsAndShapesDataQuery;
+  const vehiclePositionsData = await vehiclePositionsDataQuery;
 
   return {
     route: routeData.route,

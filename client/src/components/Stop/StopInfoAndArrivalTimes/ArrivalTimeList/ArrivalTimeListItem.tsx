@@ -38,7 +38,11 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   if (updatedArrivalTime) {
     const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
 
-    const isSame = scheduledArrivalTime.isSame(updatedArrivalTime, "minute");
+    const isSame = scheduledArrivalTime.isBetween(
+      updatedArrivalTime.subtract(2, "minute"),
+      updatedArrivalTime.add(2, "minute"),
+      "minute"
+    );
 
     const duration = scheduledArrivalTime.from(updatedArrivalTime, true);
     timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
@@ -94,8 +98,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               variant={"body2"}
               sx={{
                 textDecoration:
-                  timeDiff < 60 ||
-                  (updatedArrivalTime && timeDiffString !== "On time")
+                  updatedArrivalTime && timeDiffString !== "On time"
                     ? "line-through"
                     : undefined,
               }}
@@ -149,6 +152,16 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               <Typography color={"gray"} fontSize={14}>
                 {scheduledArrivalTime.format("A")}
               </Typography>
+            </Box>
+          ) : timeDiff == 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <Typography fontSize={20}>Now</Typography>
             </Box>
           ) : (
             <Box

@@ -23,7 +23,7 @@ import { SearchPanel } from "../components/SearchPanel/SearchPanel";
 import { useVehiclePositionsQuery } from "../schemas/VehiclePositions.generated";
 import { routeLoader } from "./route/RouteLoader";
 import { stopLoader } from "./stop/StopLoader";
-import { rootLoader } from "./RootLoader";
+import { searchParamsDataLoader } from "./SearchParamsDataLoader";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stop } from "../interfaces/interface.d";
@@ -66,7 +66,11 @@ export const RootLayout: React.FunctionComponent = () => {
   const { data: vehiclePositionsData } = useVehiclePositionsQuery(
     {
       routeId: selectedRoute?.routeId || "1",
-      direction: Number(searchParams.get("directionId")),
+      direction: Number(
+        directionId !== undefined
+          ? directionId
+          : searchParams.get("directionId")
+      ),
     },
     {
       enabled: selectedRoute !== undefined,
@@ -77,10 +81,6 @@ export const RootLayout: React.FunctionComponent = () => {
             closeSnackbar(vehiclePositionsLoadingSnackbarKey);
             setVehiclePositionsLoadingSnackbarKey(undefined);
           }
-
-          enqueueSnackbar("Vehicle Position Updated", {
-            variant: "success",
-          });
         }
       },
     }
@@ -107,17 +107,24 @@ export const RootLayout: React.FunctionComponent = () => {
   const stop = stopData?.stop;
 
   const routeData = useDataFromRouteLoader("route", routeLoader);
-  const rootData = useDataFromRouteLoader("root", rootLoader);
+  const searchParamsData = useDataFromRouteLoader(
+    "searchParams",
+    searchParamsDataLoader
+  );
 
-  const route = rootData?.route || routeData?.route;
+  const route = searchParamsData?.route || routeData?.route;
   const stops =
-    rootData?.stops || routeData?.stops || (stop !== undefined ? [stop] : []);
-  const routeShapes = rootData?.shapes || routeData?.shapes || [];
+    searchParamsData?.stops ||
+    routeData?.stops ||
+    (stop !== undefined ? [stop] : []);
+  const routeShapes = searchParamsData?.shapes || routeData?.shapes || [];
 
   setSelectedRoute(route);
 
   const vehiclePositions =
-    rootData?.vehiclePositions || vehiclePositionsData?.vehiclePositions || [];
+    searchParamsData?.vehiclePositions ||
+    vehiclePositionsData?.vehiclePositions ||
+    [];
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
       <Paper
@@ -187,4 +194,13 @@ export const getDate = () => {
     ("0" + (d.getMonth() + 1)).slice(-2),
     ("0" + d.getDate()).slice(-2),
   ].join("");
+};
+
+export const getTime = () => {
+  const d = new Date();
+  return [
+    ("0" + d.getHours()).slice(-2),
+    ("0" + d.getMinutes()).slice(-2),
+    "00",
+  ].join(":");
 };

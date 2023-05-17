@@ -18,6 +18,15 @@ export type ArrivalTime = {
   updatedArrivalTime?: Maybe<Scalars["String"]>;
 };
 
+export type ArrivalTimeAtStop = {
+  __typename?: "ArrivalTimeAtStop";
+  scheduledArrivalTime: Scalars["String"];
+  /** Identifies a stop, station, or station entrance. */
+  stopId: Scalars["String"];
+  stopSequence: Scalars["Int"];
+  updatedArrivalTime?: Maybe<Scalars["String"]>;
+};
+
 export enum GeometryType {
   GeometryCollection = "GeometryCollection",
   LineString = "LineString",
@@ -58,6 +67,7 @@ export type Query = {
   __typename?: "Query";
   arrivalTimes: Array<ArrivalTime>;
   distinctTrips: Array<Trip>;
+  earliestArrivalTimesOnRoute: Array<ArrivalTimeAtStop>;
   nearByStops: Array<Stop>;
   realTimeVehiclePositions: Array<Maybe<VehiclePosition>>;
   route: Route;
@@ -83,6 +93,13 @@ export type QueryArrivalTimesArgs = {
 export type QueryDistinctTripsArgs = {
   date: Scalars["String"];
   routeId: Scalars["String"];
+};
+
+export type QueryEarliestArrivalTimesOnRouteArgs = {
+  date: Scalars["String"];
+  directionId: Scalars["Int"];
+  routeId: Scalars["String"];
+  time: Scalars["String"];
 };
 
 export type QueryNearByStopsArgs = {

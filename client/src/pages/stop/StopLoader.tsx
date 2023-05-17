@@ -13,7 +13,7 @@ const stopQuery = (id: StopQueryVariables) => ({
 export const stopLoader = async ({ params }: LoaderFunctionArgs) => {
   const stopId = params["stopId"];
 
-  return await queryClient.ensureQueryData<StopQuery>(
+  return queryClient.ensureQueryData<StopQuery>(
     stopQuery({
       stopId: stopId || "0",
     })

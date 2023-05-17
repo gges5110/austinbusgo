@@ -10,6 +10,14 @@ type ArrivalTime {
     updatedArrivalTime: String
 }
 
+type ArrivalTimeAtStop {
+    scheduledArrivalTime: String!
+    "Identifies a stop, station, or station entrance."
+    stopId: String!
+    stopSequence: Int!
+    updatedArrivalTime: String
+}
+
 "LineString Scalar Description"
 type LineString {
     coordinates: [[Float!]!]!
@@ -34,23 +42,24 @@ type Position {
 }
 
 type Query {
-    arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]
-    distinctTrips(date: String!, routeId: String!): [Trip!]
+    arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]!
+    distinctTrips(date: String!, routeId: String!): [Trip!]!
+    earliestArrivalTimesOnRoute(date: String!, directionId: Int!, routeId: String!, time: String!): [ArrivalTimeAtStop!]!
     nearByStops(lat: Float!, lon: Float!): [Stop!]!
-    realTimeVehiclePositions: [VehiclePosition]
+    realTimeVehiclePositions: [VehiclePosition]!
     route(routeId: String!): Route!
     routeShapes(tripId: String!): LineString!
-    routes: [Route!]
+    routes: [Route!]!
     search(searchTerm: String!): Search!
     stop(stopId: String!): Stop!
-    stopTimes(tripId: String!): [StopTimes!]
+    stopTimes(tripId: String!): [StopTimes!]!
     stopsAndShapes(date: String!, directionId: Int!, routeId: String!): StopsAndShapes!
-    stopsByName(stopName: String!): [Stop!]
+    stopsByName(stopName: String!): [Stop!]!
     trip(tripId: String!): Trip!
     tripIdsForRoute(date: String!, routeId: String!): TripIdsForRoute!
-    tripUpdate(tripId: String!): TripUpdate!
-    tripUpdates(filter: TripUpdatesFilter): [TripUpdate!]
-    vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]
+    tripUpdate(tripId: String!): TripUpdate
+    tripUpdates(filter: TripUpdatesFilter): [TripUpdate!]!
+    vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]!
 }
 
 type Route {

@@ -38,14 +38,6 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
           stopLoc?: Types.Maybe<
             { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
           >;
-          routes?: Types.Maybe<
-            Array<
-              { __typename?: "Route" } & Pick<
-                Types.Route,
-                "routeId" | "routeColor"
-              >
-            >
-          >;
         }
     >;
     shapes: Array<
@@ -73,10 +65,6 @@ export const StopsAndShapesDocument = `
       stopLoc {
         type
         coordinates
-      }
-      routes {
-        routeId
-        routeColor
       }
     }
     shapes {

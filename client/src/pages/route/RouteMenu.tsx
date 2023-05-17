@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { DirectionToggle } from "../../components/SearchPanel/DirectionToggle/DirectionToggle";
-import { StopsTimeline } from "../../components/Route/StopsTimeline/StopsTimeline";
+import { RouteStopsTimeline } from "../../components/Route/RouteStopsTimeline/RouteStopsTimeline";
 import * as React from "react";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { useTitle } from "../../hooks/UseTitle";
@@ -48,6 +48,7 @@ export const RouteMenu = () => {
           display={"flex"}
           gap={1}
           justifyContent={"center"}
+          alignItems={"center"}
           sx={{ py: 1 }}
         >
           <RouteIcon />
@@ -68,7 +69,7 @@ export const RouteMenu = () => {
         </Box>
       </Box>
 
-      <StopsTimeline
+      <RouteStopsTimeline
         route={route}
         stops={stops}
         vehiclePositions={vehiclePositions || []}

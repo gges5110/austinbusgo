@@ -5,6 +5,8 @@ import { Marker } from "react-map-gl";
 import { VehiclePosition } from "../../../interfaces/interface.d";
 import { VehicleIcon } from "./VehicleIcon";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
+import { useAtomValue } from "jotai";
+import { hoveringVehiclePositionAtom } from "../../../Atoms";
 
 interface VehicleMarkerProps {
   readonly vehiclePosition: VehiclePosition;
@@ -15,6 +17,9 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
   vehiclePosition,
   onClick,
 }) => {
+  const hoveringVehiclePosition = useAtomValue(hoveringVehiclePositionAtom);
+  const isHighlighted =
+    hoveringVehiclePosition?.vehicle?.id === vehiclePosition.vehicle?.id;
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const handleOnClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
@@ -34,7 +39,8 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
     setAnchorEl(null);
   };
 
-  const open = Boolean(anchorEl);
+  // TODO: fix anchorEl on hovering
+  const open = Boolean(anchorEl) || isHighlighted;
   const { position } = vehiclePosition;
   return (
     <React.Fragment>
@@ -54,6 +60,7 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
             onClick={handleOnClick}
             onMouseEnter={handlePopoverOpen}
             onMouseLeave={handlePopoverClose}
+            highlighted={isHighlighted}
           />
         </Badge>
       </Marker>

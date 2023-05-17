@@ -20,6 +20,11 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { useUpdateViewState } from "../../../hooks/Map/UseViewStateSync";
 import { TripUpdateQuery } from "../../../schemas/TripUpdate.generated";
+import { useSetAtom } from "jotai";
+import {
+  hoveringVehiclePositionAtom,
+  mapsFlyToCoordinateAtom,
+} from "../../../Atoms";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
@@ -39,6 +44,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   tripUpdate,
 }) => {
   const { viewStatePathname } = useViewStatePathname();
+  const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
+  const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
   const [searchParams] = useSearchParams();
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -61,7 +68,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
       ?.stopSequence || 0;
   const vehicleStopId = vehiclePosition?.stopId;
   const vehicleStopSequence = vehiclePosition?.currentStopSequence || 0;
-  console.log(vehiclePosition);
   const theme = useTheme();
   // TODO: fix timeline rail styling of border radius
   return (
@@ -75,10 +81,11 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
           const scheduledArrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
           let updatedArrivalTime;
           if (stopTimeUpdateIndex !== undefined && stopTimeUpdateIndex !== -1) {
-            updatedArrivalTime = dayjs.unix(
-              tripUpdate?.stopTimeUpdate[stopTimeUpdateIndex]?.arrival?.time ||
-                0
-            );
+            const time =
+              tripUpdate?.stopTimeUpdate[stopTimeUpdateIndex]?.arrival?.time;
+            if (time) {
+              updatedArrivalTime = dayjs.unix(time);
+            }
           }
 
           const isSelectedStop = stopTime.stopId === stop?.stopId;
@@ -90,8 +97,9 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
           if (updatedArrivalTime) {
             const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
 
-            const isSame = scheduledArrivalTime.isSame(
-              updatedArrivalTime,
+            const isSame = scheduledArrivalTime.isBetween(
+              updatedArrivalTime.subtract(2, "minute"),
+              updatedArrivalTime.add(2, "minute"),
               "minute"
             );
 
@@ -169,6 +177,23 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   }}
                 >
                   <IconButton
+                    onMouseEnter={() => {
+                      setHoveringVehiclePosition(vehiclePosition);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveringVehiclePosition(undefined);
+                    }}
+                    onClick={() => {
+                      if (
+                        vehiclePosition?.position?.latitude &&
+                        vehiclePosition?.position?.longitude
+                      ) {
+                        setMapsFlyToCoordinate([
+                          vehiclePosition?.position?.longitude,
+                          vehiclePosition?.position?.latitude,
+                        ]);
+                      }
+                    }}
                     component={RouterLink}
                     to={getViewStateURL({
                       latitude: vehiclePosition?.position?.latitude,

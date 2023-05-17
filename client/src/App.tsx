@@ -18,7 +18,7 @@ export const App: React.FunctionComponent = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={appTheme}>
-        <CssBaseline />
+        <CssBaseline enableColorScheme={true} />
         <SnackbarProvider
           maxSnack={3}
           anchorOrigin={{

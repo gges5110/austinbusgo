@@ -26,6 +26,16 @@ class TripIdsForRoute(graphene.ObjectType):
     tripIds = graphene.List(graphene.NonNull(graphene.String), required=True)
 
 
+class ArrivalTimeAtStop(graphene.ObjectType):
+    stop_id = graphene.String(
+        description="Identifies a stop, station, or station entrance.", required=True
+    )
+    stop_sequence = graphene.Int(required=True)
+    trip_id = graphene.String()
+    scheduled_arrival_time = graphene.String(required=True)
+    updated_arrival_time = graphene.String()
+
+
 class TripUpdatesFilter(graphene.InputObjectType):
     trip_id = graphene.String()
     route_id = graphene.String()
@@ -107,6 +117,15 @@ class Query(graphene.ObjectType):
         graphene.NonNull(graphene.List(graphene.NonNull(StopTimes))),
         trip_id=graphene.String(required=True),
         resolver=resolver.resolve_stop_times,
+    )
+
+    earliest_arrival_times_on_route = graphene.Field(
+        graphene.NonNull(graphene.List(graphene.NonNull(ArrivalTimeAtStop))),
+        route_id=graphene.String(required=True),
+        direction_id=graphene.Int(required=True),
+        date=graphene.String(required=True),
+        time=graphene.String(required=True),
+        resolver=resolver.resolve_earliest_arrival_times_on_route,
     )
 
     trip = graphene.Field(

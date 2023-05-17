@@ -52,17 +52,6 @@ class GTFSService:
             ),
         )
 
-    @staticmethod
-    def get_routes_at_stops(stop_ids: List[str]) -> List[List[Routes]]:
-        return (
-            Routes.select(Routes)
-            .distinct(Routes.route_id)
-            .join(Trips, on=(Trips.route_id == Routes.route_id))
-            .join(StopTimes, on=(StopTimes.trip_id == Trips.trip_id))
-            .join(Stops, on=(Stops.stop_id == StopTimes.stop_id))
-            .where(Stops.stop_id.in_(stop_ids))
-        )
-
     # Stops
     @staticmethod
     def get_stop(stop_id: str) -> Stops:
@@ -98,15 +87,12 @@ class GTFSService:
         )
 
     @staticmethod
-    def get_stops_by_route_id(
-        route_id: str, direction_id: int, date: str
-    ) -> List[Stops]:
+    def get_stops_by_route_id(route_id: str, direction_id: int) -> List[Stops]:
         return (
             Stops.select(Stops, StopTimes, Trips)
             .distinct(Stops.stop_id)
             .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id).alias("stop_time"))
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
-            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
             .where((Trips.route_id == route_id) & (Trips.direction_id == direction_id))
         )
 
@@ -188,9 +174,10 @@ class GTFSService:
         )
 
     @staticmethod
-    def get_stop_time_by_route_id(
+    def get_stop_times_by_stop_id(
         stop_id: str, date: str, page_number: int = 1
     ) -> List[StopTimes]:
+        # TODO: add index for CalendarDates
         return (
             StopTimes.select(StopTimes, Stops, Trips, Routes)
             .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
@@ -206,4 +193,47 @@ class GTFSService:
                 )
             )
             .order_by(StopTimes.arrival_time)
+        )
+
+    @staticmethod
+    def get_earliest_arrival_times_on_route(
+        route_id: str, direction_id: int, date: str, time: str
+    ):
+        subquery = (
+            StopTimes.select(
+                StopTimes.stop_id,
+                StopTimes.stop_sequence,
+                peewee.fn.MIN(StopTimes.arrival_time).alias("arrival_time"),
+            )
+            .join(Trips, on=(Trips.trip_id == StopTimes.trip_id))
+            .join(Routes, on=(Routes.route_id == Trips.route_id))
+            .join(CalendarDates, on=(Trips.service_id == CalendarDates.service_id))
+            .where(
+                (StopTimes.arrival_time >= time)
+                & (CalendarDates.date == date)
+                & (Routes.route_id == route_id)
+                & (Trips.direction_id == direction_id)
+            )
+            .group_by(StopTimes.stop_id, StopTimes.stop_sequence)
+            .alias("subquery")
+        )
+
+        return (
+            StopTimes.select(
+                StopTimes.arrival_time,
+                StopTimes.stop_id,
+                StopTimes.stop_sequence,
+                StopTimes.trip_id,
+            )
+            .join(Trips, on=(Trips.trip_id == StopTimes.trip_id))
+            .join(
+                subquery,
+                on=(
+                    (StopTimes.arrival_time == subquery.c.arrival_time)
+                    & (StopTimes.stop_id == subquery.c.stop_id)
+                ),
+            )
+            .join(CalendarDates, on=(Trips.service_id == CalendarDates.service_id))
+            .where((CalendarDates.date == date))
+            .order_by(StopTimes.stop_sequence)
         )

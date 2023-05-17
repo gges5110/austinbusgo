@@ -2,6 +2,8 @@ import { LineString, Stop } from "../../interfaces/interface.d";
 import { useMap } from "react-map-gl";
 import { useEffect } from "react";
 import { vehicleZoomLevel, ViewState } from "../../components/Map/Map";
+import { mapsFlyToCoordinateAtom } from "../../Atoms";
+import { useAtomValue } from "jotai";
 
 export const useMapMotion = (
   viewState: ViewState,
@@ -9,6 +11,15 @@ export const useMapMotion = (
   routeShapes: LineString[]
 ) => {
   const { mapId: map } = useMap();
+  const mapsFlyToCoordinate = useAtomValue(mapsFlyToCoordinateAtom);
+  useEffect(() => {
+    if (map && mapsFlyToCoordinate) {
+      map.flyTo({
+        center: mapsFlyToCoordinate,
+      });
+    }
+  }, [map, mapsFlyToCoordinate]);
+
   const flyToStop = (stop: Stop) => {
     if (map && stop.stopLoc?.coordinates) {
       map.flyTo({

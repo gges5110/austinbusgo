@@ -75,6 +75,18 @@ class GTFSRTService:
             if trip_update_list.trip.trip_id in trip_ids
         ]
 
+    def get_real_time_trip_updates_on_route(
+        self, route_id: str, direction_id: int
+    ) -> List[TripUpdate]:
+        trip_updates = self.gtfs_rt_client.load_trip_updates()
+        return [
+            trip_update
+            for trip_update in trip_updates
+            if trip_update.trip.route_id == route_id
+            and GTFSService.get_trip_by_id(trip_update.trip.trip_id).direction_id
+            == direction_id
+        ]
+
     @staticmethod
     def get_arrival_time_by_stop_id(
         stop_time_updates: List[TripUpdate.StopTimeUpdate], stop_id: str
