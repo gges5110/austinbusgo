@@ -11,6 +11,7 @@ import { useVehiclePositionsQuery } from "../schemas/VehiclePositions.generated"
 import { useQueryClient } from "@tanstack/react-query";
 import { stopLoader } from "../pages/stop/StopLoader";
 import { Stop } from "../interfaces/interface.d";
+import { isResponse } from "../pages/search/SearchResultsMenu";
 
 export const useDataFromLoaders = () => {
   const autoPolling = useAtomValue(isAutoPollingAtom);
@@ -76,7 +77,10 @@ export const useDataFromLoaders = () => {
   const stopData = useDataFromRouteLoader("stop", stopLoader);
   const stop = stopData?.stop;
   const routeStops = searchParamsData?.stops || routeData?.stops || [];
-  const searchStops = searchData?.search.stops || [];
+  const searchStops =
+    searchData !== undefined && !isResponse(searchData)
+      ? searchData?.search.stops
+      : [];
   const stopstop = stop !== undefined ? [stop] : [];
   const stops = [...routeStops, ...searchStops, ...stopstop] as Stop[];
   const routeShapes = searchParamsData?.shapes || routeData?.shapes || [];

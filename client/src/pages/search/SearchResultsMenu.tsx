@@ -1,6 +1,5 @@
 import { MenuPanel } from "../../components/MenuPanel";
 import * as React from "react";
-import { useEffect } from "react";
 import { useDataFromLoader } from "../../Router";
 import {
   Box,
@@ -12,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
@@ -22,39 +21,65 @@ import { useSetAtom } from "jotai";
 import { hoveringStopAtom } from "../../Atoms";
 import { Stop } from "../../interfaces/interface.d";
 import { useTitle } from "../../hooks/UseTitle";
+import { SearchQuery } from "../../schemas/Search.generated";
+import { useEffect } from "react";
+
+export const isResponse = (data: Response | SearchQuery): data is Response => {
+  return data !== undefined && "ok" in data;
+};
 
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
   const { searchTerm } = useParams();
   const { viewStatePathname } = useViewStatePathname();
-  const navigate = useNavigate();
+
+  const { addToRecentSearches } = useRecentSearches();
+  useTitle(`${searchTerm} - Austin Bus Go`);
+
+  if (isResponse(searchData)) {
+    return null;
+  }
+
   const length =
     searchData.search.stops.length + searchData.search.routes.length;
   const noResults = length === 0;
   useEffect(() => {
-    if (length === 1) {
-      if (searchData.search.stops.length) {
-        navigate(
-          `${viewStatePathname}/stop/${searchData.search.stops[0].stopId}`,
-          {
-            replace: true,
-          }
-        );
-      } else if (searchData.search.routes.length) {
-        navigate(
-          `${viewStatePathname}/route/${searchData.search.routes[0].routeId}/direction/0`,
-          { replace: true }
-        );
-      }
+    if (searchTerm && !noResults) {
+      addToRecentSearches({ value: searchTerm });
     }
-  }, []);
-  const { addToRecentSearches } = useRecentSearches();
-  useTitle(`${searchTerm} - Austin Bus Go`);
+  }, [searchTerm, noResults]);
 
   const setHoveringStop = useSetAtom(hoveringStopAtom);
+
+  const onFavoritesPage = location.pathname.includes("Favorites");
   return (
     <MenuPanel>
-      {!noResults ? (
+      {noResults &&
+        (!onFavoritesPage ? (
+          <Container
+            sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
+          >
+            <Typography>
+              {"Austin Bus Go can't find "}
+              {searchTerm}
+            </Typography>
+            <Typography color={"gray"} fontSize={14}>
+              Make sure your search is spelled correctly. Try adding a route
+              number, street name, or stop code.
+            </Typography>
+          </Container>
+        ) : (
+          <Container
+            sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
+          >
+            <Typography>Start adding favorites!</Typography>
+            <Typography color={"gray"} fontSize={14}>
+              You can add route or stops to favorites.
+            </Typography>
+          </Container>
+        ))}
+
+      {!noResults && (
         <List>
           {searchData.search.stops.map((stop) => {
             return (
@@ -129,19 +154,6 @@ export const SearchResultsMenu = () => {
             );
           })}
         </List>
-      ) : (
-        <Container
-          sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
-        >
-          <Typography>
-            {"Austin Bus Go can&apos;t find "}
-            {searchTerm}
-          </Typography>
-          <Typography color={"gray"} fontSize={14}>
-            Make sure your search is spelled correctly. Try adding a route
-            number, street name, or stop code.
-          </Typography>
-        </Container>
       )}
     </MenuPanel>
   );

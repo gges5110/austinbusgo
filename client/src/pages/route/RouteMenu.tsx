@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { DirectionToggle } from "../../components/SearchPanel/DirectionToggle/DirectionToggle";
 import { RouteStopsTimeline } from "../../components/Route/RouteStopsTimeline/RouteStopsTimeline";
 import * as React from "react";
@@ -11,6 +11,8 @@ import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
 import { Trip } from "../../interfaces/interface.d";
 import { MenuPanel } from "../../components/MenuPanel";
 import { routeLoader } from "./RouteLoader";
+import { AddToFavorites } from "../../components/AddToFavorites/AddToFavorites";
+import { ShareButton } from "../../components/ShareButton/ShareButton";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
@@ -33,7 +35,6 @@ export const RouteMenu = () => {
       );
     }
   };
-
   return (
     <MenuPanel>
       <Box
@@ -68,6 +69,11 @@ export const RouteMenu = () => {
           />
         </Box>
       </Box>
+      <Box display={"flex"} px={"22px"} py={"10px"}>
+        <AddToFavorites value={route} />
+        <ShareButton />
+      </Box>
+      <Divider />
 
       <RouteStopsTimeline
         route={route}

@@ -42,7 +42,7 @@ export type TripQuery = { __typename?: "Query" } & {
   > & {
       route: { __typename?: "Route" } & Pick<
         Types.Route,
-        "routeLongName" | "routeColor"
+        "routeId" | "routeLongName" | "routeColor"
       >;
     };
 };
@@ -61,6 +61,7 @@ export const TripDocument = `
     wheelchairAccessible
     bikesAllowed
     route {
+      routeId
       routeLongName
       routeColor
     }

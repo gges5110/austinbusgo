@@ -66,7 +66,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
     zoom: zoom || 11.5,
   });
 
-  useMapMotion(viewState, stop, routeShapes);
+  useMapMotion(viewState, stop, stops, routeShapes);
   const { userLocationOnClick } = useUserLocation(viewState);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 

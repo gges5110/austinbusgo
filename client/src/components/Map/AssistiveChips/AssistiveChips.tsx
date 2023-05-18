@@ -7,6 +7,7 @@ import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";
 import NearMeIcon from "@mui/icons-material/NearMe";
 import { LoadingButton } from "@mui/lab";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 
 interface AssistiveChipsProps {}
 
@@ -42,7 +43,7 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
           }}
           onClick={fetchNearByStops}
         >
-          <NearMeIcon sx={{ fontSize: 18 }} />
+          <NearMeIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
             Search nearby stops
           </Typography>
@@ -64,9 +65,31 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
             px: "12px",
           }}
         >
-          <RouteIcon sx={{ fontSize: 18 }} />
+          <RouteIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
             Search all routes
+          </Typography>
+        </Button>
+      </Paper>
+      <Paper
+        sx={{
+          backgroundColor: "background.default",
+          borderRadius: "32px",
+        }}
+      >
+        <Button
+          component={RouterLink}
+          to={`${viewStatePathname}/search/Favorites`}
+          sx={{
+            whiteSpace: "nowrap",
+            color: "text.primary",
+            textTransform: "none",
+            px: "12px",
+          }}
+        >
+          <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
+          <Typography fontSize={14} fontWeight={500}>
+            Show favorites
           </Typography>
         </Button>
       </Paper>

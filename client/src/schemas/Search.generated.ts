@@ -30,6 +30,9 @@ export type SearchQuery = { __typename?: "Query" } & {
   search: { __typename?: "Search" } & {
     stops: Array<
       { __typename?: "Stop" } & Pick<Types.Stop, "stopId" | "stopName"> & {
+          stopLoc?: Types.Maybe<
+            { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+          >;
           routes?: Types.Maybe<
             Array<
               { __typename?: "Route" } & Pick<
@@ -55,6 +58,10 @@ export const SearchDocument = `
     stops {
       stopId
       stopName
+      stopLoc {
+        type
+        coordinates
+      }
       routes {
         routeColor
         routeId

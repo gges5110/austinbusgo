@@ -14,6 +14,7 @@ export const TRIP_QUERY = gql`
       wheelchairAccessible
       bikesAllowed
       route {
+        routeId
         routeLongName
         routeColor
       }

@@ -11,6 +11,10 @@ import {
   useNearByStopsQuery,
 } from "../../schemas/NearByStops.generated";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { redirect } from "react-router-dom";
+import { FavoritesType } from "../../Atoms";
+import { isRoute, isStop } from "../../components/SearchPanel/SearchPanel";
+import { Route, Stop } from "../../interfaces/interface.d";
 
 const searchQuery = (id: SearchQueryVariables) => ({
   queryKey: useSearchQuery.getKey(id),
@@ -53,11 +57,56 @@ export const searchLoader = async ({ params }: LoaderFunctionArgs) => {
         routes: [],
       },
     };
+  } else if (
+    searchTerm.toLocaleLowerCase() === "Favorites".toLocaleLowerCase()
+  ) {
+    const favoritesRawString = localStorage.getItem("favorites");
+    if (!favoritesRawString) {
+      return {
+        search: {
+          stops: [],
+          routes: [],
+        },
+      };
+    }
+
+    const favorites = JSON.parse(favoritesRawString) as FavoritesType[];
+    const favoriteStops = favorites.filter((favorite) =>
+      isStop(favorite)
+    ) as Stop[];
+    const favoriteRoutes = favorites.filter((favorite) =>
+      isRoute(favorite)
+    ) as Route[];
+
+    return {
+      search: {
+        stops: favoriteStops,
+        routes: favoriteRoutes,
+      },
+    };
   }
 
-  return queryClient.ensureQueryData<SearchQuery>(
+  const searchData = await queryClient.ensureQueryData<SearchQuery>(
     searchQuery({
       searchTerm: searchTerm || "",
     })
   );
+
+  const length =
+    searchData.search.stops.length + searchData.search.routes.length;
+  if (length === 1) {
+    const { viewStatePathname } = useViewStatePathname();
+
+    if (searchData.search.stops.length) {
+      return redirect(
+        `${viewStatePathname}/stop/${searchData.search.stops[0].stopId}`
+      );
+    } else if (searchData.search.routes.length) {
+      return redirect(
+        `${viewStatePathname}/route/${searchData.search.routes[0].routeId}/direction/0`
+      );
+    }
+  }
+
+  return searchData;
 };

@@ -1,10 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
+  Button,
   Divider,
   IconButton,
-  Tab,
-  Tabs,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -21,6 +20,9 @@ import { stopLoader } from "../stop/StopLoader";
 import { tripLoader } from "./TripLoader";
 import { searchParamsDataLoader } from "../SearchParamsDataLoader";
 import { useTripUpdateQuery } from "../../schemas/TripUpdate.generated";
+import { RouteOutlined } from "@mui/icons-material";
+import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
+import { AddToFavorites } from "../../components/AddToFavorites/AddToFavorites";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);
@@ -47,15 +49,10 @@ export const TripMenu = () => {
     (v) => v.trip?.tripId === trip.tripId
   );
 
+  const { viewStatePathname } = useViewStatePathname();
   const navigate = useNavigate();
   const onBack = () => {
     navigate(-1);
-  };
-
-  const [value, setValue] = React.useState(0);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
   };
 
   const tripName = trip.tripHeadsign?.split("-")[
@@ -99,34 +96,31 @@ export const TripMenu = () => {
             <Typography
               sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
             >
-              {"from "}
-              {stop?.stopName}
+              from {stop?.stopName}
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ width: "100%", display: "none" }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={value}
-              onChange={handleChange}
-              aria-label={"basic tabs example"}
-            >
-              <Tab label={"Item One"} />
-              <Tab label={"Item Two"} />
-              <Tab label={"Item Three"} />
-            </Tabs>
-          </Box>
-          <TabPanel value={value} index={0}>
-            Item One
-          </TabPanel>
-          <TabPanel value={value} index={1}>
-            Item Two
-          </TabPanel>
-          <TabPanel value={value} index={2}>
-            Item Three
-          </TabPanel>
-        </Box>
 
+        <Divider />
+        <Box display={"flex"} px={"22px"} py={"10px"}>
+          <Button
+            sx={{ textTransform: "none" }}
+            component={RouterLink}
+            to={`${viewStatePathname}/route/${trip.routeId}/direction/${trip.directionId}`}
+          >
+            <Box
+              display={"flex"}
+              flexDirection={"column"}
+              alignItems={"center"}
+            >
+              <RouteOutlined />
+              <Typography sx={{ textAlign: "center", fontSize: "14px" }}>
+                Show route
+              </Typography>
+            </Box>
+          </Button>
+          <AddToFavorites value={trip.route} />
+        </Box>
         <Divider />
         <TripTimeline
           vehiclePosition={vehiclePosition}
@@ -140,29 +134,3 @@ export const TripMenu = () => {
     </MenuPanel>
   );
 };
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role={"tabpanel"}
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}

@@ -6,6 +6,10 @@ export const SEARCH_QUERY = gql`
       stops {
         stopId
         stopName
+        stopLoc {
+          type
+          coordinates
+        }
         routes {
           routeColor
           routeId

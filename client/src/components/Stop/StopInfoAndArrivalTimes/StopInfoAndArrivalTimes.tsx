@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect } from "react";
 import { useArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
 import { useAtom } from "jotai";
@@ -10,6 +10,8 @@ import { RoutesSelector } from "./RoutesSelector/RoutesSelector";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { getDate } from "../../../dateUtils";
+import { AddToFavorites } from "../../AddToFavorites/AddToFavorites";
+import { ShareButton } from "../../ShareButton/ShareButton";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];
@@ -122,6 +124,11 @@ export const StopInfoAndArrivalTimes: React.FC<StopInfoAndArrivalTimesProps> = (
               Stop ID: {stop.stopId}
             </Typography>
           </Box>
+        </Box>
+        <Divider />
+        <Box display={"flex"} px={"22px"} py={"10px"}>
+          <AddToFavorites value={stop} />
+          <ShareButton />
         </Box>
 
         {!isLoading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (

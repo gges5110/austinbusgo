@@ -102,9 +102,9 @@ class GTFSService:
         return (
             Trips.select(Trips)
             .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .distinct(Trips.direction_id, Trips.trip_short_name)
+            .distinct(Trips.direction_id, Trips.trip_headsign)
             .where((Trips.route_id == route_id) & (CalendarDates.date == date))
-            .order_by(Trips.direction_id, Trips.trip_short_name)
+            .order_by(Trips.direction_id, Trips.trip_headsign)
         )
 
     @staticmethod

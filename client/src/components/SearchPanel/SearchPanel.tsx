@@ -95,7 +95,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           value: searchTerm,
         },
       });
-      addToRecentSearches({ value: searchTerm });
       setSearchPanelOpen(false);
     } else if (stop) {
       const input = getStopOptionLabel(stop);
@@ -130,14 +129,14 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       if (isRoute(optionValue)) {
         if (route?.routeId !== optionValue.routeId) {
           setRoute(optionValue);
+          addToRecentSearches(optionValue);
         }
       } else if (isStop(optionValue)) {
         setStop(optionValue);
+        addToRecentSearches(optionValue);
       } else if (isSearchTerm(optionValue)) {
         goToSearchPage(optionValue);
       }
-
-      addToRecentSearches(optionValue);
     }
   };
   const ref = useRef<HTMLInputElement | null>(null);
@@ -213,9 +212,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   const goToSearchPage = (searchTerm?: SearchTerm) => {
     ref?.current?.blur?.();
     const value = searchTerm?.value || inputString.trim();
-    addToRecentSearches({
-      value,
-    });
     navigate(`${viewStatePathname}/search/${encodeURIComponent(value)}`);
   };
 

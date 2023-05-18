@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { Stop, VehiclePosition } from "./interfaces/interface.d";
+import { Route, Stop, VehiclePosition } from "./interfaces/interface.d";
 import { atomWithStorage } from "jotai/utils";
 import { RecentSearch } from "./hooks/UseRecentSearches";
 import { Coordinate } from "./components/Map/Map";
@@ -25,3 +25,9 @@ export const hoveringVehiclePositionAtom = atom<VehiclePosition | undefined>(
 );
 
 export const mapsFlyToCoordinateAtom = atom<Coordinate | undefined>(undefined);
+export type FavoritesType = Stop | Route;
+
+export const favoritesAtom = atomWithStorage<Array<FavoritesType>>(
+  "favorites",
+  []
+);
