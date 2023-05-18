@@ -22,8 +22,6 @@ import { useMapMotion } from "../../hooks/Map/UseMapMotion";
 import { useRouteShape } from "../../hooks/Map/UseRouteShape";
 import { useViewStateSync } from "../../hooks/Map/UseViewStateSync";
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
-import { useAtomValue } from "jotai";
-import { nearByStopsAtom } from "../../Atoms";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {
@@ -70,7 +68,6 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
   useMapMotion(viewState, stop, routeShapes);
   const { userLocationOnClick } = useUserLocation(viewState);
-  const nearByStops = useAtomValue(nearByStopsAtom);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
@@ -94,7 +91,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
   return (
     <>
       <ReactMapGL
-        id="mapId"
+        id={"mapId"}
         {...viewState}
         mapStyle={
           theme.palette.mode === "dark"
@@ -105,8 +102,8 @@ export const Map: React.FunctionComponent<MapProps> = ({
         onMoveEnd={onMoveEnd}
       >
         <Fab
-          color="primary"
-          aria-label="add"
+          color={"primary"}
+          aria-label={"add"}
           sx={{
             position: "absolute",
             bottom: theme.spacing(4),
@@ -117,16 +114,11 @@ export const Map: React.FunctionComponent<MapProps> = ({
           <MyLocationIcon />
         </Fab>
         <Popper open={true}>
-          <AssistiveChips stops={stops} viewState={viewState} />
+          <AssistiveChips />
         </Popper>
 
         <StopMarkers
           stops={stops}
-          setSelectedStop={setSelectedStop}
-          selectedStop={stop}
-        />
-        <StopMarkers
-          stops={nearByStops}
           setSelectedStop={setSelectedStop}
           selectedStop={stop}
         />
@@ -137,8 +129,8 @@ export const Map: React.FunctionComponent<MapProps> = ({
 
         <Source id={"route-shapes"} type={"geojson"} data={routeShapeGeoJSON}>
           <Layer
-            id="point"
-            type="line"
+            id={"point"}
+            type={"line"}
             paint={{
               "line-color": `#${route?.routeColor || "a5a5a5"}`,
               "line-width": 5,

@@ -10,12 +10,12 @@ import {
 } from "../../schemas/Route.generated";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "../../QueryClient";
-import { getDate } from "../RootLayout";
 import {
   useVehiclePositionsQuery,
   VehiclePositionsQuery,
   VehiclePositionsQueryVariables,
 } from "../../schemas/VehiclePositions.generated";
+import { getDate } from "../../dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),

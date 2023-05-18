@@ -14,7 +14,7 @@ export const ColorModeToggle = () => {
       onClick={() => {
         setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
       }}
-      color="inherit"
+      color={"inherit"}
     >
       {theme.palette.mode === "dark" ? (
         <Brightness7Icon />

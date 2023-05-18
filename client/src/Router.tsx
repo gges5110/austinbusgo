@@ -41,6 +41,7 @@ export const router = createBrowserRouter(
       <Route
         path={"/:viewState/search/:searchTerm"}
         element={<SearchResultsMenu />}
+        id={"search"}
         loader={searchLoader}
       ></Route>
       <Route path={"/:viewState/stop/:stopId"} id={"stop"} loader={stopLoader}>

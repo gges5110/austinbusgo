@@ -75,10 +75,10 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
       <AppBar sx={{ position: "relative", minWidth: "600px" }}>
         <Toolbar>
           <IconButton
-            edge="start"
-            color="inherit"
+            edge={"start"}
+            color={"inherit"}
             onClick={handleClose}
-            aria-label="close"
+            aria-label={"close"}
           >
             <CloseIcon />
           </IconButton>
@@ -90,14 +90,17 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemIcon>
             <AutorenewIcon />
           </ListItemIcon>
-          <ListItemText id="switch-list-label-wifi" primary="Auto Polling" />
+          <ListItemText
+            id={"switch-list-label-wifi"}
+            primary={"Auto Polling"}
+          />
           <ListItemSecondaryAction>
             <Switch
               checked={autoPolling}
               onChange={handleAutoPollingChange}
               value={"autoPolling"}
               inputProps={{ "aria-label": "secondary checkbox" }}
-              edge="end"
+              edge={"end"}
             />
           </ListItemSecondaryAction>
         </ListItem>
@@ -105,7 +108,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemIcon>
             <AutorenewIcon />
           </ListItemIcon>
-          <ListItemText primary="Reload Vehicles" />
+          <ListItemText primary={"Reload Vehicles"} />
         </ListItemButton>
 
         <ListSubheader>Search</ListSubheader>
@@ -118,7 +121,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemIcon>
             <SearchOffIcon />
           </ListItemIcon>
-          <ListItemText primary="Clear recent searches" />
+          <ListItemText primary={"Clear recent searches"} />
         </ListItemButton>
 
         <ListSubheader>About Austin Bus Go</ListSubheader>
@@ -130,7 +133,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemIcon>
             <CodeIcon />
           </ListItemIcon>
-          <ListItemText primary="GitHub Repository" />
+          <ListItemText primary={"GitHub Repository"} />
         </ListItemButton>
       </List>
     </Dialog>

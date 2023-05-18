@@ -1,5 +1,5 @@
 import { Badge, Popover } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as React from "react";
 import { Marker } from "react-map-gl";
 import { VehiclePosition } from "../../../interfaces/interface.d";
@@ -20,27 +20,24 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
   const hoveringVehiclePosition = useAtomValue(hoveringVehiclePositionAtom);
   const isHighlighted =
     hoveringVehiclePosition?.vehicle?.id === vehiclePosition.vehicle?.id;
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-  const handleOnClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    setAnchorEl(event.currentTarget);
+  const [open, setOpen] = useState<boolean>(false);
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const handleOnClick = (): void => {
     onClick(vehiclePosition);
   };
 
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handlePopoverOpen = () => {
+    setOpen(true);
   };
 
   const handlePopoverClose = () => {
-    setAnchorEl(null);
+    setOpen(false);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setOpen(false);
   };
 
-  // TODO: fix anchorEl on hovering
-  const open = Boolean(anchorEl) || isHighlighted;
   const { position } = vehiclePosition;
   return (
     <React.Fragment>
@@ -52,10 +49,11 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         <Badge
           badgeContent={vehiclePosition?.trip?.routeId}
           color={"primary"}
-          overlap="circular"
+          overlap={"circular"}
           max={999}
         >
           <VehicleIcon
+            innerRef={ref}
             bearing={Number(position?.bearing) || 0}
             onClick={handleOnClick}
             onMouseEnter={handlePopoverOpen}
@@ -65,9 +63,9 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         </Badge>
       </Marker>
       <Popover
-        open={open}
+        open={open || isHighlighted}
         onClose={handleClose}
-        anchorEl={anchorEl}
+        anchorEl={ref.current}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "right",

@@ -53,9 +53,9 @@ export interface SearchPanelProps {
   route?: Route;
   stop?: Stop;
 
-  setRoute(route?: Route): void;
+  setRoute(route: Route): void;
 
-  setStop(stop?: Stop): void;
+  setStop(stop: Stop): void;
 
   searchTerm?: string;
 }
@@ -95,6 +95,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           value: searchTerm,
         },
       });
+      addToRecentSearches({ value: searchTerm });
       setSearchPanelOpen(false);
     } else if (stop) {
       const input = getStopOptionLabel(stop);

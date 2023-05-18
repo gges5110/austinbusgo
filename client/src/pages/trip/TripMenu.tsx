@@ -99,7 +99,8 @@ export const TripMenu = () => {
             <Typography
               sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
             >
-              from {stop?.stopName}
+              {"from "}
+              {stop?.stopName}
             </Typography>
           </Box>
         </Box>
@@ -108,11 +109,11 @@ export const TripMenu = () => {
             <Tabs
               value={value}
               onChange={handleChange}
-              aria-label="basic tabs example"
+              aria-label={"basic tabs example"}
             >
-              <Tab label="Item One" />
-              <Tab label="Item Two" />
-              <Tab label="Item Three" />
+              <Tab label={"Item One"} />
+              <Tab label={"Item Two"} />
+              <Tab label={"Item Three"} />
             </Tabs>
           </Box>
           <TabPanel value={value} index={0}>
@@ -151,7 +152,7 @@ function TabPanel(props: TabPanelProps) {
 
   return (
     <div
-      role="tabpanel"
+      role={"tabpanel"}
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}

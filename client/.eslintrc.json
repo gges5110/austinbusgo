@@ -25,7 +25,20 @@
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "import/no-webpack-loader-syntax": "off",
-    "prettier/prettier": ["error", { "singleQuote": false }],
+    "react/jsx-curly-brace-presence": [
+      "error",
+      {
+        "props": "always",
+        "children": "never",
+        "propElementValues": "always"
+      }
+    ],
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": false
+      }
+    ],
     "unused-imports/no-unused-imports-ts": 2
   },
   "settings": {

@@ -48,7 +48,7 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
   tripLoading,
 }) => {
   return (
-    <Card variant="outlined">
+    <Card variant={"outlined"}>
       <CardContent sx={{ minWidth: 275, borderRadius: 6 }}>
         <Box display={"flex"} gap={1} flexDirection={"column"}>
           <Box display={"flex"} gap={1} alignItems={"center"}>
@@ -57,26 +57,27 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
               routeColor={trip?.trip.route.routeColor}
               routeId={trip?.trip.routeId || ""}
             />
-            <Typography variant="body2" component="p" fontSize={14}>
+            <Typography variant={"body2"} component={"p"} fontSize={14}>
               {tripLoading ? <Skeleton /> : trip?.trip.route.routeLongName}
             </Typography>
           </Box>
-          <Typography variant="body2" display={"block"}>
+          <Typography variant={"body2"} display={"block"}>
             {vehiclePosition.currentStatus &&
               getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
           </Typography>
           <Box display={"flex"} gap={1} alignItems={"center"}>
             <PlaceOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
-            <Typography fontSize={16} variant="body2" fontWeight={600}>
+            <Typography fontSize={16} variant={"body2"} fontWeight={600}>
               {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
             </Typography>
           </Box>
           <Typography
             fontSize={14}
-            color="textSecondary"
+            color={"textSecondary"}
             alignSelf={"flex-end"}
           >
-            Updated {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
+            {"Updated "}
+            {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
           </Typography>
         </Box>
       </CardContent>

@@ -10,6 +10,10 @@ export const LoadingSnackbarMessage: React.FunctionComponent<LoadingSnackbarMess
 }) => (
   <React.Fragment>
     {message}
-    <CircularProgress color="secondary" size={24} style={{ marginLeft: 16 }} />
+    <CircularProgress
+      color={"secondary"}
+      size={24}
+      style={{ marginLeft: 16 }}
+    />
   </React.Fragment>
 );

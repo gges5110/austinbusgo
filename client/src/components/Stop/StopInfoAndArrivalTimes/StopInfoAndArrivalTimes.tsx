@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
 import { useArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
-import { getDate } from "../../../pages/RootLayout";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { ArrivalTimeList } from "./ArrivalTimeList/ArrivalTimeList";
@@ -10,6 +9,7 @@ import { selectedRouteIdsAtStopAtom } from "../../../Atoms";
 import { RoutesSelector } from "./RoutesSelector/RoutesSelector";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { StopQuery } from "../../../schemas/Stop.generated";
+import { getDate } from "../../../dateUtils";
 
 interface StopInfoAndArrivalTimesProps {
   stop: StopQuery["stop"];

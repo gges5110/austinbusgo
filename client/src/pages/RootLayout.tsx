@@ -1,49 +1,31 @@
 import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
-import { SnackbarKey, useSnackbar } from "notistack";
 import * as React from "react";
-import { useState } from "react";
 import { SettingsDialog } from "../components/SettingsDialog";
-import {
-  Outlet,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
-import {
-  isAutoPollingAtom,
-  selectedRouteAtom,
-  settingsDialogOpenAtom,
-} from "../Atoms";
+import { isAutoPollingAtom, settingsDialogOpenAtom } from "../Atoms";
 import { MapWrapper } from "../components/Map/MapWrapper";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
-import { useDataFromRouteLoader } from "../Router";
 import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
 import { SearchPanel } from "../components/SearchPanel/SearchPanel";
-import { useVehiclePositionsQuery } from "../schemas/VehiclePositions.generated";
-import { routeLoader } from "./route/RouteLoader";
-import { stopLoader } from "./stop/StopLoader";
-import { searchParamsDataLoader } from "./SearchParamsDataLoader";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { useQueryClient } from "@tanstack/react-query";
-import { Stop } from "../interfaces/interface.d";
+import { Route, Stop } from "../interfaces/interface.d";
 import { useRecentSearches } from "../hooks/UseRecentSearches";
+import { useDataFromLoaders } from "../hooks/UseDataFromLoaders";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
   const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
     settingsDialogOpenAtom
   );
-  const [selectedRoute, setSelectedRoute] = useAtom(selectedRouteAtom);
 
   const { routeId, directionId, searchTerm } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
   const { addToRecentSearches } = useRecentSearches();
 
-  const setSelectedStop = (stop: Stop) => {
+  const setStop = (stop: Stop) => {
     const { stopId } = stop;
 
     if (stopId !== undefined) {
@@ -57,74 +39,22 @@ export const RootLayout: React.FunctionComponent = () => {
       }
     }
   };
-  const [
-    vehiclePositionsLoadingSnackbarKey,
-    setVehiclePositionsLoadingSnackbarKey,
-  ] = useState<SnackbarKey | undefined>(undefined);
 
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { data: vehiclePositionsData } = useVehiclePositionsQuery(
-    {
-      routeId: selectedRoute?.routeId || "1",
-      direction: Number(
-        directionId !== undefined
-          ? directionId
-          : searchParams.get("directionId")
-      ),
-    },
-    {
-      enabled: selectedRoute !== undefined,
-      refetchInterval: autoPolling ? 15000 : false,
-      onSuccess: (vehiclePositions) => {
-        if (vehiclePositions) {
-          if (vehiclePositionsLoadingSnackbarKey) {
-            closeSnackbar(vehiclePositionsLoadingSnackbarKey);
-            setVehiclePositionsLoadingSnackbarKey(undefined);
-          }
-        }
-      },
+  const setRoute = (route: Route) => {
+    if (route) {
+      navigate(`${viewStatePathname}/route/${route?.routeId}/direction/0`);
     }
-  );
-
-  const queryClient = useQueryClient();
-  const reloadVehiclePositions = () => {
-    const key = enqueueSnackbar("Reloading Vehicles...", {
-      variant: "info",
-    });
-    setVehiclePositionsLoadingSnackbarKey(key);
-    queryClient.invalidateQueries({
-      queryKey: [
-        "VehiclePositions",
-        {
-          routeId: routeId,
-          direction: Number(directionId),
-        },
-      ],
-    });
   };
 
-  const stopData = useDataFromRouteLoader("stop", stopLoader);
-  const stop = stopData?.stop;
+  const {
+    reloadVehiclePositions,
+    stop,
+    stops,
+    route,
+    routeShapes,
+    vehiclePositions,
+  } = useDataFromLoaders();
 
-  const routeData = useDataFromRouteLoader("route", routeLoader);
-  const searchParamsData = useDataFromRouteLoader(
-    "searchParams",
-    searchParamsDataLoader
-  );
-
-  const route = searchParamsData?.route || routeData?.route;
-  const stops =
-    searchParamsData?.stops ||
-    routeData?.stops ||
-    (stop !== undefined ? [stop] : []);
-  const routeShapes = searchParamsData?.shapes || routeData?.shapes || [];
-
-  setSelectedRoute(route);
-
-  const vehiclePositions =
-    searchParamsData?.vehiclePositions ||
-    vehiclePositionsData?.vehiclePositions ||
-    [];
   return (
     <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
       <Paper
@@ -150,9 +80,9 @@ export const RootLayout: React.FunctionComponent = () => {
         stops={stops}
         routeShapes={routeShapes}
         vehiclePositions={vehiclePositions}
-        route={selectedRoute}
+        route={route}
         stop={stop}
-        setSelectedStop={setSelectedStop}
+        setSelectedStop={setStop}
       />
       <Popper open={true}>
         <Outlet />
@@ -161,19 +91,9 @@ export const RootLayout: React.FunctionComponent = () => {
         <SearchPanel
           searchTerm={searchTerm}
           route={route}
-          setRoute={(route) => {
-            if (route) {
-              navigate(
-                `${viewStatePathname}/route/${route?.routeId}/direction/0`
-              );
-            }
-          }}
+          setRoute={setRoute}
           stop={stop}
-          setStop={(stop) => {
-            if (stop) {
-              navigate(`${viewStatePathname}/stop/${stop.stopId}`);
-            }
-          }}
+          setStop={setStop}
         />
       </Popper>
 
@@ -186,21 +106,4 @@ export const RootLayout: React.FunctionComponent = () => {
       />
     </Box>
   );
-};
-export const getDate = () => {
-  const d = new Date();
-  return [
-    d.getFullYear(),
-    ("0" + (d.getMonth() + 1)).slice(-2),
-    ("0" + d.getDate()).slice(-2),
-  ].join("");
-};
-
-export const getTime = () => {
-  const d = new Date();
-  return [
-    ("0" + d.getHours()).slice(-2),
-    ("0" + d.getMinutes()).slice(-2),
-    "00",
-  ].join(":");
 };

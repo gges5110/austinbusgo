@@ -21,7 +21,7 @@ export const MenuPanel = ({
       }}
       ref={innerRef}
     >
-      <Slide direction="right" in={true} mountOnEnter unmountOnExit>
+      <Slide direction={"right"} in={true} mountOnEnter unmountOnExit>
         <Box component={"div"} sx={{ pt: 8 }}>
           {children}
         </Box>

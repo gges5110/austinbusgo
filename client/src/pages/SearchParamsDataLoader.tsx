@@ -15,7 +15,7 @@ import {
   VehiclePositionsQuery,
   VehiclePositionsQueryVariables,
 } from "../schemas/VehiclePositions.generated";
-import { getDate } from "./RootLayout";
+import { getDate } from "../dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),

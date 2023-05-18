@@ -28,10 +28,7 @@ import {
 } from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useEarliestArrivalTimesOnRouteQuery } from "../../../schemas/EarliestArrivalTimesOnRoute.generated";
-import { getDate, getTime } from "../../../pages/RootLayout";
-import isBetween from "dayjs/plugin/isBetween";
-
-dayjs.extend(isBetween);
+import { getDate, getTime } from "../../../dateUtils";
 
 interface StopsTimelineProps {
   route: Route;

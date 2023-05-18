@@ -1,14 +1,8 @@
 import { Divider, List, ListItem, ListItemText, Skeleton } from "@mui/material";
-import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
 import { ArrivalTimesQuery } from "../../../../schemas/ArrivalTimes.generated";
 import { StopQuery } from "../../../../schemas/Stop.generated";
-
-dayjs.extend(relativeTime);
-dayjs.extend(customParseFormat);
 
 export interface ArrivalTimeListProps {
   arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];

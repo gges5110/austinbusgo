@@ -24,6 +24,7 @@ export type ArrivalTimeAtStop = {
   /** Identifies a stop, station, or station entrance. */
   stopId: Scalars["String"];
   stopSequence: Scalars["Int"];
+  tripId?: Maybe<Scalars["String"]>;
   updatedArrivalTime?: Maybe<Scalars["String"]>;
 };
 

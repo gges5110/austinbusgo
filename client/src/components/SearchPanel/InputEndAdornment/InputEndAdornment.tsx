@@ -30,7 +30,7 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
 }) => {
   return (
     <>
-      <Tooltip title="Search" placement="bottom-end">
+      <Tooltip title={"Search"} placement={"bottom-end"}>
         <IconButton
           sx={{
             "&:hover": {
@@ -48,15 +48,15 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
           <SearchIcon />
         </IconButton>
       </Tooltip>
-      <Divider style={{ height: 28 }} orientation="vertical" />
+      <Divider style={{ height: 28 }} orientation={"vertical"} />
 
       {inputString === "" ? (
         <Box component={"div"} sx={{ padding: "10px 10px" }}>
-          <Tooltip title="Start search" placement="bottom-end">
+          <Tooltip title={"Start search"} placement={"bottom-end"}>
             <Button
-              variant="outlined"
+              variant={"outlined"}
               color={"neutral"}
-              size="small"
+              size={"small"}
               onClick={() => {
                 focusAutocomplete();
               }}
@@ -79,7 +79,7 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Tooltip title="Clear search" placement="bottom-end">
+        <Tooltip title={"Clear search"} placement={"bottom-end"}>
           <IconButton
             sx={{
               "&:hover": {

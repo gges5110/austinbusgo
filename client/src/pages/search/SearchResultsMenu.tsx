@@ -18,6 +18,10 @@ import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { searchLoader } from "./SearchLoader";
 import { useRecentSearches } from "../../hooks/UseRecentSearches";
+import { useSetAtom } from "jotai";
+import { hoveringStopAtom } from "../../Atoms";
+import { Stop } from "../../interfaces/interface.d";
+import { useTitle } from "../../hooks/UseTitle";
 
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
@@ -45,6 +49,9 @@ export const SearchResultsMenu = () => {
     }
   }, []);
   const { addToRecentSearches } = useRecentSearches();
+  useTitle(`${searchTerm} - Austin Bus Go`);
+
+  const setHoveringStop = useSetAtom(hoveringStopAtom);
   return (
     <MenuPanel>
       {!noResults ? (
@@ -60,6 +67,12 @@ export const SearchResultsMenu = () => {
                     onClick={() => {
                       addToRecentSearches(stop);
                     }}
+                    onMouseEnter={() => {
+                      setHoveringStop(stop as Stop);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveringStop(undefined);
+                    }}
                   >
                     <Box display={"flex"} flexDirection={"column"} gap={1}>
                       <Box display={"flex"} gap={1}>
@@ -70,7 +83,8 @@ export const SearchResultsMenu = () => {
                       </Box>
 
                       <Typography color={"gray"} fontSize={14}>
-                        Stop Code: {stop.stopId}
+                        {"Stop Code: "}
+                        {stop.stopId}
                       </Typography>
 
                       <Box display={"flex"} gap={1} flexWrap={"wrap"}>
@@ -119,7 +133,10 @@ export const SearchResultsMenu = () => {
         <Container
           sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
         >
-          <Typography>Austin Bus Go can&apos;t find {searchTerm}</Typography>
+          <Typography>
+            {"Austin Bus Go can&apos;t find "}
+            {searchTerm}
+          </Typography>
           <Typography color={"gray"} fontSize={14}>
             Make sure your search is spelled correctly. Try adding a route
             number, street name, or stop code.
