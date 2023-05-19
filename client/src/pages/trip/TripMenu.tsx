@@ -12,9 +12,9 @@ import * as React from "react";
 import { useRef } from "react";
 import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { useDataFromLoader, useDataFromRouteLoader } from "../../Router";
-import { MenuPanel } from "../../components/MenuPanel";
+import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import { useTitle } from "../../hooks/UseTitle";
 import { stopLoader } from "../stop/StopLoader";
 import { tripLoader } from "./TripLoader";
@@ -22,7 +22,7 @@ import { searchParamsDataLoader } from "../SearchParamsDataLoader";
 import { useTripUpdateQuery } from "../../schemas/TripUpdate.generated";
 import { RouteOutlined } from "@mui/icons-material";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
-import { AddToFavorites } from "../../components/AddToFavorites/AddToFavorites";
+import { AddToFavorites } from "../../components/Shared/AddToFavorites/AddToFavorites";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);

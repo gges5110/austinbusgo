@@ -1,6 +1,6 @@
 import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
 import * as React from "react";
-import { SettingsDialog } from "../components/SettingsDialog";
+import { SettingsDialog } from "../components/SettingsDialog/SettingsDialog";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAtom } from "jotai";
 import { isAutoPollingAtom, settingsDialogOpenAtom } from "../Atoms";

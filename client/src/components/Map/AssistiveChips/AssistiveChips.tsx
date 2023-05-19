@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNearByStops } from "../../../hooks/Map/UseNearByStops";
 import { Box, Button, Paper, Typography } from "@mui/material";
-import { MENU_PANEL_WIDTH } from "../../MenuPanel";
+import { MENU_PANEL_WIDTH } from "../../Shared/MenuPanel/MenuPanel";
 import { Link as RouterLink } from "react-router-dom";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";

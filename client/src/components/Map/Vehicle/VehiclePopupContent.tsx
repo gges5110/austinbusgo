@@ -11,7 +11,7 @@ import {
   VehiclePosition,
   VehicleStopStatus,
 } from "../../../interfaces/interface.d";
-import { RouteIdDisplay } from "../../RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../Shared/RouteIdDisplay/RouteIdDisplay";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import RouteIcon from "@mui/icons-material/Route";
 

@@ -1,6 +1,8 @@
-import { queryClient } from "../../QueryClient";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useNearByStops = () => {
+  const queryClient = useQueryClient();
+
   const fetchNearByStops = () => {
     queryClient.removeQueries({
       queryKey: ["NearByStops"],

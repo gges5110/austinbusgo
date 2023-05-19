@@ -1,4 +1,4 @@
-import { MenuPanel } from "../../components/MenuPanel";
+import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import * as React from "react";
 import { useDataFromLoader } from "../../Router";
 import {
@@ -10,7 +10,7 @@ import {
   ListItemButton,
   Typography,
 } from "@mui/material";
-import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import RouteIcon from "@mui/icons-material/Route";

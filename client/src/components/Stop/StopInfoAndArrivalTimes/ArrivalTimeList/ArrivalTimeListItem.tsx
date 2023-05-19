@@ -5,7 +5,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
 import { Bullet } from "./Bullet";
-import { RouteIdDisplay } from "../../../RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../../Shared/RouteIdDisplay/RouteIdDisplay";
 import { Link as RouterLink } from "react-router-dom";
 import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
 import { StopQuery } from "../../../../schemas/Stop.generated";

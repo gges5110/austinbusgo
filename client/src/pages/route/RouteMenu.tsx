@@ -7,12 +7,12 @@ import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { useTitle } from "../../hooks/UseTitle";
 import { useDataFromLoader } from "../../Router";
 import RouteIcon from "@mui/icons-material/Route";
-import { RouteIdDisplay } from "../../components/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { Trip } from "../../interfaces/interface.d";
-import { MenuPanel } from "../../components/MenuPanel";
+import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import { routeLoader } from "./RouteLoader";
-import { AddToFavorites } from "../../components/AddToFavorites/AddToFavorites";
-import { ShareButton } from "../../components/ShareButton/ShareButton";
+import { AddToFavorites } from "../../components/Shared/AddToFavorites/AddToFavorites";
+import { ShareButton } from "../../components/Shared/ShareButton/ShareButton";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();

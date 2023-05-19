@@ -16,7 +16,7 @@ import { useSnackbar } from "notistack";
 import * as React from "react";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import { useSetAtom } from "jotai/index";
-import { recentSearchesAtom } from "../Atoms";
+import { recentSearchesAtom } from "../../Atoms";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {

@@ -1,9 +1,9 @@
 import * as React from "react";
-import { useFavorites } from "../../hooks/UseFavorites";
+import { useFavorites } from "../../../hooks/UseFavorites";
 import { Box, Button, Typography } from "@mui/material";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import { FavoritesType } from "../../Atoms";
+import { FavoritesType } from "../../../Atoms";
 
 interface AddToFavoritesProps {
   value: FavoritesType;
