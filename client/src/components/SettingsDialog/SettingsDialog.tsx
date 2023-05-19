@@ -17,6 +17,7 @@ import * as React from "react";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import { useSetAtom } from "jotai/index";
 import { recentSearchesAtom } from "../../Atoms";
+import { ColorModeToggle } from "../ColorModeToggle/ColorModeToggle";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -67,24 +68,27 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
 
   return (
     <Dialog
-      fullScreen={false}
-      open={open}
-      onClose={handleClose}
       TransitionComponent={Transition}
+      fullScreen={false}
+      onClose={handleClose}
+      open={open}
     >
       <AppBar sx={{ position: "relative", minWidth: "600px" }}>
         <Toolbar>
           <IconButton
-            edge={"start"}
-            color={"inherit"}
-            onClick={handleClose}
             aria-label={"close"}
+            color={"inherit"}
+            edge={"start"}
+            onClick={handleClose}
           >
             <CloseIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
       <List>
+        <ListSubheader>Appearance</ListSubheader>
+        <ColorModeToggle />
+
         <ListSubheader>Vehicle Live Position</ListSubheader>
         <ListItem>
           <ListItemIcon>
@@ -97,10 +101,10 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           <ListItemSecondaryAction>
             <Switch
               checked={autoPolling}
+              edge={"end"}
+              inputProps={{ "aria-label": "secondary checkbox" }}
               onChange={handleAutoPollingChange}
               value={"autoPolling"}
-              inputProps={{ "aria-label": "secondary checkbox" }}
-              edge={"end"}
             />
           </ListItemSecondaryAction>
         </ListItem>

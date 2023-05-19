@@ -13,7 +13,8 @@ export const recentSearchesAtom = atomWithStorage<Array<RecentSearch>>(
   "recentSearches",
   []
 );
-export const colorModeAtom = atomWithStorage<"light" | "dark">(
+export type ColorModeType = "light" | "dark" | "system";
+export const colorModeAtom = atomWithStorage<ColorModeType>(
   "colorMode",
   "light"
 );

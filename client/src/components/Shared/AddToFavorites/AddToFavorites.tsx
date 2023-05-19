@@ -25,8 +25,8 @@ export const AddToFavorites: React.FC<AddToFavoritesProps> = ({ value }) => {
   };
 
   return (
-    <Button sx={{ textTransform: "none" }} onClick={onClick}>
-      <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
+    <Button onClick={onClick} sx={{ textTransform: "none" }}>
+      <Box alignItems={"center"} display={"flex"} flexDirection={"column"}>
         {alreadyAdded ? <BookmarkIcon /> : <BookmarkBorderIcon />}
         <Typography sx={{ textAlign: "center", fontSize: "14px" }}>
           {alreadyAdded ? "Saved" : "Save"}

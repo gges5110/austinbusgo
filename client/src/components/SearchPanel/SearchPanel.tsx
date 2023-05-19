@@ -264,26 +264,7 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
       }}
     >
       <Autocomplete<SearchOption>
-        loading={isLoading && internalSearchTerm !== ""}
-        options={options}
-        sx={{ width: SEARCH_PANEL_WIDTH }}
-        value={value}
         blurOnSelect={true}
-        open={searchPanelOpen}
-        onClose={(event, reason) => {
-          if (reason !== "toggleInput") {
-            setSearchPanelOpen(false);
-          }
-        }}
-        onBlur={() => {
-          setSearchPanelOpen(false);
-        }}
-        onFocus={() => {
-          setSearchPanelOpen(true);
-        }}
-        onOpen={() => {
-          setSearchPanelOpen(true);
-        }}
         componentsProps={{
           paper: {
             sx: {
@@ -297,12 +278,20 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
             },
           },
         }}
-        inputValue={inputString}
-        onInputChange={handleInputValueChange}
-        openOnFocus={true}
-        selectOnFocus={true}
-        onChange={searchOnChange}
         filterOptions={filterOptions}
+        getOptionLabel={(option: SearchOption) => {
+          const { optionValue } = option;
+          if (isRoute(optionValue)) {
+            return getRouteOptionLabel(optionValue);
+          } else if (isStop(optionValue)) {
+            return getStopOptionLabel(optionValue);
+          } else if (isSearchTerm(optionValue)) {
+            return optionValue.value;
+          }
+
+          return "";
+        }}
+        inputValue={inputString}
         isOptionEqualToValue={(option, value) => {
           const { optionValue } = option;
 
@@ -325,41 +314,41 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 
           return false;
         }}
-        getOptionLabel={(option: SearchOption) => {
-          const { optionValue } = option;
-          if (isRoute(optionValue)) {
-            return getRouteOptionLabel(optionValue);
-          } else if (isStop(optionValue)) {
-            return getStopOptionLabel(optionValue);
-          } else if (isSearchTerm(optionValue)) {
-            return optionValue.value;
-          }
-
-          return "";
+        loading={isLoading && internalSearchTerm !== ""}
+        onBlur={() => {
+          setSearchPanelOpen(false);
         }}
-        renderOption={renderOption}
+        onChange={searchOnChange}
+        onClose={(event, reason) => {
+          if (reason !== "toggleInput") {
+            setSearchPanelOpen(false);
+          }
+        }}
+        onFocus={() => {
+          setSearchPanelOpen(true);
+        }}
+        onInputChange={handleInputValueChange}
+        onOpen={() => {
+          setSearchPanelOpen(true);
+        }}
+        open={searchPanelOpen}
+        openOnFocus={true}
+        options={options}
         renderInput={(params) => (
           <InputBase
-            placeholder={"Search Routes or Stops"}
-            ref={params.InputProps.ref}
-            inputRef={ref}
-            inputProps={params.inputProps}
             endAdornment={
               <InputEndAdornment
+                clearSelection={clearSelection}
+                focusAutocomplete={focusAutocomplete}
+                goToSearchPage={goToSearchPage}
                 inputString={inputString}
                 loading={
                   (isLoading && internalSearchTerm !== "") || routeLoading
                 }
-                clearSelection={clearSelection}
-                goToSearchPage={goToSearchPage}
-                focusAutocomplete={focusAutocomplete}
               />
             }
-            sx={{
-              paddingLeft: 2.5,
-              flex: 1,
-              width: "100%",
-            }}
+            inputProps={params.inputProps}
+            inputRef={ref}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 ref?.current?.blur?.();
@@ -368,8 +357,19 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
                 goToSearchPage();
               }
             }}
+            placeholder={"Search Routes or Stops"}
+            ref={params.InputProps.ref}
+            sx={{
+              paddingLeft: 2.5,
+              flex: 1,
+              width: "100%",
+            }}
           />
         )}
+        renderOption={renderOption}
+        selectOnFocus={true}
+        sx={{ width: SEARCH_PANEL_WIDTH }}
+        value={value}
       />
     </Paper>
   );

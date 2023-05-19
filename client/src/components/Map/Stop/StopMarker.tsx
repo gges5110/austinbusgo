@@ -21,16 +21,16 @@ export const StopMarker: React.FC<StopMarkerProps> = ({
 
   return (
     <Marker
-      longitude={stop.stopLoc?.coordinates?.[0] || 0}
-      latitude={stop.stopLoc?.coordinates?.[1] || 0}
       key={stop.stopId}
+      latitude={stop.stopLoc?.coordinates?.[1] || 0}
+      longitude={stop.stopLoc?.coordinates?.[0] || 0}
     >
       <StopPin
         highlighted={highlighted || hoveringStop?.stopId === stop.stopId}
-        stopName={stop.stopName || ""}
         onClick={() => {
           setSelectedStop(stop);
         }}
+        stopName={stop.stopName || ""}
       />
     </Marker>
   );

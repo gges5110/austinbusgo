@@ -17,8 +17,8 @@ export const VehicleMarkers: React.FC<VehicleMarkersProps> = ({
       vehiclePositions.map((vehiclePosition) => (
         <VehicleMarker
           key={vehiclePosition?.vehicle?.id || ""}
-          vehiclePosition={vehiclePosition}
           onClick={onClick}
+          vehiclePosition={vehiclePosition}
         />
       )),
     [vehiclePositions]

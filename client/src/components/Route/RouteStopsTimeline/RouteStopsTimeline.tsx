@@ -60,17 +60,29 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
     <Box component={"div"}>
       <List>
         {stops?.map((stop, index) => {
-          const scheduledArrivalTimeString =
-            data?.earliestArrivalTimesOnRoute?.[index]?.scheduledArrivalTime;
-          const updatedArrivalTimeString =
-            data?.earliestArrivalTimesOnRoute?.[index]?.updatedArrivalTime;
-          let updatedArrivalTime;
-          if (updatedArrivalTimeString) {
-            updatedArrivalTime = dayjs(updatedArrivalTimeString, "HH:mm:ss");
+          let updatedArrivalTime, scheduledArrivalTime;
+          if (data?.earliestArrivalTimesOnRoute) {
+            const arrivalTime = data.earliestArrivalTimesOnRoute.find(
+              (t) => t.stopId === stop.stopId
+            );
+
+            if (arrivalTime) {
+              const scheduledArrivalTimeString =
+                arrivalTime.scheduledArrivalTime;
+              const updatedArrivalTimeString = arrivalTime.updatedArrivalTime;
+
+              scheduledArrivalTime = dayjs(
+                scheduledArrivalTimeString,
+                "HH:mm:ss"
+              );
+              if (updatedArrivalTimeString) {
+                updatedArrivalTime = dayjs(
+                  updatedArrivalTimeString,
+                  "HH:mm:ss"
+                );
+              }
+            }
           }
-          const scheduledArrivalTime = scheduledArrivalTimeString
-            ? dayjs(scheduledArrivalTimeString || undefined, "HH:mm:ss")
-            : undefined;
 
           let timeDiffString = "Scheduled";
           let textColor = "gray";
@@ -108,8 +120,9 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
           );
           return (
             <Box
-              key={stop.stopId}
+              className={"selected"}
               component={"div"}
+              key={stop.stopId}
               sx={{
                 position: "relative",
                 [`&.selected::before`]: {
@@ -147,7 +160,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   opacity: "100%",
                 },
               }}
-              className={"selected"}
             >
               {vehiclePosition && (
                 <Paper
@@ -163,12 +175,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   }}
                 >
                   <IconButton
-                    onMouseEnter={() => {
-                      setHoveringVehiclePosition(vehiclePosition);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveringVehiclePosition(undefined);
-                    }}
                     onClick={() => {
                       if (
                         vehiclePosition.position?.latitude &&
@@ -180,25 +186,31 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                         ]);
                       }
                     }}
+                    onMouseEnter={() => {
+                      setHoveringVehiclePosition(vehiclePosition);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveringVehiclePosition(undefined);
+                    }}
                   >
                     <DirectionsBusIcon />
                   </IconButton>
                 </Paper>
               )}
               <ListItemButton
-                key={stop.stopId}
                 component={RouterLink}
-                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${routeId}&directionId=${directionId}`}
-                sx={{
-                  pl: 6,
-                  py: 2.5,
-                }}
+                key={stop.stopId}
                 onMouseEnter={() => {
                   setHoveringStop(stop as Stop);
                 }}
                 onMouseLeave={() => {
                   setHoveringStop(undefined);
                 }}
+                sx={{
+                  pl: 6,
+                  py: 2.5,
+                }}
+                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${routeId}&directionId=${directionId}`}
               >
                 <Box
                   display={"flex"}
@@ -217,8 +229,8 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={600}>{stop.stopName}</Typography>
                       <Typography
-                        fontSize={14}
                         color={textColor}
+                        fontSize={14}
                         fontWeight={updatedArrivalTime ? 600 : undefined}
                       >
                         {timeDiffString}
@@ -290,6 +302,13 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                 </Box>
               </ListItemButton>
               <Divider
+                className={
+                  index === 0
+                    ? "first"
+                    : index === stops?.length - 1
+                    ? "last"
+                    : undefined
+                }
                 sx={{
                   ml: 6,
                   [`&::before`]: {
@@ -332,13 +351,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     //   stop.stopSequence < selectedStopSequence ? "50%" : "100%",
                   },
                 }}
-                className={
-                  index === 0
-                    ? "first"
-                    : index === stops?.length - 1
-                    ? "last"
-                    : undefined
-                }
               />
             </Box>
           );

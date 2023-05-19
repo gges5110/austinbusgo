@@ -1,8 +1,8 @@
 import { Divider, List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import * as React from "react";
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
-import { ArrivalTimesQuery } from "../../../../schemas/ArrivalTimes.generated";
-import { StopQuery } from "../../../../schemas/Stop.generated";
+import { ArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
+import { StopQuery } from "../../../schemas/Stop.generated";
 
 export interface ArrivalTimeListProps {
   arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];
@@ -32,8 +32,8 @@ export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({
           {selectedRouteIds.includes(arrivalTime.trip.routeId) && (
             <div key={arrivalTime.trip.tripId}>
               <ArrivalTimeListItem
-                key={arrivalTime.trip.tripId}
                 arrivalTime={arrivalTime}
+                key={arrivalTime.trip.tripId}
                 stop={stop}
               />
               <Divider key={`${arrivalTime.trip.tripId}-divider`} />

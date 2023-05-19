@@ -5,11 +5,11 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
 import { Bullet } from "./Bullet";
-import { RouteIdDisplay } from "../../../Shared/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../Shared/RouteIdDisplay/RouteIdDisplay";
 import { Link as RouterLink } from "react-router-dom";
-import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
-import { StopQuery } from "../../../../schemas/Stop.generated";
-import { ArrivalTimesQuery } from "../../../../schemas/ArrivalTimes.generated";
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { StopQuery } from "../../../schemas/Stop.generated";
+import { ArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 
 export interface ArrivalTimeListItemProps {
   arrivalTime: ArrivalTimesQuery["arrivalTimes"][number];
@@ -64,14 +64,14 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   ];
   return (
     <ListItemButton
-      key={arrivalTime.scheduledArrivalTime}
       component={RouterLink}
-      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
+      key={arrivalTime.scheduledArrivalTime}
       sx={{ py: 1.5 }}
+      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>
-          <Box display={"flex"} gap={1} alignItems={"center"}>
+          <Box alignItems={"center"} display={"flex"} gap={1}>
             <DirectionsBusIcon fontSize={"small"} />
             <RouteIdDisplay
               routeColor={arrivalTime.trip.route.routeColor}
@@ -81,13 +81,13 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               {tripName}
             </Typography>
           </Box>
-          <Box color={"gray"} display={"flex"} alignItems={"center"}>
+          <Box alignItems={"center"} color={"gray"} display={"flex"}>
             <Typography
               color={textColor}
               component={"span"}
               display={"inline"}
-              variant={"body2"}
               fontWeight={updatedArrivalTime ? 600 : undefined}
+              variant={"body2"}
             >
               {timeDiffString}
             </Typography>
@@ -95,13 +95,13 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
             <Typography
               component={"span"}
               display={"inline"}
-              variant={"body2"}
               sx={{
                 textDecoration:
                   updatedArrivalTime && timeDiffString !== "On time"
                     ? "line-through"
                     : undefined,
               }}
+              variant={"body2"}
             >
               {timeDiff < 60 ||
               (updatedArrivalTime && timeDiffString !== "On time") ? (

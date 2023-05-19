@@ -84,11 +84,9 @@ export const SearchResultsMenu = () => {
           {searchData.search.stops.map((stop) => {
             return (
               <>
-                <ListItem disablePadding key={`stop-${stop.stopId}`}>
+                <ListItem disablePadding={true} key={`stop-${stop.stopId}`}>
                   <ListItemButton
-                    sx={{ py: 2 }}
                     component={RouterLink}
-                    to={`${viewStatePathname}/stop/${stop.stopId}`}
                     onClick={() => {
                       addToRecentSearches(stop);
                     }}
@@ -98,6 +96,8 @@ export const SearchResultsMenu = () => {
                     onMouseLeave={() => {
                       setHoveringStop(undefined);
                     }}
+                    sx={{ py: 2 }}
+                    to={`${viewStatePathname}/stop/${stop.stopId}`}
                   >
                     <Box display={"flex"} flexDirection={"column"} gap={1}>
                       <Box display={"flex"} gap={1}>
@@ -112,7 +112,7 @@ export const SearchResultsMenu = () => {
                         {stop.stopId}
                       </Typography>
 
-                      <Box display={"flex"} gap={1} flexWrap={"wrap"}>
+                      <Box display={"flex"} flexWrap={"wrap"} gap={1}>
                         {stop?.routes?.map((route) => (
                           <RouteIdDisplay
                             key={route.routeId}
@@ -131,13 +131,13 @@ export const SearchResultsMenu = () => {
           {searchData.search.routes.map((route) => {
             return (
               <>
-                <ListItem disablePadding key={`route-${route.routeId}`}>
+                <ListItem disablePadding={true} key={`route-${route.routeId}`}>
                   <ListItemButton
                     component={RouterLink}
-                    to={`${viewStatePathname}/route/${route.routeId}/direction/0`}
                     onClick={() => {
                       addToRecentSearches(route);
                     }}
+                    to={`${viewStatePathname}/route/${route.routeId}/direction/0`}
                   >
                     <Box display={"flex"} gap={1}>
                       <RouteIcon />

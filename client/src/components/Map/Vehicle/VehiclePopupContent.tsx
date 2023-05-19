@@ -50,31 +50,31 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
   return (
     <Card variant={"outlined"}>
       <CardContent sx={{ minWidth: 275, borderRadius: 6 }}>
-        <Box display={"flex"} gap={1} flexDirection={"column"}>
-          <Box display={"flex"} gap={1} alignItems={"center"}>
+        <Box display={"flex"} flexDirection={"column"} gap={1}>
+          <Box alignItems={"center"} display={"flex"} gap={1}>
             <RouteIcon />
             <RouteIdDisplay
               routeColor={trip?.trip.route.routeColor}
               routeId={trip?.trip.routeId || ""}
             />
-            <Typography variant={"body2"} component={"p"} fontSize={14}>
+            <Typography component={"p"} fontSize={14} variant={"body2"}>
               {tripLoading ? <Skeleton /> : trip?.trip.route.routeLongName}
             </Typography>
           </Box>
-          <Typography variant={"body2"} display={"block"}>
+          <Typography display={"block"} variant={"body2"}>
             {vehiclePosition.currentStatus &&
               getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
           </Typography>
-          <Box display={"flex"} gap={1} alignItems={"center"}>
+          <Box alignItems={"center"} display={"flex"} gap={1}>
             <PlaceOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
-            <Typography fontSize={16} variant={"body2"} fontWeight={600}>
+            <Typography fontSize={16} fontWeight={600} variant={"body2"}>
               {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
             </Typography>
           </Box>
           <Typography
-            fontSize={14}
-            color={"textSecondary"}
             alignSelf={"flex-end"}
+            color={"textSecondary"}
+            fontSize={14}
           >
             {"Updated "}
             {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}

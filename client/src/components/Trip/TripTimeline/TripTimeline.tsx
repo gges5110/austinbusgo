@@ -122,8 +122,9 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
 
           return (
             <Box
-              key={stopTime.stopId}
+              className={isSelectedStop ? "selected" : undefined}
               component={"div"}
+              key={stopTime.stopId}
               ref={isSelectedStop ? stopTimelineItemRef : undefined}
               sx={{
                 position: "relative",
@@ -165,7 +166,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   opacity: "100%",
                 },
               }}
-              className={isSelectedStop ? "selected" : undefined}
             >
               {vehicleStopId === stopTime.stopId && (
                 <Paper
@@ -177,12 +177,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   }}
                 >
                   <IconButton
-                    onMouseEnter={() => {
-                      setHoveringVehiclePosition(vehiclePosition);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveringVehiclePosition(undefined);
-                    }}
+                    component={RouterLink}
                     onClick={() => {
                       if (
                         vehiclePosition?.position?.latitude &&
@@ -194,7 +189,12 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                         ]);
                       }
                     }}
-                    component={RouterLink}
+                    onMouseEnter={() => {
+                      setHoveringVehiclePosition(vehiclePosition);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveringVehiclePosition(undefined);
+                    }}
                     to={getViewStateURL({
                       latitude: vehiclePosition?.position?.latitude,
                       longitude: vehiclePosition?.position?.longitude,
@@ -205,8 +205,13 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 </Paper>
               )}
               <ListItemButton
-                key={stopTime.stopId}
                 component={RouterLink}
+                key={stopTime.stopId}
+                sx={{
+                  pl: 6,
+                  py: 2.5,
+                  color: isPastStop ? "gray" : "unset",
+                }}
                 to={
                   searchParams.get("routeId")
                     ? `${viewStatePathname}/stop/${
@@ -216,11 +221,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                       )}&directionId=${searchParams.get("directionId")}`
                     : `${viewStatePathname}/stop/${stopTime.stopId}`
                 }
-                sx={{
-                  pl: 6,
-                  py: 2.5,
-                  color: isPastStop ? "gray" : "unset",
-                }}
               >
                 <Box
                   display={"flex"}
@@ -281,6 +281,13 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 </Box>
               </ListItemButton>
               <Divider
+                className={
+                  index === 0
+                    ? "first"
+                    : index === stopTimes?.length - 1
+                    ? "last"
+                    : undefined
+                }
                 sx={{
                   ml: 6,
                   [`&::before`]: {
@@ -327,13 +334,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                         : "100%",
                   },
                 }}
-                className={
-                  index === 0
-                    ? "first"
-                    : index === stopTimes?.length - 1
-                    ? "last"
-                    : undefined
-                }
               />
             </Box>
           );

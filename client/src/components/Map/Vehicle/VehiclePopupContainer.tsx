@@ -21,11 +21,11 @@ export const VehiclePopupContainer: React.FunctionComponent<VehiclePopupContaine
 
   return (
     <VehiclePopupContent
-      vehiclePosition={vehiclePosition}
       stop={stop}
       stopLoading={stopLoading}
       trip={trip}
       tripLoading={tripLoading}
+      vehiclePosition={vehiclePosition}
     />
   );
 };

@@ -30,8 +30,13 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
 }) => {
   return (
     <>
-      <Tooltip title={"Search"} placement={"bottom-end"}>
+      <Tooltip placement={"bottom-end"} title={"Search"}>
         <IconButton
+          onClick={() => {
+            if (inputString !== "") {
+              goToSearchPage();
+            }
+          }}
           sx={{
             "&:hover": {
               color: "#2196f3",
@@ -39,27 +44,21 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
             },
             padding: "12px 15px",
           }}
-          onClick={() => {
-            if (inputString !== "") {
-              goToSearchPage();
-            }
-          }}
         >
           <SearchIcon />
         </IconButton>
       </Tooltip>
-      <Divider style={{ height: 28 }} orientation={"vertical"} />
+      <Divider orientation={"vertical"} style={{ height: 28 }} />
 
       {inputString === "" ? (
         <Box component={"div"} sx={{ padding: "10px 10px" }}>
-          <Tooltip title={"Start search"} placement={"bottom-end"}>
+          <Tooltip placement={"bottom-end"} title={"Start search"}>
             <Button
-              variant={"outlined"}
               color={"neutral"}
-              size={"small"}
               onClick={() => {
                 focusAutocomplete();
               }}
+              size={"small"}
               sx={{
                 width: 34,
                 height: 28,
@@ -69,6 +68,7 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
                   color: "#2196f3",
                 },
               }}
+              variant={"outlined"}
             >
               <div>⌘K</div>
             </Button>
@@ -79,8 +79,9 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Tooltip title={"Clear search"} placement={"bottom-end"}>
+        <Tooltip placement={"bottom-end"} title={"Clear search"}>
           <IconButton
+            onClick={clearSelection}
             sx={{
               "&:hover": {
                 color: "#2196f3",
@@ -88,7 +89,6 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
               },
               padding: "12px 15px",
             }}
-            onClick={clearSelection}
           >
             <ClearIcon />
           </IconButton>

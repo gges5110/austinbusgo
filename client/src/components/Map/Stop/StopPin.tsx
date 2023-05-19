@@ -19,21 +19,21 @@ export const StopPin: React.FunctionComponent<StopPinProps> = ({
   // Consider showing stop name when zoom is below 12
   return (
     <Tooltip
-      title={stopName}
-      placement={"left"}
-      open={highlighted || open}
-      onOpen={() => {
-        setOpen(true);
-      }}
       onClose={() => {
         setOpen(false);
       }}
+      onOpen={() => {
+        setOpen(true);
+      }}
+      open={highlighted || open}
+      placement={"left"}
+      title={stopName}
     >
       <IconButton onClick={onClick} size={"small"}>
         <LocationOnIcon
-          sx={{ fontSize: highlighted ? 36 : undefined }}
           fontSize={"small"}
           style={{ color: highlighted ? red[500] : blue[500] }}
+          sx={{ fontSize: highlighted ? 36 : undefined }}
         />
       </IconButton>
     </Tooltip>

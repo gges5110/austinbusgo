@@ -164,6 +164,8 @@ class Resolver:
 
         if stop_time_update is None:
             return None
+        if stop_time_update.schedule_relationship == 1:
+            return None
 
         arrival_time_update = (
             stop_time_update.arrival.time

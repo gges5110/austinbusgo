@@ -1,18 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider } from "@mui/material";
 import { DirectionToggle } from "../../components/SearchPanel/DirectionToggle/DirectionToggle";
 import { RouteStopsTimeline } from "../../components/Route/RouteStopsTimeline/RouteStopsTimeline";
 import * as React from "react";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { useTitle } from "../../hooks/UseTitle";
 import { useDataFromLoader } from "../../Router";
-import RouteIcon from "@mui/icons-material/Route";
-import { RouteIdDisplay } from "../../components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { Trip } from "../../interfaces/interface.d";
 import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import { routeLoader } from "./RouteLoader";
 import { AddToFavorites } from "../../components/Shared/AddToFavorites/AddToFavorites";
 import { ShareButton } from "../../components/Shared/ShareButton/ShareButton";
+import { RouteDisplayBanner } from "../../components/Shared/RouteDisplayBanner/RouteDisplayBanner";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
@@ -44,28 +43,18 @@ export const RouteMenu = () => {
           width: "100%",
         }}
       >
-        <Box
-          component={"div"}
-          display={"flex"}
-          gap={1}
-          justifyContent={"center"}
-          alignItems={"center"}
-          sx={{ py: 1 }}
-        >
-          <RouteIcon />
-          <RouteIdDisplay
+        <Box py={1}>
+          <RouteDisplayBanner
             routeColor={route.routeColor}
             routeId={route.routeId}
+            routeName={route.routeLongName}
           />
-          <Typography sx={{ fontSize: "18px" }}>
-            {route.routeLongName}
-          </Typography>
         </Box>
         <Box sx={{ pl: 4 }}>
           <DirectionToggle
             directionId={Number(directionId)}
-            setDirection={setDirection}
             distinctTrips={distinctTrips}
+            setDirection={setDirection}
           />
         </Box>
       </Box>

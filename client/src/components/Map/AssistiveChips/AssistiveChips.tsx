@@ -17,14 +17,14 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
 
   return (
     <Box
+      display={"flex"}
+      gap={1}
       sx={{
         position: "absolute",
         left: MENU_PANEL_WIDTH,
         ml: 2,
         mt: 2,
       }}
-      display={"flex"}
-      gap={1}
     >
       <Paper
         sx={{
@@ -33,15 +33,15 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
         }}
       >
         <LoadingButton
-          loading={isLoading}
           component={RouterLink}
-          to={`${viewStatePathname}/search/Nearby%20stops`}
+          loading={isLoading}
+          onClick={fetchNearByStops}
           sx={{
             whiteSpace: "nowrap",
             color: "text.primary",
             textTransform: "none",
           }}
-          onClick={fetchNearByStops}
+          to={`${viewStatePathname}/search/Nearby%20stops`}
         >
           <NearMeIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
@@ -57,13 +57,13 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
       >
         <Button
           component={RouterLink}
-          to={`${viewStatePathname}/search/All%20routes`}
           sx={{
             whiteSpace: "nowrap",
             color: "text.primary",
             textTransform: "none",
             px: "12px",
           }}
+          to={`${viewStatePathname}/search/All%20routes`}
         >
           <RouteIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
@@ -79,13 +79,13 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
       >
         <Button
           component={RouterLink}
-          to={`${viewStatePathname}/search/Favorites`}
           sx={{
             whiteSpace: "nowrap",
             color: "text.primary",
             textTransform: "none",
             px: "12px",
           }}
+          to={`${viewStatePathname}/search/Favorites`}
         >
           <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>

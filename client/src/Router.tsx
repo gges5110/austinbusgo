@@ -33,35 +33,35 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route
-      path={"/:viewState?"}
+      element={<RootLayout />}
       id={"searchParams"}
       loader={searchParamsDataLoader}
-      element={<RootLayout />}
+      path={"/:viewState?"}
     >
       <Route
-        path={"/:viewState/search/:searchTerm"}
         element={<SearchResultsMenu />}
         id={"search"}
         loader={searchLoader}
+        path={"/:viewState/search/:searchTerm"}
       ></Route>
-      <Route path={"/:viewState/stop/:stopId"} id={"stop"} loader={stopLoader}>
+      <Route id={"stop"} loader={stopLoader} path={"/:viewState/stop/:stopId"}>
         <Route
-          path={"/:viewState/stop/:stopId"}
-          index={true}
           element={<StopMenu />}
+          index={true}
           loader={stopLoader}
+          path={"/:viewState/stop/:stopId"}
         ></Route>
         <Route
-          path={"/:viewState/stop/:stopId/trip/:tripId"}
-          loader={tripLoader}
           element={<TripMenu />}
+          loader={tripLoader}
+          path={"/:viewState/stop/:stopId/trip/:tripId"}
         ></Route>
       </Route>
       <Route
-        path={"/:viewState/route/:routeId/direction/:directionId"}
         element={<RouteMenu />}
         id={"route"}
         loader={routeLoader}
+        path={"/:viewState/route/:routeId/direction/:directionId"}
       ></Route>
     </Route>
   )

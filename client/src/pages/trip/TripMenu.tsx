@@ -1,18 +1,8 @@
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import {
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { Box, Button, Divider, Typography } from "@mui/material";
 import * as React from "react";
 import { useRef } from "react";
 import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../../components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { useDataFromLoader, useDataFromRouteLoader } from "../../Router";
 import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import { useTitle } from "../../hooks/UseTitle";
@@ -23,6 +13,8 @@ import { useTripUpdateQuery } from "../../schemas/TripUpdate.generated";
 import { RouteOutlined } from "@mui/icons-material";
 import { useViewStatePathname } from "../../hooks/UseViewStatePathname";
 import { AddToFavorites } from "../../components/Shared/AddToFavorites/AddToFavorites";
+import { BackButton } from "../../components/Shared/BackButton/BackButton";
+import { RouteDisplayBanner } from "../../components/Shared/RouteDisplayBanner/RouteDisplayBanner";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);
@@ -50,14 +42,10 @@ export const TripMenu = () => {
   );
 
   const { viewStatePathname } = useViewStatePathname();
-  const navigate = useNavigate();
-  const onBack = () => {
-    navigate(-1);
-  };
 
-  const tripName = trip.tripHeadsign?.split("-")[
-    trip.tripHeadsign?.split("-").length - 1
-  ];
+  const tripName =
+    trip.tripHeadsign?.split("-")[trip.tripHeadsign?.split("-").length - 1] ||
+    "";
 
   useTitle(`${tripName} - Austin Bus Go`);
 
@@ -79,23 +67,15 @@ export const TripMenu = () => {
             overflow: "hidden",
           }}
         >
-          <Tooltip title={"Back"} sx={{ position: "absolute", left: "6px" }}>
-            <IconButton onClick={onBack}>
-              <ArrowBackIcon />
-            </IconButton>
-          </Tooltip>
+          <BackButton />
           <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-              <DirectionsBusIcon />
-              <RouteIdDisplay
-                routeId={trip.routeId}
-                routeColor={trip.route.routeColor}
-              />
-              <Typography sx={{ fontSize: "18px" }}>{tripName}</Typography>
-            </Box>
-            <Typography
-              sx={{ color: "gray", textAlign: "center", fontSize: "16px" }}
-            >
+            <RouteDisplayBanner
+              routeColor={trip.route.routeColor}
+              routeId={trip.routeId}
+              routeName={tripName}
+              useBusIcon={true}
+            />
+            <Typography textAlign={"center"} variant={"subtitle2"}>
               from {stop?.stopName}
             </Typography>
           </Box>
@@ -104,14 +84,14 @@ export const TripMenu = () => {
         <Divider />
         <Box display={"flex"} px={"22px"} py={"10px"}>
           <Button
-            sx={{ textTransform: "none" }}
             component={RouterLink}
+            sx={{ textTransform: "none" }}
             to={`${viewStatePathname}/route/${trip.routeId}/direction/${trip.directionId}`}
           >
             <Box
+              alignItems={"center"}
               display={"flex"}
               flexDirection={"column"}
-              alignItems={"center"}
             >
               <RouteOutlined />
               <Typography sx={{ textAlign: "center", fontSize: "14px" }}>
@@ -123,12 +103,12 @@ export const TripMenu = () => {
         </Box>
         <Divider />
         <TripTimeline
-          vehiclePosition={vehiclePosition}
-          tripUpdate={tripUpdate}
-          stopTimes={stopTimes}
-          stop={stop}
-          trip={trip}
           containerRef={containerRef}
+          stop={stop}
+          stopTimes={stopTimes}
+          trip={trip}
+          tripUpdate={tripUpdate}
+          vehiclePosition={vehiclePosition}
         />
       </Box>
     </MenuPanel>

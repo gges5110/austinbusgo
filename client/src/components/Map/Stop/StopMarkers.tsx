@@ -18,10 +18,10 @@ export const StopMarkers: React.FC<StopMarkersProps> = ({
     () =>
       stops.map((stop) => (
         <StopMarker
-          key={stop.stopId}
-          stop={stop}
-          setSelectedStop={setSelectedStop}
           highlighted={selectedStop?.stopId === stop.stopId}
+          key={stop.stopId}
+          setSelectedStop={setSelectedStop}
+          stop={stop}
         />
       )),
     [stops, stop]

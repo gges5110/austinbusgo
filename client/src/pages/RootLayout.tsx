@@ -77,32 +77,32 @@ export const RootLayout: React.FunctionComponent = () => {
         </IconButton>
       </Paper>
       <MapWrapper
-        stops={stops}
-        routeShapes={routeShapes}
-        vehiclePositions={vehiclePositions}
         route={route}
-        stop={stop}
+        routeShapes={routeShapes}
         setSelectedStop={setStop}
+        stop={stop}
+        stops={stops}
+        vehiclePositions={vehiclePositions}
       />
       <Popper open={true}>
         <Outlet />
       </Popper>
       <Popper open={true} sx={{ zIndex: 2 }}>
         <SearchPanel
-          searchTerm={searchTerm}
           route={route}
+          searchTerm={searchTerm}
           setRoute={setRoute}
-          stop={stop}
           setStop={setStop}
+          stop={stop}
         />
       </Popper>
 
       <SettingsDialog
-        open={settingsDialogOpen}
         autoPolling={autoPolling}
+        open={settingsDialogOpen}
         reloadVehiclePositions={reloadVehiclePositions}
-        setOpen={setSettingsDialogOpen}
         setAutoPolling={setAutoPolling}
+        setOpen={setSettingsDialogOpen}
       />
     </Box>
   );

@@ -43,16 +43,16 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
       <RadioGroup
         aria-labelledby={"direction-radio-buttons-group"}
         name={"direction-radio-buttons-group"}
-        value={value}
         onChange={handleChange}
+        value={value}
       >
         {distinctTrips?.map((distinctTrip, index) => {
           return (
             <FormControlLabel
-              key={index}
-              value={distinctTrip.directionId}
               control={<Radio size={"small"} />}
+              key={index}
               label={distinctTrip.tripShortName}
+              value={distinctTrip.directionId}
             />
           );
         })}

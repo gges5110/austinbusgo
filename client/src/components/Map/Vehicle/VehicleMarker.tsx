@@ -42,40 +42,40 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
   return (
     <React.Fragment>
       <Marker
-        longitude={position?.longitude || 0}
-        latitude={position?.latitude || 0}
         key={vehiclePosition?.vehicle?.id || ""}
+        latitude={position?.latitude || 0}
+        longitude={position?.longitude || 0}
       >
         <Badge
           badgeContent={vehiclePosition?.trip?.routeId}
           color={"primary"}
-          overlap={"circular"}
           max={999}
+          overlap={"circular"}
         >
           <VehicleIcon
-            innerRef={ref}
             bearing={Number(position?.bearing) || 0}
+            highlighted={isHighlighted}
+            innerRef={ref}
             onClick={handleOnClick}
             onMouseEnter={handlePopoverOpen}
             onMouseLeave={handlePopoverClose}
-            highlighted={isHighlighted}
           />
         </Badge>
       </Marker>
       <Popover
-        open={open || isHighlighted}
-        onClose={handleClose}
         anchorEl={ref.current}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "right",
         }}
+        onClose={handleClose}
+        open={open || isHighlighted}
+        sx={{
+          pointerEvents: "none",
+        }}
         transformOrigin={{
           vertical: "top",
           horizontal: "left",
-        }}
-        sx={{
-          pointerEvents: "none",
         }}
       >
         <VehiclePopupContainer vehiclePosition={vehiclePosition} />

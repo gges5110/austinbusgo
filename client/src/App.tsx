@@ -16,13 +16,13 @@ export const App: React.FunctionComponent = () => {
       <ThemeProvider theme={appTheme}>
         <CssBaseline enableColorScheme={true} />
         <SnackbarProvider
-          maxSnack={3}
           anchorOrigin={{
             vertical: "bottom",
             horizontal: "left",
           }}
-          preventDuplicate={true}
           autoHideDuration={2000}
+          maxSnack={3}
+          preventDuplicate={true}
         >
           <RouterProvider router={router} />
         </SnackbarProvider>

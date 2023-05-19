@@ -1,21 +1,21 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import * as React from "react";
+import { useEffect } from "react";
 import { useTitle } from "../../hooks/UseTitle";
 import { useDataFromLoader } from "../../Router";
 import { MenuPanel } from "../../components/Shared/MenuPanel/MenuPanel";
 import { stopLoader } from "./StopLoader";
-import { Box, Divider, IconButton, Tooltip, Typography } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Divider, Typography } from "@mui/material";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { AddToFavorites } from "../../components/Shared/AddToFavorites/AddToFavorites";
 import { ShareButton } from "../../components/Shared/ShareButton/ShareButton";
-import { RoutesSelector } from "../../components/Stop/StopInfoAndArrivalTimes/RoutesSelector/RoutesSelector";
-import { ArrivalTimeList } from "../../components/Stop/StopInfoAndArrivalTimes/ArrivalTimeList/ArrivalTimeList";
+import { RoutesSelector } from "../../components/Stop/RoutesSelector/RoutesSelector";
+import { ArrivalTimeList } from "../../components/Stop/ArrivalTimeList/ArrivalTimeList";
 import { useArrivalTimesQuery } from "../../schemas/ArrivalTimes.generated";
 import { getDate } from "../../dateUtils";
 import { useAtom } from "jotai";
 import { selectedRouteIdsAtStopAtom } from "../../Atoms";
-import { useEffect } from "react";
+import { BackButton } from "../../components/Shared/BackButton/BackButton";
 
 interface StopMenuProps {
   hideBackButton?: boolean;
@@ -103,18 +103,16 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
 
           <Box sx={{ flex: 1 }}>
             <Box
+              alignItems={"center"}
               display={"flex"}
               gap={1}
               justifyContent={"center"}
-              alignItems={"center"}
             >
               <PlaceOutlinedIcon />
-              <Typography sx={{ fontSize: "18px" }}>{stop.stopName}</Typography>
+              <Typography variant={"subtitle1"}>{stop.stopName}</Typography>
             </Box>
 
-            <Typography
-              sx={{ color: "gray", textAlign: "center", fontSize: "15px" }}
-            >
+            <Typography textAlign={"center"} variant={"subtitle2"}>
               Stop ID: {stop.stopId}
             </Typography>
           </Box>
@@ -135,34 +133,19 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
             }}
           >
             <RoutesSelector
+              arrivalTimes={arrivalTimes}
               selectedRouteIds={selectedRouteIds}
               setSelectedRouteIds={setSelectedRouteIds}
-              arrivalTimes={arrivalTimes}
             />
           </Box>
         )}
       </Box>
       <ArrivalTimeList
         arrivalTimes={arrivalTimes}
-        stop={stop}
         loading={isLoading}
         selectedRouteIds={selectedRouteIds}
+        stop={stop}
       />
     </MenuPanel>
-  );
-};
-
-const BackButton = () => {
-  const navigate = useNavigate();
-  const onBack = () => {
-    navigate(-1);
-  };
-
-  return (
-    <Tooltip title={"Back"} sx={{ position: "absolute", left: "6px" }}>
-      <IconButton onClick={onBack}>
-        <ArrowBackIcon />
-      </IconButton>
-    </Tooltip>
   );
 };

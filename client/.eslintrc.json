@@ -25,6 +25,7 @@
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "import/no-webpack-loader-syntax": "off",
+    "react/jsx-boolean-value": ["error", "always"],
     "react/jsx-curly-brace-presence": [
       "error",
       {
@@ -33,6 +34,7 @@
         "propElementValues": "always"
       }
     ],
+    "react/jsx-sort-props": ["error"],
     "prettier/prettier": [
       "error",
       {

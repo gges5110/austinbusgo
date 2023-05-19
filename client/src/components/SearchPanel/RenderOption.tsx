@@ -46,21 +46,21 @@ export const renderOption: AutocompleteProps<
         </Box>
         {isRoute(optionValue) && (
           <>
-            <Highlight text={String(optionValue.routeId)} query={inputValue} />
-            <Highlight text={optionValue.routeLongName} query={inputValue} />
+            <Highlight query={inputValue} text={String(optionValue.routeId)} />
+            <Highlight query={inputValue} text={optionValue.routeLongName} />
           </>
         )}
         {isStop(optionValue) && (
           <>
-            <Highlight text={String(optionValue.stopId)} query={inputValue} />
+            <Highlight query={inputValue} text={String(optionValue.stopId)} />
             <Highlight
-              text={String(optionValue.stopName || "")}
               query={inputValue}
+              text={String(optionValue.stopName || "")}
             />
           </>
         )}
         {isSearchTerm(optionValue) && (
-          <Highlight text={String(optionValue.value)} query={inputValue} />
+          <Highlight query={inputValue} text={String(optionValue.value)} />
         )}
       </Box>
     </li>

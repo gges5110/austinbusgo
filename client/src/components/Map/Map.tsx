@@ -102,14 +102,14 @@ export const Map: React.FunctionComponent<MapProps> = ({
         onMoveEnd={onMoveEnd}
       >
         <Fab
-          color={"primary"}
           aria-label={"add"}
+          color={"primary"}
+          onClick={userLocationOnClick}
           sx={{
             position: "absolute",
             bottom: theme.spacing(4),
             right: theme.spacing(2),
           }}
-          onClick={userLocationOnClick}
         >
           <MyLocationIcon />
         </Fab>
@@ -118,23 +118,23 @@ export const Map: React.FunctionComponent<MapProps> = ({
         </Popper>
 
         <StopMarkers
-          stops={stops}
-          setSelectedStop={setSelectedStop}
           selectedStop={stop}
+          setSelectedStop={setSelectedStop}
+          stops={stops}
         />
         <VehicleMarkers
           onClick={vehicleMarkerOnClick}
           vehiclePositions={vehiclePositions}
         />
 
-        <Source id={"route-shapes"} type={"geojson"} data={routeShapeGeoJSON}>
+        <Source data={routeShapeGeoJSON} id={"route-shapes"} type={"geojson"}>
           <Layer
             id={"point"}
-            type={"line"}
             paint={{
               "line-color": `#${route?.routeColor || "a5a5a5"}`,
               "line-width": 5,
             }}
+            type={"line"}
           />
         </Source>
       </ReactMapGL>

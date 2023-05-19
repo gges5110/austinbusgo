@@ -16,6 +16,7 @@ export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
 }) => {
   return (
     <Box
+      onClick={onClick}
       sx={{
         backgroundColor: `#${routeColor}`,
         color: "white",
@@ -26,7 +27,6 @@ export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
         borderRadius: "7px",
         textAlign: "center",
       }}
-      onClick={onClick}
     >
       <Typography sx={{ fontWeight: "bold" }}>{routeId}</Typography>
     </Box>
