@@ -14,14 +14,19 @@ export const MenuPanel = ({
 }: PropsWithChildren<MenuPanelProps>) => {
   return (
     <Paper
+      ref={innerRef}
       sx={{
         height: "100vh",
         width: MENU_PANEL_WIDTH,
         overflowY: "auto",
       }}
-      ref={innerRef}
     >
-      <Slide direction="right" in={true} mountOnEnter unmountOnExit>
+      <Slide
+        direction={"right"}
+        in={true}
+        mountOnEnter={true}
+        unmountOnExit={true}
+      >
         <Box component={"div"} sx={{ pt: 8 }}>
           {children}
         </Box>

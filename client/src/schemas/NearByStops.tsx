@@ -10,6 +10,10 @@ export const NEAR_BY_STOPS_QUERY = gql`
         type
         coordinates
       }
+      routes {
+        routeId
+        routeColor
+      }
     }
   }
 `;

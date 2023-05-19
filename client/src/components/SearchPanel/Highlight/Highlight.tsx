@@ -16,7 +16,7 @@ export const Highlight: React.FC<HighlightProps> = ({ text, query }) => {
 
   return (
     <Box
-      component="span"
+      component={"span"}
       sx={{
         minWidth: "30px",
         display: "inline-block",

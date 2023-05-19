@@ -2,13 +2,26 @@ import { LineString, Stop } from "../../interfaces/interface.d";
 import { useMap } from "react-map-gl";
 import { useEffect } from "react";
 import { vehicleZoomLevel, ViewState } from "../../components/Map/Map";
+import { mapsFlyToCoordinateAtom } from "../../Atoms";
+import { useAtomValue } from "jotai";
+import { LngLatBoundsLike } from "mapbox-gl";
 
 export const useMapMotion = (
   viewState: ViewState,
   stop: Stop | undefined,
+  stops: Stop[],
   routeShapes: LineString[]
 ) => {
   const { mapId: map } = useMap();
+  const mapsFlyToCoordinate = useAtomValue(mapsFlyToCoordinateAtom);
+  useEffect(() => {
+    if (map && mapsFlyToCoordinate) {
+      map.flyTo({
+        center: mapsFlyToCoordinate,
+      });
+    }
+  }, [map, mapsFlyToCoordinate]);
+
   const flyToStop = (stop: Stop) => {
     if (map && stop.stopLoc?.coordinates) {
       map.flyTo({
@@ -28,38 +41,70 @@ export const useMapMotion = (
   };
 
   const flyToRoute = () => {
-    if (routeShapes.length !== 0) {
-      const flatLineString = routeShapes.flat();
-      const coordinates = flatLineString.map((s) => s.coordinates).flat();
-      map?.fitBounds(
-        [
-          [
-            Math.min(...coordinates.map((coord) => coord[0])),
-            Math.min(...coordinates.map((coord) => coord[1])),
-          ],
-          [
-            Math.max(...coordinates.map((coord) => coord[0])),
-            Math.max(...coordinates.map((coord) => coord[1])),
-          ],
-        ],
-        {
-          padding: {
-            top: 10,
-            left: 420,
-            right: 10,
-            bottom: 10,
-          },
-        }
-      );
+    if (routeShapes.length === 0) {
+      return;
     }
+
+    const flatLineString = routeShapes.flat();
+    const coordinates = flatLineString.map((s) => s.coordinates).flat();
+    const bounds: LngLatBoundsLike = [
+      [
+        Math.min(...coordinates.map((coord) => coord[0])),
+        Math.min(...coordinates.map((coord) => coord[1])),
+      ],
+      [
+        Math.max(...coordinates.map((coord) => coord[0])),
+        Math.max(...coordinates.map((coord) => coord[1])),
+      ],
+    ];
+    map?.fitBounds(bounds, {
+      padding: {
+        top: 10,
+        left: 420,
+        right: 10,
+        bottom: 10,
+      },
+    });
+  };
+
+  const flyToStops = (stops: Stop[]) => {
+    if (stops.length === 0) {
+      return;
+    }
+
+    const bounds: LngLatBoundsLike = [
+      [
+        Math.min(...stops.map((stop) => stop.stopLoc?.coordinates?.[0] || 0)),
+        Math.min(...stops.map((stop) => stop.stopLoc?.coordinates?.[1] || 0)),
+      ],
+      [
+        Math.max(...stops.map((stop) => stop.stopLoc?.coordinates?.[0] || 0)),
+        Math.max(...stops.map((stop) => stop.stopLoc?.coordinates?.[1] || 0)),
+      ],
+    ];
+
+    map?.fitBounds(bounds, {
+      padding: {
+        top: 100,
+        left: 420,
+        right: 10,
+        bottom: 100,
+      },
+    });
   };
 
   useEffect(() => {
-    if (map && stop) {
+    if (!map) {
+      return;
+    }
+
+    if (stop) {
       flyToStop(stop);
-    } else if (map && routeShapes.length !== 0) {
+    } else if (routeShapes.length !== 0) {
       flyToRoute();
+    } else if (stops) {
+      flyToStops(stops);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, stop, JSON.stringify(routeShapes)]);
+  }, [map, stop, JSON.stringify(stops), JSON.stringify(routeShapes)]);
 };

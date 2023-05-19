@@ -27,17 +27,15 @@ export type StopsByNameQueryVariables = Types.Exact<{
 }>;
 
 export type StopsByNameQuery = { __typename?: "Query" } & {
-  stopsByName?: Types.Maybe<
-    Array<
-      { __typename?: "Stop" } & Pick<
-        Types.Stop,
-        "stopId" | "stopCode" | "stopName"
-      > & {
-          stopLoc?: Types.Maybe<
-            { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
-          >;
-        }
-    >
+  stopsByName: Array<
+    { __typename?: "Stop" } & Pick<
+      Types.Stop,
+      "stopId" | "stopCode" | "stopName"
+    > & {
+        stopLoc?: Types.Maybe<
+          { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
+        >;
+      }
   >;
 };
 

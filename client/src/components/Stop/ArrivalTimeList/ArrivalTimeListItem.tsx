@@ -1,67 +1,18 @@
-import { Box, ListItemButton, Typography } from "@mui/material";
+import { Box, ListItemButton, Typography, useTheme } from "@mui/material";
 import AccessibleIcon from "@mui/icons-material/Accessible";
 import DirectionsBikeIcon from "@mui/icons-material/DirectionsBike";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
 import { Bullet } from "./Bullet";
-import * as Types from "../../../../interfaces/interface.d";
-import { RouteIdDisplay } from "../../../RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "../../Shared/RouteIdDisplay/RouteIdDisplay";
 import { Link as RouterLink } from "react-router-dom";
-import { useViewStatePathname } from "../../../../hooks/UseViewStatePathname";
-import { StopQuery } from "../../../../schemas/Stop.generated";
-
-type ArrivalTime = { __typename?: "ArrivalTime" } & Pick<
-  Types.ArrivalTime,
-  "updatedArrivalTime" | "scheduledArrivalTime"
-> & {
-    trip: { __typename?: "TripWithRoute" } & Pick<
-      Types.TripWithRoute,
-      | "routeId"
-      | "serviceId"
-      | "tripId"
-      | "tripHeadsign"
-      | "tripShortName"
-      | "directionId"
-      | "blockId"
-      | "shapeId"
-      | "wheelchairAccessible"
-      | "bikesAllowed"
-    > & {
-        route: { __typename?: "Route" } & Pick<
-          Types.Route,
-          "routeColor" | "routeLongName"
-        >;
-      };
-    vehicle?: Types.Maybe<
-      { __typename?: "VehiclePosition" } & Pick<
-        Types.VehiclePosition,
-        "stopId" | "currentStatus" | "timestamp"
-      > & {
-          trip?: Types.Maybe<
-            { __typename?: "TripDescriptor" } & Pick<
-              Types.TripDescriptor,
-              "tripId" | "routeId" | "startDate"
-            >
-          >;
-          vehicle?: Types.Maybe<
-            { __typename?: "VehicleDescriptor" } & Pick<
-              Types.VehicleDescriptor,
-              "id" | "label"
-            >
-          >;
-          position?: Types.Maybe<
-            { __typename?: "Position" } & Pick<
-              Types.Position,
-              "latitude" | "longitude"
-            >
-          >;
-        }
-    >;
-  };
+import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
+import { StopQuery } from "../../../schemas/Stop.generated";
+import { ArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 
 export interface ArrivalTimeListItemProps {
-  arrivalTime: ArrivalTime;
+  arrivalTime: ArrivalTimesQuery["arrivalTimes"][number];
   stop: StopQuery["stop"];
 }
 
@@ -69,55 +20,58 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   arrivalTime,
   stop,
 }) => {
-  const { updatedArrivalTime, scheduledArrivalTime } = arrivalTime;
   const { viewStatePathname } = useViewStatePathname();
 
-  const scheduledArrivalTimeInMoment: Dayjs = dayjs(
-    scheduledArrivalTime,
+  const scheduledArrivalTime: Dayjs = dayjs(
+    arrivalTime.scheduledArrivalTime,
     "HH:mm:ss"
   );
+  let updatedArrivalTime;
+  if (arrivalTime.updatedArrivalTime) {
+    updatedArrivalTime = dayjs(arrivalTime.updatedArrivalTime, "HH:mm:ss");
+  }
 
-  let timeDiffString;
-  const textColor: string | undefined = undefined;
-  let updatedArrivalTimeInMoment: Dayjs | undefined = undefined;
+  const theme = useTheme();
+  let timeDiffString = "Scheduled";
+  let textColor = "gray";
 
   if (updatedArrivalTime) {
-    // TODO: Move the calculation to the backend
-    updatedArrivalTimeInMoment = dayjs(updatedArrivalTime, "HH:mm:ss");
-    const early: boolean = updatedArrivalTimeInMoment.isBefore(
-      scheduledArrivalTimeInMoment
-    );
+    const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
 
-    const isSame: boolean = scheduledArrivalTimeInMoment.isSame(
-      updatedArrivalTimeInMoment,
+    const isSame = scheduledArrivalTime.isBetween(
+      updatedArrivalTime.subtract(2, "minute"),
+      updatedArrivalTime.add(2, "minute"),
       "minute"
     );
 
-    const duration: string = scheduledArrivalTimeInMoment.from(
-      updatedArrivalTimeInMoment,
-      true
-    );
+    const duration = scheduledArrivalTime.from(updatedArrivalTime, true);
     timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
+    if (early) {
+      textColor = "#f57c00";
+    } else {
+      textColor = theme.palette.error.light;
+    }
 
     if (isSame) {
       timeDiffString = "On time";
+      textColor = theme.palette.success.light;
     }
   }
 
-  const timeDiff = scheduledArrivalTimeInMoment.diff(dayjs(), "minute");
+  const timeDiff = scheduledArrivalTime.diff(dayjs(), "minute");
   const tripName = arrivalTime.trip.tripHeadsign?.split("-")[
     arrivalTime.trip.tripHeadsign?.split("-").length - 1
   ];
   return (
     <ListItemButton
-      key={scheduledArrivalTime}
       component={RouterLink}
-      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
+      key={arrivalTime.scheduledArrivalTime}
       sx={{ py: 1.5 }}
+      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>
-          <Box display={"flex"} gap={1} alignItems={"center"}>
+          <Box alignItems={"center"} display={"flex"} gap={1}>
             <DirectionsBusIcon fontSize={"small"} />
             <RouteIdDisplay
               routeColor={arrivalTime.trip.route.routeColor}
@@ -127,25 +81,36 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               {tripName}
             </Typography>
           </Box>
-          <Box color={"gray"} display={"flex"} alignItems={"center"}>
+          <Box alignItems={"center"} color={"gray"} display={"flex"}>
             <Typography
-              className={updatedArrivalTime ? textColor : undefined}
+              color={textColor}
               component={"span"}
               display={"inline"}
+              fontWeight={updatedArrivalTime ? 600 : undefined}
               variant={"body2"}
             >
-              {updatedArrivalTimeInMoment ? `${timeDiffString}` : "Scheduled"}
+              {timeDiffString}
             </Typography>
             <Bullet />
             <Typography
-              className={updatedArrivalTime ? textColor : undefined}
               component={"span"}
               display={"inline"}
+              sx={{
+                textDecoration:
+                  updatedArrivalTime && timeDiffString !== "On time"
+                    ? "line-through"
+                    : undefined,
+              }}
               variant={"body2"}
             >
-              {updatedArrivalTimeInMoment
-                ? updatedArrivalTimeInMoment.format("h:mm A")
-                : scheduledArrivalTimeInMoment.format("h:mm A")}
+              {timeDiff < 60 ||
+              (updatedArrivalTime && timeDiffString !== "On time") ? (
+                <>
+                  {updatedArrivalTime
+                    ? updatedArrivalTime.format("h:mm A")
+                    : scheduledArrivalTime.format("h:mm A")}
+                </>
+              ) : null}
             </Typography>
             {arrivalTime.trip.wheelchairAccessible && (
               <AccessibleIcon sx={{ fontSize: 16 }} />
@@ -182,11 +147,21 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
               }}
             >
               <Typography fontSize={24} lineHeight={1}>
-                {scheduledArrivalTimeInMoment.format("h:mm")}
+                {scheduledArrivalTime.format("h:mm")}
               </Typography>
               <Typography color={"gray"} fontSize={14}>
-                {scheduledArrivalTimeInMoment.format("A")}
+                {scheduledArrivalTime.format("A")}
               </Typography>
+            </Box>
+          ) : timeDiff == 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <Typography fontSize={20}>Now</Typography>
             </Box>
           ) : (
             <Box

@@ -8,6 +8,7 @@ import {
   ListItemButton,
   Paper,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { StopTimesQuery } from "../../../schemas/StopTimes.generated";
 import { useEffect, useRef } from "react";
@@ -18,12 +19,19 @@ import { VehiclePosition } from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { useUpdateViewState } from "../../../hooks/Map/UseViewStateSync";
+import { TripUpdateQuery } from "../../../schemas/TripUpdate.generated";
+import { useSetAtom } from "jotai";
+import {
+  hoveringVehiclePositionAtom,
+  mapsFlyToCoordinateAtom,
+} from "../../../Atoms";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];
   stop?: StopQuery["stop"];
   trip: TripQuery["trip"];
   vehiclePosition: VehiclePosition | undefined;
+  tripUpdate: TripUpdateQuery["tripUpdate"];
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
@@ -33,8 +41,11 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   trip,
   containerRef,
   vehiclePosition,
+  tripUpdate,
 }) => {
   const { viewStatePathname } = useViewStatePathname();
+  const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
+  const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
   const [searchParams] = useSearchParams();
   const stopTimelineItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -56,18 +67,64 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
     stopTimes?.find((stopTime) => stopTime.stopId === stop?.stopId)
       ?.stopSequence || 0;
   const vehicleStopId = vehiclePosition?.stopId;
+  const vehicleStopSequence = vehiclePosition?.currentStopSequence || 0;
+  const theme = useTheme();
   // TODO: fix timeline rail styling of border radius
   return (
     <Box component={"div"}>
       <List>
         {stopTimes?.map((stopTime, index) => {
-          const arrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
+          const stopTimeUpdateIndex = tripUpdate?.stopTimeUpdate.findIndex(
+            (stopTimeUpdate) =>
+              stopTimeUpdate?.stopSequence === stopTime.stopSequence
+          );
+          const scheduledArrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
+          let updatedArrivalTime;
+          if (stopTimeUpdateIndex !== undefined && stopTimeUpdateIndex !== -1) {
+            const time =
+              tripUpdate?.stopTimeUpdate[stopTimeUpdateIndex]?.arrival?.time;
+            if (time) {
+              updatedArrivalTime = dayjs.unix(time);
+            }
+          }
+
           const isSelectedStop = stopTime.stopId === stop?.stopId;
+          const isPastStop = vehicleStopSequence > stopTime.stopSequence;
+
+          let timeDiffString = "Scheduled";
+          let textColor = "gray";
+
+          if (updatedArrivalTime) {
+            const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
+
+            const isSame = scheduledArrivalTime.isBetween(
+              updatedArrivalTime.subtract(2, "minute"),
+              updatedArrivalTime.add(2, "minute"),
+              "minute"
+            );
+
+            const duration = scheduledArrivalTime.from(
+              updatedArrivalTime,
+              true
+            );
+            timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
+            if (early) {
+              textColor = "#f57c00";
+            } else {
+              textColor = theme.palette.error.light;
+            }
+
+            if (isSame) {
+              timeDiffString = "On time";
+              textColor = theme.palette.success.light;
+            }
+          }
 
           return (
             <Box
-              key={stopTime.stopId}
+              className={isSelectedStop ? "selected" : undefined}
               component={"div"}
+              key={stopTime.stopId}
               ref={isSelectedStop ? stopTimelineItemRef : undefined}
               sx={{
                 position: "relative",
@@ -109,7 +166,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   opacity: "100%",
                 },
               }}
-              className={isSelectedStop ? "selected" : undefined}
             >
               {vehicleStopId === stopTime.stopId && (
                 <Paper
@@ -122,6 +178,23 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 >
                   <IconButton
                     component={RouterLink}
+                    onClick={() => {
+                      if (
+                        vehiclePosition?.position?.latitude &&
+                        vehiclePosition?.position?.longitude
+                      ) {
+                        setMapsFlyToCoordinate([
+                          vehiclePosition?.position?.longitude,
+                          vehiclePosition?.position?.latitude,
+                        ]);
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      setHoveringVehiclePosition(vehiclePosition);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveringVehiclePosition(undefined);
+                    }}
                     to={getViewStateURL({
                       latitude: vehiclePosition?.position?.latitude,
                       longitude: vehiclePosition?.position?.longitude,
@@ -132,8 +205,13 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 </Paper>
               )}
               <ListItemButton
-                key={stopTime.stopId}
                 component={RouterLink}
+                key={stopTime.stopId}
+                sx={{
+                  pl: 6,
+                  py: 2.5,
+                  color: isPastStop ? "gray" : "unset",
+                }}
                 to={
                   searchParams.get("routeId")
                     ? `${viewStatePathname}/stop/${
@@ -143,10 +221,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                       )}&directionId=${searchParams.get("directionId")}`
                     : `${viewStatePathname}/stop/${stopTime.stopId}`
                 }
-                sx={{
-                  pl: 6,
-                  py: 2.5,
-                }}
               >
                 <Box
                   display={"flex"}
@@ -166,8 +240,12 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
                         {stopTime.stop.stopName}
                       </Typography>
-                      <Typography color={"gray"} fontSize={14}>
-                        Scheduled
+                      <Typography
+                        color={textColor}
+                        fontSize={14}
+                        fontWeight={updatedArrivalTime ? 600 : undefined}
+                      >
+                        {timeDiffString}
                       </Typography>
                     </Box>
 
@@ -180,21 +258,36 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                         }}
                       >
                         <Typography fontSize={24} lineHeight={1}>
-                          {arrivalTime.format("h:mm")}
+                          {scheduledArrivalTime.format("h:mm")}
                         </Typography>
                         <Typography color={"gray"} fontSize={14}>
-                          {arrivalTime.format("A")}
+                          {scheduledArrivalTime.format("A")}
                         </Typography>
                       </Box>
                     ) : (
-                      <Typography whiteSpace={"nowrap"}>
-                        {arrivalTime.format("LT")}
-                      </Typography>
+                      <>
+                        {updatedArrivalTime !== undefined ? (
+                          <Typography whiteSpace={"nowrap"}>
+                            {updatedArrivalTime.format("LT")}
+                          </Typography>
+                        ) : (
+                          <Typography whiteSpace={"nowrap"}>
+                            {scheduledArrivalTime.format("LT")}
+                          </Typography>
+                        )}
+                      </>
                     )}
                   </Box>
                 </Box>
               </ListItemButton>
               <Divider
+                className={
+                  index === 0
+                    ? "first"
+                    : index === stopTimes?.length - 1
+                    ? "last"
+                    : undefined
+                }
                 sx={{
                   ml: 6,
                   [`&::before`]: {
@@ -241,13 +334,6 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                         : "100%",
                   },
                 }}
-                className={
-                  index === 0
-                    ? "first"
-                    : index === stopTimes?.length - 1
-                    ? "last"
-                    : undefined
-                }
               />
             </Box>
           );

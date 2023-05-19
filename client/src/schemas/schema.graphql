@@ -6,9 +6,26 @@ schema {
 
 type ArrivalTime {
     scheduledArrivalTime: String!
-    trip: TripWithRoute!
+    trip: Trip!
     updatedArrivalTime: String
-    vehicle: VehiclePosition
+}
+
+type ArrivalTimeAtStop {
+    scheduledArrivalTime: String!
+    "Identifies a stop, station, or station entrance."
+    stopId: String!
+    stopSequence: Int!
+    tripId: String
+    updatedArrivalTime: String
+}
+
+type FeedInfo {
+    feedEndDate: String
+    feedLang: String!
+    feedPublisherName: String!
+    feedPublisherUrl: String!
+    feedStartDate: String
+    feedVersion: String
 }
 
 "LineString Scalar Description"
@@ -35,21 +52,25 @@ type Position {
 }
 
 type Query {
-    arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]
-    distinctTrips(date: String!, routeId: String!): [Trip!]
+    arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]!
+    distinctTrips(date: String!, routeId: String!): [Trip!]!
+    earliestArrivalTimesOnRoute(date: String!, directionId: Int!, routeId: String!, time: String!): [ArrivalTimeAtStop!]!
+    feedInfo: FeedInfo!
     nearByStops(lat: Float!, lon: Float!): [Stop!]!
-    realTimeVehiclePositions: [VehiclePosition]
+    realTimeVehiclePositions: [VehiclePosition]!
     route(routeId: String!): Route!
     routeShapes(tripId: String!): LineString!
-    routes: [Route!]
+    routes: [Route!]!
     search(searchTerm: String!): Search!
     stop(stopId: String!): Stop!
-    stopTimes(tripId: String!): [StopTimes!]
+    stopTimes(tripId: String!): [StopTimes!]!
     stopsAndShapes(date: String!, directionId: Int!, routeId: String!): StopsAndShapes!
-    stopsByName(stopName: String!): [Stop!]
-    trip(tripId: String!): TripWithRoute!
+    stopsByName(stopName: String!): [Stop!]!
+    trip(tripId: String!): Trip!
     tripIdsForRoute(date: String!, routeId: String!): TripIdsForRoute!
-    vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]
+    tripUpdate(tripId: String!): TripUpdate
+    tripUpdates(filter: TripUpdatesFilter): [TripUpdate!]!
+    vehiclePositions(direction: Int!, routeId: String!): [VehiclePosition!]!
 }
 
 type Route {
@@ -84,6 +105,24 @@ type Stop {
     stopName: String
 }
 
+type StopTimeEvent {
+    delay: Int
+    time: Int
+    uncertainty: Int
+}
+
+type StopTimeUpdate {
+    "If schedule_relationship is empty or SCHEDULED, either arrival or departure must be provided within a StopTimeUpdate - both fields cannot be empty. arrival and departure may both be empty when schedule_relationship is SKIPPED. If schedule_relationship is NO_DATA, arrival and departure must be empty."
+    arrival: StopTimeEvent
+    "If schedule_relationship is empty or SCHEDULED, either arrival or departure must be provided within a StopTimeUpdate - both fields cannot be empty. arrival and departure may both be empty when schedule_relationship is SKIPPED. If schedule_relationship is NO_DATA, arrival and departure must be empty."
+    departure: StopTimeEvent
+    scheduleRelationship: Int
+    "Must be the same as in stops.txt in the corresponding GTFS feed."
+    stopId: String
+    "Must be the same as in stop_times.txt in the corresponding GTFS feed."
+    stopSequence: Int
+}
+
 type StopTimes {
     arrivalTime: String!
     departureTime: String!
@@ -111,6 +150,7 @@ type Trip {
     blockId: String
     "Indicates the direction of travel for a trip."
     directionId: Int
+    route: Route!
     "Identifies a route."
     routeId: String!
     "Identifies a set of dates when service is available for one or more routes."
@@ -143,28 +183,12 @@ type TripIdsForRoute {
     tripIds: [String!]!
 }
 
-type TripWithRoute {
-    "Indicates whether bikes are allowed."
-    bikesAllowed: Int
-    "Identifies the block to which the trip belongs."
-    blockId: String
-    "Indicates the direction of travel for a trip."
-    directionId: Int
-    route: Route!
-    "Identifies a route."
-    routeId: String!
-    "Identifies a set of dates when service is available for one or more routes."
-    serviceId: String!
-    "Identifies a geospatial shape describing the vehicle travel path for a trip."
-    shapeId: String
-    "Text that appears on signage identifying the trip's destination to riders."
-    tripHeadsign: String
-    "Identifies a trip."
-    tripId: String!
-    "Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips."
-    tripShortName: String
-    "Indicates wheelchair accessibility."
-    wheelchairAccessible: Int
+type TripUpdate {
+    delay: Int
+    stopTimeUpdate: [StopTimeUpdate]!
+    timestamp: Int!
+    trip: TripDescriptor!
+    vehicle: VehicleDescriptor!
 }
 
 type VehicleDescriptor {
@@ -211,4 +235,9 @@ enum VehicleStopStatus {
     IN_TRANSIT_TO
     "The vehicle is standing at the stop."
     STOPPED_AT
+}
+
+input TripUpdatesFilter {
+    routeId: String
+    tripId: String
 }

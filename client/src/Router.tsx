@@ -16,7 +16,7 @@ import { routeLoader } from "./pages/route/RouteLoader";
 import { stopLoader } from "./pages/stop/StopLoader";
 import { tripLoader } from "./pages/trip/TripLoader";
 import { searchLoader } from "./pages/search/SearchLoader";
-import { rootLoader } from "./pages/RootLoader";
+import { searchParamsDataLoader } from "./pages/SearchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn
@@ -33,34 +33,35 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <Route
-      path={"/:viewState?"}
-      id={"root"}
-      loader={rootLoader}
       element={<RootLayout />}
+      id={"searchParams"}
+      loader={searchParamsDataLoader}
+      path={"/:viewState?"}
     >
       <Route
-        path={"/:viewState/search/:searchTerm"}
         element={<SearchResultsMenu />}
+        id={"search"}
         loader={searchLoader}
+        path={"/:viewState/search/:searchTerm"}
       ></Route>
-      <Route path={"/:viewState/stop/:stopId"} id={"stop"} loader={stopLoader}>
+      <Route id={"stop"} loader={stopLoader} path={"/:viewState/stop/:stopId"}>
         <Route
-          path={"/:viewState/stop/:stopId"}
-          index={true}
           element={<StopMenu />}
+          index={true}
           loader={stopLoader}
+          path={"/:viewState/stop/:stopId"}
         ></Route>
         <Route
-          path={"/:viewState/stop/:stopId/trip/:tripId"}
-          loader={tripLoader}
           element={<TripMenu />}
+          loader={tripLoader}
+          path={"/:viewState/stop/:stopId/trip/:tripId"}
         ></Route>
       </Route>
       <Route
-        path={"/:viewState/route/:routeId/direction/:directionId"}
         element={<RouteMenu />}
         id={"route"}
         loader={routeLoader}
+        path={"/:viewState/route/:routeId/direction/:directionId"}
       ></Route>
     </Route>
   )

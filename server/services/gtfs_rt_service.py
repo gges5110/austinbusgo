@@ -48,12 +48,43 @@ class GTFSRTService:
     def get_trip_id(vehicle: VehiclePosition) -> str:
         return vehicle.trip.trip_id
 
+    def get_all_real_time_trip_updates(
+        self, route_id: str = None, trip_id: str = None
+    ) -> List[TripUpdate]:
+        trip_updates = self.gtfs_rt_client.load_trip_updates()
+        if trip_id:
+            return [
+                trip_update_list
+                for trip_update_list in trip_updates
+                if trip_update_list.trip.trip_id == trip_id
+            ]
+        elif route_id:
+            return [
+                trip_update_list
+                for trip_update_list in trip_updates
+                if trip_update_list.trip.route_id == route_id
+            ]
+        else:
+            return trip_updates
+
     def get_real_time_trip_updates(self, trip_ids: List[str]) -> List[TripUpdate]:
         trip_updates = self.gtfs_rt_client.load_trip_updates()
         return [
             trip_update_list
             for trip_update_list in trip_updates
             if trip_update_list.trip.trip_id in trip_ids
+        ]
+
+    def get_real_time_trip_updates_on_route(
+        self, route_id: str, direction_id: int
+    ) -> List[TripUpdate]:
+        trip_updates = self.gtfs_rt_client.load_trip_updates()
+        return [
+            trip_update
+            for trip_update in trip_updates
+            if trip_update.trip.route_id == route_id
+            and GTFSService.get_trip_by_id(trip_update.trip.trip_id).direction_id
+            == direction_id
         ]
 
     @staticmethod

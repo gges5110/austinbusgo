@@ -27,13 +27,11 @@ export type StopTimesQueryVariables = Types.Exact<{
 }>;
 
 export type StopTimesQuery = { __typename?: "Query" } & {
-  stopTimes?: Types.Maybe<
-    Array<
-      { __typename?: "StopTimes" } & Pick<
-        Types.StopTimes,
-        "tripId" | "arrivalTime" | "departureTime" | "stopId" | "stopSequence"
-      > & { stop: { __typename?: "Stop" } & Pick<Types.Stop, "stopName"> }
-    >
+  stopTimes: Array<
+    { __typename?: "StopTimes" } & Pick<
+      Types.StopTimes,
+      "tripId" | "arrivalTime" | "departureTime" | "stopId" | "stopSequence"
+    > & { stop: { __typename?: "Stop" } & Pick<Types.Stop, "stopName"> }
   >;
 };
 

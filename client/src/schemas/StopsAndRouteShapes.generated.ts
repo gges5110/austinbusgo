@@ -22,6 +22,7 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
     return json.data;
   };
 }
+
 export type StopsAndShapesQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   directionId: Types.Scalars["Int"];
@@ -38,14 +39,6 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
           stopLoc?: Types.Maybe<
             { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
           >;
-          routes?: Types.Maybe<
-            Array<
-              { __typename?: "Route" } & Pick<
-                Types.Route,
-                "routeId" | "routeColor"
-              >
-            >
-          >;
         }
     >;
     shapes: Array<
@@ -55,12 +48,10 @@ export type StopsAndShapesQuery = { __typename?: "Query" } & {
       >
     >;
   };
-  distinctTrips?: Types.Maybe<
-    Array<
-      { __typename?: "Trip" } & Pick<
-        Types.Trip,
-        "tripId" | "tripShortName" | "directionId"
-      >
+  distinctTrips: Array<
+    { __typename?: "Trip" } & Pick<
+      Types.Trip,
+      "tripId" | "tripShortName" | "directionId"
     >
   >;
 };
@@ -75,10 +66,6 @@ export const StopsAndShapesDocument = `
       stopLoc {
         type
         coordinates
-      }
-      routes {
-        routeId
-        routeColor
       }
     }
     shapes {

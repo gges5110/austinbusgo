@@ -22,8 +22,6 @@ import { useMapMotion } from "../../hooks/Map/UseMapMotion";
 import { useRouteShape } from "../../hooks/Map/UseRouteShape";
 import { useViewStateSync } from "../../hooks/Map/UseViewStateSync";
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
-import { useAtomValue } from "jotai";
-import { nearByStopsAtom } from "../../Atoms";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {
@@ -68,9 +66,8 @@ export const Map: React.FunctionComponent<MapProps> = ({
     zoom: zoom || 11.5,
   });
 
-  useMapMotion(viewState, stop, routeShapes);
+  useMapMotion(viewState, stop, stops, routeShapes);
   const { userLocationOnClick } = useUserLocation(viewState);
-  const nearByStops = useAtomValue(nearByStopsAtom);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
@@ -94,7 +91,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
   return (
     <>
       <ReactMapGL
-        id="mapId"
+        id={"mapId"}
         {...viewState}
         mapStyle={
           theme.palette.mode === "dark"
@@ -105,44 +102,39 @@ export const Map: React.FunctionComponent<MapProps> = ({
         onMoveEnd={onMoveEnd}
       >
         <Fab
-          color="primary"
-          aria-label="add"
+          aria-label={"add"}
+          color={"primary"}
+          onClick={userLocationOnClick}
           sx={{
             position: "absolute",
             bottom: theme.spacing(4),
             right: theme.spacing(2),
           }}
-          onClick={userLocationOnClick}
         >
           <MyLocationIcon />
         </Fab>
         <Popper open={true}>
-          <AssistiveChips stops={stops} viewState={viewState} />
+          <AssistiveChips />
         </Popper>
 
         <StopMarkers
+          selectedStop={stop}
+          setSelectedStop={setSelectedStop}
           stops={stops}
-          setSelectedStop={setSelectedStop}
-          selectedStop={stop}
-        />
-        <StopMarkers
-          stops={nearByStops}
-          setSelectedStop={setSelectedStop}
-          selectedStop={stop}
         />
         <VehicleMarkers
           onClick={vehicleMarkerOnClick}
           vehiclePositions={vehiclePositions}
         />
 
-        <Source id={"route-shapes"} type={"geojson"} data={routeShapeGeoJSON}>
+        <Source data={routeShapeGeoJSON} id={"route-shapes"} type={"geojson"}>
           <Layer
-            id="point"
-            type="line"
+            id={"point"}
             paint={{
               "line-color": `#${route?.routeColor || "a5a5a5"}`,
               "line-width": 5,
             }}
+            type={"line"}
           />
         </Source>
       </ReactMapGL>

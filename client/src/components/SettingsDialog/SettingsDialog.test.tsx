@@ -7,20 +7,20 @@ describe("SettingsDialog", () => {
   test("matches snapshot", async () => {
     const { container } = render(
       <SnackbarProvider
-        maxSnack={3}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "left",
         }}
-        preventDuplicate={true}
         autoHideDuration={2000}
+        maxSnack={3}
+        preventDuplicate={true}
       >
         <SettingsDialog
-          open={true}
           autoPolling={false}
+          open={true}
           reloadVehiclePositions={jest.fn()}
-          setOpen={jest.fn()}
           setAutoPolling={jest.fn()}
+          setOpen={jest.fn()}
         />
       </SnackbarProvider>
     );

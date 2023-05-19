@@ -1,10 +1,12 @@
 import { Badge, Popover } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as React from "react";
 import { Marker } from "react-map-gl";
 import { VehiclePosition } from "../../../interfaces/interface.d";
 import { VehicleIcon } from "./VehicleIcon";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
+import { useAtomValue } from "jotai";
+import { hoveringVehiclePositionAtom } from "../../../Atoms";
 
 interface VehicleMarkerProps {
   readonly vehiclePosition: VehiclePosition;
@@ -15,42 +17,45 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
   vehiclePosition,
   onClick,
 }) => {
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-  const handleOnClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    setAnchorEl(event.currentTarget);
+  const hoveringVehiclePosition = useAtomValue(hoveringVehiclePositionAtom);
+  const isHighlighted =
+    hoveringVehiclePosition?.vehicle?.id === vehiclePosition.vehicle?.id;
+  const [open, setOpen] = useState<boolean>(false);
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const handleOnClick = (): void => {
     onClick(vehiclePosition);
   };
 
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handlePopoverOpen = () => {
+    setOpen(true);
   };
 
   const handlePopoverClose = () => {
-    setAnchorEl(null);
+    setOpen(false);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setOpen(false);
   };
 
-  const open = Boolean(anchorEl);
   const { position } = vehiclePosition;
   return (
     <React.Fragment>
       <Marker
-        longitude={position?.longitude || 0}
-        latitude={position?.latitude || 0}
         key={vehiclePosition?.vehicle?.id || ""}
+        latitude={position?.latitude || 0}
+        longitude={position?.longitude || 0}
       >
         <Badge
           badgeContent={vehiclePosition?.trip?.routeId}
           color={"primary"}
-          overlap="circular"
           max={999}
+          overlap={"circular"}
         >
           <VehicleIcon
             bearing={Number(position?.bearing) || 0}
+            highlighted={isHighlighted}
+            innerRef={ref}
             onClick={handleOnClick}
             onMouseEnter={handlePopoverOpen}
             onMouseLeave={handlePopoverClose}
@@ -58,19 +63,19 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         </Badge>
       </Marker>
       <Popover
-        open={open}
-        onClose={handleClose}
-        anchorEl={anchorEl}
+        anchorEl={ref.current}
         anchorOrigin={{
           vertical: "bottom",
           horizontal: "right",
         }}
+        onClose={handleClose}
+        open={open || isHighlighted}
+        sx={{
+          pointerEvents: "none",
+        }}
         transformOrigin={{
           vertical: "top",
           horizontal: "left",
-        }}
-        sx={{
-          pointerEvents: "none",
         }}
       >
         <VehiclePopupContainer vehiclePosition={vehiclePosition} />

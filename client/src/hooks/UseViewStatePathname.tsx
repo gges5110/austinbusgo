@@ -1,7 +1,6 @@
-import { useLocation } from "react-router-dom";
-
 export const useViewStatePathname = () => {
-  const location = useLocation();
+  // TODO: convert this to non hook
+  const location = window.location;
   const re = /^(\/@[-0-9.]+,[-0-9.]+,[0-9.]+z)(.*)/;
   const viewStatePathname = location.pathname.match(re)?.[1] || "";
   const restOfPathname = location.pathname.match(re)?.[2];

@@ -28,12 +28,10 @@ export type DistinctTripsQueryVariables = Types.Exact<{
 }>;
 
 export type DistinctTripsQuery = { __typename?: "Query" } & {
-  distinctTrips?: Types.Maybe<
-    Array<
-      { __typename?: "Trip" } & Pick<
-        Types.Trip,
-        "tripId" | "tripShortName" | "directionId"
-      >
+  distinctTrips: Array<
+    { __typename?: "Trip" } & Pick<
+      Types.Trip,
+      "tripId" | "tripShortName" | "directionId"
     >
   >;
 };

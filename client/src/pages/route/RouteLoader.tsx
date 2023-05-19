@@ -10,7 +10,12 @@ import {
 } from "../../schemas/Route.generated";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "../../QueryClient";
-import { getDate } from "../RootLayout";
+import {
+  useVehiclePositionsQuery,
+  VehiclePositionsQuery,
+  VehiclePositionsQueryVariables,
+} from "../../schemas/VehiclePositions.generated";
+import { getDate } from "../../dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),
@@ -20,14 +25,18 @@ const stopsAndShapesQuery = (id: StopsAndShapesQueryVariables) => ({
   queryKey: useStopsAndShapesQuery.getKey(id),
   queryFn: useStopsAndShapesQuery.fetcher(id),
 });
+
+const vehiclePositionsQuery = (id: VehiclePositionsQueryVariables) => ({
+  queryKey: useVehiclePositionsQuery.getKey(id),
+  queryFn: useVehiclePositionsQuery.fetcher(id),
+});
 export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeId = params["routeId"] || "";
   const directionId = Number(params["directionId"]);
-
-  const routeData = await queryClient.ensureQueryData<RouteQuery>(
+  const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
     routeQuery({ routeId })
   );
-  const stopsAndShapesData = await queryClient.ensureQueryData<
+  const stopsAndShapesDataQuery = queryClient.ensureQueryData<
     StopsAndShapesQuery
   >(
     stopsAndShapesQuery({
@@ -37,10 +46,24 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
     })
   );
 
+  const vehiclePositionsDataQuery = queryClient.ensureQueryData<
+    VehiclePositionsQuery
+  >(
+    vehiclePositionsQuery({
+      routeId: routeId,
+      direction: directionId,
+    })
+  );
+
+  const routeData = await routeDataQuery;
+  const stopsAndShapesData = await stopsAndShapesDataQuery;
+  const vehiclePositionsData = await vehiclePositionsDataQuery;
+
   return {
     route: routeData.route,
     shapes: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.shapes,
     stops: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.stops,
     distinctTrips: (stopsAndShapesData as StopsAndShapesQuery).distinctTrips,
+    vehiclePositions: vehiclePositionsData?.vehiclePositions,
   };
 };

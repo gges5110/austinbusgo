@@ -11,10 +11,6 @@ export const STOPS_AND_ROUTE_SHAPES_QUERY = gql`
           type
           coordinates
         }
-        routes {
-          routeId
-          routeColor
-        }
       }
       shapes {
         type

@@ -27,8 +27,8 @@ export type TripQueryVariables = Types.Exact<{
 }>;
 
 export type TripQuery = { __typename?: "Query" } & {
-  trip: { __typename?: "TripWithRoute" } & Pick<
-    Types.TripWithRoute,
+  trip: { __typename?: "Trip" } & Pick<
+    Types.Trip,
     | "routeId"
     | "serviceId"
     | "tripId"
@@ -42,7 +42,7 @@ export type TripQuery = { __typename?: "Query" } & {
   > & {
       route: { __typename?: "Route" } & Pick<
         Types.Route,
-        "routeLongName" | "routeColor"
+        "routeId" | "routeLongName" | "routeColor"
       >;
     };
 };
@@ -61,6 +61,7 @@ export const TripDocument = `
     wheelchairAccessible
     bikesAllowed
     route {
+      routeId
       routeLongName
       routeColor
     }

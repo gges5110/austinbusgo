@@ -1,4 +1,4 @@
-import { ArrivalTimesQuery } from "../../../../schemas/ArrivalTimes.generated";
+import { ArrivalTimesQuery } from "../../../schemas/ArrivalTimes.generated";
 import * as React from "react";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -29,7 +29,7 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
     setSelectedRouteIds(uniqueRouteIds);
   };
   return (
-    <Box display={"flex"} justifyContent={"flex-start"} alignItems={"center"}>
+    <Box alignItems={"center"} display={"flex"} justifyContent={"flex-start"}>
       <Box sx={{ display: "flex", gap: 1 }}>
         {uniqueRouteIds.map((uniqueRouteId) => {
           const routeColor = arrivalTimes?.find(
@@ -39,21 +39,6 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
           // TODO: fix hover styles
           return (
             <Button
-              sx={{
-                backgroundColor: `#${routeColor}`,
-                "&:hover": {
-                  backgroundColor: `#${routeColor}`,
-                  opacity: isSelected ? "80%" : "40%",
-                },
-                color: "white",
-                width: "fit-content",
-                height: "fit-content",
-                px: 1,
-                py: 0,
-                minWidth: 0,
-                borderRadius: 1,
-                opacity: isSelected ? "100%" : "50%",
-              }}
               key={uniqueRouteId}
               onClick={() => {
                 setSelectedRouteIds((prevState) => {
@@ -73,6 +58,21 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
                   }
                 });
               }}
+              sx={{
+                backgroundColor: `#${routeColor}`,
+                "&:hover": {
+                  backgroundColor: `#${routeColor}`,
+                  opacity: isSelected ? "80%" : "40%",
+                },
+                color: "white",
+                width: "fit-content",
+                height: "fit-content",
+                px: 1,
+                py: 0,
+                minWidth: 0,
+                borderRadius: 1,
+                opacity: isSelected ? "100%" : "50%",
+              }}
             >
               <Typography sx={{ fontWeight: "bold" }}>
                 {uniqueRouteId}
@@ -83,10 +83,10 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
       </Box>
       {uniqueRouteIds.length !== selectedRouteIds.length && (
         <IconButton
-          sx={{ padding: "4px" }}
           onClick={() => {
             clearSelection();
           }}
+          sx={{ padding: "4px" }}
         >
           <ClearIcon sx={{ fontSize: 16 }} />
         </IconButton>

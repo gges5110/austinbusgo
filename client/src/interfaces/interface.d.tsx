@@ -14,9 +14,28 @@ export type Scalars = {
 export type ArrivalTime = {
   __typename?: "ArrivalTime";
   scheduledArrivalTime: Scalars["String"];
-  trip: TripWithRoute;
+  trip: Trip;
   updatedArrivalTime?: Maybe<Scalars["String"]>;
-  vehicle?: Maybe<VehiclePosition>;
+};
+
+export type ArrivalTimeAtStop = {
+  __typename?: "ArrivalTimeAtStop";
+  scheduledArrivalTime: Scalars["String"];
+  /** Identifies a stop, station, or station entrance. */
+  stopId: Scalars["String"];
+  stopSequence: Scalars["Int"];
+  tripId?: Maybe<Scalars["String"]>;
+  updatedArrivalTime?: Maybe<Scalars["String"]>;
+};
+
+export type FeedInfo = {
+  __typename?: "FeedInfo";
+  feedEndDate?: Maybe<Scalars["String"]>;
+  feedLang: Scalars["String"];
+  feedPublisherName: Scalars["String"];
+  feedPublisherUrl: Scalars["String"];
+  feedStartDate?: Maybe<Scalars["String"]>;
+  feedVersion?: Maybe<Scalars["String"]>;
 };
 
 export enum GeometryType {
@@ -57,21 +76,25 @@ export type Position = {
 
 export type Query = {
   __typename?: "Query";
-  arrivalTimes?: Maybe<Array<ArrivalTime>>;
-  distinctTrips?: Maybe<Array<Trip>>;
+  arrivalTimes: Array<ArrivalTime>;
+  distinctTrips: Array<Trip>;
+  earliestArrivalTimesOnRoute: Array<ArrivalTimeAtStop>;
+  feedInfo: FeedInfo;
   nearByStops: Array<Stop>;
-  realTimeVehiclePositions?: Maybe<Array<Maybe<VehiclePosition>>>;
+  realTimeVehiclePositions: Array<Maybe<VehiclePosition>>;
   route: Route;
-  routes?: Maybe<Array<Route>>;
+  routes: Array<Route>;
   routeShapes: LineString;
   search: Search;
   stop: Stop;
   stopsAndShapes: StopsAndShapes;
-  stopsByName?: Maybe<Array<Stop>>;
-  stopTimes?: Maybe<Array<StopTimes>>;
-  trip: TripWithRoute;
+  stopsByName: Array<Stop>;
+  stopTimes: Array<StopTimes>;
+  trip: Trip;
   tripIdsForRoute: TripIdsForRoute;
-  vehiclePositions?: Maybe<Array<VehiclePosition>>;
+  tripUpdate?: Maybe<TripUpdate>;
+  tripUpdates: Array<TripUpdate>;
+  vehiclePositions: Array<VehiclePosition>;
 };
 
 export type QueryArrivalTimesArgs = {
@@ -82,6 +105,13 @@ export type QueryArrivalTimesArgs = {
 export type QueryDistinctTripsArgs = {
   date: Scalars["String"];
   routeId: Scalars["String"];
+};
+
+export type QueryEarliestArrivalTimesOnRouteArgs = {
+  date: Scalars["String"];
+  directionId: Scalars["Int"];
+  routeId: Scalars["String"];
+  time: Scalars["String"];
 };
 
 export type QueryNearByStopsArgs = {
@@ -126,6 +156,14 @@ export type QueryTripArgs = {
 export type QueryTripIdsForRouteArgs = {
   date: Scalars["String"];
   routeId: Scalars["String"];
+};
+
+export type QueryTripUpdateArgs = {
+  tripId: Scalars["String"];
+};
+
+export type QueryTripUpdatesArgs = {
+  filter?: Maybe<TripUpdatesFilter>;
 };
 
 export type QueryVehiclePositionsArgs = {
@@ -174,6 +212,13 @@ export type StopsAndShapes = {
   stops: Array<Stop>;
 };
 
+export type StopTimeEvent = {
+  __typename?: "StopTimeEvent";
+  delay?: Maybe<Scalars["Int"]>;
+  time?: Maybe<Scalars["Int"]>;
+  uncertainty?: Maybe<Scalars["Int"]>;
+};
+
 export type StopTimes = {
   __typename?: "StopTimes";
   arrivalTime: Scalars["String"];
@@ -190,6 +235,19 @@ export type StopTimes = {
   tripId: Scalars["String"];
 };
 
+export type StopTimeUpdate = {
+  __typename?: "StopTimeUpdate";
+  /** If schedule_relationship is empty or SCHEDULED, either arrival or departure must be provided within a StopTimeUpdate - both fields cannot be empty. arrival and departure may both be empty when schedule_relationship is SKIPPED. If schedule_relationship is NO_DATA, arrival and departure must be empty. */
+  arrival?: Maybe<StopTimeEvent>;
+  /** If schedule_relationship is empty or SCHEDULED, either arrival or departure must be provided within a StopTimeUpdate - both fields cannot be empty. arrival and departure may both be empty when schedule_relationship is SKIPPED. If schedule_relationship is NO_DATA, arrival and departure must be empty. */
+  departure?: Maybe<StopTimeEvent>;
+  scheduleRelationship?: Maybe<Scalars["Int"]>;
+  /** Must be the same as in stops.txt in the corresponding GTFS feed. */
+  stopId?: Maybe<Scalars["String"]>;
+  /** Must be the same as in stop_times.txt in the corresponding GTFS feed. */
+  stopSequence?: Maybe<Scalars["Int"]>;
+};
+
 export type Trip = {
   __typename?: "Trip";
   /** Indicates whether bikes are allowed. */
@@ -198,6 +256,7 @@ export type Trip = {
   blockId?: Maybe<Scalars["String"]>;
   /** Indicates the direction of travel for a trip. */
   directionId?: Maybe<Scalars["Int"]>;
+  route: Route;
   /** Identifies a route. */
   routeId: Scalars["String"];
   /** Identifies a set of dates when service is available for one or more routes. */
@@ -232,29 +291,18 @@ export type TripIdsForRoute = {
   tripIds: Array<Scalars["String"]>;
 };
 
-export type TripWithRoute = {
-  __typename?: "TripWithRoute";
-  /** Indicates whether bikes are allowed. */
-  bikesAllowed?: Maybe<Scalars["Int"]>;
-  /** Identifies the block to which the trip belongs. */
-  blockId?: Maybe<Scalars["String"]>;
-  /** Indicates the direction of travel for a trip. */
-  directionId?: Maybe<Scalars["Int"]>;
-  route: Route;
-  /** Identifies a route. */
-  routeId: Scalars["String"];
-  /** Identifies a set of dates when service is available for one or more routes. */
-  serviceId: Scalars["String"];
-  /** Identifies a geospatial shape describing the vehicle travel path for a trip. */
-  shapeId?: Maybe<Scalars["String"]>;
-  /** Text that appears on signage identifying the trip's destination to riders. */
-  tripHeadsign?: Maybe<Scalars["String"]>;
-  /** Identifies a trip. */
-  tripId: Scalars["String"];
-  /** Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips. */
-  tripShortName?: Maybe<Scalars["String"]>;
-  /** Indicates wheelchair accessibility. */
-  wheelchairAccessible?: Maybe<Scalars["Int"]>;
+export type TripUpdate = {
+  __typename?: "TripUpdate";
+  delay?: Maybe<Scalars["Int"]>;
+  stopTimeUpdate: Array<Maybe<StopTimeUpdate>>;
+  timestamp: Scalars["Int"];
+  trip: TripDescriptor;
+  vehicle: VehicleDescriptor;
+};
+
+export type TripUpdatesFilter = {
+  routeId?: Maybe<Scalars["String"]>;
+  tripId?: Maybe<Scalars["String"]>;
 };
 
 export type VehicleDescriptor = {

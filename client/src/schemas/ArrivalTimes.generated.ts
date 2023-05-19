@@ -28,57 +28,30 @@ export type ArrivalTimesQueryVariables = Types.Exact<{
 }>;
 
 export type ArrivalTimesQuery = { __typename?: "Query" } & {
-  arrivalTimes?: Types.Maybe<
-    Array<
-      { __typename?: "ArrivalTime" } & Pick<
-        Types.ArrivalTime,
-        "updatedArrivalTime" | "scheduledArrivalTime"
-      > & {
-          trip: { __typename?: "TripWithRoute" } & Pick<
-            Types.TripWithRoute,
-            | "routeId"
-            | "serviceId"
-            | "tripId"
-            | "tripHeadsign"
-            | "tripShortName"
-            | "directionId"
-            | "blockId"
-            | "shapeId"
-            | "wheelchairAccessible"
-            | "bikesAllowed"
-          > & {
-              route: { __typename?: "Route" } & Pick<
-                Types.Route,
-                "routeColor" | "routeLongName"
-              >;
-            };
-          vehicle?: Types.Maybe<
-            { __typename?: "VehiclePosition" } & Pick<
-              Types.VehiclePosition,
-              "stopId" | "currentStatus" | "timestamp"
-            > & {
-                trip?: Types.Maybe<
-                  { __typename?: "TripDescriptor" } & Pick<
-                    Types.TripDescriptor,
-                    "tripId" | "routeId" | "startDate"
-                  >
-                >;
-                vehicle?: Types.Maybe<
-                  { __typename?: "VehicleDescriptor" } & Pick<
-                    Types.VehicleDescriptor,
-                    "id" | "label"
-                  >
-                >;
-                position?: Types.Maybe<
-                  { __typename?: "Position" } & Pick<
-                    Types.Position,
-                    "latitude" | "longitude"
-                  >
-                >;
-              }
-          >;
-        }
-    >
+  arrivalTimes: Array<
+    { __typename?: "ArrivalTime" } & Pick<
+      Types.ArrivalTime,
+      "updatedArrivalTime" | "scheduledArrivalTime"
+    > & {
+        trip: { __typename?: "Trip" } & Pick<
+          Types.Trip,
+          | "routeId"
+          | "serviceId"
+          | "tripId"
+          | "tripHeadsign"
+          | "tripShortName"
+          | "directionId"
+          | "blockId"
+          | "shapeId"
+          | "wheelchairAccessible"
+          | "bikesAllowed"
+        > & {
+            route: { __typename?: "Route" } & Pick<
+              Types.Route,
+              "routeColor" | "routeLongName"
+            >;
+          };
+      }
   >;
 };
 
@@ -102,24 +75,6 @@ export const ArrivalTimesDocument = `
         routeColor
         routeLongName
       }
-    }
-    vehicle {
-      trip {
-        tripId
-        routeId
-        startDate
-      }
-      vehicle {
-        id
-        label
-      }
-      position {
-        latitude
-        longitude
-      }
-      stopId
-      currentStatus
-      timestamp
     }
   }
 }

@@ -39,7 +39,9 @@ declare module "@mui/material/SvgIcon" {
 
 export const useAppTheme = () => {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const mode = useAtomValue(colorModeAtom);
+  const colorMode = useAtomValue(colorModeAtom);
+  const mode =
+    colorMode === "system" ? (prefersDarkMode ? "dark" : "light") : colorMode;
   const theme = useTheme();
 
   return React.useMemo(
@@ -59,6 +61,13 @@ export const useAppTheme = () => {
             "Arial",
             "-apple-system",
           ].join(","),
+          subtitle1: {
+            fontSize: "18px",
+          },
+          subtitle2: {
+            fontSize: "16px",
+            color: "gray",
+          },
         },
         components: {
           MuiTooltip: {

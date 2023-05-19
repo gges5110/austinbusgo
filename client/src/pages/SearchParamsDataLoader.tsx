@@ -15,7 +15,7 @@ import {
   VehiclePositionsQuery,
   VehiclePositionsQueryVariables,
 } from "../schemas/VehiclePositions.generated";
-import { getDate } from "./RootLayout";
+import { getDate } from "../dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),
@@ -29,7 +29,9 @@ const vehiclePositionsQuery = (id: VehiclePositionsQueryVariables) => ({
   queryKey: useVehiclePositionsQuery.getKey(id),
   queryFn: useVehiclePositionsQuery.fetcher(id),
 });
-export const rootLoader = async ({ request }: LoaderFunctionArgs) => {
+export const searchParamsDataLoader = async ({
+  request,
+}: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const routeId = url.searchParams.get("routeId") || "";
   const directionId = Number(url.searchParams.get("directionId") || "");
@@ -38,8 +40,12 @@ export const rootLoader = async ({ request }: LoaderFunctionArgs) => {
     return {};
   }
 
-  const rq = queryClient.ensureQueryData<RouteQuery>(routeQuery({ routeId }));
-  const sq = queryClient.ensureQueryData<StopsAndShapesQuery>(
+  const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
+    routeQuery({ routeId })
+  );
+  const stopsAndShapesDataQuery = queryClient.ensureQueryData<
+    StopsAndShapesQuery
+  >(
     stopsAndShapesQuery({
       routeId,
       directionId,
@@ -47,18 +53,20 @@ export const rootLoader = async ({ request }: LoaderFunctionArgs) => {
     })
   );
 
-  const vq = queryClient.ensureQueryData<VehiclePositionsQuery>({
-    ...vehiclePositionsQuery({
+  const vehiclePositionsDataQuery = queryClient.ensureQueryData<
+    VehiclePositionsQuery
+  >(
+    vehiclePositionsQuery({
       routeId: routeId,
       direction: directionId,
-    }),
-  });
+    })
+  );
 
   let routeData, stopsAndShapesData, vehiclePositionsData;
   if (routeId !== "") {
-    routeData = await rq;
-    stopsAndShapesData = await sq;
-    vehiclePositionsData = await vq;
+    routeData = await routeDataQuery;
+    stopsAndShapesData = await stopsAndShapesDataQuery;
+    vehiclePositionsData = await vehiclePositionsDataQuery;
   }
 
   return {

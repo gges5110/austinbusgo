@@ -1,26 +1,53 @@
-import { IconButton, useTheme } from "@mui/material";
-import { useSetAtom } from "jotai/index";
-import { colorModeAtom } from "../../Atoms";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { colorModeAtom, ColorModeType } from "../../Atoms";
 import * as React from "react";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import SettingsSystemDaydreamIcon from "@mui/icons-material/SettingsSystemDaydream";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { useAtom } from "jotai";
 
 export const ColorModeToggle = () => {
-  const theme = useTheme();
-  const setMode = useSetAtom(colorModeAtom);
+  const [mode, setMode] = useAtom(colorModeAtom);
+
+  const handleColorMode = (
+    event: React.MouseEvent<HTMLElement>,
+    newColorMode: ColorModeType | null
+  ) => {
+    if (newColorMode) {
+      setMode(newColorMode);
+    }
+  };
 
   return (
-    <IconButton
-      onClick={() => {
-        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-      }}
-      color="inherit"
+    <ToggleButtonGroup
+      aria-label={"color mode"}
+      color={"primary"}
+      exclusive={true}
+      onChange={handleColorMode}
+      sx={{ borderRadius: "10px" }}
+      value={mode}
     >
-      {theme.palette.mode === "dark" ? (
-        <Brightness7Icon />
-      ) : (
-        <Brightness4Icon />
-      )}
-    </IconButton>
+      <ToggleButton
+        aria-label={"light mode"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"light"}
+      >
+        <LightModeIcon /> Light
+      </ToggleButton>
+      <ToggleButton
+        aria-label={"system"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"system"}
+      >
+        <SettingsSystemDaydreamIcon /> System
+      </ToggleButton>
+      <ToggleButton
+        aria-label={"dark mode"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"dark"}
+      >
+        <DarkModeIcon /> Dark
+      </ToggleButton>
+    </ToggleButtonGroup>
   );
 };
