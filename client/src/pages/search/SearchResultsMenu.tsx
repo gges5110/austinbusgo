@@ -59,10 +59,11 @@ export const SearchResultsMenu = () => {
           <Container
             sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
           >
-            <Typography>
-              {"Austin Bus Go can't find "}
-              {searchTerm}
-            </Typography>
+            <Box component={"span"} display={"inherit"}>
+              <Typography mr={"4px"}>Austin Bus Go can&apos;t find</Typography>
+              <Typography fontStyle={"italic"}>{searchTerm}</Typography>
+            </Box>
+
             <Typography color={"gray"} fontSize={14}>
               Make sure your search is spelled correctly. Try adding a route
               number, street name, or stop code.

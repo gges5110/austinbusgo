@@ -17,6 +17,7 @@ export const EARLIEST_ARRIVAL_TIMES_ON_ROUTE_QUERY = gql`
       stopId
       scheduledArrivalTime
       updatedArrivalTime
+      tripId
     }
   }
 `;

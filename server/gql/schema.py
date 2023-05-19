@@ -2,7 +2,7 @@ import graphene
 
 from server.gql.geometry_types import LineString
 from server.gql.gtfs_rt_types import VehiclePosition, TripUpdate
-from server.gql.gtfs_types import Stop, Route, Trip, StopTimes
+from server.gql.gtfs_types import Stop, Route, Trip, StopTimes, FeedInfo
 from server.gql.resolver import Resolver
 
 
@@ -56,6 +56,10 @@ class Query(graphene.ObjectType):
         route_id=graphene.String(required=True),
         date=graphene.String(required=True),
         resolver=resolver.resolve_distinct_trips,
+    )
+
+    feed_info = graphene.Field(
+        graphene.NonNull(FeedInfo), resolver=resolver.resolve_feed_info
     )
 
     near_by_stops = graphene.Field(

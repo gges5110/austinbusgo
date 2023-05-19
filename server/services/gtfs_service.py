@@ -13,6 +13,7 @@ from server.models.gtfs_models import (
     CalendarDates,
     AggregatedShape,
     RoutesAtStop,
+    FeedInfo,
 )
 
 
@@ -237,3 +238,7 @@ class GTFSService:
             .where((CalendarDates.date == date))
             .order_by(StopTimes.stop_sequence)
         )
+
+    @staticmethod
+    def get_feed_info() -> FeedInfo:
+        return FeedInfo.get()

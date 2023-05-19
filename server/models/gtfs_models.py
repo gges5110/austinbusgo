@@ -35,6 +35,19 @@ class UnknownField(object):
         pass
 
 
+class FeedInfo(db_wrapper.Model):
+    feed_publisher_name = TextField()
+    feed_publisher_url = TextField()
+    feed_lang = TextField()
+    feed_start_date = DateField(null=True)
+    feed_end_date = DateField(null=True)
+    feed_version = TextField()
+
+    class Meta:
+        table_name = "feed_info"
+        primary_key = False
+
+
 class Routes(db_wrapper.Model):
     route_id = TextField(index=True, null=True, primary_key=True, unique=True)
     agency_id = IntegerField(null=True)

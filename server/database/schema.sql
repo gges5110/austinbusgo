@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS feed_info;
 DROP TABLE IF EXISTS stops;
 DROP TABLE IF EXISTS routes;
 DROP TABLE IF EXISTS shapes;
@@ -5,6 +6,28 @@ DROP TABLE IF EXISTS trips;
 DROP TABLE IF EXISTS stop_times;
 DROP TABLE IF EXISTS calendar;
 DROP TABLE IF EXISTS calendar_dates;
+
+CREATE TABLE agency
+(
+  agency_id         text UNIQUE NULL,
+  agency_name       text NOT NULL,
+  agency_url        text NOT NULL,
+  agency_timezone   text NOT NULL,
+  agency_lang       text NULL,
+  agency_phone      text NULL,
+  agency_fare_url   text NULL,
+  agency_email      text NULL
+);
+
+CREATE TABLE feed_info (
+  feed_publisher_name   text NOT NULL,
+  feed_publisher_url    text NOT NULL,
+  feed_lang             text NOT NULL,
+  feed_start_date       DATE NULL,
+  feed_end_date         DATE NULL,
+  feed_version          text NULL,
+  sign_id               int NULL
+);
 
 CREATE TABLE stops
 (
@@ -15,12 +38,12 @@ CREATE TABLE stops
   stop_loc          geography(POINT) NOT NULL, -- stop_lat/stop_lon
   zone_id           text NULL,
   stop_url          text NULL,
-  location_type     boolean NULL,
+  location_type     integer NULL,
   parent_station    text NULL,
   stop_timezone     text NULL,
   wheelchair_boarding integer NULL,
   corner_placement  text NULL,
-  stop_position     text NULL,
+  stop_position     text NULL, -- capital metro specific column
   on_street         text NULL,
   at_street         text NULL,
   heading           integer NULL
@@ -123,6 +146,22 @@ CREATE TABLE calendar_dates
   exception_type    integer NOT NULL
 );
 
+CREATE TABLE transfers
+(
+    from_stop_id        text NOT NULL,
+    to_stop_id          text NOT NULL,
+    transfer_type       integer NOT NULL,
+    min_transfer_time   integer
+    CONSTRAINT fk_from_stop_id
+		FOREIGN KEY(from_stop_id)
+	      REFERENCES stops(stop_id),
+    CONSTRAINT fk_to_stop_id
+		FOREIGN KEY(to_stop_id)
+	      REFERENCES stops(stop_id),
+);
+
+\copy agency from './capmetro/agency.txt' with csv header
+\copy feed_info from './capmetro/feed_info.txt' with csv header
 \copy stops from './capmetro/stops.txt' with csv header
 \copy routes from './capmetro/routes.txt' with csv header
 \copy shapes from './capmetro/shapes.txt' with csv header
@@ -130,6 +169,7 @@ CREATE TABLE calendar_dates
 \copy stop_times from './capmetro/stop_times.txt' with csv header
 \copy calendar from './capmetro/calendar.txt' with csv header
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
+\copy transfers from './capmetro/transfers.txt' with csv header
 
 CREATE MATERIALIZED VIEW routes_at_stop AS
 SELECT routes.route_id, stop_times.stop_id
@@ -145,3 +185,4 @@ CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
 CREATE INDEX CALENDAR_service_id ON calendar(service_id);
 CREATE INDEX ROUTES_AT_STOP_stop_id_route_id ON routes_at_stop(stop_id, route_id);
+CREATE INDEX TRANSFERS_from_stop_id_to_stop_id ON transfers(from_stop_id, to_stop_id);

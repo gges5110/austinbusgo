@@ -15,7 +15,17 @@ type ArrivalTimeAtStop {
     "Identifies a stop, station, or station entrance."
     stopId: String!
     stopSequence: Int!
+    tripId: String
     updatedArrivalTime: String
+}
+
+type FeedInfo {
+    feedEndDate: String
+    feedLang: String!
+    feedPublisherName: String!
+    feedPublisherUrl: String!
+    feedStartDate: String
+    feedVersion: String
 }
 
 "LineString Scalar Description"
@@ -45,6 +55,7 @@ type Query {
     arrivalTimes(date: String!, stopId: String!): [ArrivalTime!]!
     distinctTrips(date: String!, routeId: String!): [Trip!]!
     earliestArrivalTimesOnRoute(date: String!, directionId: Int!, routeId: String!, time: String!): [ArrivalTimeAtStop!]!
+    feedInfo: FeedInfo!
     nearByStops(lat: Float!, lon: Float!): [Stop!]!
     realTimeVehiclePositions: [VehiclePosition]!
     route(routeId: String!): Route!

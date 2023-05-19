@@ -84,3 +84,12 @@ class StopTimes(graphene.ObjectType):
     timepoint = graphene.Int()
     sup_est_delay = graphene.String()
     stop = graphene.Field(graphene.NonNull(Stop))
+
+
+class FeedInfo(graphene.ObjectType):
+    feed_publisher_name = graphene.String(required=True)
+    feed_publisher_url = graphene.String(required=True)
+    feed_lang = graphene.String(required=True)
+    feed_start_date = graphene.String()
+    feed_end_date = graphene.String()
+    feed_version = graphene.String()

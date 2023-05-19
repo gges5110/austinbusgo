@@ -28,6 +28,16 @@ export type ArrivalTimeAtStop = {
   updatedArrivalTime?: Maybe<Scalars["String"]>;
 };
 
+export type FeedInfo = {
+  __typename?: "FeedInfo";
+  feedEndDate?: Maybe<Scalars["String"]>;
+  feedLang: Scalars["String"];
+  feedPublisherName: Scalars["String"];
+  feedPublisherUrl: Scalars["String"];
+  feedStartDate?: Maybe<Scalars["String"]>;
+  feedVersion?: Maybe<Scalars["String"]>;
+};
+
 export enum GeometryType {
   GeometryCollection = "GeometryCollection",
   LineString = "LineString",
@@ -69,6 +79,7 @@ export type Query = {
   arrivalTimes: Array<ArrivalTime>;
   distinctTrips: Array<Trip>;
   earliestArrivalTimesOnRoute: Array<ArrivalTimeAtStop>;
+  feedInfo: FeedInfo;
   nearByStops: Array<Stop>;
   realTimeVehiclePositions: Array<Maybe<VehiclePosition>>;
   route: Route;

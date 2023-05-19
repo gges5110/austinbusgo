@@ -1,4 +1,4 @@
-import { Dialog, Fade, ListItemButton, Switch } from "@mui/material";
+import { Box, Dialog, Fade, ListItemButton, Switch } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -18,6 +18,10 @@ import SearchOffIcon from "@mui/icons-material/SearchOff";
 import { useSetAtom } from "jotai/index";
 import { recentSearchesAtom } from "../../Atoms";
 import { ColorModeToggle } from "../ColorModeToggle/ColorModeToggle";
+import ColorLensIcon from "@mui/icons-material/ColorLens";
+import { useFeedInfoQuery } from "../../schemas/FeedInfo.generated";
+import dayjs from "dayjs";
+import { Bullet } from "../Stop/ArrivalTimeList/Bullet";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -47,6 +51,7 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
   reloadVehiclePositions,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const { data } = useFeedInfoQuery();
 
   const handleClose = () => {
     setOpen(false);
@@ -87,17 +92,22 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
       </AppBar>
       <List>
         <ListSubheader>Appearance</ListSubheader>
-        <ColorModeToggle />
+        <ListItem>
+          <ListItemIcon>
+            <ColorLensIcon />
+          </ListItemIcon>
+          <ListItemText primary={"Color Mode"} />
+          <ListItemSecondaryAction>
+            <ColorModeToggle />
+          </ListItemSecondaryAction>
+        </ListItem>
 
         <ListSubheader>Vehicle Live Position</ListSubheader>
         <ListItem>
           <ListItemIcon>
             <AutorenewIcon />
           </ListItemIcon>
-          <ListItemText
-            id={"switch-list-label-wifi"}
-            primary={"Auto Polling"}
-          />
+          <ListItemText primary={"Auto Polling"} />
           <ListItemSecondaryAction>
             <Switch
               checked={autoPolling}
@@ -139,6 +149,30 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           </ListItemIcon>
           <ListItemText primary={"GitHub Repository"} />
         </ListItemButton>
+        <ListItem>
+          <ListItemText
+            primary={"Feed Info"}
+            secondary={
+              <Box display={"flex"} gap={"4px"}>
+                <span>
+                  Start Date:{" "}
+                  {data?.feedInfo.feedStartDate
+                    ? dayjs(data?.feedInfo.feedStartDate, "YYYYMMDD").format(
+                        "ll"
+                      )
+                    : null}
+                </span>
+                <Bullet />
+                <span>
+                  End Date:{" "}
+                  {data?.feedInfo.feedEndDate
+                    ? dayjs(data?.feedInfo.feedEndDate, "YYYYMMDD").format("ll")
+                    : null}
+                </span>
+              </Box>
+            }
+          />
+        </ListItem>
       </List>
     </Dialog>
   );

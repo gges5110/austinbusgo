@@ -24,15 +24,28 @@ export const ColorModeToggle = () => {
       color={"primary"}
       exclusive={true}
       onChange={handleColorMode}
+      sx={{ borderRadius: "10px" }}
       value={mode}
     >
-      <ToggleButton aria-label={"light mode"} value={"light"}>
+      <ToggleButton
+        aria-label={"light mode"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"light"}
+      >
         <LightModeIcon /> Light
       </ToggleButton>
-      <ToggleButton aria-label={"system"} value={"system"}>
+      <ToggleButton
+        aria-label={"system"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"system"}
+      >
         <SettingsSystemDaydreamIcon /> System
       </ToggleButton>
-      <ToggleButton aria-label={"dark mode"} value={"dark"}>
+      <ToggleButton
+        aria-label={"dark mode"}
+        sx={{ textTransform: "none", display: "flex", gap: 1 }}
+        value={"dark"}
+      >
         <DarkModeIcon /> Dark
       </ToggleButton>
     </ToggleButtonGroup>

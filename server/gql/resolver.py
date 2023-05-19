@@ -9,7 +9,7 @@ from server.config import (
     capital_metro_trip_updates_pb_file_url,
     capital_metro_vehicle_positions_pb_file_url,
 )
-from server.models.gtfs_models import Stops, Trips, Routes
+from server.models.gtfs_models import Stops, Trips, Routes, FeedInfo
 from server.services.gtfs_rt_client import GTFSRTClient
 from server.services.gtfs_rt_service import GTFSRTService
 from server.services.gtfs_service import GTFSService
@@ -122,7 +122,7 @@ class Resolver:
                 "stop_id": r.stop_id,
                 "stop_sequence": r.stop_sequence,
                 "trip_id": r.trip_id,
-                "updated_arrival_time": self._populate_updated_arrival_time(
+                "updated_arrival_time": self._get_updated_arrival_time(
                     r.stop_id, stop_time_update_by_trip.get(r.trip_id, [])
                 ),
             }
@@ -137,7 +137,7 @@ class Resolver:
         trip_ids = [stop_time.trip.trip_id for stop_time in stop_times]
         trip_updates = self.gtfs_rt_service.get_real_time_trip_updates(trip_ids)
         trip_updates_by_trip_id = {
-            trip_update.trip.trip_id: self._populate_updated_arrival_time(
+            trip_update.trip.trip_id: self._get_updated_arrival_time(
                 stop_id, trip_update.stop_time_update
             )
             for trip_update in trip_updates
@@ -155,7 +155,7 @@ class Resolver:
         ]
         return arrival_times
 
-    def _populate_updated_arrival_time(
+    def _get_updated_arrival_time(
         self, stop_id: str, stop_time_updates: List[TripUpdate.StopTimeUpdate]
     ):
         stop_time_update = self.gtfs_rt_service.get_arrival_time_by_stop_id(
@@ -180,6 +180,9 @@ class Resolver:
         )
 
         return updated_arrival_time
+
+    def resolve_feed_info(self, query, info) -> FeedInfo:
+        return self.gtfs_service.get_feed_info()
 
     # For debugging purposes
     def resolve_vehicle_positions_debug(self, query, info) -> List[VehiclePosition]:

@@ -6,7 +6,6 @@ import { useAtom } from "jotai";
 import { isAutoPollingAtom, settingsDialogOpenAtom } from "../Atoms";
 import { MapWrapper } from "../components/Map/MapWrapper";
 import { useViewStatePathname } from "../hooks/UseViewStatePathname";
-import { ColorModeToggle } from "../components/ColorModeToggle/ColorModeToggle";
 import { SearchPanel } from "../components/SearchPanel/SearchPanel";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Route, Stop } from "../interfaces/interface.d";
@@ -67,7 +66,6 @@ export const RootLayout: React.FunctionComponent = () => {
           right: theme.spacing(2),
         }}
       >
-        <ColorModeToggle />
         <IconButton
           onClick={() => {
             setSettingsDialogOpen(true);

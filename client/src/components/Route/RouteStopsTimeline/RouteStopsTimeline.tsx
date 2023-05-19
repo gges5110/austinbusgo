@@ -61,26 +61,19 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
       <List>
         {stops?.map((stop, index) => {
           let updatedArrivalTime, scheduledArrivalTime;
-          if (data?.earliestArrivalTimesOnRoute) {
-            const arrivalTime = data.earliestArrivalTimesOnRoute.find(
-              (t) => t.stopId === stop.stopId
+          const arrivalTime = data?.earliestArrivalTimesOnRoute.find(
+            (t) => t.stopId === stop.stopId
+          );
+          if (arrivalTime) {
+            const scheduledArrivalTimeString = arrivalTime.scheduledArrivalTime;
+            const updatedArrivalTimeString = arrivalTime.updatedArrivalTime;
+
+            scheduledArrivalTime = dayjs(
+              scheduledArrivalTimeString,
+              "HH:mm:ss"
             );
-
-            if (arrivalTime) {
-              const scheduledArrivalTimeString =
-                arrivalTime.scheduledArrivalTime;
-              const updatedArrivalTimeString = arrivalTime.updatedArrivalTime;
-
-              scheduledArrivalTime = dayjs(
-                scheduledArrivalTimeString,
-                "HH:mm:ss"
-              );
-              if (updatedArrivalTimeString) {
-                updatedArrivalTime = dayjs(
-                  updatedArrivalTimeString,
-                  "HH:mm:ss"
-                );
-              }
+            if (updatedArrivalTimeString) {
+              updatedArrivalTime = dayjs(updatedArrivalTimeString, "HH:mm:ss");
             }
           }
 

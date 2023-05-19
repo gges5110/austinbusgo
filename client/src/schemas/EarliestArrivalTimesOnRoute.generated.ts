@@ -33,7 +33,11 @@ export type EarliestArrivalTimesOnRouteQuery = { __typename?: "Query" } & {
   earliestArrivalTimesOnRoute: Array<
     { __typename?: "ArrivalTimeAtStop" } & Pick<
       Types.ArrivalTimeAtStop,
-      "stopSequence" | "stopId" | "scheduledArrivalTime" | "updatedArrivalTime"
+      | "stopSequence"
+      | "stopId"
+      | "scheduledArrivalTime"
+      | "updatedArrivalTime"
+      | "tripId"
     >
   >;
 };
@@ -45,6 +49,7 @@ export const EarliestArrivalTimesOnRouteDocument = `
     stopId
     scheduledArrivalTime
     updatedArrivalTime
+    tripId
   }
 }
     `;

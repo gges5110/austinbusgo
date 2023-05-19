@@ -1,6 +1,6 @@
 import { AutocompleteProps } from "@mui/material/Autocomplete/Autocomplete";
 import { Box } from "@mui/material";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
+import HistoryIcon from "@mui/icons-material/History";
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
@@ -34,7 +34,7 @@ export const renderOption: AutocompleteProps<
           }}
         >
           {option.type === SearchType.recent && (
-            <AccessTimeOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
+            <HistoryIcon color={"neutral"} sx={{ fontSize: 20 }} />
           )}
           {isSearchTerm(optionValue) ? (
             <SearchIcon color={"neutral"} sx={{ fontSize: 20 }} />
@@ -52,11 +52,13 @@ export const renderOption: AutocompleteProps<
         )}
         {isStop(optionValue) && (
           <>
-            <Highlight query={inputValue} text={String(optionValue.stopId)} />
             <Highlight
               query={inputValue}
               text={String(optionValue.stopName || "")}
             />
+            <Box color={"gray"}>
+              <Highlight query={inputValue} text={String(optionValue.stopId)} />
+            </Box>
           </>
         )}
         {isSearchTerm(optionValue) && (
