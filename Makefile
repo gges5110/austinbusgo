@@ -21,11 +21,11 @@ deps:
 
 run: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 run:
-	$(VENV_ACTIVATE) flask --app 'server/app:create_app()' --debug run
+	$(VENV_ACTIVATE) flask --app 'server/app:create_app()' --debug run --port=5001
 
 run-prod: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 run-prod:
-	$(VENV_ACTIVATE) gunicorn 'server.app:create_app()'
+	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 'server.app:create_app()'
 
 test:
 	$(PYTHON) -m unittest discover -s tests

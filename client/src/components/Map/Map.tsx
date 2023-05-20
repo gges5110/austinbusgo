@@ -98,6 +98,7 @@ export const Map: React.FunctionComponent<MapProps> = ({
             ? "mapbox://styles/mapbox/dark-v11"
             : "mapbox://styles/mapbox/streets-v12"
         }
+        mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
         onMove={onViewportChange}
         onMoveEnd={onMoveEnd}
       >

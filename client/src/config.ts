@@ -1,4 +1,4 @@
 export const graphQLEndpoint =
-  process.env.REACT_APP_API_BASE !== undefined
-    ? `${process.env.REACT_APP_API_BASE}/graphql`
+  import.meta.env.VITE_API_BASE !== undefined
+    ? `${import.meta.env.VITE_API_BASE}/graphql`
     : "/graphql";

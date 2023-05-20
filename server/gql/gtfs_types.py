@@ -1,7 +1,7 @@
 import graphene
 
-from gql.geometry_types import Point
-from services.gtfs_service import GTFSService
+from server.gql.geometry_types import Point
+from server.services.gtfs_service import GTFSService
 
 
 class Route(graphene.ObjectType):

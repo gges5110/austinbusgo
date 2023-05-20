@@ -10,8 +10,13 @@ from server.models.gtfs_models import Stops, Trips, Shapes, StopTimes, Routes
 
 MODELS = [Stops, Trips, Shapes, StopTimes, Routes]
 
-database = PostgresqlDatabase(user="local-user", password="local-password", port=5439, host="localhost",
-                              database="local-db")
+database = PostgresqlDatabase(
+    user="local-user",
+    password="local-password",
+    port=5439,
+    host="localhost",
+    database="local-db",
+)
 compose = DockerCompose(filepath="./docker/integration-tests")
 
 
