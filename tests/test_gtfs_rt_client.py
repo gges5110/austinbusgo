@@ -41,7 +41,7 @@ class TestGTFSRTClient(unittest.TestCase):
         )
 
     @patch(
-        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+        "server.services.gtfs_rt_client.GTFSRTClient._get_feed_message_entity_from_url"
     )
     def test_load_trip_updates(self, mock_gtfs_client_get_feed_message_entity_from_url):
         # Setup protobuf mock for trip update
@@ -64,7 +64,7 @@ class TestGTFSRTClient(unittest.TestCase):
         self.assertEqual(trip_updates[0], trip_update)
 
     @patch(
-        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+        "server.services.gtfs_rt_client.GTFSRTClient._get_feed_message_entity_from_url"
     )
     def test_load_vehicle_positions(
         self, mock_gtfs_client_get_feed_message_entity_from_url
@@ -91,7 +91,7 @@ class TestGTFSRTClient(unittest.TestCase):
         self.assertEqual(vehicle_positions[0], vehicle_position)
 
     @patch(
-        "server.services.gtfs_rt_client.GTFSClient._get_feed_message_entity_from_url"
+        "server.services.gtfs_rt_client.GTFSRTClient._get_feed_message_entity_from_url"
     )
     def test_load_vehicle_positions_with_route_id(
         self, mock_gtfs_client_get_feed_message_entity_from_url

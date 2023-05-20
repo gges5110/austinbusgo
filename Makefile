@@ -30,6 +30,9 @@ run-prod:
 test:
 	$(PYTHON) -m unittest discover -s tests
 
+integration-tests:
+	$(PYTHON) -m unittest discover -s integration-tests
+
 coverage:
 	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage report -m
 
