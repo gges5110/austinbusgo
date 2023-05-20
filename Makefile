@@ -37,7 +37,7 @@ coverage-html:
 	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage html
 
 lint:
-	$(VENV_ACTIVATE) black server tests
+	$(VENV_ACTIVATE) black server tests --check
 
 setup-local:
 	docker-compose -f docker/docker-compose.yml up
