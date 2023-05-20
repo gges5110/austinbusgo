@@ -1,10 +1,13 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { Bullet } from "./Bullet";
 
 describe("Bullet", () => {
-  test("matches snapshot", () => {
-    const { container } = render(<Bullet />);
-    expect(container).toMatchSnapshot();
+  test("renders", () => {
+    render(<Bullet />);
+
+    const bulletNode = screen.getByText("•");
+
+    expect(bulletNode).toBeTruthy();
   });
 });
