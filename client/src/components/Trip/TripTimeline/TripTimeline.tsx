@@ -15,7 +15,10 @@ import { useEffect, useRef } from "react";
 import { TripQuery } from "../../../schemas/Trip.generated";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
 import { useViewStatePathname } from "../../../hooks/UseViewStatePathname";
-import { VehiclePosition } from "../../../interfaces/interface.d";
+import {
+  VehiclePosition,
+  VehicleStopStatus,
+} from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { StopQuery } from "../../../schemas/Stop.generated";
 import { useUpdateViewState } from "../../../hooks/Map/UseViewStateSync";
@@ -171,7 +174,11 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 <Paper
                   sx={{
                     position: "absolute",
-                    top: "65px",
+                    top:
+                      vehiclePosition?.currentStatus ===
+                      VehicleStopStatus.InTransitTo
+                        ? "-25%"
+                        : "25%",
                     zIndex: 1,
                     borderRadius: "50%",
                   }}

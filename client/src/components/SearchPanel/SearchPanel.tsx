@@ -188,8 +188,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
 
   const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
 
-  // TODO: fix onCompleted isn't fired when fetching from cached values
-  // https://github.com/apollographql/react-apollo/issues/2177
   const { isLoading } = useSearchQuery(
     {
       searchTerm: internalSearchTerm,

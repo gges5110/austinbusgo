@@ -2,6 +2,7 @@ import { SnackbarProvider } from "notistack";
 import React from "react";
 import { render, waitFor, screen } from "@testing-library/react";
 import { SettingsDialog } from "./SettingsDialog";
+import { vitest } from "vitest";
 
 describe("SettingsDialog", () => {
   test("matches snapshot", async () => {
@@ -18,9 +19,9 @@ describe("SettingsDialog", () => {
         <SettingsDialog
           autoPolling={false}
           open={true}
-          reloadVehiclePositions={jest.fn()}
-          setAutoPolling={jest.fn()}
-          setOpen={jest.fn()}
+          reloadVehiclePositions={vitest.fn()}
+          setAutoPolling={vitest.fn()}
+          setOpen={vitest.fn()}
         />
       </SnackbarProvider>
     );

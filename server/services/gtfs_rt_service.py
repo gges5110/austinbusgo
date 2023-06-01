@@ -95,7 +95,7 @@ class GTFSRTService:
             return next(
                 stop_time_update
                 for stop_time_update in stop_time_updates
-                if stop_time_update.stop_id == str(stop_id)
+                if stop_time_update.stop_id == stop_id
             )
         except StopIteration:
             return None

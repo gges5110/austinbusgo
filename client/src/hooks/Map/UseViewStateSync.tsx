@@ -58,7 +58,11 @@ export const useViewStateSync = (viewState: ViewState) => {
     debounce((viewState: ViewState) => {
       let path = convertViewStateToPath(viewState);
       if (restOfPathname !== "" && restOfPathname !== undefined) {
-        path += restOfPathname + searchParams;
+        path += restOfPathname;
+      }
+
+      if (searchParams !== undefined && searchParams !== "") {
+        path += searchParams;
       }
 
       if (navigation.location === undefined) {

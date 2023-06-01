@@ -1,4 +1,4 @@
-CREATE EXTENSION postgis;
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 DROP TABLE IF EXISTS feed_info;
 DROP TABLE IF EXISTS stops;
@@ -154,12 +154,6 @@ CREATE TABLE transfers
     to_stop_id          text NOT NULL,
     transfer_type       integer NOT NULL,
     min_transfer_time   integer
-    CONSTRAINT fk_from_stop_id
-		FOREIGN KEY(from_stop_id)
-	      REFERENCES stops(stop_id),
-    CONSTRAINT fk_to_stop_id
-		FOREIGN KEY(to_stop_id)
-	      REFERENCES stops(stop_id),
 );
 
 \copy agency from './capmetro/agency.txt' with csv header
