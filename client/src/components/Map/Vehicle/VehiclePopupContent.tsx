@@ -80,13 +80,6 @@ export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentPro
             {"Updated "}
             {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
           </Typography>
-          <Typography
-            alignSelf={"flex-end"}
-            color={"textSecondary"}
-            fontSize={14}
-          >
-            {trip?.trip.tripId}
-          </Typography>
         </Box>
       </CardContent>
     </Card>

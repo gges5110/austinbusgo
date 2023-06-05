@@ -111,10 +111,9 @@ class Resolver:
             route_id, direction_id
         )
 
-        stop_time_update_by_trip = {
-            trip_update.trip.trip_id: trip_update.stop_time_update
-            for trip_update in trip_updates
-        }
+        stop_time_updates_list = [
+            trip_update.stop_time_update for trip_update in trip_updates
+        ]
 
         arrival_times = [
             {
@@ -122,8 +121,8 @@ class Resolver:
                 "stop_id": r.stop_id,
                 "stop_sequence": r.stop_sequence,
                 "trip_id": r.trip_id,
-                "updated_arrival_time": self._get_updated_arrival_time(
-                    r.stop_id, stop_time_update_by_trip.get(r.trip_id, [])
+                "updated_arrival_time": self._get_earliest_updated_arrival_time(
+                    r.stop_id, stop_time_updates_list
                 ),
             }
             for r in earliest_arrival_times_on_route
@@ -180,6 +179,19 @@ class Resolver:
         )
 
         return updated_arrival_time
+
+    def _get_earliest_updated_arrival_time(
+        self,
+        stop_id: str,
+        stop_time_updates_list: List[List[TripUpdate.StopTimeUpdate]],
+    ):
+        earliest = None
+        for stop_time_updates in stop_time_updates_list:
+            t = self._get_updated_arrival_time(stop_id, stop_time_updates)
+            if t:
+                if earliest is None or t < earliest:
+                    earliest = t
+        return earliest
 
     def resolve_feed_info(self, query, info) -> FeedInfo:
         return self.gtfs_service.get_feed_info()

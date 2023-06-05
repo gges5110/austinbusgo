@@ -2,24 +2,29 @@ name: Pull Request - Server
 on: pull_request
 jobs:
   linting:
-    # Check if the PR is not raised by this workflow and is not from a fork
-    if: startsWith(github.head_ref, 'autopep8-patches') == false && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
         with:
-          ref: ${{ github.head_ref }}
-      - name: autopep8
-        id: autopep8
-        uses: peter-evans/autopep8@v2
+          python-version: '3.9'
+      - uses: psf/black@stable
         with:
-          args: --exit-code --recursive --in-place -v --aggressive --aggressive server tests
-      - name: Set autopep8 branch name
-        id: vars
+          options: "--check --verbose"
+          version: "23.3.0"
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
         run: |
-          echo "branch-name=$branch_name" >> "$GITHUB_OUTPUT"
-        env:
-          branch_name: "autopep8-patches/${{ github.head_ref }}"
-      - name: Fail if autopep8 made changes
-        if: steps.autopep8.outputs.exit-code == 2
-        run: exit 1
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Test with unittest
+        run: |
+          python -m unittest discover -s tests

@@ -2,24 +2,36 @@ import { act, renderHook } from "@testing-library/react";
 import { useViewStateSync } from "./UseViewStateSync";
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
+import { vi } from "vitest";
 
-jest.useFakeTimers();
+const mocks = vi.hoisted(() => {
+  return {
+    mockUserNavigate: vi.fn(),
+    mockUseNavigation: vi.fn(),
+  };
+});
 
-const mockUserNavigate = jest.fn();
-const mockUseNavigation = jest.fn();
-jest.mock("react-router-dom", () => ({
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  ...jest.requireActual("react-router-dom"),
-  useNavigate: () => mockUserNavigate,
-  useNavigation: () => mockUseNavigation,
-  useLocation: () => ({
-    pathname:
-      "/@30.1914967,-97.8068439,13.27z/stop/6379/trip/2699464_MRG_3?routeId=318&directionId=1",
-  }),
-}));
+vi.mock("react-router-dom", async () => {
+  const actual = (await vi.importActual("react-router-dom")) as object;
+  return {
+    ...actual,
+    useNavigate: () => mocks.mockUserNavigate,
+    useNavigation: () => mocks.mockUseNavigation,
+  };
+});
+
+vi.useFakeTimers();
+
 describe("useViewStateSync", () => {
   test("should setViewStateInUrl", () => {
+    Object.defineProperty(window, "location", {
+      value: {
+        pathname:
+          "/@30.1914967,-97.8068439,13.27z/stop/6379/trip/2699464_MRG_3",
+        search: "?routeId=318&directionId=1",
+      },
+    });
+
     const viewPort = {
       longitude: 50,
       latitude: 20,
@@ -37,12 +49,12 @@ describe("useViewStateSync", () => {
         zoom: 10,
       });
     });
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(
-      mockUserNavigate
+      mocks.mockUserNavigate
     ).toHaveBeenCalledWith(
-      "/@30,50,10z/stop/6379/trip/2699464_MRG_3?routeId=318&directionId=1undefined",
+      "/@30,50,10z/stop/6379/trip/2699464_MRG_3?routeId=318&directionId=1",
       { replace: true }
     );
   });

@@ -23,29 +23,36 @@ import dayjs from "dayjs";
 import {
   Route,
   Stop,
-  VehiclePosition,
   VehicleStopStatus,
 } from "../../../interfaces/interface.d";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { useEarliestArrivalTimesOnRouteQuery } from "../../../schemas/EarliestArrivalTimesOnRoute.generated";
 import { getDate, getTime } from "../../../dateUtils";
+import { useVehiclePositionsQuery } from "../../../schemas/VehiclePositions.generated";
 
 interface StopsTimelineProps {
   route: Route;
   stops: StopsAndShapesQuery["stopsAndShapes"]["stops"];
-  vehiclePositions: VehiclePosition[];
 }
 
 export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
   route,
   stops,
-  vehiclePositions,
 }) => {
-  const { routeId, directionId } = useParams();
+  const { directionId } = useParams();
   const { viewStatePathname } = useViewStatePathname();
   const setHoveringStop = useSetAtom(hoveringStopAtom);
   const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
   const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
+  const { data: vehiclePositionsData } = useVehiclePositionsQuery(
+    {
+      routeId: route.routeId,
+      direction: Number(directionId),
+    },
+    {
+      refetchInterval: 15000,
+    }
+  );
   const { data } = useEarliestArrivalTimesOnRouteQuery(
     {
       routeId: route.routeId,
@@ -56,6 +63,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
     { keepPreviousData: true }
   );
   const theme = useTheme();
+  const vehiclePositions = vehiclePositionsData?.vehiclePositions || [];
   return (
     <Box component={"div"}>
       <List>
@@ -77,34 +85,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
             }
           }
 
-          let timeDiffString = "Scheduled";
-          let textColor = "gray";
-
-          if (updatedArrivalTime && scheduledArrivalTime) {
-            const early = updatedArrivalTime.isBefore(scheduledArrivalTime);
-
-            const isSame = scheduledArrivalTime.isBetween(
-              updatedArrivalTime.subtract(2, "minute"),
-              updatedArrivalTime.add(2, "minute"),
-              "minute"
-            );
-
-            const duration = scheduledArrivalTime.from(
-              updatedArrivalTime,
-              true
-            );
-            timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
-            if (early) {
-              textColor = "#f57c00";
-            } else {
-              textColor = theme.palette.error.light;
-            }
-
-            if (isSame) {
-              timeDiffString = "On time";
-              textColor = theme.palette.success.light;
-            }
-          }
           const at = updatedArrivalTime || scheduledArrivalTime;
           const timeDiff = at?.diff(dayjs(), "minute");
 
@@ -128,7 +108,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   left: 10,
                   borderTopLeftRadius: "20px 20px",
                   borderTopRightRadius: "20px 20px",
-                  // opacity: stop.stopSequence < 6 ? "50%" : "100%",
                 },
                 [`&::after`]: {
                   content: "''",
@@ -161,7 +140,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     top:
                       vehiclePosition.currentStatus ===
                       VehicleStopStatus.InTransitTo
-                        ? "75%"
+                        ? "-25%"
                         : "25%",
                     zIndex: 1,
                     borderRadius: "50%",
@@ -203,7 +182,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   pl: 6,
                   py: 2.5,
                 }}
-                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${routeId}&directionId=${directionId}`}
+                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${route.routeId}&directionId=${directionId}`}
               >
                 <Box
                   display={"flex"}
@@ -222,11 +201,15 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={600}>{stop.stopName}</Typography>
                       <Typography
-                        color={textColor}
+                        color={
+                          updatedArrivalTime
+                            ? theme.palette.success.light
+                            : theme.palette.grey["500"]
+                        }
                         fontSize={14}
                         fontWeight={updatedArrivalTime ? 600 : undefined}
                       >
-                        {timeDiffString}
+                        {updatedArrivalTime ? "Live" : "Scheduled"}
                       </Typography>
                     </Box>
 
@@ -312,10 +295,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     top: 0,
                     bottom: 0,
                     left: 10,
-                    // opacity:
-                    //   stop.stopSequence <= selectedStopSequence
-                    //     ? "50%"
-                    //     : "100%",
                   },
                   [`&.first::before`]: {
                     content: "''",
@@ -327,8 +306,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     left: 10,
                     borderTopLeftRadius: "20px 20px",
                     borderTopRightRadius: "20px 20px",
-                    // opacity:
-                    //   stop.stopSequence < selectedStopSequence ? "50%" : "100%",
                   },
                   [`&.last::before`]: {
                     content: "''",
@@ -340,8 +317,6 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     left: 10,
                     borderBottomLeftRadius: "20px 20px",
                     borderBottomRightRadius: "20px 20px",
-                    // opacity:
-                    //   stop.stopSequence < selectedStopSequence ? "50%" : "100%",
                   },
                 }}
               />

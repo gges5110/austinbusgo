@@ -15,9 +15,7 @@ import { RouteDisplayBanner } from "../../components/Shared/RouteDisplayBanner/R
 
 export const RouteMenu = () => {
   const navigate = useNavigate();
-  const { stops, distinctTrips, route, vehiclePositions } = useDataFromLoader(
-    routeLoader
-  );
+  const { stops, distinctTrips, route } = useDataFromLoader(routeLoader);
   const { routeId, directionId } = useParams();
 
   const { viewStatePathname } = useViewStatePathname();
@@ -64,11 +62,7 @@ export const RouteMenu = () => {
       </Box>
       <Divider />
 
-      <RouteStopsTimeline
-        route={route}
-        stops={stops}
-        vehiclePositions={vehiclePositions || []}
-      />
+      <RouteStopsTimeline route={route} stops={stops} />
     </MenuPanel>
   );
 };
