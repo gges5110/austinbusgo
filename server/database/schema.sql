@@ -16,9 +16,7 @@ CREATE TABLE agency
   agency_url        text NOT NULL,
   agency_timezone   text NOT NULL,
   agency_lang       text NULL,
-  agency_phone      text NULL,
-  agency_fare_url   text NULL,
-  agency_email      text NULL
+  agency_phone      text NULL
 );
 
 CREATE TABLE feed_info (
@@ -34,21 +32,21 @@ CREATE TABLE feed_info (
 CREATE TABLE stops
 (
   stop_id           text UNIQUE NOT NULL PRIMARY KEY,
-  stop_code         text NULL,
-  stop_name         text NOT NULL,
-  stop_desc         text NULL,
-  stop_loc          geography(POINT) NOT NULL, -- stop_lat/stop_lon
-  zone_id           text NULL,
-  stop_url          text NULL,
-  location_type     integer NULL,
-  parent_station    text NULL,
-  stop_timezone     text NULL,
-  wheelchair_boarding integer NULL,
-  corner_placement  text NULL,
-  stop_position     text NULL, -- capital metro specific column
-  on_street         text NULL,
   at_street         text NULL,
-  heading           integer NULL
+  corner_placement  text NULL,
+  heading           integer NULL,
+  location_type     integer NULL,
+  on_street         text NULL,
+  parent_station    text NULL,
+  stop_code         text NULL,
+  stop_desc         text NULL,
+  stop_loc          geography(POINT) NOT NULL,
+  stop_name         text NOT NULL,
+  stop_position     text NULL,
+  stop_timezone     text NULL,
+  stop_url          text NULL,
+  wheelchair_boarding integer NULL,
+  zone_id           text NULL
 );
 
 CREATE TABLE routes
@@ -67,7 +65,7 @@ CREATE TABLE routes
 CREATE TABLE shapes
 (
   shape_id          text,
-  shape_pt_loc       geography(POINT) NOT NULL, -- shape_pt_lat/shape_pt_lon
+  shape_pt_loc       geography(POINT) NOT NULL,
   shape_pt_sequence integer NOT NULL,
   shape_dist_traveled double precision NULL,
   sup_detour_flag text NULL
@@ -98,7 +96,7 @@ CREATE TABLE trips
   shape_id          text NULL,
   wheelchair_accessible integer NULL,
   bikes_allowed     integer NULL,
-  dir_abbr          text NULL, -- capital metro specific column
+  dir_abbr          text NULL,
   sup_service_mod   integer NULL,
   CONSTRAINT fk_route
 	FOREIGN KEY(route_id)
@@ -108,8 +106,8 @@ CREATE TABLE trips
 CREATE TABLE stop_times
 (
   trip_id           text NOT NULL,
-  arrival_time      text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
-  departure_time    text NOT NULL, -- not using TIME field because it might contain values like '24:59:30'
+  arrival_time      text NOT NULL,
+  departure_time    text NOT NULL,
   stop_id           text NOT NULL,
   stop_sequence     integer NOT NULL,
   stop_headsign     text NULL,
@@ -124,21 +122,6 @@ CREATE TABLE stop_times
   CONSTRAINT fk_trip
 	FOREIGN KEY(trip_id)
       REFERENCES trips(trip_id)
-);
-
-CREATE TABLE calendar
-(
-  service_id        text PRIMARY KEY,
-  monday            boolean NOT NULL,
-  tuesday           boolean NOT NULL,
-  wednesday         boolean NOT NULL,
-  thursday          boolean NOT NULL,
-  friday            boolean NOT NULL,
-  saturday          boolean NOT NULL,
-  sunday            boolean NOT NULL,
-  start_date        DATE NOT NULL,
-  end_date          DATE NOT NULL,
-  service_name      text NOT NULL
 );
 
 CREATE TABLE calendar_dates
@@ -163,7 +146,6 @@ CREATE TABLE transfers
 \copy shapes from './capmetro/shapes.txt' with csv header
 \copy trips from './capmetro/trips.txt' with csv header
 \copy stop_times from './capmetro/stop_times.txt' with csv header
-\copy calendar from './capmetro/calendar.txt' with csv header
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 \copy transfers from './capmetro/transfers.txt' with csv header
 
@@ -179,6 +161,5 @@ CREATE INDEX TRIPS_trip_id_route_id ON trips(trip_id, route_id);
 CREATE INDEX TRIPS_trip_id_direction_id ON trips(trip_id, direction_id);
 CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
-CREATE INDEX CALENDAR_service_id ON calendar(service_id);
 CREATE INDEX ROUTES_AT_STOP_stop_id_route_id ON routes_at_stop(stop_id, route_id);
 CREATE INDEX TRANSFERS_from_stop_id_to_stop_id ON transfers(from_stop_id, to_stop_id);
