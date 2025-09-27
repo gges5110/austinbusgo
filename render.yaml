@@ -9,9 +9,7 @@ services:
     branch: main # optional (defaults to master)
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: austin-bus-go
-          property: connectionString
+        sync: false
   # A static site
   - type: web
     name: austin-bus-go-client
@@ -28,6 +26,3 @@ services:
       ignoredPaths:
         - src/**/*.test.tsx
 
-
-databases:
-  - name: austin-bus-go
