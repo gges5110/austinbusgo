@@ -1,13 +1,17 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-DROP TABLE IF EXISTS feed_info;
-DROP TABLE IF EXISTS stops;
-DROP TABLE IF EXISTS routes;
-DROP TABLE IF EXISTS shapes;
-DROP TABLE IF EXISTS trips;
-DROP TABLE IF EXISTS stop_times;
-DROP TABLE IF EXISTS calendar;
-DROP TABLE IF EXISTS calendar_dates;
+DROP MATERIALIZED VIEW IF EXISTS routes_at_stop CASCADE;
+DROP VIEW IF EXISTS shapes_aggregated CASCADE;
+DROP TABLE IF EXISTS stop_times CASCADE;
+DROP TABLE IF EXISTS trips CASCADE;
+DROP TABLE IF EXISTS shapes CASCADE;
+DROP TABLE IF EXISTS routes CASCADE;
+DROP TABLE IF EXISTS stops CASCADE;
+DROP TABLE IF EXISTS calendar_dates CASCADE;
+DROP TABLE IF EXISTS calendar CASCADE;
+DROP TABLE IF EXISTS transfers CASCADE;
+DROP TABLE IF EXISTS feed_info CASCADE;
+DROP TABLE IF EXISTS agency CASCADE;
 
 CREATE TABLE agency
 (
@@ -26,7 +30,7 @@ CREATE TABLE feed_info (
   feed_start_date       DATE NULL,
   feed_end_date         DATE NULL,
   feed_version          text NULL,
-  sign_id               int NULL
+  feed_contact_url      text NULL
 );
 
 CREATE TABLE stops
@@ -52,10 +56,9 @@ CREATE TABLE stops
 CREATE TABLE routes
 (
   route_id          text UNIQUE NOT NULL PRIMARY KEY,
-  agency_id         integer NULL,
+  agency_id         text NULL,
   route_short_name  text UNIQUE NOT NULL,
   route_long_name   text NULL,
-  route_desc        text NULL,
   route_type        integer NULL,
   route_url         text NULL,
   route_color       text NULL,
@@ -67,8 +70,7 @@ CREATE TABLE shapes
   shape_id          text,
   shape_pt_loc       geography(POINT) NOT NULL,
   shape_pt_sequence integer NOT NULL,
-  shape_dist_traveled double precision NULL,
-  sup_detour_flag text NULL
+  shape_dist_traveled double precision NULL
 );
 
 CREATE OR REPLACE VIEW shapes_aggregated AS
@@ -90,14 +92,13 @@ CREATE TABLE trips
   service_id        text NOT NULL,
   trip_id           text UNIQUE NOT NULL PRIMARY KEY,
   trip_headsign     text NULL,
-  trip_short_name   text NULL,
   direction_id      integer NULL,
   block_id          text NULL,
   shape_id          text NULL,
+  scheduled_trip_id text NULL,
+  trip_short_name   text NULL,
   wheelchair_accessible integer NULL,
   bikes_allowed     integer NULL,
-  dir_abbr          text NULL,
-  sup_service_mod   integer NULL,
   CONSTRAINT fk_route
 	FOREIGN KEY(route_id)
       REFERENCES routes(route_id)
@@ -110,12 +111,10 @@ CREATE TABLE stop_times
   departure_time    text NOT NULL,
   stop_id           text NOT NULL,
   stop_sequence     integer NOT NULL,
-  stop_headsign     text NULL,
   pickup_type       integer NULL CHECK(pickup_type >= 0 and pickup_type <=3),
   drop_off_type     integer NULL CHECK(drop_off_type >= 0 and drop_off_type <=3),
   shape_dist_traveled double precision NULL,
   timepoint         integer NULL,
-  sup_est_delay     integer NULL,
   CONSTRAINT fk_stop
 	FOREIGN KEY(stop_id)
       REFERENCES stops(stop_id),
