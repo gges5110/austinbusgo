@@ -5,6 +5,7 @@ on:
     # Runs "At 00:00." (see https://crontab.guru)
     - cron: '0 0 * * *'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   upload:
