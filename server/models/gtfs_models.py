@@ -50,10 +50,9 @@ class FeedInfo(db_wrapper.Model):
 
 class Routes(db_wrapper.Model):
     route_id = TextField(index=True, null=True, primary_key=True, unique=True)
-    agency_id = IntegerField(null=True)
+    agency_id = TextField(null=True)
     route_short_name = TextField(null=True, unique=True)
     route_long_name = TextField(null=True)
-    route_desc = TextField(null=True)
     route_type = IntegerField(null=True)
     route_url = TextField(null=True)
     route_color = TextField(null=True)
@@ -69,7 +68,6 @@ class Shapes(db_wrapper.Model):
     shape_pt_loc = GeometryField(null=True)
     shape_pt_sequence = IntegerField(index=True, null=True)
     shape_dist_traveled = FloatField(null=True)
-    sup_detour_flag = TextField(null=True)
 
     class Meta:
         table_name = "shapes"
@@ -91,12 +89,10 @@ class StopTimes(db_wrapper.Model):
     departure_time = TextField(null=True)
     stop_id = TextField(index=True, null=True)
     stop_sequence = IntegerField(index=True, null=True)
-    stop_headsign = TextField(null=True)
     pickup_type = IntegerField(null=True)
     drop_off_type = IntegerField(null=True)
     shape_dist_traveled = FloatField(null=True)
     timepoint = IntegerField(null=True)
-    sup_est_delay = TextField(null=True)
 
     class Meta:
         table_name = "stop_times"
@@ -140,14 +136,13 @@ class Trips(db_wrapper.Model):
     service_id = TextField(null=True)
     trip_id = TextField(index=True, null=True, primary_key=True, unique=True)
     trip_headsign = TextField(null=True)
-    trip_short_name = TextField(null=True)
     direction_id = IntegerField(index=True, null=True)
     block_id = TextField(null=True)
     shape_id = TextField(index=True, null=True)
+    scheduled_trip_id = TextField(null=True)
+    trip_short_name = TextField(null=True)
     wheelchair_accessible = IntegerField(null=True)
     bikes_allowed = IntegerField(null=True)
-    dir_abbr = TextField(null=True)
-    sup_service_mod = IntegerField(null=True)
 
     class Meta:
         table_name = "trips"

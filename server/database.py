@@ -8,8 +8,9 @@ ALL_TABLES_SET = {
     "shapes",
     "stop_times",
     "stops",
-    "calendar",
     "calendar_dates",
+    "agency",
+    "transfers",
 }
 
 
