@@ -6,16 +6,13 @@ from server.services.gtfs_service import GTFSService
 
 class Route(graphene.ObjectType):
     route_id = graphene.String(description="Identifies a route.", required=True)
-    agency_id = graphene.Int(description="Agency for the specified route.")
+    agency_id = graphene.String(description="Agency for the specified route.")
     route_short_name = graphene.String(description="Short name of a route.")
     route_long_name = graphene.String(
         description="Full name of a route.", required=True
     )
     route_color = graphene.String(
         description="Route color designation that matches public facing material."
-    )
-    route_desc = graphene.String(
-        description="Description of a route that provides useful, quality information."
     )
 
 
@@ -50,10 +47,6 @@ class Trip(graphene.ObjectType):
         description="Text that appears on signage identifying the trip's destination to "
         "riders."
     )
-    trip_short_name = graphene.String(
-        description="Public facing text used to identify the trip to riders, "
-        "for instance, to identify train numbers for commuter rail trips."
-    )
     direction_id = graphene.Int(
         description="Indicates the direction of travel for a trip."
     )
@@ -63,6 +56,13 @@ class Trip(graphene.ObjectType):
     shape_id = graphene.String(
         description="Identifies a geospatial shape describing the vehicle travel path for a "
         "trip."
+    )
+    scheduled_trip_id = graphene.String(
+        description="Identifies the scheduled trip ID from the transit agency."
+    )
+    trip_short_name = graphene.String(
+        description="Public facing text used to identify the trip to riders, "
+        "for instance, to identify train numbers for commuter rail trips."
     )
     wheelchair_accessible = graphene.Int(
         description="Indicates wheelchair accessibility."
@@ -77,12 +77,10 @@ class StopTimes(graphene.ObjectType):
     departure_time = graphene.String(required=True)
     stop_id = graphene.String(required=True)
     stop_sequence = graphene.Int(required=True)
-    stop_headsign = graphene.String()
     pickup_type = graphene.Int()
     drop_off_type = graphene.Int()
     shape_dist_traveled = graphene.Float()
     timepoint = graphene.Int()
-    sup_est_delay = graphene.String()
     stop = graphene.Field(graphene.NonNull(Stop))
 
 
