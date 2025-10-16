@@ -92,7 +92,7 @@ jobs:
             APP_SECRET_VALUE=$(aws ssm get-parameter --name "$APP_SECRET_PARAM_NAME" --with-decryption --region "$REGION" --query 'Parameter.Value' --output text)
 
             # 6. Stop/Remove old container and run new one
-            CONTAINER_NAME="my-app-container" #
+            CONTAINER_NAME="austin-bus-go-container" #
 
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
