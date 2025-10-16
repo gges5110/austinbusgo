@@ -1,14 +1,12 @@
-# GitHub Actions Workflow for Continuous Deployment to EC2
+# GitHub Actions Workflow for Continuous Deployment
 
-name: Deploy to EC2 via ECR
+name: Main
 
 # Triggers the workflow on pushes to the 'main' branch
 on:
   push:
     branches:
       - main
-  # Allows manual triggering from the Actions tab in GitHub
-  workflow_dispatch:
 
 env:
   # General AWS Configuration
@@ -30,8 +28,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: client/package-lock.json
 
       - name: Install Dependencies
@@ -57,7 +55,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  deploy:
+  deploy-server:
     runs-on: ubuntu-latest
     environment: production
 
