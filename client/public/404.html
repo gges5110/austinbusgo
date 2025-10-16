@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  
+  <script>
+    /**
+     * This script runs when GitHub Pages returns a 404.
+     * It redirects the user back to the application's root while keeping 
+     * the requested path in the URL, allowing the SPA router to take over.
+     */
+    
+    // Get the full URL path that caused the 404 error (e.g., /repo-name/123)
+    var path = window.location.pathname;
+
+    // Construct the complete URL including search parameters and hash fragments
+    var target = window.location.origin + path + window.location.search + window.location.hash;
+
+    // Use location.replace() for a clean redirect that overwrites the 404 in history
+    window.location.replace(target);
+  </script>
+</head>
+<body>
+  <p>Loading application...</p>
+</body>
+</html>
