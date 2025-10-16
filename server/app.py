@@ -24,6 +24,9 @@ def create_app():
         logger.setLevel(logging.DEBUG)
         #     austin_bus_go_app.wsgi_app = ProfilerMiddleware(austin_bus_go_app.wsgi_app)
 
+    @austin_bus_go_app.route('/health')
+    def health_check():
+        return 'OK', 200
     @austin_bus_go_app.route("/", defaults={"path": ""})
     @austin_bus_go_app.route("/<path:path>")
     def catch_all(path):
