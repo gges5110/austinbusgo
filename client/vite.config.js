@@ -4,6 +4,7 @@ import eslint from "vite-plugin-eslint";
 
 export default defineConfig(() => {
   return {
+    base: process.env.GITHUB_ACTIONS ? "/austinbusgo/" : "/",
     build: {
       outDir: "build",
     },
