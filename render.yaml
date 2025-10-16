@@ -1,15 +1,4 @@
 services:
-  # A web service
-  - type: web
-    name: austin-bus-go
-    env: python
-    repo: https://github.com/gges5110/austinbusgo.git # optional
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --pythonpath "/server" 'server.app:create_app()'
-    branch: main # optional (defaults to master)
-    envVars:
-      - key: DATABASE_URL
-        sync: false
   # A static site
   - type: web
     name: austin-bus-go-client
@@ -25,4 +14,3 @@ services:
         - src/**/*.tsx
       ignoredPaths:
         - src/**/*.test.tsx
-
