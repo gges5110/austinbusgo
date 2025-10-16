@@ -45,7 +45,7 @@ jobs:
         # ECR_URI will look like: 123456789012.dkr.ecr.us-east-1.amazonaws.com/server
 
       - name: Build and Tag Docker Image
-        run: docker build -t ${{ env.ECR_URI }}:latest .
+        run: docker build --platform linux/amd64 -t ${{ env.ECR_URI }}:latest -f server/Dockerfile .
 
       - name: Push Docker Image to ECR
         run: docker push ${{ env.ECR_URI }}:latest
