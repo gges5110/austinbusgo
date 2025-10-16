@@ -24,9 +24,6 @@ def create_app():
         logger.setLevel(logging.DEBUG)
         #     austin_bus_go_app.wsgi_app = ProfilerMiddleware(austin_bus_go_app.wsgi_app)
 
-    @austin_bus_go_app.route('/health')
-    def health_check():
-        return 'OK', 200
     @austin_bus_go_app.route("/", defaults={"path": ""})
     @austin_bus_go_app.route("/<path:path>")
     def catch_all(path):
@@ -49,13 +46,6 @@ def create_app():
     
     # 1. Initialize the wrapper (sets up pre/post-request connection handlers)
     db_wrapper.init_app(austin_bus_go_app)
-
-    # 2. Perform Sanity Check within a safe context
-    try:
-        with db_wrapper.database.connection_context():
-            database_sanity_check()
-    except Exception as e:
-        # Halt the server if the DB check fails during boot
-        raise RuntimeError(f"Database setup failed during app boot: {e}")
+    database_sanity_check()
 
     return austin_bus_go_app
