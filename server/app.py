@@ -46,7 +46,16 @@ def create_app():
     austin_bus_go_app.config["DATABASE"] = db_url
     if db_url is None:
         raise RuntimeError("Environment variable $DATABASE_URL was not set")
+    
+    # 1. Initialize the wrapper (sets up pre/post-request connection handlers)
     db_wrapper.init_app(austin_bus_go_app)
-    database_sanity_check()
+
+    # 2. Perform Sanity Check within a safe context
+    try:
+        with db_wrapper.database.connection_context():
+            database_sanity_check()
+    except Exception as e:
+        # Halt the server if the DB check fails during boot
+        raise RuntimeError(f"Database setup failed during app boot: {e}")
 
     return austin_bus_go_app

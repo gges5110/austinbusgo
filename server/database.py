@@ -1,16 +1,7 @@
 from playhouse.flask_utils import FlaskDB
 
-
-# Custom FlaskDB that handles already-open connections
-class SafeFlaskDB(FlaskDB):
-    def connect_db(self):
-        """Only connect if database is closed to avoid 'Connection already opened' errors."""
-        if self.database.is_closed():
-            self.database.connect()
-
-
 # This module is for connecting to database
-db_wrapper = SafeFlaskDB()
+db_wrapper = FlaskDB()
 ALL_TABLES_SET = {
     "trips",
     "routes",
