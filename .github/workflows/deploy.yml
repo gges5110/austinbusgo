@@ -53,18 +53,12 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user # <-- CHANGE if you use a different user (e.g., ubuntu, centos)
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # --- SSH SCRIPT START ---
 
-            # 1. Update your deployment script on EC2 with the latest version
-            # If you committed your EC2_Deployment_Script.sh to the repository, 
-            # you can pull the latest version or just run the commands directly.
-
-            # Since the token is short-lived, we must regenerate it on EC2.
-
-            # 2. Define Variables (MUST MATCH YOUR EC2 SCRIPT CONFIGURATION)
+            # 1. Define Variables (MUST MATCH YOUR EC2 SCRIPT CONFIGURATION)
             REGION=${{ env.AWS_REGION }}
             # Get Account ID dynamically
             ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -72,41 +66,32 @@ jobs:
 
             # RDS Connection Details (Non-sensitive configuration)
             RDS_HOST="${{ secrets.RDS_HOST }}"
+            RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"
             RDS_PORT="5432" 
             RDS_USER="iam_db_user" 
-            RDS_DB_NAME="austin_bus_db" 
-            APP_SECRET_PARAM_NAME="/prod/server/app_secret"
+            RDS_DB_NAME="postgres" 
 
-            # 3. Log in to ECR and pull the new image
+            # 2. Log in to ECR and pull the new image
             aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
             docker pull "$ECR_REPO_URI"
 
-            # 4. Generate RDS Auth Token and Encode it
-            echo "Generating temporary RDS authentication token..."
-            RDS_AUTH_TOKEN=$(aws rds generate-db-auth-token --hostname "$RDS_HOST" --port "$RDS_PORT" --username "$RDS_USER" --region "$REGION")
-
-            # URL encode the token using Python (requires python3 on EC2)
-            ENCODED_RDS_AUTH_TOKEN=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$RDS_AUTH_TOKEN'))")
-
-            # 5. Fetch application secret from Parameter Store
-            APP_SECRET_VALUE=$(aws ssm get-parameter --name "$APP_SECRET_PARAM_NAME" --with-decryption --region "$REGION" --query 'Parameter.Value' --output text)
-
-            # 6. Stop/Remove old container and run new one
+            # 3. Stop/Remove old container and run new one
             CONTAINER_NAME="austin-bus-go-container" #
 
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
-
-            # Construct the DATABASE URL 
-            DATABASE_URL="postgresql://$RDS_USER:$ENCODED_RDS_AUTH_TOKEN@$RDS_HOST:$RDS_PORT/$RDS_DB_NAME"
 
             echo "Running container with new image: $ECR_REPO_URI"
 
             docker run -d \
                 --name $CONTAINER_NAME \
                 -p 8080:8080 \
-                -e DATABASE_URL="$DATABASE_URL" \
-                -e MY_APP_SECRET="$APP_SECRET_VALUE" \
+                -e PGHOST="${RDS_HOST}" \
+                -e PGPORT="${RDS_PORT}" \
+                -e PGUSER="${RDS_USER}" \
+                -e PGPASSWORD="${RDS_PASSWORD}" \
+                -e PGDATABASE="${RDS_DB_NAME}" \
+                -e PGSSLMODE="require" \
                 "$ECR_REPO_URI"
 
             echo "Deployment to EC2 complete."
