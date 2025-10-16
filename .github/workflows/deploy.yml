@@ -1,0 +1,113 @@
+# GitHub Actions Workflow for Continuous Deployment to EC2
+
+name: Deploy to EC2 via ECR
+
+# Triggers the workflow on pushes to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+  # Allows manual triggering from the Actions tab in GitHub
+  workflow_dispatch:
+
+env:
+  # General AWS Configuration
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: server
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- 1. Configure AWS Credentials for ECR ---
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # --- 2. Build and Push Docker Image to ECR ---
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get ECR URI
+        id: get-ecr-uri
+        run: echo "ECR_URI=$(echo ${{ steps.login-ecr.outputs.registry }} / ${{ env.ECR_REPOSITORY }} | tr -d ' ')" >> $GITHUB_ENV
+        # ECR_URI will look like: 123456789012.dkr.ecr.us-east-1.amazonaws.com/server
+
+      - name: Build and Tag Docker Image
+        run: docker build --platform linux/amd64 -t ${{ env.ECR_URI }}:latest -f server/Dockerfile .
+
+      - name: Push Docker Image to ECR
+        run: docker push ${{ env.ECR_URI }}:latest
+
+      # --- 3. Run Deployment Script on EC2 via SSH ---
+      - name: Deploy to EC2 and Restart Container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user # <-- CHANGE if you use a different user (e.g., ubuntu, centos)
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # --- SSH SCRIPT START ---
+
+            # 1. Update your deployment script on EC2 with the latest version
+            # If you committed your EC2_Deployment_Script.sh to the repository, 
+            # you can pull the latest version or just run the commands directly.
+
+            # Since the token is short-lived, we must regenerate it on EC2.
+
+            # 2. Define Variables (MUST MATCH YOUR EC2 SCRIPT CONFIGURATION)
+            REGION=${{ env.AWS_REGION }}
+            # Get Account ID dynamically
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            ECR_REPO_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
+
+            # RDS Connection Details (Non-sensitive configuration)
+            RDS_HOST="${{ secrets.RDS_HOST }}"
+            RDS_PORT="5432" 
+            RDS_USER="iam_db_user" 
+            RDS_DB_NAME="austin_bus_db" 
+            APP_SECRET_PARAM_NAME="/prod/server/app_secret"
+
+            # 3. Log in to ECR and pull the new image
+            aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com"
+            docker pull "$ECR_REPO_URI"
+
+            # 4. Generate RDS Auth Token and Encode it
+            echo "Generating temporary RDS authentication token..."
+            RDS_AUTH_TOKEN=$(aws rds generate-db-auth-token --hostname "$RDS_HOST" --port "$RDS_PORT" --username "$RDS_USER" --region "$REGION")
+
+            # URL encode the token using Python (requires python3 on EC2)
+            ENCODED_RDS_AUTH_TOKEN=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('$RDS_AUTH_TOKEN'))")
+
+            # 5. Fetch application secret from Parameter Store
+            APP_SECRET_VALUE=$(aws ssm get-parameter --name "$APP_SECRET_PARAM_NAME" --with-decryption --region "$REGION" --query 'Parameter.Value' --output text)
+
+            # 6. Stop/Remove old container and run new one
+            CONTAINER_NAME="my-app-container" #
+
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+
+            # Construct the DATABASE URL 
+            DATABASE_URL="postgresql://$RDS_USER:$ENCODED_RDS_AUTH_TOKEN@$RDS_HOST:$RDS_PORT/$RDS_DB_NAME"
+
+            echo "Running container with new image: $ECR_REPO_URI"
+
+            docker run -d \
+                --name $CONTAINER_NAME \
+                -p 8080:8080 \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -e MY_APP_SECRET="$APP_SECRET_VALUE" \
+                "$ECR_REPO_URI"
+
+            echo "Deployment to EC2 complete."
+            # --- SSH SCRIPT END ---
