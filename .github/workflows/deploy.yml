@@ -9,8 +9,6 @@ on:
       - main
   # Allows manual triggering from the Actions tab in GitHub
   workflow_dispatch:
-  # TESTING
-  pull_request:
 
 env:
   # General AWS Configuration
