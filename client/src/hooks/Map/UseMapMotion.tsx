@@ -24,6 +24,7 @@ export const useMapMotion = (
 
   const flyToStop = (stop: Stop) => {
     if (map && stop.stopLoc?.coordinates) {
+      const isMobile = window.innerWidth < 768;
       map.flyTo({
         center: [
           stop.stopLoc.coordinates?.[0] || viewState.longitude,
@@ -32,7 +33,7 @@ export const useMapMotion = (
         zoom: vehicleZoomLevel,
         padding: {
           top: 0,
-          left: 420,
+          left: isMobile ? 0 : 420,
           right: 0,
           bottom: 0,
         },
@@ -57,10 +58,11 @@ export const useMapMotion = (
         Math.max(...coordinates.map((coord) => coord[1])),
       ],
     ];
+    const isMobile = window.innerWidth < 768;
     map?.fitBounds(bounds, {
       padding: {
         top: 10,
-        left: 420,
+        left: isMobile ? 0 : 420,
         right: 10,
         bottom: 10,
       },
@@ -83,12 +85,13 @@ export const useMapMotion = (
       ],
     ];
 
+    const isMobile = window.innerWidth < 768;
     map?.fitBounds(bounds, {
       padding: {
-        top: 100,
-        left: 420,
+        top: 10,
+        left: isMobile ? 0 : 420,
         right: 10,
-        bottom: 100,
+        bottom: 10,
       },
     });
   };
