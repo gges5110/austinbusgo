@@ -1,7 +1,6 @@
-import * as Types from "shared/types/interface.d";
-
-import { graphQLEndpoint } from "../../../config/config";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { graphQLEndpoint } from "config/config";
+import * as Types from "shared/types/interface.d";
 
 function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   return async (): Promise<TData> => {

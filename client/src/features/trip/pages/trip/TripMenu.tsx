@@ -2,6 +2,7 @@ import { RouteOutlined } from "@mui/icons-material";
 import { Box, Button, Divider, Typography } from "@mui/material";
 import { useDataFromLoader, useDataFromRouteLoader } from "app/Router";
 import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { TripTimeline } from "features/trip/components/Trip/TripTimeline/TripTimeline";
 import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
 import { useRef } from "react";
 import * as React from "react";
@@ -14,7 +15,6 @@ import { RouteDisplayBanner } from "shared/components/Shared/RouteDisplayBanner/
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
-import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
 import { tripLoader } from "./TripLoader";
 
 export const TripMenu = () => {

@@ -15,14 +15,13 @@ import ListSubheader from "@mui/material/ListSubheader";
 import Toolbar from "@mui/material/Toolbar";
 import { TransitionProps } from "@mui/material/transitions";
 import dayjs from "dayjs";
+import { ColorModeToggle } from "features/settings/components/ColorModeToggle/ColorModeToggle";
+import { Bullet } from "features/stop/components/Stop/ArrivalTimeList/Bullet";
 import { useSetAtom } from "jotai/index";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
 import { recentSearchesAtom } from "shared/state/atoms";
-
-import { Bullet } from "../../../stop/components/Stop/ArrivalTimeList/Bullet";
-import { ColorModeToggle } from "../ColorModeToggle/ColorModeToggle";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {

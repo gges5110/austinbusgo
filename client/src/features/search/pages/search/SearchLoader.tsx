@@ -1,5 +1,9 @@
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "app/QueryClient";
+import {
+  isRoute,
+  isStop,
+} from "features/search/components/SearchPanel/SearchPanel";
 import { redirect } from "react-router-dom";
 import {
   NearByStopsQuery,
@@ -17,8 +21,6 @@ import {
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { FavoritesType } from "shared/state/atoms";
 import { Route, Stop } from "shared/types/interface.d";
-
-import { isRoute, isStop } from "../../components/SearchPanel/SearchPanel";
 
 const searchQuery = (id: SearchQueryVariables) => ({
   queryKey: useSearchQuery.getKey(id),

@@ -1,6 +1,10 @@
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { Popper, useTheme } from "@mui/material";
 import Fab from "@mui/material/Fab";
+import { useMapMotion } from "features/map/hooks/Map/UseMapMotion";
+import { useRouteShape } from "features/map/hooks/Map/UseRouteShape";
+import { useUserLocation } from "features/map/hooks/Map/UseUserLocation";
+import { useViewStateSync } from "features/map/hooks/Map/UseViewStateSync";
 import * as React from "react";
 import { useState } from "react";
 import ReactMapGL, {
@@ -17,10 +21,6 @@ import {
   VehiclePosition,
 } from "shared/types/interface.d";
 
-import { useMapMotion } from "../../hooks/Map/UseMapMotion";
-import { useRouteShape } from "../../hooks/Map/UseRouteShape";
-import { useUserLocation } from "../../hooks/Map/UseUserLocation";
-import { useViewStateSync } from "../../hooks/Map/UseViewStateSync";
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";

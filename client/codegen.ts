@@ -33,7 +33,7 @@ const config: CodegenConfig = {
         "typescript-react-query",
         {
           add: {
-            content: "import { graphQLEndpoint } from '../config';",
+            content: "import { graphQLEndpoint } from 'config/config';",
           },
         },
       ],

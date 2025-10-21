@@ -3,12 +3,11 @@ import NearMeIcon from "@mui/icons-material/NearMe";
 import RouteIcon from "@mui/icons-material/Route";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Paper, Typography } from "@mui/material";
+import { useNearByStops } from "features/map/hooks/Map/UseNearByStops";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MENU_PANEL_WIDTH } from "shared/components/Shared/MenuPanel/MenuPanel";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-
-import { useNearByStops } from "../../../hooks/Map/UseNearByStops";
 
 interface AssistiveChipsProps {}
 

@@ -34,8 +34,8 @@
     "serve": "vite preview",
     "coverage": "TZ=UTC CI=true vite vitest --coverage",
     "test:ci": "npm run lint && CI=true vite test --coverage",
-    "lint": "eslint -c .eslintrc.json 'src/**/*.tsx'",
-    "lint:fix": "eslint -c .eslintrc.json 'src/**/*.tsx' --fix",
+    "lint": "eslint -c .eslintrc.json 'src/**/*.{tsx,ts,js}'",
+    "lint:fix": "eslint -c .eslintrc.json 'src/**/*.{tsx,ts,js}' --fix",
     "generate": "graphql-codegen",
     "analyze_bundle": "npx source-map-explorer 'build/static/js/*.js'"
   },

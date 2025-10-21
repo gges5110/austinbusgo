@@ -1,9 +1,8 @@
 import { debounce } from "@mui/material";
+import { ViewState } from "features/map/components/Map/Map";
 import { useCallback, useEffect } from "react";
 import { useNavigate, useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-
-import { ViewState } from "../../components/Map/Map";
 
 const convertViewStateToPath = (viewState: ViewState) => {
   return `/@${parseFloat(viewState.latitude.toFixed(7))},${parseFloat(

@@ -1,6 +1,8 @@
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { Box, Divider, Typography } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
+import { ArrivalTimeList } from "features/stop/components/Stop/ArrivalTimeList/ArrivalTimeList";
+import { RoutesSelector } from "features/stop/components/Stop/RoutesSelector/RoutesSelector";
 import { useAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";
@@ -14,8 +16,6 @@ import { useTitle } from "shared/hooks/UseTitle";
 
 import { selectedRouteIdsAtStopAtom } from "shared/state/atoms";
 import { getDate } from "shared/utils/dateUtils";
-import { ArrivalTimeList } from "../../components/Stop/ArrivalTimeList/ArrivalTimeList";
-import { RoutesSelector } from "../../components/Stop/RoutesSelector/RoutesSelector";
 import { stopLoader } from "./StopLoader";
 
 interface StopMenuProps {
