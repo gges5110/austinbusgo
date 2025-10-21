@@ -174,11 +174,9 @@ export type QueryVehiclePositionsArgs = {
 export type Route = {
   __typename?: "Route";
   /** Agency for the specified route. */
-  agencyId?: Maybe<Scalars["Int"]>;
+  agencyId?: Maybe<Scalars["String"]>;
   /** Route color designation that matches public facing material. */
   routeColor?: Maybe<Scalars["String"]>;
-  /** Description of a route that provides useful, quality information. */
-  routeDesc?: Maybe<Scalars["String"]>;
   /** Identifies a route. */
   routeId: Scalars["String"];
   /** Full name of a route. */
@@ -227,10 +225,8 @@ export type StopTimes = {
   pickupType?: Maybe<Scalars["Int"]>;
   shapeDistTraveled?: Maybe<Scalars["Float"]>;
   stop: Stop;
-  stopHeadsign?: Maybe<Scalars["String"]>;
   stopId: Scalars["String"];
   stopSequence: Scalars["Int"];
-  supEstDelay?: Maybe<Scalars["String"]>;
   timepoint?: Maybe<Scalars["Int"]>;
   tripId: Scalars["String"];
 };
@@ -259,6 +255,8 @@ export type Trip = {
   route: Route;
   /** Identifies a route. */
   routeId: Scalars["String"];
+  /** Identifies the scheduled trip ID from the transit agency. */
+  scheduledTripId?: Maybe<Scalars["String"]>;
   /** Identifies a set of dates when service is available for one or more routes. */
   serviceId: Scalars["String"];
   /** Identifies a geospatial shape describing the vehicle travel path for a trip. */
