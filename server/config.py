@@ -1,24 +1,23 @@
-import os
-from urllib.parse import quote_plus
+"""
+DEPRECATED: This module is kept for backwards compatibility.
+Please import from server.config instead.
+"""
 
-# Try DATABASE_URL first, otherwise build from PG* environment variables
-db_url = os.environ.get("DATABASE_URL")
-if not db_url and os.environ.get("PGHOST"):
-    pghost = os.environ.get("PGHOST")
-    pgport = os.environ.get("PGPORT", "5432")
-    pguser = os.environ.get("PGUSER")
-    pgpassword = os.environ.get("PGPASSWORD")
-    pgdatabase = os.environ.get("PGDATABASE", "postgres")
-    pgsslmode = os.environ.get("PGSSLMODE", "prefer")
+# Import from new config structure
+from server.config.base import Config
+from server.config.agencies import CAPITAL_METRO, DEFAULT_AGENCY
+from server.config.constants import *
 
-    # Build DATABASE_URL, properly encoding the password
-    # The password (IAM token) contains special chars, so we URL-encode it
-    encoded_password = quote_plus(pgpassword) if pgpassword else ""
-    db_url = f"postgresql://{pguser}:{encoded_password}@{pghost}:{pgport}/{pgdatabase}?sslmode={pgsslmode}"
+# Backwards compatibility exports
+db_url = Config.get_database_url()
+capital_metro_trip_updates_pb_file_url = CAPITAL_METRO.trip_updates_url
+capital_metro_vehicle_positions_pb_file_url = CAPITAL_METRO.vehicle_positions_url
 
-capital_metro_trip_updates_pb_file_url = (
-    "https://data.texas.gov/download/rmk2-acnw/application%2Foctet-stream"
-)
-capital_metro_vehicle_positions_pb_file_url = (
-    "https://data.texas.gov/download/eiei-9rpf/application%2Foctet-stream"
-)
+__all__ = [
+    'Config',
+    'CAPITAL_METRO',
+    'DEFAULT_AGENCY',
+    'db_url',
+    'capital_metro_trip_updates_pb_file_url',
+    'capital_metro_vehicle_positions_pb_file_url'
+]
