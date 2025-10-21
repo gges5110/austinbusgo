@@ -5,7 +5,7 @@ const config: CodegenConfig = {
   documents: ["src/schemas/*.tsx"],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {
-    "src/interfaces/interface.d.tsx": { plugins: ["typescript"] },
+    "src/shared/types/interface.d.tsx": { plugins: ["typescript"] },
     "src/interfaces": {
       preset: "near-operation-file",
       presetConfig: {
@@ -33,7 +33,7 @@ const config: CodegenConfig = {
         "typescript-react-query",
         {
           add: {
-            content: "import { graphQLEndpoint } from '../config';",
+            content: "import { graphQLEndpoint } from 'config/config';",
           },
         },
       ],

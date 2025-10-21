@@ -1,21 +1,21 @@
-import {
-  StopsAndShapesQuery,
-  StopsAndShapesQueryVariables,
-  useStopsAndShapesQuery,
-} from "../schemas/StopsAndRouteShapes.generated";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import { queryClient } from "../QueryClient";
+import { queryClient } from "app/QueryClient";
 import {
   RouteQuery,
   RouteQueryVariables,
   useRouteQuery,
-} from "../schemas/Route.generated";
+} from "shared/api/schemas/Route.generated";
+import {
+  StopsAndShapesQuery,
+  StopsAndShapesQueryVariables,
+  useStopsAndShapesQuery,
+} from "shared/api/schemas/StopsAndRouteShapes.generated";
 import {
   useVehiclePositionsQuery,
   VehiclePositionsQuery,
   VehiclePositionsQueryVariables,
-} from "../schemas/VehiclePositions.generated";
-import { getDate } from "../dateUtils";
+} from "shared/api/schemas/VehiclePositions.generated";
+import { getDate } from "shared/utils/dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),

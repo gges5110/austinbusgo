@@ -34,8 +34,8 @@
     "serve": "vite preview",
     "coverage": "TZ=UTC CI=true vite vitest --coverage",
     "test:ci": "npm run lint && CI=true vite test --coverage",
-    "lint": "eslint -c .eslintrc.json 'src/**/*.tsx'",
-    "lint:fix": "eslint -c .eslintrc.json 'src/**/*.tsx' --fix",
+    "lint": "eslint -c .eslintrc.json 'src/**/*.{tsx,ts,js}'",
+    "lint:fix": "eslint -c .eslintrc.json 'src/**/*.{tsx,ts,js}' --fix",
     "generate": "graphql-codegen",
     "analyze_bundle": "npx source-map-explorer 'build/static/js/*.js'"
   },
@@ -81,6 +81,7 @@
     "eslint-config-prettier": "6.11.0",
     "eslint-config-react": "1.1.7",
     "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "3.1.4",
     "husky": "4.3.0",
     "jsdom": "^22.0.0",

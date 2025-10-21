@@ -1,0 +1,23 @@
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import { Box, Button, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
+import * as React from "react";
+
+export const ShareButton = () => {
+  const { enqueueSnackbar } = useSnackbar();
+  const copy = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      enqueueSnackbar("Copied to clipboard.");
+    });
+  };
+  return (
+    <Button onClick={copy} sx={{ textTransform: "none" }}>
+      <Box alignItems={"center"} display={"flex"} flexDirection={"column"}>
+        <ShareOutlinedIcon />
+        <Typography sx={{ textAlign: "center", fontSize: "14px" }}>
+          Share
+        </Typography>
+      </Box>
+    </Button>
+  );
+};

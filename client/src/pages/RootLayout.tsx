@@ -1,17 +1,17 @@
-import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
-import * as React from "react";
-import { SettingsDialog } from "../components/SettingsDialog/SettingsDialog";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
-import { useAtom } from "jotai";
-import { isAutoPollingAtom, settingsDialogOpenAtom } from "../Atoms";
-import { MapWrapper } from "../components/Map/MapWrapper";
-import { useViewStatePathname } from "../hooks/UseViewStatePathname";
-import { SearchPanel } from "../components/SearchPanel/SearchPanel";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Route, Stop } from "../interfaces/interface.d";
-import { useRecentSearches } from "../hooks/UseRecentSearches";
-import { useDataFromLoaders } from "../hooks/UseDataFromLoaders";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
+import { MapWrapper } from "features/map/components/Map/MapWrapper";
+import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
+import { SettingsDialog } from "features/settings/components/SettingsDialog/SettingsDialog";
+import { useAtom } from "jotai";
+import * as React from "react";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { ErrorBoundary } from "shared/components/ErrorBoundary";
+import { useDataFromLoaders } from "shared/hooks/UseDataFromLoaders";
+import { useRecentSearches } from "shared/hooks/UseRecentSearches";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { isAutoPollingAtom, settingsDialogOpenAtom } from "shared/state/atoms";
+import { Route, Stop } from "shared/types/interface.d";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
