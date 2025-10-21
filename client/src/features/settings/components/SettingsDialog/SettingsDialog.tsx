@@ -1,3 +1,8 @@
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import CloseIcon from "@mui/icons-material/Close";
+import CodeIcon from "@mui/icons-material/Code";
+import ColorLensIcon from "@mui/icons-material/ColorLens";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
 import { Box, Dialog, Fade, ListItemButton, Switch } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import IconButton from "@mui/material/IconButton";
@@ -7,21 +12,17 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemSecondaryAction from "@mui/material/ListItemSecondaryAction";
 import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
-import CodeIcon from "@mui/icons-material/Code";
 import Toolbar from "@mui/material/Toolbar";
 import { TransitionProps } from "@mui/material/transitions";
-import CloseIcon from "@mui/icons-material/Close";
+import dayjs from "dayjs";
+import { useSetAtom } from "jotai/index";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import SearchOffIcon from "@mui/icons-material/SearchOff";
-import { useSetAtom } from "jotai/index";
-import { recentSearchesAtom } from "../../../../shared/state/atoms";
-import { ColorModeToggle } from "../ColorModeToggle/ColorModeToggle";
-import ColorLensIcon from "@mui/icons-material/ColorLens";
-import { useFeedInfoQuery } from "../../../../shared/api/schemas/FeedInfo.generated";
-import dayjs from "dayjs";
+import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
+import { recentSearchesAtom } from "shared/state/atoms";
+
 import { Bullet } from "../../../stop/components/Stop/ArrivalTimeList/Bullet";
+import { ColorModeToggle } from "../ColorModeToggle/ColorModeToggle";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {

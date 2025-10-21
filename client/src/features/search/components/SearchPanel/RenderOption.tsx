@@ -1,11 +1,12 @@
-import { AutocompleteProps } from "@mui/material/Autocomplete/Autocomplete";
-import { Box } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
-import SearchIcon from "@mui/icons-material/Search";
-import RouteIcon from "@mui/icons-material/Route";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import { Highlight } from "./Highlight/Highlight";
+import RouteIcon from "@mui/icons-material/Route";
+import SearchIcon from "@mui/icons-material/Search";
+import { Box } from "@mui/material";
+import { AutocompleteProps } from "@mui/material/Autocomplete/Autocomplete";
 import * as React from "react";
+
+import { Highlight } from "./Highlight/Highlight";
 import {
   isRoute,
   isSearchTerm,

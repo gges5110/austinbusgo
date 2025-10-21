@@ -1,5 +1,4 @@
-import { StopsAndShapesQuery } from "../../../../../shared/api/schemas/StopsAndRouteShapes.generated";
-import * as React from "react";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import {
   Box,
   Divider,
@@ -10,25 +9,21 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-
-import { Link as RouterLink, useParams } from "react-router-dom";
-import { useViewStatePathname } from "../../../../../shared/hooks/UseViewStatePathname";
+import dayjs from "dayjs";
 import { useSetAtom } from "jotai";
+import * as React from "react";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { useEarliestArrivalTimesOnRouteQuery } from "shared/api/schemas/EarliestArrivalTimesOnRoute.generated";
+import { StopsAndShapesQuery } from "shared/api/schemas/StopsAndRouteShapes.generated";
+import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   hoveringStopAtom,
   hoveringVehiclePositionAtom,
   mapsFlyToCoordinateAtom,
-} from "../../../../../shared/state/atoms";
-import dayjs from "dayjs";
-import {
-  Route,
-  Stop,
-  VehicleStopStatus,
-} from "../../../../../shared/types/interface.d";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { useEarliestArrivalTimesOnRouteQuery } from "../../../../../shared/api/schemas/EarliestArrivalTimesOnRoute.generated";
-import { getDate, getTime } from "../../../../../shared/utils/dateUtils";
-import { useVehiclePositionsQuery } from "../../../../../shared/api/schemas/VehiclePositions.generated";
+} from "shared/state/atoms";
+import { Route, Stop, VehicleStopStatus } from "shared/types/interface.d";
+import { getDate, getTime } from "shared/utils/dateUtils";
 
 interface StopsTimelineProps {
   route: Route;

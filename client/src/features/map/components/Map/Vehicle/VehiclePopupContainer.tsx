@@ -1,7 +1,8 @@
 import React from "react";
-import { VehiclePosition } from "../../../../../shared/types/interface.d";
-import { useStopQuery } from "../../../../../shared/api/schemas/Stop.generated";
-import { useTripQuery } from "../../../../../shared/api/schemas/Trip.generated";
+import { useStopQuery } from "shared/api/schemas/Stop.generated";
+import { useTripQuery } from "shared/api/schemas/Trip.generated";
+import { VehiclePosition } from "shared/types/interface.d";
+
 import { VehiclePopupContent } from "./VehiclePopupContent";
 
 export interface VehiclePopupContainerProps {

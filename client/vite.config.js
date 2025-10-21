@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import eslint from "vite-plugin-eslint";
 import { join, parse, resolve } from "path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import eslint from "vite-plugin-eslint";
 
 export default defineConfig(() => {
   return {
@@ -14,6 +14,15 @@ export default defineConfig(() => {
     },
     plugins: [react(), eslint()],
     appType: "spa",
+    resolve: {
+      alias: {
+        app: resolve(__dirname, "src/app"),
+        features: resolve(__dirname, "src/features"),
+        shared: resolve(__dirname, "src/shared"),
+        pages: resolve(__dirname, "src/pages"),
+        config: resolve(__dirname, "src/config"),
+      },
+    },
     test: {
       globals: true,
       environment: "jsdom",

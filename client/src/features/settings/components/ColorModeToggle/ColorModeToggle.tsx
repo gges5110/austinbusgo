@@ -1,10 +1,10 @@
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { colorModeAtom, ColorModeType } from "../../../../shared/state/atoms";
-import * as React from "react";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import SettingsSystemDaydreamIcon from "@mui/icons-material/SettingsSystemDaydream";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useAtom } from "jotai";
+import * as React from "react";
+import { colorModeAtom, ColorModeType } from "shared/state/atoms";
 
 export const ColorModeToggle = () => {
   const [mode, setMode] = useAtom(colorModeAtom);

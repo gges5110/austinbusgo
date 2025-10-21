@@ -1,21 +1,22 @@
-import { useSearchParams } from "react-router-dom";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import { Box, Divider, Typography } from "@mui/material";
+import { useDataFromLoader } from "app/Router";
+import { useAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";
-import { useTitle } from "../../../../shared/hooks/UseTitle";
-import { useDataFromLoader } from "../../../../app/Router";
-import { MenuPanel } from "../../../../shared/components/Shared/MenuPanel/MenuPanel";
-import { stopLoader } from "./StopLoader";
-import { Box, Divider, Typography } from "@mui/material";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import { AddToFavorites } from "../../../../shared/components/Shared/AddToFavorites/AddToFavorites";
-import { ShareButton } from "../../../../shared/components/Shared/ShareButton/ShareButton";
-import { RoutesSelector } from "../../components/Stop/RoutesSelector/RoutesSelector";
+import { useSearchParams } from "react-router-dom";
+import { useArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
+import { AddToFavorites } from "shared/components/Shared/AddToFavorites/AddToFavorites";
+import { BackButton } from "shared/components/Shared/BackButton/BackButton";
+import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
+import { ShareButton } from "shared/components/Shared/ShareButton/ShareButton";
+import { useTitle } from "shared/hooks/UseTitle";
+
+import { selectedRouteIdsAtStopAtom } from "shared/state/atoms";
+import { getDate } from "shared/utils/dateUtils";
 import { ArrivalTimeList } from "../../components/Stop/ArrivalTimeList/ArrivalTimeList";
-import { useArrivalTimesQuery } from "../../../../shared/api/schemas/ArrivalTimes.generated";
-import { getDate } from "../../../../shared/utils/dateUtils";
-import { useAtom } from "jotai";
-import { selectedRouteIdsAtStopAtom } from "../../../../shared/state/atoms";
-import { BackButton } from "../../../../shared/components/Shared/BackButton/BackButton";
+import { RoutesSelector } from "../../components/Stop/RoutesSelector/RoutesSelector";
+import { stopLoader } from "./StopLoader";
 
 interface StopMenuProps {
   hideBackButton?: boolean;

@@ -1,5 +1,5 @@
-import * as React from "react";
 import { Box } from "@mui/material";
+import * as React from "react";
 
 export const Bullet: React.FunctionComponent = () => (
   <Box

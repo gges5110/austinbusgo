@@ -1,17 +1,17 @@
-import { useAtomValue } from "jotai";
-import { isAutoPollingAtom } from "../state/atoms";
-import { useParams, useSearchParams } from "react-router-dom";
-import { useDataFromRouteLoader } from "../../app/Router";
-import { routeLoader } from "../../features/route/pages/route/RouteLoader";
-import { searchParamsDataLoader } from "../../pages/SearchParamsDataLoader";
-import { searchLoader } from "../../features/search/pages/search/SearchLoader";
-import { useState } from "react";
-import { SnackbarKey, useSnackbar } from "notistack";
-import { useVehiclePositionsQuery } from "../api/schemas/VehiclePositions.generated";
 import { useQueryClient } from "@tanstack/react-query";
-import { stopLoader } from "../../features/stop/pages/stop/StopLoader";
-import { Stop } from "../types/interface.d";
-import { isResponse } from "../../features/search/pages/search/SearchResultsMenu";
+import { useDataFromRouteLoader } from "app/Router";
+import { routeLoader } from "features/route/pages/route/RouteLoader";
+import { searchLoader } from "features/search/pages/search/SearchLoader";
+import { isResponse } from "features/search/pages/search/SearchResultsMenu";
+import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { useAtomValue } from "jotai";
+import { SnackbarKey, useSnackbar } from "notistack";
+import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
+import { useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
+import { isAutoPollingAtom } from "shared/state/atoms";
+import { Stop } from "shared/types/interface.d";
 
 export const useDataFromLoaders = () => {
   const autoPolling = useAtomValue(isAutoPollingAtom);

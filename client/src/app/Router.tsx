@@ -1,3 +1,14 @@
+import { routeLoader } from "features/route/pages/route/RouteLoader";
+import { RouteMenu } from "features/route/pages/route/RouteMenu";
+import { searchLoader } from "features/search/pages/search/SearchLoader";
+import { SearchResultsMenu } from "features/search/pages/search/SearchResultsMenu";
+import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { StopMenu } from "features/stop/pages/stop/StopMenu";
+import { tripLoader } from "features/trip/pages/trip/TripLoader";
+import { TripMenu } from "features/trip/pages/trip/TripMenu";
+import { RootLayout } from "pages/RootLayout";
+import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
+import * as React from "react";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -6,17 +17,6 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
-import { RootLayout } from "../pages/RootLayout";
-import { RouteMenu } from "../features/route/pages/route/RouteMenu";
-import { StopMenu } from "../features/stop/pages/stop/StopMenu";
-import { TripMenu } from "../features/trip/pages/trip/TripMenu";
-import * as React from "react";
-import { SearchResultsMenu } from "../features/search/pages/search/SearchResultsMenu";
-import { routeLoader } from "../features/route/pages/route/RouteLoader";
-import { stopLoader } from "../features/stop/pages/stop/StopLoader";
-import { tripLoader } from "../features/trip/pages/trip/TripLoader";
-import { searchLoader } from "../features/search/pages/search/SearchLoader";
-import { searchParamsDataLoader } from "../pages/SearchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn

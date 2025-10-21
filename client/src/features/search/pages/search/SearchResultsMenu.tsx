@@ -1,6 +1,5 @@
-import { MenuPanel } from "../../../../shared/components/Shared/MenuPanel/MenuPanel";
-import * as React from "react";
-import { useDataFromLoader } from "../../../../app/Router";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import RouteIcon from "@mui/icons-material/Route";
 import {
   Box,
   Container,
@@ -10,19 +9,21 @@ import {
   ListItemButton,
   Typography,
 } from "@mui/material";
-import { RouteIdDisplay } from "../../../../shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
-import { Link as RouterLink, useParams } from "react-router-dom";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import RouteIcon from "@mui/icons-material/Route";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import { searchLoader } from "./SearchLoader";
-import { useRecentSearches } from "../../../../shared/hooks/UseRecentSearches";
+import { useDataFromLoader } from "app/Router";
 import { useSetAtom } from "jotai";
-import { hoveringStopAtom } from "../../../../shared/state/atoms";
-import { Stop } from "../../../../shared/types/interface.d";
-import { useTitle } from "../../../../shared/hooks/UseTitle";
-import { SearchQuery } from "../../../../shared/api/schemas/Search.generated";
+import * as React from "react";
 import { useEffect } from "react";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { SearchQuery } from "shared/api/schemas/Search.generated";
+import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
+import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { useRecentSearches } from "shared/hooks/UseRecentSearches";
+import { useTitle } from "shared/hooks/UseTitle";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { hoveringStopAtom } from "shared/state/atoms";
+import { Stop } from "shared/types/interface.d";
+
+import { searchLoader } from "./SearchLoader";
 
 export const isResponse = (data: Response | SearchQuery): data is Response => {
   return data !== undefined && "ok" in data;

@@ -1,9 +1,10 @@
+import { useAtomValue } from "jotai";
 import * as React from "react";
 import { Marker } from "react-map-gl";
-import { Stop } from "../../../../../shared/types/interface.d";
+import { hoveringStopAtom } from "shared/state/atoms";
+import { Stop } from "shared/types/interface.d";
+
 import { StopPin } from "./StopPin";
-import { useAtomValue } from "jotai";
-import { hoveringStopAtom } from "../../../../../shared/state/atoms";
 
 interface StopMarkerProps {
   readonly stop: Stop;

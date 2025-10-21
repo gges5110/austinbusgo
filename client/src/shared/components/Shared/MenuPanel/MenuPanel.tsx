@@ -1,6 +1,6 @@
+import { Box, Paper, Slide } from "@mui/material";
 import * as React from "react";
 import { PropsWithChildren } from "react";
-import { Box, Paper, Slide } from "@mui/material";
 
 export const MENU_PANEL_WIDTH = "408px";
 

@@ -1,7 +1,7 @@
-import { ArrivalTimesQuery } from "../../../../../shared/api/schemas/ArrivalTimes.generated";
-import * as React from "react";
-import { Box, Button, IconButton, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
+import { Box, Button, IconButton, Typography } from "@mui/material";
+import * as React from "react";
+import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
 
 interface RoutesSelectorProps {
   selectedRouteIds: Array<string>;

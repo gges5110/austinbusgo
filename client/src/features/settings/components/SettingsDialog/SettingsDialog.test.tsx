@@ -1,8 +1,9 @@
+import { render, waitFor, screen } from "@testing-library/react";
 import { SnackbarProvider } from "notistack";
 import React from "react";
-import { render, waitFor, screen } from "@testing-library/react";
-import { SettingsDialog } from "./SettingsDialog";
 import { vitest } from "vitest";
+
+import { SettingsDialog } from "./SettingsDialog";
 
 describe("SettingsDialog", () => {
   test("matches snapshot", async () => {

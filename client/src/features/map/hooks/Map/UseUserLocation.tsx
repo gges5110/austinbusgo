@@ -1,5 +1,6 @@
 import { useSnackbar } from "notistack";
 import { useMap } from "react-map-gl";
+
 import { ViewState } from "../../components/Map/Map";
 
 export const useUserLocation = (viewState: ViewState) => {

@@ -1,8 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
-import { useViewStateSync } from "./UseViewStateSync";
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
+
+import { useViewStateSync } from "./UseViewStateSync";
 
 const mocks = vi.hoisted(() => {
   return {

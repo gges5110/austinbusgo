@@ -1,5 +1,6 @@
 import { default as React, useMemo } from "react";
-import { Stop } from "../../../../../shared/types/interface.d";
+import { Stop } from "shared/types/interface.d";
+
 import { StopMarker } from "./StopMarker";
 
 interface StopMarkersProps {

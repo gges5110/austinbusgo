@@ -1,12 +1,12 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import * as React from "react";
-import { SnackbarProvider } from "notistack";
-import { RouterProvider } from "react-router-dom";
-import { router } from "./Router";
-import { useAppTheme } from "../shared/hooks/UseAppTheme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { queryClient } from "./QueryClient";
+import { queryClient } from "app/QueryClient";
+import { router } from "app/Router";
+import { SnackbarProvider } from "notistack";
+import * as React from "react";
+import { RouterProvider } from "react-router-dom";
+import { useAppTheme } from "shared/hooks/UseAppTheme";
 
 export const App: React.FunctionComponent = () => {
   const appTheme = useAppTheme();

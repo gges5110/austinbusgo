@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   FormControl,
   FormControlLabel,
@@ -6,9 +5,10 @@ import {
   Radio,
   RadioGroup,
 } from "@mui/material";
-import { StopsAndShapesQuery } from "../../../../../shared/api/schemas/StopsAndRouteShapes.generated";
+import * as React from "react";
 import { useEffect, useState } from "react";
-import { Trip } from "../../../../../shared/types/interface.d";
+import { StopsAndShapesQuery } from "shared/api/schemas/StopsAndRouteShapes.generated";
+import { Trip } from "shared/types/interface.d";
 
 interface DirectionToggleProps {
   directionId: Trip["directionId"];

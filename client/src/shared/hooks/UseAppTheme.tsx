@@ -1,7 +1,7 @@
 import { createTheme, useMediaQuery, useTheme } from "@mui/material";
 import { useAtomValue } from "jotai";
-import { colorModeAtom } from "../state/atoms";
 import * as React from "react";
+import { colorModeAtom } from "shared/state/atoms";
 
 declare module "@mui/material/styles" {
   interface Palette {

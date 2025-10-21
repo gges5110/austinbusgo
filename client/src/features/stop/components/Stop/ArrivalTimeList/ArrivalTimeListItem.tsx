@@ -1,15 +1,16 @@
-import { Box, ListItemButton, Typography, useTheme } from "@mui/material";
 import AccessibleIcon from "@mui/icons-material/Accessible";
 import DirectionsBikeIcon from "@mui/icons-material/DirectionsBike";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import { Box, ListItemButton, Typography, useTheme } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
-import { Bullet } from "./Bullet";
-import { RouteIdDisplay } from "../../../../../shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
 import { Link as RouterLink } from "react-router-dom";
-import { useViewStatePathname } from "../../../../../shared/hooks/UseViewStatePathname";
-import { StopQuery } from "../../../../../shared/api/schemas/Stop.generated";
-import { ArrivalTimesQuery } from "../../../../../shared/api/schemas/ArrivalTimes.generated";
+import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
+import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+
+import { Bullet } from "./Bullet";
 
 export interface ArrivalTimeListItemProps {
   arrivalTime: ArrivalTimesQuery["arrivalTimes"][number];

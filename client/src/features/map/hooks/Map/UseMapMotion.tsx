@@ -1,10 +1,11 @@
-import { LineString, Stop } from "../../../../shared/types/interface.d";
-import { useMap } from "react-map-gl";
-import { useEffect } from "react";
-import { vehicleZoomLevel, ViewState } from "../../components/Map/Map";
-import { mapsFlyToCoordinateAtom } from "../../../../shared/state/atoms";
 import { useAtomValue } from "jotai";
 import { LngLatBoundsLike } from "mapbox-gl";
+import { useEffect } from "react";
+import { useMap } from "react-map-gl";
+import { mapsFlyToCoordinateAtom } from "shared/state/atoms";
+import { LineString, Stop } from "shared/types/interface.d";
+
+import { vehicleZoomLevel, ViewState } from "../../components/Map/Map";
 
 export const useMapMotion = (
   viewState: ViewState,

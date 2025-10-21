@@ -1,12 +1,13 @@
 import { Badge, Popover } from "@mui/material";
+import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import * as React from "react";
 import { Marker } from "react-map-gl";
-import { VehiclePosition } from "../../../../../shared/types/interface.d";
+import { hoveringVehiclePositionAtom } from "shared/state/atoms";
+import { VehiclePosition } from "shared/types/interface.d";
+
 import { VehicleIcon } from "./VehicleIcon";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
-import { useAtomValue } from "jotai";
-import { hoveringVehiclePositionAtom } from "../../../../../shared/state/atoms";
 
 interface VehicleMarkerProps {
   readonly vehiclePosition: VehiclePosition;

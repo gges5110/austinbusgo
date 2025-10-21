@@ -1,8 +1,8 @@
+import { Coordinate } from "features/map/components/Map/Map";
 import { atom } from "jotai";
-import { Route, Stop, VehiclePosition } from "../types/interface.d";
 import { atomWithStorage } from "jotai/utils";
-import { RecentSearch } from "../hooks/UseRecentSearches";
-import { Coordinate } from "../../features/map/components/Map/Map";
+import { RecentSearch } from "shared/hooks/UseRecentSearches";
+import { Route, Stop, VehiclePosition } from "shared/types/interface.d";
 
 export const settingsDialogOpenAtom = atom<boolean>(false);
 export const isAutoPollingAtom = atomWithStorage<boolean>(

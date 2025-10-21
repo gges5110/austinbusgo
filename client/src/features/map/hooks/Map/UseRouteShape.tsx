@@ -1,6 +1,6 @@
-import { LineString } from "../../../../shared/types/interface.d";
 import * as GeoJSON from "geojson";
 import { useEffect, useState } from "react";
+import { LineString } from "shared/types/interface.d";
 
 export const useRouteShape = (routeShapes: LineString[]) => {
   const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString> = {

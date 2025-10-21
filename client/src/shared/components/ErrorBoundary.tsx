@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react";
 import { Box, Button, Paper, Typography } from "@mui/material";
+import React, { ReactNode } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
 interface Props {

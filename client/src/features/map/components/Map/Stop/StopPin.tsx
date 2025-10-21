@@ -1,6 +1,6 @@
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { IconButton, Tooltip } from "@mui/material";
 import { blue, red } from "@mui/material/colors";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import React, { useState } from "react";
 
 export interface StopPinProps {

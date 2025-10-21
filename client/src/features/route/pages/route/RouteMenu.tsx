@@ -1,17 +1,18 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { Box, Divider } from "@mui/material";
-import { DirectionToggle } from "../../../search/components/SearchPanel/DirectionToggle/DirectionToggle";
-import { RouteStopsTimeline } from "../../components/Route/RouteStopsTimeline/RouteStopsTimeline";
+import { useDataFromLoader } from "app/Router";
+import { DirectionToggle } from "features/search/components/SearchPanel/DirectionToggle/DirectionToggle";
 import * as React from "react";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import { useTitle } from "../../../../shared/hooks/UseTitle";
-import { useDataFromLoader } from "../../../../app/Router";
-import { Trip } from "../../../../shared/types/interface.d";
-import { MenuPanel } from "../../../../shared/components/Shared/MenuPanel/MenuPanel";
+import { useNavigate, useParams } from "react-router-dom";
+import { AddToFavorites } from "shared/components/Shared/AddToFavorites/AddToFavorites";
+import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
+import { RouteDisplayBanner } from "shared/components/Shared/RouteDisplayBanner/RouteDisplayBanner";
+import { ShareButton } from "shared/components/Shared/ShareButton/ShareButton";
+import { useTitle } from "shared/hooks/UseTitle";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { Trip } from "shared/types/interface.d";
+
+import { RouteStopsTimeline } from "../../components/Route/RouteStopsTimeline/RouteStopsTimeline";
 import { routeLoader } from "./RouteLoader";
-import { AddToFavorites } from "../../../../shared/components/Shared/AddToFavorites/AddToFavorites";
-import { ShareButton } from "../../../../shared/components/Shared/ShareButton/ShareButton";
-import { RouteDisplayBanner } from "../../../../shared/components/Shared/RouteDisplayBanner/RouteDisplayBanner";
 
 export const RouteMenu = () => {
   const navigate = useNavigate();

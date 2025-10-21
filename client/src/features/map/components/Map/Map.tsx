@@ -1,6 +1,6 @@
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { Popper, useTheme } from "@mui/material";
 import Fab from "@mui/material/Fab";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as React from "react";
 import { useState } from "react";
 import ReactMapGL, {
@@ -9,19 +9,20 @@ import ReactMapGL, {
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   LineString,
   Route,
   Stop,
   VehiclePosition,
-} from "../../../../shared/types/interface.d";
-import { StopMarkers } from "./Stop/StopMarkers";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import { useUserLocation } from "../../hooks/Map/UseUserLocation";
+} from "shared/types/interface.d";
+
 import { useMapMotion } from "../../hooks/Map/UseMapMotion";
 import { useRouteShape } from "../../hooks/Map/UseRouteShape";
+import { useUserLocation } from "../../hooks/Map/UseUserLocation";
 import { useViewStateSync } from "../../hooks/Map/UseViewStateSync";
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
+import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {

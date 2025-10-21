@@ -1,10 +1,10 @@
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import { queryClient } from "app/QueryClient";
 import {
   StopQuery,
   StopQueryVariables,
   useStopQuery,
-} from "../../../../shared/api/schemas/Stop.generated";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import { queryClient } from "../../../../app/QueryClient";
+} from "shared/api/schemas/Stop.generated";
 
 const stopQuery = (id: StopQueryVariables) => ({
   queryKey: useStopQuery.getKey(id),

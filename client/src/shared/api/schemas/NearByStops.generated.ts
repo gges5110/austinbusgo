@@ -1,4 +1,4 @@
-import * as Types from "../../types/interface.d";
+import * as Types from "shared/types/interface.d";
 
 import { graphQLEndpoint } from "../../../config/config";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";

@@ -11,7 +11,8 @@
     "react-hooks",
     "@typescript-eslint",
     "prettier",
-    "unused-imports"
+    "unused-imports",
+    "import"
   ],
   "env": {
     "browser": true,
@@ -41,12 +42,36 @@
         "singleQuote": false
       }
     ],
-    "unused-imports/no-unused-imports-ts": 2
+    "unused-imports/no-unused-imports-ts": 2,
+    "import/no-relative-parent-imports": "error",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
   },
   "settings": {
     "react": {
       "pragma": "React",
       "version": "detect"
+    },
+    "import/resolver": {
+      // This tells ESLint to respect the 'jsconfig.json' or 'tsconfig.json' settings
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
     }
   },
   "parser": "@typescript-eslint/parser"

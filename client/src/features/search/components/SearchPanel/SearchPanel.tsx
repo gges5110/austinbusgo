@@ -3,15 +3,16 @@ import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Route, Stop } from "../../../../shared/types/interface.d";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useNavigate, useNavigation } from "react-router-dom";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import { useRecentSearches } from "../../../../shared/hooks/UseRecentSearches";
 import {
   SearchQuery,
   useSearchQuery,
-} from "../../../../shared/api/schemas/Search.generated";
+} from "shared/api/schemas/Search.generated";
+import { useRecentSearches } from "shared/hooks/UseRecentSearches";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { Route, Stop } from "shared/types/interface.d";
+
 import { InputEndAdornment } from "./InputEndAdornment/InputEndAdornment";
 import { renderOption } from "./RenderOption";
 

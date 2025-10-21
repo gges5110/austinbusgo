@@ -1,20 +1,20 @@
-import {
-  TripQuery,
-  TripQueryVariables,
-  useTripQuery,
-} from "../../../../shared/api/schemas/Trip.generated";
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import { queryClient } from "../../../../app/QueryClient";
+import { queryClient } from "app/QueryClient";
 import {
   StopTimesQuery,
   StopTimesQueryVariables,
   useStopTimesQuery,
-} from "../../../../shared/api/schemas/StopTimes.generated";
+} from "shared/api/schemas/StopTimes.generated";
+import {
+  TripQuery,
+  TripQueryVariables,
+  useTripQuery,
+} from "shared/api/schemas/Trip.generated";
 import {
   TripUpdateQuery,
   TripUpdateQueryVariables,
   useTripUpdateQuery,
-} from "../../../../shared/api/schemas/TripUpdate.generated";
+} from "shared/api/schemas/TripUpdate.generated";
 
 const tripQuery = (id: TripQueryVariables) => ({
   queryKey: useTripQuery.getKey(id),

@@ -1,11 +1,11 @@
-import { useAtom } from "jotai";
-import { recentSearchesAtom } from "../state/atoms";
 import {
   isRoute,
   isSearchTerm,
   isStop,
   OptionValue,
-} from "../../features/search/components/SearchPanel/SearchPanel";
+} from "features/search/components/SearchPanel/SearchPanel";
+import { useAtom } from "jotai";
+import { recentSearchesAtom } from "shared/state/atoms";
 
 export interface RecentSearch {
   timestamp: number;

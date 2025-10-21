@@ -1,9 +1,9 @@
-import { useAtom } from "jotai";
-import { favoritesAtom, FavoritesType } from "../state/atoms";
 import {
   isRoute,
   isStop,
-} from "../../features/search/components/SearchPanel/SearchPanel";
+} from "features/search/components/SearchPanel/SearchPanel";
+import { useAtom } from "jotai";
+import { favoritesAtom, FavoritesType } from "shared/state/atoms";
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useAtom(favoritesAtom);

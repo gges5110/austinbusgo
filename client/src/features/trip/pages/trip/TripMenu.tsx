@@ -1,23 +1,21 @@
-import { Link as RouterLink, useParams } from "react-router-dom";
-import { Box, Button, Divider, Typography } from "@mui/material";
-import * as React from "react";
-import { useRef } from "react";
-import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
-import {
-  useDataFromLoader,
-  useDataFromRouteLoader,
-} from "../../../../app/Router";
-import { MenuPanel } from "../../../../shared/components/Shared/MenuPanel/MenuPanel";
-import { useTitle } from "../../../../shared/hooks/UseTitle";
-import { stopLoader } from "../../../stop/pages/stop/StopLoader";
-import { tripLoader } from "./TripLoader";
-import { searchParamsDataLoader } from "../../../../pages/SearchParamsDataLoader";
-import { useTripUpdateQuery } from "../../../../shared/api/schemas/TripUpdate.generated";
 import { RouteOutlined } from "@mui/icons-material";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import { AddToFavorites } from "../../../../shared/components/Shared/AddToFavorites/AddToFavorites";
-import { BackButton } from "../../../../shared/components/Shared/BackButton/BackButton";
-import { RouteDisplayBanner } from "../../../../shared/components/Shared/RouteDisplayBanner/RouteDisplayBanner";
+import { Box, Button, Divider, Typography } from "@mui/material";
+import { useDataFromLoader, useDataFromRouteLoader } from "app/Router";
+import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
+import { useRef } from "react";
+import * as React from "react";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { useTripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
+import { AddToFavorites } from "shared/components/Shared/AddToFavorites/AddToFavorites";
+import { BackButton } from "shared/components/Shared/BackButton/BackButton";
+import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
+import { RouteDisplayBanner } from "shared/components/Shared/RouteDisplayBanner/RouteDisplayBanner";
+import { useTitle } from "shared/hooks/UseTitle";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+
+import { TripTimeline } from "../../components/Trip/TripTimeline/TripTimeline";
+import { tripLoader } from "./TripLoader";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);

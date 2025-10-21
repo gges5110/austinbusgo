@@ -1,7 +1,8 @@
-import { useNavigate, useNavigation } from "react-router-dom";
-import { useViewStatePathname } from "../../../../shared/hooks/UseViewStatePathname";
-import { useCallback, useEffect } from "react";
 import { debounce } from "@mui/material";
+import { useCallback, useEffect } from "react";
+import { useNavigate, useNavigation } from "react-router-dom";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+
 import { ViewState } from "../../components/Map/Map";
 
 const convertViewStateToPath = (viewState: ViewState) => {

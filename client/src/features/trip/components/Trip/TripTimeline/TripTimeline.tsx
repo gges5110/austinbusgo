@@ -1,5 +1,4 @@
-import * as React from "react";
-import dayjs from "dayjs";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import {
   Box,
   Divider,
@@ -10,24 +9,22 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { StopTimesQuery } from "../../../../../shared/api/schemas/StopTimes.generated";
-import { useEffect, useRef } from "react";
-import { TripQuery } from "../../../../../shared/api/schemas/Trip.generated";
-import { Link as RouterLink, useSearchParams } from "react-router-dom";
-import { useViewStatePathname } from "../../../../../shared/hooks/UseViewStatePathname";
-import {
-  VehiclePosition,
-  VehicleStopStatus,
-} from "../../../../../shared/types/interface.d";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { StopQuery } from "../../../../../shared/api/schemas/Stop.generated";
-import { useUpdateViewState } from "../../../../map/hooks/Map/UseViewStateSync";
-import { TripUpdateQuery } from "../../../../../shared/api/schemas/TripUpdate.generated";
+import dayjs from "dayjs";
+import { useUpdateViewState } from "features/map/hooks/Map/UseViewStateSync";
 import { useSetAtom } from "jotai";
+import * as React from "react";
+import { useEffect, useRef } from "react";
+import { Link as RouterLink, useSearchParams } from "react-router-dom";
+import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { StopTimesQuery } from "shared/api/schemas/StopTimes.generated";
+import { TripQuery } from "shared/api/schemas/Trip.generated";
+import { TripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   hoveringVehiclePositionAtom,
   mapsFlyToCoordinateAtom,
-} from "../../../../../shared/state/atoms";
+} from "shared/state/atoms";
+import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 interface TripTimelineProps {
   stopTimes: StopTimesQuery["stopTimes"];

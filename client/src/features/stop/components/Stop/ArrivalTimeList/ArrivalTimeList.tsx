@@ -1,8 +1,9 @@
 import { Divider, List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import * as React from "react";
+import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
+import { StopQuery } from "shared/api/schemas/Stop.generated";
+
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
-import { ArrivalTimesQuery } from "../../../../../shared/api/schemas/ArrivalTimes.generated";
-import { StopQuery } from "../../../../../shared/api/schemas/Stop.generated";
 
 export interface ArrivalTimeListProps {
   arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];

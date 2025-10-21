@@ -1,9 +1,10 @@
-import { Route } from "../../../types/interface.d";
-import * as React from "react";
-import { Box, Typography } from "@mui/material";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import { RouteIdDisplay } from "../RouteIdDisplay/RouteIdDisplay";
 import RouteIcon from "@mui/icons-material/Route";
+import { Box, Typography } from "@mui/material";
+import * as React from "react";
+import { Route } from "shared/types/interface.d";
+
+import { RouteIdDisplay } from "../RouteIdDisplay/RouteIdDisplay";
 
 interface RouteDisplayBannerProps {
   routeColor: Route["routeColor"];

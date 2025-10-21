@@ -1,6 +1,6 @@
-import { useSnackbar } from "notistack";
-import { Box, Button, Typography } from "@mui/material";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import { Box, Button, Typography } from "@mui/material";
+import { useSnackbar } from "notistack";
 import * as React from "react";
 
 export const ShareButton = () => {

@@ -1,7 +1,7 @@
-import * as React from "react";
 import { Box, Typography } from "@mui/material";
-import { Route } from "../../../types/interface.d";
+import * as React from "react";
 import { MouseEventHandler } from "react";
+import { Route } from "shared/types/interface.d";
 
 interface RouteIdDisplayProps {
   routeColor: Route["routeColor"];

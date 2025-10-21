@@ -1,6 +1,7 @@
-import { VehiclePosition } from "../../../../../shared/types/interface.d";
 import * as React from "react";
 import { useMemo } from "react";
+import { VehiclePosition } from "shared/types/interface.d";
+
 import { VehicleMarker } from "./VehicleMarker";
 
 interface VehicleMarkersProps {

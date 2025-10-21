@@ -1,19 +1,16 @@
-import * as React from "react";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import RouteIcon from "@mui/icons-material/Route";
+import { Box, Skeleton } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { StopQuery } from "../../../../../shared/api/schemas/Stop.generated";
-import { TripQuery } from "../../../../../shared/api/schemas/Trip.generated";
-import { Box, Skeleton } from "@mui/material";
-import {
-  VehiclePosition,
-  VehicleStopStatus,
-} from "../../../../../shared/types/interface.d";
-import { RouteIdDisplay } from "../../../../../shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import RouteIcon from "@mui/icons-material/Route";
+import * as React from "react";
+import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { TripQuery } from "shared/api/schemas/Trip.generated";
+import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 dayjs.extend(relativeTime);
 
