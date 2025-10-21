@@ -2,20 +2,20 @@ import {
   StopsAndShapesQuery,
   StopsAndShapesQueryVariables,
   useStopsAndShapesQuery,
-} from "../shared/api/schemas/StopsAndRouteShapes.generated";
-import { LoaderFunctionArgs } from "@remix-run/router/utils";
-import { queryClient } from "../app/QueryClient";
+} from "../../../../shared/api/schemas/StopsAndRouteShapes.generated";
 import {
   RouteQuery,
   RouteQueryVariables,
   useRouteQuery,
-} from "../shared/api/schemas/Route.generated";
+} from "../../../../shared/api/schemas/Route.generated";
+import { LoaderFunctionArgs } from "@remix-run/router/utils";
+import { queryClient } from "../../../../app/QueryClient";
 import {
   useVehiclePositionsQuery,
   VehiclePositionsQuery,
   VehiclePositionsQueryVariables,
-} from "../shared/api/schemas/VehiclePositions.generated";
-import { getDate } from "../shared/utils/dateUtils";
+} from "../../../../shared/api/schemas/VehiclePositions.generated";
+import { getDate } from "../../../../shared/utils/dateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),
@@ -25,21 +25,14 @@ const stopsAndShapesQuery = (id: StopsAndShapesQueryVariables) => ({
   queryKey: useStopsAndShapesQuery.getKey(id),
   queryFn: useStopsAndShapesQuery.fetcher(id),
 });
+
 const vehiclePositionsQuery = (id: VehiclePositionsQueryVariables) => ({
   queryKey: useVehiclePositionsQuery.getKey(id),
   queryFn: useVehiclePositionsQuery.fetcher(id),
 });
-export const searchParamsDataLoader = async ({
-  request,
-}: LoaderFunctionArgs) => {
-  const url = new URL(request.url);
-  const routeId = url.searchParams.get("routeId") || "";
-  const directionId = Number(url.searchParams.get("directionId") || "");
-
-  if (routeId === "") {
-    return {};
-  }
-
+export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
+  const routeId = params["routeId"] || "";
+  const directionId = Number(params["directionId"]);
   const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
     routeQuery({ routeId })
   );
@@ -62,18 +55,15 @@ export const searchParamsDataLoader = async ({
     })
   );
 
-  let routeData, stopsAndShapesData, vehiclePositionsData;
-  if (routeId !== "") {
-    routeData = await routeDataQuery;
-    stopsAndShapesData = await stopsAndShapesDataQuery;
-    vehiclePositionsData = await vehiclePositionsDataQuery;
-  }
+  const routeData = await routeDataQuery;
+  const stopsAndShapesData = await stopsAndShapesDataQuery;
+  const vehiclePositionsData = await vehiclePositionsDataQuery;
 
   return {
-    route: routeData?.route,
-    shapes: stopsAndShapesData?.stopsAndShapes.shapes,
-    stops: stopsAndShapesData?.stopsAndShapes.stops,
-    distinctTrips: stopsAndShapesData?.distinctTrips,
+    route: routeData.route,
+    shapes: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.shapes,
+    stops: (stopsAndShapesData as StopsAndShapesQuery).stopsAndShapes.stops,
+    distinctTrips: (stopsAndShapesData as StopsAndShapesQuery).distinctTrips,
     vehiclePositions: vehiclePositionsData?.vehiclePositions,
   };
 };
