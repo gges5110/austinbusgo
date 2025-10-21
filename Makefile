@@ -28,19 +28,19 @@ run-prod:
 	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 'server.app:create_app()'
 
 test:
-	$(PYTHON) -m unittest discover -s tests
+	$(PYTHON) -m unittest discover -s server/tests
 
 integration-tests:
 	$(PYTHON) -m unittest discover -s integration-tests
 
 coverage:
-	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage report -m
+	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s server/tests; coverage report -m
 
 coverage-html:
-	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s tests; coverage html
+	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s server/tests; coverage html
 
 lint:
-	$(VENV_ACTIVATE) black server tests ci-job
+	$(VENV_ACTIVATE) black server ci-job
 
 setup-local:
 	docker-compose -f docker/docker-compose.yml up
