@@ -149,6 +149,11 @@ jobs:
             docker run -d \
                 --name $CONTAINER_NAME \
                 -p 8080:8080 \
+                --log-driver=awslogs \
+                --log-opt awslogs-region="$REGION" \
+                --log-opt awslogs-group="/ecs/austin-bus-go" \
+                --log-opt awslogs-stream="$CONTAINER_NAME" \
+                --log-opt awslogs-create-group=true \
                 -e PGHOST="${RDS_HOST}" \
                 -e PGPORT="${RDS_PORT}" \
                 -e PGUSER="${RDS_USER}" \
