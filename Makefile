@@ -34,10 +34,10 @@ integration-tests:
 	$(PYTHON) -m unittest discover -s integration-tests
 
 coverage:
-	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s server/tests; coverage report -m
+	$(VENV_ACTIVATE) coverage run -m unittest discover -s server/tests; coverage report
 
 coverage-html:
-	$(VENV_ACTIVATE) coverage run --source=./server -m unittest discover -s server/tests; coverage html
+	$(VENV_ACTIVATE) coverage run -m unittest discover -s server/tests; coverage html
 
 lint:
 	$(VENV_ACTIVATE) black server ci-job
