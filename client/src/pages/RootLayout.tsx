@@ -11,6 +11,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { Route, Stop } from "../interfaces/interface.d";
 import { useRecentSearches } from "../hooks/UseRecentSearches";
 import { useDataFromLoaders } from "../hooks/UseDataFromLoaders";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
@@ -55,53 +56,55 @@ export const RootLayout: React.FunctionComponent = () => {
   } = useDataFromLoaders();
 
   return (
-    <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
-      <Paper
-        sx={{
-          color: "text.primary",
-          borderRadius: 1,
-          position: "absolute",
-          zIndex: 1,
-          top: theme.spacing(2),
-          right: theme.spacing(2),
-        }}
-      >
-        <IconButton
-          onClick={() => {
-            setSettingsDialogOpen(true);
+    <ErrorBoundary>
+      <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
+        <Paper
+          sx={{
+            color: "text.primary",
+            borderRadius: 1,
+            position: "absolute",
+            zIndex: 1,
+            top: theme.spacing(2),
+            right: theme.spacing(2),
           }}
         >
-          <SettingsIcon />
-        </IconButton>
-      </Paper>
-      <MapWrapper
-        route={route}
-        routeShapes={routeShapes}
-        setSelectedStop={setStop}
-        stop={stop}
-        stops={stops}
-        vehiclePositions={vehiclePositions}
-      />
-      <Popper open={true}>
-        <Outlet />
-      </Popper>
-      <Popper open={true} sx={{ zIndex: 2 }}>
-        <SearchPanel
+          <IconButton
+            onClick={() => {
+              setSettingsDialogOpen(true);
+            }}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Paper>
+        <MapWrapper
           route={route}
-          searchTerm={searchTerm}
-          setRoute={setRoute}
-          setStop={setStop}
+          routeShapes={routeShapes}
+          setSelectedStop={setStop}
           stop={stop}
+          stops={stops}
+          vehiclePositions={vehiclePositions}
         />
-      </Popper>
+        <Popper open={true}>
+          <Outlet />
+        </Popper>
+        <Popper open={true} sx={{ zIndex: 2 }}>
+          <SearchPanel
+            route={route}
+            searchTerm={searchTerm}
+            setRoute={setRoute}
+            setStop={setStop}
+            stop={stop}
+          />
+        </Popper>
 
-      <SettingsDialog
-        autoPolling={autoPolling}
-        open={settingsDialogOpen}
-        reloadVehiclePositions={reloadVehiclePositions}
-        setAutoPolling={setAutoPolling}
-        setOpen={setSettingsDialogOpen}
-      />
-    </Box>
+        <SettingsDialog
+          autoPolling={autoPolling}
+          open={settingsDialogOpen}
+          reloadVehiclePositions={reloadVehiclePositions}
+          setAutoPolling={setAutoPolling}
+          setOpen={setSettingsDialogOpen}
+        />
+      </Box>
+    </ErrorBoundary>
   );
 };
