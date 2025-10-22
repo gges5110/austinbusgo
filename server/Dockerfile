@@ -29,4 +29,4 @@ ENV FLASK_APP=server.app:create_app()
 EXPOSE 8080
 
 # Run gunicorn with the Flask app
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "--config", "server/gunicorn_config.py", "server.app:create_app()"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "server.app:create_app()"]
