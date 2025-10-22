@@ -6,7 +6,7 @@ def post_fork(server, worker):
     from server.database import db_wrapper
 
     # Close any existing connection from the parent process
-    if not db_wrapper.database.is_closed():
+    if db_wrapper.database is not None and not db_wrapper.database.is_closed():
         db_wrapper.database.close()
 
     # The FlaskDB wrapper will automatically reconnect on first request
@@ -18,5 +18,5 @@ def worker_exit(server, worker):
     """
     from server.database import db_wrapper
 
-    if not db_wrapper.database.is_closed():
+    if db_wrapper.database is not None and not db_wrapper.database.is_closed():
         db_wrapper.database.close()
