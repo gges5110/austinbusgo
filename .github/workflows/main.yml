@@ -132,7 +132,7 @@ jobs:
             RDS_HOST="${{ secrets.RDS_HOST }}"
             RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"
             RDS_PORT="5432"
-            RDS_USER="iam_db_user"
+            RDS_USER="deployment_user"
             RDS_DB_NAME="postgres"
 
             # 2. Log in to ECR and pull the new image
