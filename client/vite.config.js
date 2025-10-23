@@ -1,7 +1,6 @@
 import { join, parse, resolve } from "path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import eslint from "vite-plugin-eslint";
 
 export default defineConfig(() => {
   return {
@@ -12,7 +11,7 @@ export default defineConfig(() => {
         input: entryPoints("index.html", "404.html"),
       },
     },
-    plugins: [react(), eslint()],
+    plugins: [react()],
     appType: "spa",
     resolve: {
       alias: {
