@@ -153,7 +153,7 @@ jobs:
 
             docker run -d \
                 --name $CONTAINER_NAME \
-                -p 8080:8080 \
+                -p 80:8080 \
                 --log-driver=awslogs \
                 --log-opt awslogs-region="$REGION" \
                 --log-opt awslogs-group="/ecs/austin-bus-go" \
