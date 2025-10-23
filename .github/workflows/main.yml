@@ -131,7 +131,7 @@ jobs:
             RDS_HOST="${{ secrets.RDS_HOST }}"
             RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"
             RDS_PORT="5432"
-            RDS_USER="iam_db_user"
+            RDS_USER="deployment_user"
             RDS_DB_NAME="postgres"
 
             # 2. Log in to ECR and pull the new image
@@ -144,11 +144,15 @@ jobs:
             docker stop $CONTAINER_NAME || true
             docker rm $CONTAINER_NAME || true
 
+            # 4. Prune unused Docker resources to free up space
+            echo "Pruning unused Docker resources..."
+            docker system prune -af --volumes || true
+
             echo "Running container with new image: $ECR_REPO_URI"
 
             docker run -d \
                 --name $CONTAINER_NAME \
-                -p 8080:8080 \
+                -p 80:8080 \
                 --log-driver=awslogs \
                 --log-opt awslogs-region="$REGION" \
                 --log-opt awslogs-group="/ecs/austin-bus-go" \
