@@ -150,6 +150,11 @@ jobs:
 
             echo "Running container with new image: $ECR_REPO_URI"
 
+            # Construct DATABASE_URL from RDS connection details
+            # Note: URL encoding the password to handle special characters (e.g., IAM tokens)
+            ENCODED_PASSWORD=$(python3 -c "import urllib.parse; print(urllib.parse.quote_plus('${RDS_PASSWORD}'))")
+            DATABASE_URL="postgresql://${RDS_USER}:${ENCODED_PASSWORD}@${RDS_HOST}:${RDS_PORT}/${RDS_DB_NAME}?sslmode=require"
+
             docker run -d \
                 --name $CONTAINER_NAME \
                 -p 80:8080 \
@@ -158,12 +163,7 @@ jobs:
                 --log-opt awslogs-group="/ecs/austin-bus-go" \
                 --log-opt awslogs-stream="$CONTAINER_NAME" \
                 --log-opt awslogs-create-group=true \
-                -e PGHOST="${RDS_HOST}" \
-                -e PGPORT="${RDS_PORT}" \
-                -e PGUSER="${RDS_USER}" \
-                -e PGPASSWORD="${RDS_PASSWORD}" \
-                -e PGDATABASE="${RDS_DB_NAME}" \
-                -e PGSSLMODE="require" \
+                -e DATABASE_URL="${DATABASE_URL}" \
                 "$ECR_REPO_URI"
 
             echo "Deployment to EC2 complete."
