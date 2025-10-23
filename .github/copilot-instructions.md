@@ -143,7 +143,7 @@ This is a full-stack application with:
 
 - GTFS Static Data: CapMetro transit schedule data
 - GTFS-RT: Real-time vehicle positions and trip updates
-- Download GTFS: `make downloadGTFS`
+- Download GTFS: `./ci-job/downloadGTFS.sh`
 - Preprocessing: `ci-job/prepareGTFSFiles.py`
 
 ## CI/CD Workflows
