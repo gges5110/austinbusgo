@@ -165,8 +165,8 @@ This is a full-stack application with:
 ## Environment Variables
 
 ### Server (Production)
-- `DATABASE_URL` or separate PG* variables:
-  - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `PGSSLMODE`
+- `DATABASE_URL`: PostgreSQL connection string in the format `postgresql://user:password@host:port/database?sslmode=mode`
+  - Example: `postgresql://user:pass@localhost:5432/dbname?sslmode=require`
 
 ### Client (Build-time)
 - `VITE_MAPBOX_ACCESS_TOKEN`: Mapbox API token
