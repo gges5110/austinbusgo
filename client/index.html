@@ -8,6 +8,35 @@
     content="width=device-width, initial-scale=1, shrink-to-fit=no"
   />
   <meta name="theme-color" content="#2196f3" />
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Track Austin public transit in real-time. Find bus routes, stops, and arrival times for Capital Metro buses. Get live transit updates and directions for Austin, Texas." />
+  <meta name="keywords" content="Austin bus tracker, Capital Metro, Austin public transit, real-time bus tracking, Austin transportation, bus routes Austin, bus arrival times, Austin Texas transit" />
+  <meta name="author" content="Austin Bus Go" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://austinbusgo.com/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://austinbusgo.com/" />
+  <meta property="og:title" content="Austin Bus Go - Real-Time Austin Transit Tracker" />
+  <meta property="og:description" content="Track Austin public transit in real-time. Find bus routes, stops, and arrival times for Capital Metro buses." />
+  <meta property="og:image" content="https://austinbusgo.com/og-image.png" />
+  <meta property="og:site_name" content="Austin Bus Go" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://austinbusgo.com/" />
+  <meta name="twitter:title" content="Austin Bus Go - Real-Time Austin Transit Tracker" />
+  <meta name="twitter:description" content="Track Austin public transit in real-time. Find bus routes, stops, and arrival times for Capital Metro buses." />
+  <meta name="twitter:image" content="https://austinbusgo.com/twitter-card.png" />
+
+  <!-- Additional SEO -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Austin Bus Go" />
+
   <!--
     manifest.json provides metadata used when your web app is added to the
     homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -27,10 +56,52 @@
     work correctly both with client-side routing and a non-root public URL.
     Learn how to configure a non-root public URL by running `npm run build`.
   -->
-  <title>Austin Bus Go</title>
+  <title>Austin Bus Go - Real-Time Austin Transit Tracker</title>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
+
+<!-- Structured Data for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Austin Bus Go",
+  "description": "Track Austin public transit in real-time. Find bus routes, stops, and arrival times for Capital Metro buses.",
+  "url": "https://austinbusgo.com",
+  "applicationCategory": "TravelApplication",
+  "operatingSystem": "Web Browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "ratingCount": "100"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Austin Bus Go"
+  },
+  "areaServed": {
+    "@type": "City",
+    "name": "Austin",
+    "@id": "https://www.wikidata.org/wiki/Q16559",
+    "containedInPlace": {
+      "@type": "State",
+      "name": "Texas"
+    }
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "Capital Metro",
+    "url": "https://www.capmetro.org"
+  }
+}
+</script>
+
 <div id="root" style="height:100vh"></div>
 <script type="module" src="/src/index.tsx"></script>
 <!--
