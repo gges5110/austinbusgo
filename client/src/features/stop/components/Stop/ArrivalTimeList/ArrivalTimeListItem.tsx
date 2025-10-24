@@ -7,7 +7,7 @@ import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
 import { StopQuery } from "shared/api/schemas/Stop.generated";
-import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
 import { Bullet } from "./Bullet";

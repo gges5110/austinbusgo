@@ -2,7 +2,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import RouteIcon from "@mui/icons-material/Route";
 import { Box, Typography } from "@mui/material";
 import * as React from "react";
-import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { Route } from "shared/types/interface.d";
 
 interface RouteDisplayBannerProps {

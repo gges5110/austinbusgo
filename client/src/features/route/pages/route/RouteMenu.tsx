@@ -4,10 +4,10 @@ import { RouteStopsTimeline } from "features/route/components/Route/RouteStopsTi
 import { DirectionToggle } from "features/search/components/SearchPanel/DirectionToggle/DirectionToggle";
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AddToFavorites } from "shared/components/Shared/AddToFavorites/AddToFavorites";
-import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
-import { RouteDisplayBanner } from "shared/components/Shared/RouteDisplayBanner/RouteDisplayBanner";
-import { ShareButton } from "shared/components/Shared/ShareButton/ShareButton";
+import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
+import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
+import { RouteDisplayBanner } from "shared/components/RouteDisplayBanner/RouteDisplayBanner";
+import { ShareButton } from "shared/components/ShareButton/ShareButton";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { Trip } from "shared/types/interface.d";

@@ -9,7 +9,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
 import { StopQuery } from "shared/api/schemas/Stop.generated";
 import { TripQuery } from "shared/api/schemas/Trip.generated";
-import { RouteIdDisplay } from "shared/components/Shared/RouteIdDisplay/RouteIdDisplay";
+import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 dayjs.extend(relativeTime);

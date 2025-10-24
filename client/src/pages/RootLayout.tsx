@@ -5,8 +5,8 @@ import * as React from "react";
 import { useState } from "react";
 import { MapProvider } from "react-map-gl";
 import { Outlet } from "react-router-dom";
+import { AppDrawer } from "shared/components/AppDrawer/AppDrawer";
 import { ErrorBoundary } from "shared/components/ErrorBoundary";
-import { AppDrawer } from "shared/components/Shared/AppDrawer/AppDrawer";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);

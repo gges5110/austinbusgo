@@ -8,10 +8,10 @@ import * as React from "react";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
-import { AddToFavorites } from "shared/components/Shared/AddToFavorites/AddToFavorites";
-import { BackButton } from "shared/components/Shared/BackButton/BackButton";
-import { MenuPanel } from "shared/components/Shared/MenuPanel/MenuPanel";
-import { ShareButton } from "shared/components/Shared/ShareButton/ShareButton";
+import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
+import { BackButton } from "shared/components/BackButton/BackButton";
+import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
+import { ShareButton } from "shared/components/ShareButton/ShareButton";
 import { useTitle } from "shared/hooks/UseTitle";
 
 import { selectedRouteIdsAtStopAtom } from "shared/state/atoms";
