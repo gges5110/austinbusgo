@@ -3,7 +3,6 @@ import { Box, IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import * as React from "react";
 import { useState } from "react";
-import { useNavigation } from "react-router-dom";
 import { Route, Stop } from "shared/types/interface.d";
 
 import { SearchAutocomplete } from "./SearchAutocomplete";
@@ -27,9 +26,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   setStop,
   onMenuClick,
 }) => {
-  const navigation = useNavigation();
-
-  const routeLoading = navigation.location !== undefined;
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
 
   return (
@@ -51,7 +47,6 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
           <MenuIcon />
         </IconButton>
         <SearchAutocomplete
-          loading={routeLoading}
           onOpenChange={setSearchPanelOpen}
           open={searchPanelOpen}
           route={route}

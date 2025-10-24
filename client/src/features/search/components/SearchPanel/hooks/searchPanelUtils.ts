@@ -58,3 +58,30 @@ export const getOptionLabel = (option: SearchOption): string => {
 
   return "";
 };
+
+// Equality checker for autocomplete options
+export const isOptionEqualToValue = (
+  option: SearchOption,
+  value: SearchOption
+): boolean => {
+  const { optionValue } = option;
+
+  if (isRoute(optionValue)) {
+    return (
+      isRoute(value.optionValue) &&
+      optionValue.routeId === value.optionValue.routeId
+    );
+  } else if (isStop(optionValue)) {
+    return (
+      isStop(value.optionValue) &&
+      optionValue.stopId === value.optionValue.stopId
+    );
+  } else if (isSearchTerm(optionValue)) {
+    return (
+      isSearchTerm(value.optionValue) &&
+      optionValue.value === value.optionValue.value
+    );
+  }
+
+  return false;
+};
