@@ -21,12 +21,13 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { ColorModeToggle } from "features/settings/components/ColorModeToggle/ColorModeToggle";
-import { Bullet } from "features/stop/components/Stop/ArrivalTimeList/Bullet";
 import { useAtom, useSetAtom } from "jotai";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
+import { useReloadVehiclePositions } from "shared/hooks/UseReloadVehiclePositions";
 import {
+  isAutoPollingAtom,
   recentSearchesAtom,
   showReactQueryDevtoolsAtom,
 } from "shared/state/atoms";
@@ -34,20 +35,16 @@ import {
 export interface AppDrawerProps {
   open: boolean;
   onClose: () => void;
-  autoPolling: boolean;
-  setAutoPolling: (autoPolling: boolean) => void;
-  reloadVehiclePositions: () => void;
 }
 
 export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
   open,
   onClose,
-  autoPolling,
-  setAutoPolling,
-  reloadVehiclePositions,
 }) => {
+  const { reloadVehiclePositions } = useReloadVehiclePositions();
   const { data } = useFeedInfoQuery();
   const { enqueueSnackbar } = useSnackbar();
+  const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
   const setRecentSearches = useSetAtom(recentSearchesAtom);
   const [showReactQueryDevtools, setShowReactQueryDevtools] = useAtom(
     showReactQueryDevtoolsAtom

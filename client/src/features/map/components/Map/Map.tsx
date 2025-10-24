@@ -13,13 +13,13 @@ import ReactMapGL, {
   useMap,
   ViewStateChangeEvent,
 } from "react-map-gl";
+import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
+import { useCurrentStop } from "shared/hooks/UseCurrentStop";
+import { useRouteShapes } from "shared/hooks/UseRouteShapes";
+import { useStops } from "shared/hooks/UseStops";
+import { useVehiclePositions } from "shared/hooks/UseVehiclePositions";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import {
-  LineString,
-  Route,
-  Stop,
-  VehiclePosition,
-} from "shared/types/interface.d";
+import { VehiclePosition } from "shared/types/interface.d";
 
 import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
 import { StopMarkers } from "./Stop/StopMarkers";
@@ -34,30 +34,18 @@ export type ViewState = {
   zoom: number;
 };
 
-export interface MapProps {
-  readonly route?: Route;
-  readonly stop?: Stop;
-  readonly routeShapes: LineString[];
-  readonly stops: Stop[];
-  readonly vehiclePositions: VehiclePosition[];
-
-  setSelectedStop(stop: Stop): void;
-}
-
 export const vehicleZoomLevel = 16;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
-export const Map: React.FunctionComponent<MapProps> = ({
-  route,
-  stops,
-  stop,
-  setSelectedStop,
-  routeShapes,
-  vehiclePositions,
-}) => {
+export const Map: React.FunctionComponent = () => {
   const { mapId: map } = useMap();
+  const { vehiclePositions } = useVehiclePositions();
+  const { stops } = useStops();
+  const { routeShapes } = useRouteShapes();
   const theme = useTheme();
+  const { currentRoute: route } = useCurrentRoute();
+  const { currentStop: stop, setStop: setSelectedStop } = useCurrentStop();
 
   const { routeShapeGeoJSON } = useRouteShape(routeShapes);
   const { latitude, longitude, zoom } = useViewStatePathname();

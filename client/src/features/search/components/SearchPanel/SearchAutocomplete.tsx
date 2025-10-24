@@ -1,9 +1,9 @@
 import { Autocomplete, createFilterOptions } from "@mui/material";
 import * as React from "react";
 import { useRef, useState } from "react";
-import { useNavigation } from "react-router-dom";
-import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { Route, Stop } from "shared/types/interface.d";
+import { useNavigation, useParams } from "react-router-dom";
+import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
+import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 
 import {
   getOptionLabel,
@@ -19,11 +19,6 @@ import { SearchInput } from "./SearchInput";
 import { SEARCH_PANEL_WIDTH } from "./SearchPanel";
 
 interface SearchAutocompleteProps {
-  route?: Route;
-  stop?: Stop;
-  searchTerm?: string;
-  setRoute: (route: Route) => void;
-  setStop: (stop: Stop) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -33,17 +28,14 @@ const filterOptions = createFilterOptions<SearchOption>({
 });
 
 export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps> = ({
-  route,
-  stop,
-  searchTerm,
-  setRoute,
-  setStop,
   open,
   onOpenChange,
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState<SearchOption | null>(null);
-  const { viewStatePathname } = useViewStatePathname();
+  const { currentRoute } = useCurrentRoute();
+  const { currentStop } = useCurrentStop();
+  const { searchTerm } = useParams();
 
   const navigation = useNavigation();
   const externalLoading = navigation.location !== undefined;
@@ -66,17 +58,12 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
     value,
   });
 
-  const { handleSelect, handleClear, handleSearch } = useSearchNavigation({
-    route,
-    setRoute,
-    setStop,
-    viewStatePathname,
-  });
+  const { handleSelect, handleClear, handleSearch } = useSearchNavigation();
 
   // Sync input with URL parameters
   useSearchSync({
-    route,
-    stop,
+    route: currentRoute,
+    stop: currentStop,
     searchTerm,
     setInputString,
     setValue,

@@ -1,5 +1,5 @@
-import InputBase from "@mui/material/InputBase";
 import { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
+import InputBase from "@mui/material/InputBase";
 import * as React from "react";
 
 import { InputEndAdornment } from "./InputEndAdornment/InputEndAdornment";

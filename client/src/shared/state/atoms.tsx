@@ -36,3 +36,6 @@ export const favoritesAtom = atomWithStorage<Array<FavoritesType>>(
   "favorites",
   []
 );
+
+export const currentRouteAtom = atom<Route | undefined>(undefined);
+export const currentStopAtom = atom<Stop | undefined>(undefined);

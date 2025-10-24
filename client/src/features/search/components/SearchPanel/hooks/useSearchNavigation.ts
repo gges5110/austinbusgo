@@ -1,7 +1,9 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
+import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
-import { Route, Stop } from "shared/types/interface.d";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
 import {
   isRoute,
@@ -10,20 +12,11 @@ import {
   SearchOption,
 } from "./searchPanelUtils";
 
-interface UseSearchNavigationParams {
-  route?: Route;
-  setRoute: (route: Route) => void;
-  setStop: (stop: Stop) => void;
-  viewStatePathname: string;
-}
-
-export const useSearchNavigation = ({
-  route,
-  setRoute,
-  setStop,
-  viewStatePathname,
-}: UseSearchNavigationParams) => {
+export const useSearchNavigation = () => {
   const navigate = useNavigate();
+  const { currentRoute, setRoute } = useCurrentRoute();
+  const { setStop } = useCurrentStop();
+  const { viewStatePathname } = useViewStatePathname();
   const { addToRecentSearches } = useRecentSearches();
 
   const handleSearch = useCallback(
@@ -37,7 +30,7 @@ export const useSearchNavigation = ({
     (option: SearchOption) => {
       const { optionValue } = option;
       if (isRoute(optionValue)) {
-        if (route?.routeId !== optionValue.routeId) {
+        if (currentRoute?.routeId !== optionValue.routeId) {
           setRoute(optionValue);
           addToRecentSearches(optionValue);
         }
@@ -48,7 +41,7 @@ export const useSearchNavigation = ({
         handleSearch(optionValue.value);
       }
     },
-    [route, setRoute, setStop, addToRecentSearches, handleSearch]
+    [currentRoute, setRoute, setStop, addToRecentSearches, handleSearch]
   );
 
   const handleClear = useCallback(() => {

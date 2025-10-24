@@ -1,0 +1,18 @@
+import { useDataFromRouteLoader } from "app/Router";
+import { routeLoader } from "features/route/pages/route/RouteLoader";
+import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
+import { LineString } from "shared/types/interface.d";
+
+export const useRouteShapes = () => {
+  const routeData = useDataFromRouteLoader("route", routeLoader);
+  const searchParamsData = useDataFromRouteLoader(
+    "searchParams",
+    searchParamsDataLoader
+  );
+
+  // Get route shapes from loaders (prefer searchParamsData for prefetched data)
+  const routeShapes: LineString[] =
+    searchParamsData?.shapes || routeData?.shapes || [];
+
+  return { routeShapes };
+};
