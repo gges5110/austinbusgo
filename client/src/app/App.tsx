@@ -7,7 +7,7 @@ import { useAtomValue } from "jotai";
 import { SnackbarProvider } from "notistack";
 import * as React from "react";
 import { RouterProvider } from "react-router-dom";
-import { useAppTheme } from "shared/hooks/UseAppTheme";
+import { useAppTheme } from "app/hooks/useAppTheme";
 import { showReactQueryDevtoolsAtom } from "shared/state/atoms";
 
 export const App: React.FunctionComponent = () => {

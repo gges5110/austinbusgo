@@ -25,7 +25,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
-import { useReloadVehiclePositions } from "shared/hooks/UseReloadVehiclePositions";
+import { useReloadVehiclePositions } from "./useReloadVehiclePositions";
 import {
   isAutoPollingAtom,
   recentSearchesAtom,

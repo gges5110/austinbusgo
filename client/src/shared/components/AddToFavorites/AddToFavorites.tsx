@@ -2,7 +2,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import { Box, Button, Typography } from "@mui/material";
 import * as React from "react";
-import { useFavorites } from "shared/hooks/UseFavorites";
+import { useFavorites } from "./useFavorites";
 import { FavoritesType } from "shared/state/atoms";
 
 interface AddToFavoritesProps {

@@ -3,7 +3,10 @@ import { Popper, useTheme } from "@mui/material";
 import Fab from "@mui/material/Fab";
 import { useMapMotion } from "features/map/hooks/Map/UseMapMotion";
 import { useRouteShape } from "features/map/hooks/Map/UseRouteShape";
+import { useRouteShapes } from "features/map/hooks/Map/useRouteShapes";
+import { useStops } from "features/map/hooks/Map/useStops";
 import { useUserLocation } from "features/map/hooks/Map/UseUserLocation";
+import { useVehiclePositions } from "features/map/hooks/Map/useVehiclePositions";
 import { useViewStateSync } from "features/map/hooks/Map/UseViewStateSync";
 import * as React from "react";
 import { useState } from "react";
@@ -15,9 +18,6 @@ import ReactMapGL, {
 } from "react-map-gl/mapbox";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
-import { useRouteShapes } from "shared/hooks/UseRouteShapes";
-import { useStops } from "shared/hooks/UseStops";
-import { useVehiclePositions } from "shared/hooks/UseVehiclePositions";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition } from "shared/types/interface.d";
 
