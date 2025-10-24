@@ -24,7 +24,7 @@ interface SearchAutocompleteProps {
 }
 
 const filterOptions = createFilterOptions<SearchOption>({
-  limit: 5,
+  limit: 8,
 });
 
 export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps> = ({

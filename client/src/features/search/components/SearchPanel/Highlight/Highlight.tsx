@@ -26,7 +26,7 @@ export const Highlight: React.FC<HighlightProps> = ({ text, query }) => {
         <span
           key={index}
           style={{
-            fontWeight: part.highlight ? 700 : 400,
+            fontWeight: part.highlight ? 700 : 600,
             fontSize: "14px",
           }}
         >
