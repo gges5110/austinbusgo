@@ -1,13 +1,6 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import * as React from "react";
 
 interface InputEndAdornmentProps {
@@ -17,8 +10,6 @@ interface InputEndAdornmentProps {
   clearSelection(): void;
 
   goToSearchPage(): void;
-
-  focusAutocomplete(): void;
 }
 
 export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
@@ -26,54 +17,23 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
   clearSelection,
   loading,
   goToSearchPage,
-  focusAutocomplete,
 }) => {
   return (
     <>
-      <Tooltip placement={"bottom-end"} title={"Search"}>
-        <IconButton
-          onClick={() => {
-            if (inputString !== "") {
-              goToSearchPage();
-            }
-          }}
-          sx={{
-            "&:hover": {
-              color: "#2196f3",
-              backgroundColor: "unset",
-            },
-            padding: "12px 15px",
-          }}
-        >
-          <SearchIcon />
-        </IconButton>
-      </Tooltip>
-      <Divider orientation={"vertical"} style={{ height: 28 }} />
-
       {inputString === "" ? (
-        <Box component={"div"} sx={{ padding: "10px 10px" }}>
-          <Tooltip placement={"bottom-end"} title={"Start search"}>
-            <Button
-              color={"neutral"}
-              onClick={() => {
-                focusAutocomplete();
-              }}
-              size={"small"}
-              sx={{
-                width: 34,
-                height: 28,
-                minWidth: "unset",
-                borderRadius: "7px",
-                "&:hover": {
-                  color: "#2196f3",
-                },
-              }}
-              variant={"outlined"}
-            >
-              <div>⌘K</div>
-            </Button>
-          </Tooltip>
-        </Box>
+        <Tooltip placement={"bottom-end"} title={"Search"}>
+          <IconButton
+            sx={{
+              "&:hover": {
+                color: "#2196f3",
+                backgroundColor: "unset",
+              },
+              padding: "12px 15px",
+            }}
+          >
+            <SearchIcon />
+          </IconButton>
+        </Tooltip>
       ) : loading ? (
         <Box sx={{ padding: "9px 15px" }}>
           <CircularProgress size={24} />

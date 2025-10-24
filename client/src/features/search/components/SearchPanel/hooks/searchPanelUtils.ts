@@ -1,0 +1,60 @@
+import { SearchQuery } from "shared/api/schemas/Search.generated";
+import { Route, Stop } from "shared/types/interface.d";
+
+export enum SearchType {
+  "recent",
+  "search",
+}
+
+export interface SearchTerm {
+  value: string;
+}
+
+type ArrayElement<
+  ArrayType extends readonly unknown[]
+> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+export type OptionValue =
+  | ArrayElement<SearchQuery["search"]["stops"]>
+  | Route
+  | SearchTerm;
+
+export interface SearchOption {
+  type: SearchType;
+  optionValue: OptionValue;
+}
+
+// Type guards
+export const isRoute = (option: OptionValue): option is Route => {
+  return "routeLongName" in option;
+};
+
+export const isStop = (option: OptionValue): option is Stop => {
+  return "stopName" in option;
+};
+
+export const isSearchTerm = (option: OptionValue): option is SearchTerm => {
+  return "value" in option;
+};
+
+// Label helpers
+export const getRouteOptionLabel = (route: Route): string => {
+  return `${route.routeId} ${route.routeLongName}`;
+};
+
+export const getStopOptionLabel = (stop: Stop): string => {
+  return `${stop.stopId} ${stop.stopName}`;
+};
+
+export const getOptionLabel = (option: SearchOption): string => {
+  const { optionValue } = option;
+  if (isRoute(optionValue)) {
+    return getRouteOptionLabel(optionValue);
+  } else if (isStop(optionValue)) {
+    return getStopOptionLabel(optionValue);
+  } else if (isSearchTerm(optionValue)) {
+    return optionValue.value;
+  }
+
+  return "";
+};

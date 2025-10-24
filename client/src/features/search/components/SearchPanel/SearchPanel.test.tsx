@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
   },
 });
 const theme = createTheme();
-const wrapper = ({ children }) => {
+const wrapper = ({ children }: { children: any }) => {
   return (
     <ThemeProvider theme={theme}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -34,7 +34,11 @@ describe("SearchPanel", () => {
   it("renders", () => {
     render(
       <BrowserRouter>
-        <SearchPanel setRoute={vi.fn()} setStop={vi.fn()} />
+        <SearchPanel
+          onMenuClick={vi.fn()}
+          setRoute={vi.fn()}
+          setStop={vi.fn()}
+        />
       </BrowserRouter>,
       { wrapper }
     );

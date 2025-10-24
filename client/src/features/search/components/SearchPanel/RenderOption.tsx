@@ -13,7 +13,7 @@ import {
   isStop,
   SearchOption,
   SearchType,
-} from "./SearchPanel";
+} from "./hooks/searchPanelUtils";
 
 export const renderOption: AutocompleteProps<
   SearchOption,

@@ -5,8 +5,10 @@ import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel"
 import { SettingsDialog } from "features/settings/components/SettingsDialog/SettingsDialog";
 import { useAtom } from "jotai";
 import * as React from "react";
+import { useState } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { ErrorBoundary } from "shared/components/ErrorBoundary";
+import { AppDrawer } from "shared/components/Shared/AppDrawer/AppDrawer";
 import { useDataFromLoaders } from "shared/hooks/UseDataFromLoaders";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
@@ -18,6 +20,7 @@ export const RootLayout: React.FunctionComponent = () => {
   const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
     settingsDialogOpenAtom
   );
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   const { routeId, directionId, searchTerm } = useParams();
   const navigate = useNavigate();
@@ -89,6 +92,7 @@ export const RootLayout: React.FunctionComponent = () => {
         </Popper>
         <Popper open={true} sx={{ zIndex: 2 }}>
           <SearchPanel
+            onMenuClick={() => setIsDrawerOpen(true)}
             route={route}
             searchTerm={searchTerm}
             setRoute={setRoute}
@@ -96,6 +100,8 @@ export const RootLayout: React.FunctionComponent = () => {
             stop={stop}
           />
         </Popper>
+
+        <AppDrawer onClose={() => setIsDrawerOpen(false)} open={isDrawerOpen} />
 
         <SettingsDialog
           autoPolling={autoPolling}
