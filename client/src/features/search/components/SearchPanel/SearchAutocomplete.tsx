@@ -1,6 +1,9 @@
 import { Autocomplete, createFilterOptions } from "@mui/material";
 import InputBase from "@mui/material/InputBase";
 import * as React from "react";
+import { useRef, useState } from "react";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { Route, Stop } from "shared/types/interface.d";
 
 import {
   getOptionLabel,
@@ -9,28 +12,23 @@ import {
   isStop,
   SearchOption,
 } from "./hooks/searchPanelUtils";
+import { useSearchInput } from "./hooks/useSearchInput";
+import { useSearchNavigation } from "./hooks/useSearchNavigation";
+import { useSearchOptions } from "./hooks/useSearchOptions";
+import { useSearchSync } from "./hooks/useSearchSync";
 import { InputEndAdornment } from "./InputEndAdornment/InputEndAdornment";
 import { renderOption } from "./RenderOption";
 import { SEARCH_PANEL_WIDTH } from "./SearchPanel";
 
 interface SearchAutocompleteProps {
+  route?: Route;
+  stop?: Stop;
+  searchTerm?: string;
+  loading?: boolean;
+  setRoute: (route: Route) => void;
+  setStop: (stop: Stop) => void;
   open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onBlur: () => void;
-  onFocus: () => void;
-  value: SearchOption | null;
-  onChange: (
-    event: React.SyntheticEvent,
-    newValue: SearchOption | null
-  ) => void;
-  inputValue: string;
-  onInputChange: (event: React.SyntheticEvent, value: string) => void;
-  options: SearchOption[];
-  loading: boolean;
-  inputRef: React.RefObject<HTMLInputElement>;
-  onClearSelection: () => void;
-  onEnterPress: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 const filterOptions = createFilterOptions<SearchOption>({
@@ -38,21 +36,80 @@ const filterOptions = createFilterOptions<SearchOption>({
 });
 
 export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps> = ({
+  route,
+  stop,
+  searchTerm,
+  loading: externalLoading = false,
+  setRoute,
+  setStop,
   open,
-  onOpen,
-  onClose,
-  onBlur,
-  onFocus,
-  value,
-  onChange,
-  inputValue,
-  onInputChange,
-  options,
-  loading,
-  inputRef,
-  onClearSelection,
-  onEnterPress,
+  onOpenChange,
 }) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [value, setValue] = useState<SearchOption | null>(null);
+  const { viewStatePathname } = useViewStatePathname();
+
+  // Custom hooks for managing search state
+  const {
+    inputString,
+    setInputString,
+    stops,
+    routes,
+    isLoading,
+    handleInputValueChange,
+    search,
+  } = useSearchInput();
+
+  const { options } = useSearchOptions({
+    inputString,
+    stops,
+    routes,
+    value,
+  });
+
+  const { handleSelect, handleClear, handleSearch } = useSearchNavigation({
+    route,
+    setRoute,
+    setStop,
+    viewStatePathname,
+  });
+
+  // Sync input with URL parameters
+  useSearchSync({
+    route,
+    stop,
+    searchTerm,
+    setInputString,
+    setValue,
+    onOpenChange,
+    search,
+  });
+
+  // Handle selection changes
+  const handleChange = (
+    _event: React.SyntheticEvent,
+    newValue: SearchOption | null
+  ) => {
+    setValue(newValue);
+    if (newValue) {
+      handleSelect(newValue);
+    }
+  };
+
+  // Clear selection and reset state
+  const handleClearSelection = () => {
+    handleClear();
+    setInputString("");
+    setValue(null);
+    onOpenChange(true);
+  };
+
+  // Handle search page navigation
+  const handleEnterPress = () => {
+    inputRef?.current?.blur?.();
+    handleSearch(inputString.trim());
+  };
+
   return (
     <Autocomplete<SearchOption>
       blurOnSelect={true}
@@ -72,7 +129,7 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
       }}
       filterOptions={filterOptions}
       getOptionLabel={getOptionLabel}
-      inputValue={inputValue}
+      inputValue={inputString}
       isOptionEqualToValue={(option, value) => {
         const { optionValue } = option;
 
@@ -95,17 +152,17 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
 
         return false;
       }}
-      loading={loading}
-      onBlur={onBlur}
-      onChange={onChange}
-      onClose={(event, reason) => {
+      loading={isLoading || externalLoading}
+      onBlur={() => onOpenChange(false)}
+      onChange={handleChange}
+      onClose={(_event, reason) => {
         if (reason !== "toggleInput") {
-          onClose();
+          onOpenChange(false);
         }
       }}
-      onFocus={onFocus}
-      onInputChange={onInputChange}
-      onOpen={onOpen}
+      onFocus={() => onOpenChange(true)}
+      onInputChange={handleInputValueChange}
+      onOpen={() => onOpenChange(true)}
       open={open}
       openOnFocus={true}
       options={options}
@@ -113,10 +170,10 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
         <InputBase
           endAdornment={
             <InputEndAdornment
-              clearSelection={onClearSelection}
-              goToSearchPage={onEnterPress}
-              inputString={inputValue}
-              loading={loading}
+              clearSelection={handleClearSelection}
+              goToSearchPage={handleEnterPress}
+              inputString={inputString}
+              loading={isLoading || externalLoading}
             />
           }
           inputProps={params.inputProps}
@@ -126,7 +183,7 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
               inputRef?.current?.blur?.();
             }
             if (event.key === "Enter") {
-              onEnterPress();
+              handleEnterPress();
             }
           }}
           placeholder={"Search Routes or Stops"}

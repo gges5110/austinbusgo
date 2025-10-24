@@ -1,5 +1,6 @@
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { Route, Stop } from "shared/types/interface.d";
 
 import {
@@ -7,41 +8,34 @@ import {
   isSearchTerm,
   isStop,
   SearchOption,
-  SearchTerm,
 } from "./searchPanelUtils";
 
 interface UseSearchNavigationParams {
   route?: Route;
   setRoute: (route: Route) => void;
   setStop: (stop: Stop) => void;
-  addToRecentSearches: (value: Route | Stop) => void;
-  inputString: string;
-  ref: React.RefObject<HTMLInputElement>;
+  viewStatePathname: string;
 }
 
 export const useSearchNavigation = ({
   route,
   setRoute,
   setStop,
-  addToRecentSearches,
-  inputString,
-  ref,
+  viewStatePathname,
 }: UseSearchNavigationParams) => {
   const navigate = useNavigate();
-  const { viewStatePathname } = useViewStatePathname();
+  const { addToRecentSearches } = useRecentSearches();
 
-  const goToSearchPage = (searchTerm?: SearchTerm) => {
-    ref?.current?.blur?.();
-    const value = searchTerm?.value || inputString.trim();
-    navigate(`${viewStatePathname}/search/${encodeURIComponent(value)}`);
-  };
+  const handleSearch = useCallback(
+    (searchTerm: string) => {
+      navigate(`${viewStatePathname}/search/${encodeURIComponent(searchTerm)}`);
+    },
+    [navigate, viewStatePathname]
+  );
 
-  const handleSearchChange = (
-    event: React.SyntheticEvent,
-    newValue: SearchOption | null
-  ) => {
-    if (newValue != null) {
-      const { optionValue } = newValue;
+  const handleSelect = useCallback(
+    (option: SearchOption) => {
+      const { optionValue } = option;
       if (isRoute(optionValue)) {
         if (route?.routeId !== optionValue.routeId) {
           setRoute(optionValue);
@@ -51,18 +45,19 @@ export const useSearchNavigation = ({
         setStop(optionValue);
         addToRecentSearches(optionValue);
       } else if (isSearchTerm(optionValue)) {
-        goToSearchPage(optionValue);
+        handleSearch(optionValue.value);
       }
-    }
-  };
+    },
+    [route, setRoute, setStop, addToRecentSearches, handleSearch]
+  );
 
-  const clearSelection = () => {
+  const handleClear = useCallback(() => {
     navigate(viewStatePathname);
-  };
+  }, [navigate, viewStatePathname]);
 
   return {
-    handleSearchChange,
-    goToSearchPage,
-    clearSelection,
+    handleSelect,
+    handleClear,
+    handleSearch,
   };
 };
