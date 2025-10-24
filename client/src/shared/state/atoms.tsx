@@ -9,6 +9,10 @@ export const isAutoPollingAtom = atomWithStorage<boolean>(
   "vehiclePositionAutoPolling",
   false
 );
+export const showReactQueryDevtoolsAtom = atomWithStorage<boolean>(
+  "showReactQueryDevtools",
+  false
+);
 export const recentSearchesAtom = atomWithStorage<Array<RecentSearch>>(
   "recentSearches",
   []

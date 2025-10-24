@@ -1,9 +1,8 @@
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
-import CodeIcon from "@mui/icons-material/Code";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
-import { Box, Dialog, Fade, ListItemButton, Switch } from "@mui/material";
+import { Dialog, Fade, ListItemButton, Switch } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -14,13 +13,10 @@ import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import Toolbar from "@mui/material/Toolbar";
 import { TransitionProps } from "@mui/material/transitions";
-import dayjs from "dayjs";
 import { ColorModeToggle } from "features/settings/components/ColorModeToggle/ColorModeToggle";
-import { Bullet } from "features/stop/components/Stop/ArrivalTimeList/Bullet";
 import { useSetAtom } from "jotai/index";
 import { useSnackbar } from "notistack";
 import * as React from "react";
-import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
 import { recentSearchesAtom } from "shared/state/atoms";
 
 const Transition = React.forwardRef(function Transition(
@@ -51,7 +47,6 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
   reloadVehiclePositions,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { data } = useFeedInfoQuery();
 
   const handleClose = () => {
     setOpen(false);
@@ -137,42 +132,6 @@ export const SettingsDialog: React.FunctionComponent<SettingsDialogProps> = ({
           </ListItemIcon>
           <ListItemText primary={"Clear recent searches"} />
         </ListItemButton>
-
-        <ListSubheader>About Austin Bus Go</ListSubheader>
-        <ListItemButton
-          onClick={() => {
-            window.open("https://github.com/gges5110/austinbusgo");
-          }}
-        >
-          <ListItemIcon>
-            <CodeIcon />
-          </ListItemIcon>
-          <ListItemText primary={"GitHub Repository"} />
-        </ListItemButton>
-        <ListItem>
-          <ListItemText
-            primary={"Feed Info"}
-            secondary={
-              <Box display={"flex"} gap={"4px"}>
-                <span>
-                  Start Date:{" "}
-                  {data?.feedInfo.feedStartDate
-                    ? dayjs(data?.feedInfo.feedStartDate, "YYYYMMDD").format(
-                        "ll"
-                      )
-                    : null}
-                </span>
-                <Bullet />
-                <span>
-                  End Date:{" "}
-                  {data?.feedInfo.feedEndDate
-                    ? dayjs(data?.feedInfo.feedEndDate, "YYYYMMDD").format("ll")
-                    : null}
-                </span>
-              </Box>
-            }
-          />
-        </ListItem>
       </List>
     </Dialog>
   );

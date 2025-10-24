@@ -1,8 +1,6 @@
-import SettingsIcon from "@mui/icons-material/Settings";
-import { Box, IconButton, Paper, Popper, useTheme } from "@mui/material";
+import { Box, Popper } from "@mui/material";
 import { MapWrapper } from "features/map/components/Map/MapWrapper";
 import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
-import { SettingsDialog } from "features/settings/components/SettingsDialog/SettingsDialog";
 import { useAtom } from "jotai";
 import * as React from "react";
 import { useState } from "react";
@@ -12,20 +10,16 @@ import { AppDrawer } from "shared/components/Shared/AppDrawer/AppDrawer";
 import { useDataFromLoaders } from "shared/hooks/UseDataFromLoaders";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { isAutoPollingAtom, settingsDialogOpenAtom } from "shared/state/atoms";
+import { isAutoPollingAtom } from "shared/state/atoms";
 import { Route, Stop } from "shared/types/interface.d";
 
 export const RootLayout: React.FunctionComponent = () => {
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useAtom(
-    settingsDialogOpenAtom
-  );
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   const { routeId, directionId, searchTerm } = useParams();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
-  const theme = useTheme();
   const { addToRecentSearches } = useRecentSearches();
 
   const setStop = (stop: Stop) => {
@@ -61,24 +55,6 @@ export const RootLayout: React.FunctionComponent = () => {
   return (
     <ErrorBoundary>
       <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
-        <Paper
-          sx={{
-            color: "text.primary",
-            borderRadius: 1,
-            position: "absolute",
-            zIndex: 1,
-            top: theme.spacing(2),
-            right: theme.spacing(2),
-          }}
-        >
-          <IconButton
-            onClick={() => {
-              setSettingsDialogOpen(true);
-            }}
-          >
-            <SettingsIcon />
-          </IconButton>
-        </Paper>
         <MapWrapper
           route={route}
           routeShapes={routeShapes}
@@ -101,14 +77,12 @@ export const RootLayout: React.FunctionComponent = () => {
           />
         </Popper>
 
-        <AppDrawer onClose={() => setIsDrawerOpen(false)} open={isDrawerOpen} />
-
-        <SettingsDialog
+        <AppDrawer
           autoPolling={autoPolling}
-          open={settingsDialogOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          open={isDrawerOpen}
           reloadVehiclePositions={reloadVehiclePositions}
           setAutoPolling={setAutoPolling}
-          setOpen={setSettingsDialogOpen}
         />
       </Box>
     </ErrorBoundary>

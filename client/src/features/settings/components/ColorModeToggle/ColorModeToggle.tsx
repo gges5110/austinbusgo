@@ -32,21 +32,21 @@ export const ColorModeToggle = () => {
         sx={{ textTransform: "none", display: "flex", gap: 1 }}
         value={"light"}
       >
-        <LightModeIcon /> Light
+        <LightModeIcon />
       </ToggleButton>
       <ToggleButton
         aria-label={"system"}
         sx={{ textTransform: "none", display: "flex", gap: 1 }}
         value={"system"}
       >
-        <SettingsSystemDaydreamIcon /> System
+        <SettingsSystemDaydreamIcon />
       </ToggleButton>
       <ToggleButton
         aria-label={"dark mode"}
         sx={{ textTransform: "none", display: "flex", gap: 1 }}
         value={"dark"}
       >
-        <DarkModeIcon /> Dark
+        <DarkModeIcon />
       </ToggleButton>
     </ToggleButtonGroup>
   );
