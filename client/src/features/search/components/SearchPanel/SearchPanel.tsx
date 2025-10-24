@@ -1,57 +1,24 @@
-import { Autocomplete, createFilterOptions, debounce } from "@mui/material";
-import InputBase from "@mui/material/InputBase";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Box, IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useNavigate, useNavigation } from "react-router-dom";
-import {
-  SearchQuery,
-  useSearchQuery,
-} from "shared/api/schemas/Search.generated";
-import { useRecentSearches } from "shared/hooks/UseRecentSearches";
+import { useEffect, useRef, useState } from "react";
+import { useNavigation } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { Route, Stop } from "shared/types/interface.d";
 
-import { InputEndAdornment } from "./InputEndAdornment/InputEndAdornment";
-import { renderOption } from "./RenderOption";
+import {
+  getRouteOptionLabel,
+  getStopOptionLabel,
+  SearchOption,
+  SearchType,
+} from "./hooks/searchPanelUtils";
+import { useSearchInput } from "./hooks/useSearchInput";
+import { useSearchNavigation } from "./hooks/useSearchNavigation";
+import { useSearchOptions } from "./hooks/useSearchOptions";
+import { SearchAutocomplete } from "./SearchAutocomplete";
 
 export const SEARCH_PANEL_WIDTH = "392px";
-
-export enum SearchType {
-  "recent",
-  "search",
-}
-
-export interface SearchTerm {
-  value: string;
-}
-
-type ArrayElement<
-  ArrayType extends readonly unknown[]
-> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-
-export type OptionValue =
-  | ArrayElement<SearchQuery["search"]["stops"]>
-  | Route
-  | SearchTerm;
-
-export interface SearchOption {
-  type: SearchType;
-  optionValue: OptionValue;
-}
-
-export const isRoute = (option: OptionValue): option is Route => {
-  return "routeLongName" in option;
-};
-
-export const isStop = (option: OptionValue): option is Stop => {
-  return "stopName" in option;
-};
-
-export const isSearchTerm = (option: OptionValue): option is SearchTerm => {
-  return "value" in option;
-};
 
 export interface SearchPanelProps {
   route?: Route;
@@ -62,6 +29,8 @@ export interface SearchPanelProps {
   setStop(stop: Stop): void;
 
   searchTerm?: string;
+
+  onMenuClick(): void;
 }
 
 export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
@@ -70,26 +39,56 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   setRoute,
   stop,
   setStop,
+  onMenuClick,
 }) => {
   const navigation = useNavigation();
-  const navigate = useNavigate();
-  const { viewStatePathname, isBasePath } = useViewStatePathname();
+  const { isBasePath } = useViewStatePathname();
+  const ref = useRef<HTMLInputElement | null>(null);
 
   const routeLoading = navigation.location !== undefined;
 
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
   const [value, setValue] = useState<SearchOption | null>(null);
-  const [inputString, setInputString] = useState<string>("");
-  const [stops, setStops] = useState<SearchQuery["search"]["stops"]>([]);
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [options, setOptions] = useState<SearchOption[]>([]);
 
+  // Custom hooks for managing search state
+  const {
+    inputString,
+    setInputString,
+    stops,
+    routes,
+    isLoading,
+    handleInputValueChange,
+    search,
+  } = useSearchInput();
+
+  const { options, addToRecentSearches } = useSearchOptions({
+    inputString,
+    stops,
+    routes,
+    value,
+  });
+
+  const {
+    handleSearchChange,
+    goToSearchPage,
+    clearSelection,
+  } = useSearchNavigation({
+    route,
+    setRoute,
+    setStop,
+    addToRecentSearches,
+    inputString,
+    ref,
+  });
+
+  // Open search panel when on base path
   useEffect(() => {
     if (isBasePath) {
       setSearchPanelOpen(true);
     }
   }, [isBasePath]);
 
+  // Sync input with URL parameters
   useEffect(() => {
     if (searchTerm) {
       setInputString(searchTerm);
@@ -121,262 +120,62 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
     } else {
       setInputString("");
     }
+    // setInputString and search are memoized in useSearchInput, so they're stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, stop, route]);
 
+  // Handle selection changes
   const searchOnChange = (
-    event: React.SyntheticEvent,
+    _event: React.SyntheticEvent,
     newValue: SearchOption | null
   ) => {
     setValue(newValue);
-    if (newValue != null) {
-      const { optionValue } = newValue;
-      if (isRoute(optionValue)) {
-        if (route?.routeId !== optionValue.routeId) {
-          setRoute(optionValue);
-          addToRecentSearches(optionValue);
-        }
-      } else if (isStop(optionValue)) {
-        setStop(optionValue);
-        addToRecentSearches(optionValue);
-      } else if (isSearchTerm(optionValue)) {
-        goToSearchPage(optionValue);
-      }
-    }
-  };
-  const ref = useRef<HTMLInputElement | null>(null);
-
-  const focusAutocomplete = () => {
-    ref?.current?.focus?.();
+    handleSearchChange(_event, newValue);
   };
 
-  useHotkeys(
-    "ctrl+k",
-    () => {
-      focusAutocomplete();
-    },
-    []
-  );
-
-  const handleInputValueChange = (
-    event: React.SyntheticEvent,
-    value: string
-  ) => {
-    if (!event) {
-      return;
-    }
-
-    if (event.type === "blur") {
-      return;
-    }
-    setInputString(value);
-
-    if (event.type === "change") {
-      delayedQuery(value);
-    }
-  };
-
-  const clearSelection = () => {
-    navigate(viewStatePathname);
+  // Clear selection and reset state
+  const handleClearSelection = () => {
+    clearSelection();
     setInputString("");
     setValue(null);
     setSearchPanelOpen(true);
   };
 
-  const getRouteOptionLabel = (route: Route) => {
-    return `${route.routeId} ${route.routeLongName}`;
-  };
-
-  const getStopOptionLabel = (stop: Stop) => {
-    return `${stop.stopId} ${stop.stopName}`;
-  };
-
-  const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
-
-  const { isLoading } = useSearchQuery(
-    {
-      searchTerm: internalSearchTerm,
-    },
-    {
-      enabled: internalSearchTerm !== "",
-      onSuccess: (data) => {
-        if (data.search) {
-          setStops(data.search.stops);
-          setRoutes(data.search.routes);
-        }
-      },
-    }
-  );
-
-  const search = (value: string): void => {
-    setInternalSearchTerm(value);
-  };
-
-  const goToSearchPage = (searchTerm?: SearchTerm) => {
-    ref?.current?.blur?.();
-    const value = searchTerm?.value || inputString.trim();
-    navigate(`${viewStatePathname}/search/${encodeURIComponent(value)}`);
-  };
-
-  const delayedQuery = useCallback(
-    debounce((value: string) => {
-      if (value !== "") {
-        search(value);
-      } else {
-        setStops([]);
-      }
-    }, 500),
-    []
-  );
-
-  const { recentSearches, addToRecentSearches } = useRecentSearches();
-
-  useEffect(() => {
-    let options: SearchOption[];
-    if (inputString === "") {
-      options = recentSearches.map((search) => ({
-        type: SearchType.recent,
-        optionValue: search.value,
-      }));
-    } else {
-      options = [
-        ...stops.map((stop) => ({
-          type: SearchType.search,
-          optionValue: stop,
-        })),
-        ...routes.map((route) => ({
-          type: SearchType.search,
-          optionValue: route,
-        })),
-      ];
-
-      if (value && options.length === 0) {
-        options.push(value);
-      }
-    }
-
-    setOptions(options);
-  }, [inputString, stops, routes, value, recentSearches]);
-
   return (
     <Paper
       sx={{
         m: 1,
-        borderRadius: searchPanelOpen ? "10px 10px 0 0" : "10px",
+        borderRadius: searchPanelOpen ? "16px 16px 0 0" : "24px",
         boxShadow: searchPanelOpen ? 1 : 5,
+        width: SEARCH_PANEL_WIDTH,
       }}
     >
-      <Autocomplete<SearchOption>
-        blurOnSelect={true}
-        componentsProps={{
-          paper: {
-            sx: {
-              borderRadius: "0 0 10px 10px",
-            },
-          },
-          popper: {
-            sx: {
-              width: SEARCH_PANEL_WIDTH,
-              zIndex: 1,
-            },
-          },
-        }}
-        filterOptions={filterOptions}
-        getOptionLabel={(option: SearchOption) => {
-          const { optionValue } = option;
-          if (isRoute(optionValue)) {
-            return getRouteOptionLabel(optionValue);
-          } else if (isStop(optionValue)) {
-            return getStopOptionLabel(optionValue);
-          } else if (isSearchTerm(optionValue)) {
-            return optionValue.value;
-          }
-
-          return "";
-        }}
-        inputValue={inputString}
-        isOptionEqualToValue={(option, value) => {
-          const { optionValue } = option;
-
-          if (isRoute(optionValue)) {
-            return (
-              isRoute(value.optionValue) &&
-              optionValue.routeId === value.optionValue.routeId
-            );
-          } else if (isStop(optionValue)) {
-            return (
-              isStop(value.optionValue) &&
-              optionValue.stopId === value.optionValue.stopId
-            );
-          } else if (isSearchTerm(optionValue)) {
-            return (
-              isSearchTerm(value.optionValue) &&
-              optionValue.value === value.optionValue.value
-            );
-          }
-
-          return false;
-        }}
-        loading={isLoading && internalSearchTerm !== ""}
-        onBlur={() => {
-          setSearchPanelOpen(false);
-        }}
-        onChange={searchOnChange}
-        onClose={(event, reason) => {
-          if (reason !== "toggleInput") {
-            setSearchPanelOpen(false);
-          }
-        }}
-        onFocus={() => {
-          setSearchPanelOpen(true);
-        }}
-        onInputChange={handleInputValueChange}
-        onOpen={() => {
-          setSearchPanelOpen(true);
-        }}
-        open={searchPanelOpen}
-        openOnFocus={true}
-        options={options}
-        renderInput={(params) => (
-          <InputBase
-            endAdornment={
-              <InputEndAdornment
-                clearSelection={clearSelection}
-                focusAutocomplete={focusAutocomplete}
-                goToSearchPage={goToSearchPage}
-                inputString={inputString}
-                loading={
-                  (isLoading && internalSearchTerm !== "") || routeLoading
-                }
-              />
-            }
-            inputProps={params.inputProps}
-            inputRef={ref}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                ref?.current?.blur?.();
-              }
-              if (event.key === "Enter") {
-                goToSearchPage();
-              }
-            }}
-            placeholder={"Search Routes or Stops"}
-            ref={params.InputProps.ref}
-            sx={{
-              paddingLeft: 2.5,
-              flex: 1,
-              width: "100%",
-            }}
-          />
-        )}
-        renderOption={renderOption}
-        selectOnFocus={true}
-        sx={{ width: SEARCH_PANEL_WIDTH }}
-        value={value}
-      />
+      <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+        <IconButton
+          aria-label={"menu"}
+          edge={"start"}
+          onClick={onMenuClick}
+          sx={{ ml: 1 }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <SearchAutocomplete
+          inputRef={ref}
+          inputValue={inputString}
+          loading={isLoading || routeLoading}
+          onBlur={() => setSearchPanelOpen(false)}
+          onChange={searchOnChange}
+          onClearSelection={handleClearSelection}
+          onClose={() => setSearchPanelOpen(false)}
+          onEnterPress={goToSearchPage}
+          onFocus={() => setSearchPanelOpen(true)}
+          onInputChange={handleInputValueChange}
+          onOpen={() => setSearchPanelOpen(true)}
+          open={searchPanelOpen}
+          options={options}
+          value={value}
+        />
+      </Box>
     </Paper>
   );
 };
-
-const filterOptions = createFilterOptions<SearchOption>({
-  limit: 5,
-});

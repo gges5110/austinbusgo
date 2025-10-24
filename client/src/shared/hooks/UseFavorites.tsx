@@ -1,7 +1,7 @@
 import {
   isRoute,
   isStop,
-} from "features/search/components/SearchPanel/SearchPanel";
+} from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { useAtom } from "jotai";
 import { favoritesAtom, FavoritesType } from "shared/state/atoms";
 

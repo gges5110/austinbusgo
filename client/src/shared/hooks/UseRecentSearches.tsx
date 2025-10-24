@@ -3,7 +3,7 @@ import {
   isSearchTerm,
   isStop,
   OptionValue,
-} from "features/search/components/SearchPanel/SearchPanel";
+} from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { useAtom } from "jotai";
 import { recentSearchesAtom } from "shared/state/atoms";
 

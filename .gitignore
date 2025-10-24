@@ -14,3 +14,4 @@ htmlcov/*
 
 **/capmetro/*
 /postgres-data
+client/.claude/settings.local.json

@@ -3,7 +3,7 @@ import { queryClient } from "app/QueryClient";
 import {
   isRoute,
   isStop,
-} from "features/search/components/SearchPanel/SearchPanel";
+} from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { redirect } from "react-router-dom";
 import {
   NearByStopsQuery,
