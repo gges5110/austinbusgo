@@ -3,7 +3,7 @@ import { Map } from "features/map/components/Map/Map";
 import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
 import * as React from "react";
 import { useState } from "react";
-import { MapProvider } from "react-map-gl";
+import { MapProvider } from "react-map-gl/mapbox";
 import { Outlet } from "react-router-dom";
 import { AppDrawer } from "shared/components/AppDrawer/AppDrawer";
 import { ErrorBoundary } from "shared/components/ErrorBoundary";

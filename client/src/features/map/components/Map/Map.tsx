@@ -12,7 +12,7 @@ import ReactMapGL, {
   Source,
   useMap,
   ViewStateChangeEvent,
-} from "react-map-gl";
+} from "react-map-gl/mapbox";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useRouteShapes } from "shared/hooks/UseRouteShapes";

@@ -2,7 +2,7 @@ import { vehicleZoomLevel, ViewState } from "features/map/components/Map/Map";
 import { useAtomValue } from "jotai";
 import { LngLatBoundsLike } from "mapbox-gl";
 import { useEffect } from "react";
-import { useMap } from "react-map-gl";
+import { useMap } from "react-map-gl/mapbox";
 import { mapsFlyToCoordinateAtom } from "shared/state/atoms";
 import { LineString, Stop } from "shared/types/interface.d";
 

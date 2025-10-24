@@ -2,7 +2,7 @@ import { Badge, Popover } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import * as React from "react";
-import { Marker } from "react-map-gl";
+import { Marker } from "react-map-gl/mapbox";
 import { hoveringVehiclePositionAtom } from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 

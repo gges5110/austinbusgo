@@ -1,6 +1,6 @@
 import { ViewState } from "features/map/components/Map/Map";
 import { useSnackbar } from "notistack";
-import { useMap } from "react-map-gl";
+import { useMap } from "react-map-gl/mapbox";
 
 export const useUserLocation = (viewState: ViewState) => {
   const { enqueueSnackbar } = useSnackbar();

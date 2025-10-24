@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import * as React from "react";
-import { Marker } from "react-map-gl";
+import { Marker } from "react-map-gl/mapbox";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
