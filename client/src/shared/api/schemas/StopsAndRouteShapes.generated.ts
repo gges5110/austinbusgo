@@ -21,7 +21,6 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
     return json.data;
   };
 }
-
 export type StopsAndShapesQueryVariables = Types.Exact<{
   routeId: Types.Scalars["String"];
   directionId: Types.Scalars["Int"];

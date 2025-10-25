@@ -1,3 +1,4 @@
+import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { RouteMenu } from "features/route/pages/route/RouteMenu";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
@@ -32,37 +33,44 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route
-      element={<RootLayout />}
-      id={"searchParams"}
-      loader={searchParamsDataLoader}
-      path={"/:viewState?"}
-    >
+    <>
+      <Route element={<VehiclePositionsDevPage />} path={"/dev/vehicles"} />
       <Route
-        element={<SearchResultsMenu />}
-        id={"search"}
-        loader={searchLoader}
-        path={"/:viewState/search/:searchTerm"}
-      ></Route>
-      <Route id={"stop"} loader={stopLoader} path={"/:viewState/stop/:stopId"}>
+        element={<RootLayout />}
+        id={"searchParams"}
+        loader={searchParamsDataLoader}
+        path={"/:viewState?"}
+      >
         <Route
-          element={<StopMenu />}
-          index={true}
+          element={<SearchResultsMenu />}
+          id={"search"}
+          loader={searchLoader}
+          path={"/:viewState/search/:searchTerm"}
+        ></Route>
+        <Route
+          id={"stop"}
           loader={stopLoader}
           path={"/:viewState/stop/:stopId"}
-        ></Route>
+        >
+          <Route
+            element={<StopMenu />}
+            index={true}
+            loader={stopLoader}
+            path={"/:viewState/stop/:stopId"}
+          ></Route>
+          <Route
+            element={<TripMenu />}
+            loader={tripLoader}
+            path={"/:viewState/stop/:stopId/trip/:tripId"}
+          ></Route>
+        </Route>
         <Route
-          element={<TripMenu />}
-          loader={tripLoader}
-          path={"/:viewState/stop/:stopId/trip/:tripId"}
+          element={<RouteMenu />}
+          id={"route"}
+          loader={routeLoader}
+          path={"/:viewState/route/:routeId/direction/:directionId"}
         ></Route>
       </Route>
-      <Route
-        element={<RouteMenu />}
-        id={"route"}
-        loader={routeLoader}
-        path={"/:viewState/route/:routeId/direction/:directionId"}
-      ></Route>
-    </Route>
+    </>
   )
 );
