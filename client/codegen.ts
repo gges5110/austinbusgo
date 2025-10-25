@@ -2,15 +2,15 @@ import { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
   schema: "http://localhost:5001/graphql",
-  documents: ["src/schemas/*.tsx"],
+  documents: ["src/shared/api/schemas/*.tsx"],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {
     "src/shared/types/interface.d.tsx": { plugins: ["typescript"] },
-    "src/interfaces": {
+    "src/": {
       preset: "near-operation-file",
       presetConfig: {
         extension: ".generated.ts",
-        baseTypesPath: "interface.d.tsx",
+        baseTypesPath: "~shared/types/interface.d",
       },
       config: {
         exposeQueryKeys: true,
@@ -40,7 +40,7 @@ const config: CodegenConfig = {
     },
   },
   hooks: {
-    afterAllFileWrite: ["prettier --write"],
+    afterAllFileWrite: ["prettier --write", "eslint --fix"],
   },
 };
 
