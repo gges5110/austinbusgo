@@ -34,11 +34,7 @@ describe("SearchPanel", () => {
   it("renders", () => {
     render(
       <BrowserRouter>
-        <SearchPanel
-          onMenuClick={vi.fn()}
-          setRoute={vi.fn()}
-          setStop={vi.fn()}
-        />
+        <SearchPanel onMenuClick={vi.fn()} />
       </BrowserRouter>,
       { wrapper }
     );

@@ -84,7 +84,7 @@ class GTFSService:
                     peewee.fn.ST_SetSRID(peewee.fn.ST_MakePoint(lon, lat), 4326),
                 )
             )
-            .limit(100)
+            .limit(20)
         )
 
     @staticmethod
