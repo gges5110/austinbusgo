@@ -24,6 +24,12 @@ export const useStops = () => {
       : [];
   const currentStopArray = currentStop !== undefined ? [currentStop] : [];
   const stops = [...routeStops, ...searchStops, ...currentStopArray] as Stop[];
+  // Remove duplicate stops based on stopId
+  const uniqueStopsMap: Record<string, Stop> = {};
+  stops.forEach((stop) => {
+    uniqueStopsMap[stop.stopId] = stop;
+  });
+  const uniqueStops = Object.values(uniqueStopsMap);
 
-  return { stops };
+  return { stops: uniqueStops };
 };
