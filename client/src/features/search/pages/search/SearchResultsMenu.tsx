@@ -99,7 +99,7 @@ export const SearchResultsMenu = () => {
                       setHoveringStop(undefined);
                     }}
                     sx={{ py: 2 }}
-                    to={`${viewStatePathname}/stop/${stop.stopId}`}
+                    to={`/stop/${stop.stopId}${viewStatePathname}`}
                   >
                     <Box display={"flex"} flexDirection={"column"} gap={1}>
                       <Box display={"flex"} gap={1}>
@@ -139,7 +139,7 @@ export const SearchResultsMenu = () => {
                     onClick={() => {
                       addToRecentSearches(route);
                     }}
-                    to={`${viewStatePathname}/route/${route.routeId}/direction/0`}
+                    to={`/route/${route.routeId}/direction/0${viewStatePathname}`}
                   >
                     <Box display={"flex"} gap={1}>
                       <RouteIcon />

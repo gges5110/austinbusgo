@@ -32,10 +32,10 @@ export const useCurrentStop = () => {
       setCurrentStop(stop);
       if (location.pathname.includes("/route")) {
         navigate(
-          `${viewStatePathname}/stop/${stopId}?routeId=${routeId}&directionId=${directionId}`
+          `/stop/${stopId}${viewStatePathname}?routeId=${routeId}&directionId=${directionId}`
         );
       } else {
-        navigate(`${viewStatePathname}/stop/${stopId}`);
+        navigate(`/stop/${stopId}${viewStatePathname}`);
       }
     }
   };

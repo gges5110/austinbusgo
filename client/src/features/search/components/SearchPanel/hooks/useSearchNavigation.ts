@@ -21,7 +21,7 @@ export const useSearchNavigation = () => {
 
   const handleSearch = useCallback(
     (searchTerm: string) => {
-      navigate(`${viewStatePathname}/search/${encodeURIComponent(searchTerm)}`);
+      navigate(`/search/${encodeURIComponent(searchTerm)}${viewStatePathname}`);
     },
     [navigate, viewStatePathname]
   );
@@ -45,7 +45,7 @@ export const useSearchNavigation = () => {
   );
 
   const handleClear = useCallback(() => {
-    navigate(viewStatePathname);
+    navigate(viewStatePathname || "/");
   }, [navigate, viewStatePathname]);
 
   return {

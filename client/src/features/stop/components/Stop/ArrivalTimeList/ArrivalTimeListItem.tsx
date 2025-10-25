@@ -68,7 +68,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
       component={RouterLink}
       key={arrivalTime.scheduledArrivalTime}
       sx={{ py: 1.5 }}
-      to={`${viewStatePathname}/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
+      to={`/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}${viewStatePathname}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>

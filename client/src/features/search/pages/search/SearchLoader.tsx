@@ -101,15 +101,16 @@ export const searchLoader = async ({ params }: LoaderFunctionArgs) => {
   const length =
     searchData.search.stops.length + searchData.search.routes.length;
   if (length === 1) {
-    const { viewStatePathname } = useViewStatePathname();
+    const viewStateMatch = params["viewState"];
+    const viewStatePathname = viewStateMatch ? `/${viewStateMatch}` : "";
 
     if (searchData.search.stops.length) {
       return redirect(
-        `${viewStatePathname}/stop/${searchData.search.stops[0].stopId}`
+        `/stop/${searchData.search.stops[0].stopId}${viewStatePathname}`
       );
     } else if (searchData.search.routes.length) {
       return redirect(
-        `${viewStatePathname}/route/${searchData.search.routes[0].routeId}/direction/0`
+        `/route/${searchData.search.routes[0].routeId}/direction/0${viewStatePathname}`
       );
     }
   }

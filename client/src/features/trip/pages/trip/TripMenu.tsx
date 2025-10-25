@@ -87,7 +87,7 @@ export const TripMenu = () => {
           <Button
             component={RouterLink}
             sx={{ textTransform: "none" }}
-            to={`${viewStatePathname}/route/${trip.routeId}/direction/${trip.directionId}`}
+            to={`/route/${trip.routeId}/direction/${trip.directionId}${viewStatePathname}`}
           >
             <Box
               alignItems={"center"}

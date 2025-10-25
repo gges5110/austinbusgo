@@ -19,13 +19,16 @@ export const useUpdateViewState = () => {
     restOfPathname,
   } = useViewStatePathname();
   const getViewStateURL = (viewState: Partial<ViewState>) => {
-    let path = convertViewStateToPath({
+    const viewStatePath = convertViewStateToPath({
       latitude: viewState.latitude || latitude,
       longitude: viewState.longitude || longitude,
       zoom: viewState.zoom || zoom,
     });
-    if (restOfPathname !== "" && restOfPathname !== undefined) {
-      path += restOfPathname + searchParams;
+
+    let path = restOfPathname || "/";
+    path += viewStatePath;
+    if (searchParams) {
+      path += searchParams;
     }
 
     return path;
@@ -45,7 +48,10 @@ export const useViewStateSync = (viewState: ViewState) => {
 
   useEffect(() => {
     if (viewStatePathname === "") {
-      const path = convertViewStateToPath(viewState) + searchParams;
+      const path =
+        (restOfPathname || "/") +
+        convertViewStateToPath(viewState) +
+        searchParams;
 
       // hack to prevent navigation from failing on component mount
       setTimeout(() => {
@@ -56,10 +62,8 @@ export const useViewStateSync = (viewState: ViewState) => {
 
   const setViewStateInUrl = useCallback(
     debounce((viewState: ViewState) => {
-      let path = convertViewStateToPath(viewState);
-      if (restOfPathname !== "" && restOfPathname !== undefined) {
-        path += restOfPathname;
-      }
+      let path = restOfPathname || "/";
+      path += convertViewStateToPath(viewState);
 
       if (searchParams !== undefined && searchParams !== "") {
         path += searchParams;

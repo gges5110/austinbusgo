@@ -177,7 +177,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   pl: 6,
                   py: 2.5,
                 }}
-                to={`${viewStatePathname}/stop/${stop.stopId}?routeId=${route.routeId}&directionId=${directionId}`}
+                to={`/stop/${stop.stopId}${viewStatePathname}?routeId=${route.routeId}&directionId=${directionId}`}
               >
                 <Box
                   display={"flex"}

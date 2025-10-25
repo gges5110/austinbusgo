@@ -218,12 +218,12 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 }}
                 to={
                   searchParams.get("routeId")
-                    ? `${viewStatePathname}/stop/${
+                    ? `/stop/${
                         stopTime.stopId
-                      }?routeId=${searchParams.get(
+                      }${viewStatePathname}?routeId=${searchParams.get(
                         "routeId"
                       )}&directionId=${searchParams.get("directionId")}`
-                    : `${viewStatePathname}/stop/${stopTime.stopId}`
+                    : `/stop/${stopTime.stopId}${viewStatePathname}`
                 }
               >
                 <Box

@@ -29,7 +29,7 @@ export const useCurrentRoute = () => {
   const setRoute = (route: Route) => {
     if (route) {
       setCurrentRoute(route);
-      navigate(`${viewStatePathname}/route/${route?.routeId}/direction/0`);
+      navigate(`/route/${route?.routeId}/direction/0${viewStatePathname}`);
     }
   };
 

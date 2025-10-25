@@ -39,37 +39,37 @@ export const router = createBrowserRouter(
         element={<RootLayout />}
         id={"searchParams"}
         loader={searchParamsDataLoader}
-        path={"/:viewState?"}
+        path={"/"}
       >
         <Route
           element={<SearchResultsMenu />}
           id={"search"}
           loader={searchLoader}
-          path={"/:viewState/search/:searchTerm"}
+          path={"search/:searchTerm/:viewState?"}
         ></Route>
         <Route
           id={"stop"}
           loader={stopLoader}
-          path={"/:viewState/stop/:stopId"}
+          path={"stop/:stopId/:viewState?"}
         >
           <Route
             element={<StopMenu />}
             index={true}
             loader={stopLoader}
-            path={"/:viewState/stop/:stopId"}
           ></Route>
           <Route
             element={<TripMenu />}
             loader={tripLoader}
-            path={"/:viewState/stop/:stopId/trip/:tripId"}
+            path={"trip/:tripId/:viewState?"}
           ></Route>
         </Route>
         <Route
           element={<RouteMenu />}
           id={"route"}
           loader={routeLoader}
-          path={"/:viewState/route/:routeId/direction/:directionId"}
+          path={"route/:routeId/direction/:directionId/:viewState?"}
         ></Route>
+        <Route path={"/:viewState"} />
       </Route>
     </>
   )

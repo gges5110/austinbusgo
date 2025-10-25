@@ -41,7 +41,7 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
             color: "text.primary",
             textTransform: "none",
           }}
-          to={`${viewStatePathname}/search/Nearby%20stops`}
+          to={`/search/Nearby%20stops${viewStatePathname}`}
         >
           <NearMeIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
@@ -63,7 +63,7 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
             textTransform: "none",
             px: "12px",
           }}
-          to={`${viewStatePathname}/search/All%20routes`}
+          to={`/search/All%20routes${viewStatePathname}`}
         >
           <RouteIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
@@ -85,7 +85,7 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
             textTransform: "none",
             px: "12px",
           }}
-          to={`${viewStatePathname}/search/Favorites`}
+          to={`/search/Favorites${viewStatePathname}`}
         >
           <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>

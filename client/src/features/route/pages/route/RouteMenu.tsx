@@ -26,7 +26,7 @@ export const RouteMenu = () => {
   const setDirection = (directionId: Trip["directionId"]) => {
     if (directionId !== undefined) {
       navigate(
-        `${viewStatePathname}/route/${routeId}/direction/${directionId}`,
+        `/route/${routeId}/direction/${directionId}${viewStatePathname}`,
         {
           replace: true,
         }
