@@ -1,17 +1,16 @@
-import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { Popper, useTheme } from "@mui/material";
-import Fab from "@mui/material/Fab";
 import { useMapMotion } from "features/map/hooks/Map/UseMapMotion";
 import { useRouteShape } from "features/map/hooks/Map/UseRouteShape";
 import { useRouteShapes } from "features/map/hooks/Map/useRouteShapes";
 import { useStops } from "features/map/hooks/Map/useStops";
-import { useUserLocation } from "features/map/hooks/Map/UseUserLocation";
 import { useVehiclePositions } from "features/map/hooks/Map/useVehiclePositions";
 import { useViewStateSync } from "features/map/hooks/Map/UseViewStateSync";
 import * as React from "react";
 import { useState } from "react";
 import ReactMapGL, {
+  GeolocateControl,
   Layer,
+  NavigationControl,
   Source,
   useMap,
   ViewStateChangeEvent,
@@ -56,7 +55,6 @@ export const Map: React.FunctionComponent = () => {
   });
 
   useMapMotion(viewState, stop, stops, routeShapes);
-  const { userLocationOnClick } = useUserLocation(viewState);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
@@ -91,18 +89,13 @@ export const Map: React.FunctionComponent = () => {
         onMove={onViewportChange}
         onMoveEnd={onMoveEnd}
       >
-        <Fab
-          aria-label={"add"}
-          color={"primary"}
-          onClick={userLocationOnClick}
-          sx={{
-            position: "absolute",
-            bottom: theme.spacing(4),
-            right: theme.spacing(2),
-          }}
-        >
-          <MyLocationIcon />
-        </Fab>
+        <NavigationControl position={"bottom-right"} visualizePitch={true} />
+        <GeolocateControl
+          position={"bottom-right"}
+          positionOptions={{ enableHighAccuracy: true }}
+          showUserLocation={true}
+          trackUserLocation={true}
+        />
         <Popper open={true}>
           <AssistiveChips />
         </Popper>
