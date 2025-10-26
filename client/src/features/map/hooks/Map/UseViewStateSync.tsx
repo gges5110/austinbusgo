@@ -10,6 +10,19 @@ const convertViewStateToPath = (viewState: ViewState) => {
   )},${parseFloat(viewState.zoom.toFixed(2))}z`;
 };
 
+const buildPathWithViewState = (
+  restOfPathname: string,
+  viewStatePath: string,
+  searchParams: string
+) => {
+  let path = restOfPathname === "/" ? "" : restOfPathname;
+  path += viewStatePath;
+  if (searchParams) {
+    path += searchParams;
+  }
+  return path;
+};
+
 export const useUpdateViewState = () => {
   const {
     latitude,
@@ -25,13 +38,7 @@ export const useUpdateViewState = () => {
       zoom: viewState.zoom || zoom,
     });
 
-    let path = restOfPathname || "/";
-    path += viewStatePath;
-    if (searchParams) {
-      path += searchParams;
-    }
-
-    return path;
+    return buildPathWithViewState(restOfPathname, viewStatePath, searchParams);
   };
 
   return { getViewStateURL };
@@ -48,10 +55,11 @@ export const useViewStateSync = (viewState: ViewState) => {
 
   useEffect(() => {
     if (viewStatePathname === "") {
-      const path =
-        (restOfPathname || "/") +
-        convertViewStateToPath(viewState) +
-        searchParams;
+      const path = buildPathWithViewState(
+        restOfPathname,
+        convertViewStateToPath(viewState),
+        searchParams
+      );
 
       // hack to prevent navigation from failing on component mount
       setTimeout(() => {
@@ -62,12 +70,11 @@ export const useViewStateSync = (viewState: ViewState) => {
 
   const setViewStateInUrl = useCallback(
     debounce((viewState: ViewState) => {
-      let path = restOfPathname || "/";
-      path += convertViewStateToPath(viewState);
-
-      if (searchParams !== undefined && searchParams !== "") {
-        path += searchParams;
-      }
+      const path = buildPathWithViewState(
+        restOfPathname,
+        convertViewStateToPath(viewState),
+        searchParams
+      );
 
       if (navigation.location === undefined) {
         navigate(path, { replace: true });
