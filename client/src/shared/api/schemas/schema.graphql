@@ -75,11 +75,9 @@ type Query {
 
 type Route {
     "Agency for the specified route."
-    agencyId: Int
+    agencyId: String
     "Route color designation that matches public facing material."
     routeColor: String
-    "Description of a route that provides useful, quality information."
-    routeDesc: String
     "Identifies a route."
     routeId: String!
     "Full name of a route."
@@ -130,10 +128,8 @@ type StopTimes {
     pickupType: Int
     shapeDistTraveled: Float
     stop: Stop!
-    stopHeadsign: String
     stopId: String!
     stopSequence: Int!
-    supEstDelay: String
     timepoint: Int
     tripId: String!
 }
@@ -153,6 +149,8 @@ type Trip {
     route: Route!
     "Identifies a route."
     routeId: String!
+    "Identifies the scheduled trip ID from the transit agency."
+    scheduledTripId: String
     "Identifies a set of dates when service is available for one or more routes."
     serviceId: String!
     "Identifies a geospatial shape describing the vehicle travel path for a trip."
