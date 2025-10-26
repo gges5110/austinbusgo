@@ -19,7 +19,11 @@ export const useSearchOptions = ({
   value,
 }: UseSearchOptionsParams) => {
   const [options, setOptions] = useState<SearchOption[]>([]);
-  const { recentSearches, addToRecentSearches } = useRecentSearches();
+  const {
+    recentSearches,
+    addToRecentSearches,
+    removeFromRecentSearches,
+  } = useRecentSearches();
 
   useEffect(() => {
     let options: SearchOption[];
@@ -51,5 +55,6 @@ export const useSearchOptions = ({
   return {
     options,
     addToRecentSearches,
+    removeFromRecentSearches,
   };
 };

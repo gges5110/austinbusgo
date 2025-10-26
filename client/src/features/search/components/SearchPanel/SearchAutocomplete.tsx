@@ -51,7 +51,7 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
     search,
   } = useSearchInput();
 
-  const { options } = useSearchOptions({
+  const { options, removeFromRecentSearches } = useSearchOptions({
     inputString,
     stops,
     routes,
@@ -141,7 +141,9 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
           params={params}
         />
       )}
-      renderOption={renderOption}
+      renderOption={(props, option, state) =>
+        renderOption(props, option, state, removeFromRecentSearches)
+      }
       selectOnFocus={true}
       sx={{ flex: 1 }}
       value={value}

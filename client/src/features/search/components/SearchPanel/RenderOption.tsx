@@ -1,8 +1,9 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import CloseIcon from "@mui/icons-material/Close";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import RouteIcon from "@mui/icons-material/Route";
 import SearchIcon from "@mui/icons-material/Search";
-import { AutocompleteProps, Box } from "@mui/material";
+import { AutocompleteProps, Box, IconButton } from "@mui/material";
 import * as React from "react";
 
 import { Highlight } from "./Highlight/Highlight";
@@ -10,18 +11,19 @@ import {
   isRoute,
   isSearchTerm,
   isStop,
+  OptionValue,
   SearchOption,
   SearchType,
 } from "./hooks/searchPanelUtils";
 
 const ICON_SIZE = 24;
 
-export const renderOption: AutocompleteProps<
-  SearchOption,
-  boolean,
-  boolean,
-  boolean
->["renderOption"] = (props, option, { inputValue }) => {
+export const renderOption = (
+  props: React.HTMLAttributes<HTMLLIElement>,
+  option: SearchOption,
+  { inputValue }: { inputValue: string },
+  removeFromRecentSearches?: (search: OptionValue) => void
+) => {
   const { optionValue } = option;
 
   return (
@@ -104,12 +106,28 @@ export const renderOption: AutocompleteProps<
             gap: 0.8,
           }}
         >
-          {isSearchTerm(optionValue) ? (
-            <SearchIcon sx={{ fontSize: ICON_SIZE }} />
-          ) : isRoute(optionValue) ? (
-            <RouteIcon sx={{ fontSize: ICON_SIZE }} />
+          {option.type === SearchType.recent && removeFromRecentSearches ? (
+            <IconButton
+              aria-label={"Remove from recent searches"}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeFromRecentSearches(optionValue);
+              }}
+              size={"small"}
+              sx={{ padding: 0.5 }}
+            >
+              <CloseIcon sx={{ fontSize: ICON_SIZE }} />
+            </IconButton>
           ) : (
-            <PlaceOutlinedIcon sx={{ fontSize: ICON_SIZE }} />
+            <>
+              {isSearchTerm(optionValue) ? (
+                <SearchIcon sx={{ fontSize: ICON_SIZE }} />
+              ) : isRoute(optionValue) ? (
+                <RouteIcon sx={{ fontSize: ICON_SIZE }} />
+              ) : (
+                <PlaceOutlinedIcon sx={{ fontSize: ICON_SIZE }} />
+              )}
+            </>
           )}
         </Box>
       </Box>

@@ -51,8 +51,27 @@ export const useRecentSearches = () => {
     });
   };
 
+  const removeFromRecentSearches = (search: OptionValue): void => {
+    setRecentSearches((recentSearches) => {
+      return recentSearches.filter((recentSearch) => {
+        const { value } = recentSearch;
+
+        if (isRoute(search)) {
+          return !(isRoute(value) && search.routeId === value.routeId);
+        } else if (isStop(search)) {
+          return !(isStop(value) && search.stopId === value.stopId);
+        } else if (isSearchTerm(search)) {
+          return !(isSearchTerm(value) && search.value === value.value);
+        }
+
+        return true;
+      });
+    });
+  };
+
   return {
     recentSearches: recentSearches,
     addToRecentSearches,
+    removeFromRecentSearches,
   };
 };
