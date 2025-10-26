@@ -2,8 +2,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import RouteIcon from "@mui/icons-material/Route";
 import SearchIcon from "@mui/icons-material/Search";
-import { Box } from "@mui/material";
-import { AutocompleteProps } from "@mui/material/Autocomplete/Autocomplete";
+import { AutocompleteProps, Box } from "@mui/material";
 import * as React from "react";
 
 import { Highlight } from "./Highlight/Highlight";
