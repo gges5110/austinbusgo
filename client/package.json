@@ -7,7 +7,7 @@
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.16",
     "@mui/lab": "^5.0.0-alpha.128",
-    "@mui/material": "^5.12.2",
+    "@mui/material": "^5.18.0",
     "@tanstack/react-query": "^4.29.5",
     "@tanstack/react-query-devtools": "^4.29.6",
     "autosuggest-highlight": "^3.3.4",
