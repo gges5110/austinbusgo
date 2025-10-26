@@ -1,6 +1,7 @@
 import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { RouteMenu } from "features/route/pages/route/RouteMenu";
+import { RecentSearchesMenu } from "features/search/pages/recent/RecentSearchesMenu";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
 import { SearchResultsMenu } from "features/search/pages/search/SearchResultsMenu";
 import { stopLoader } from "features/stop/pages/stop/StopLoader";
@@ -46,6 +47,10 @@ export const router = createBrowserRouter(
           id={"search"}
           loader={searchLoader}
           path={"search/:searchTerm/:viewState?"}
+        ></Route>
+        <Route
+          element={<RecentSearchesMenu />}
+          path={"recent-searches/:viewState?"}
         ></Route>
         <Route
           id={"stop"}

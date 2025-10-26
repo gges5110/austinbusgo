@@ -28,10 +28,22 @@ export const useSearchOptions = ({
   useEffect(() => {
     let options: SearchOption[];
     if (inputString === "") {
-      options = recentSearches.map((search) => ({
+      // Show first 7 recent searches when there are more than 8
+      const recentToShow =
+        recentSearches.length > 8 ? recentSearches.slice(0, 7) : recentSearches;
+
+      options = recentToShow.map((search) => ({
         type: SearchType.recent,
         optionValue: search.value,
       }));
+
+      // Add "View all" option if there are more than 8 recent searches
+      if (recentSearches.length > 8) {
+        options.push({
+          type: SearchType.viewAll,
+          optionValue: { type: "viewAll" },
+        });
+      }
     } else {
       options = [
         ...stops.map((stop) => ({

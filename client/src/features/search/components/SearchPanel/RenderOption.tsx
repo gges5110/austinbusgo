@@ -11,6 +11,7 @@ import {
   isRoute,
   isSearchTerm,
   isStop,
+  isViewAllRecent,
   OptionValue,
   SearchOption,
   SearchType,
@@ -94,6 +95,11 @@ export const renderOption = (
             )}
             {isSearchTerm(optionValue) && (
               <Highlight query={inputValue} text={String(optionValue.value)} />
+            )}
+            {isViewAllRecent(optionValue) && (
+              <Box sx={{ fontWeight: 500, color: "#1976d2" }}>
+                View all recent searches
+              </Box>
             )}
           </Box>
         </Box>

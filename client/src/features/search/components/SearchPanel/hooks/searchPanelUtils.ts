@@ -4,10 +4,15 @@ import { Route, Stop } from "shared/types/interface.d";
 export enum SearchType {
   "recent",
   "search",
+  "viewAll",
 }
 
 export interface SearchTerm {
   value: string;
+}
+
+export interface ViewAllRecent {
+  type: "viewAll";
 }
 
 type ArrayElement<
@@ -17,7 +22,8 @@ type ArrayElement<
 export type OptionValue =
   | ArrayElement<SearchQuery["search"]["stops"]>
   | Route
-  | SearchTerm;
+  | SearchTerm
+  | ViewAllRecent;
 
 export interface SearchOption {
   type: SearchType;
@@ -37,6 +43,12 @@ export const isSearchTerm = (option: OptionValue): option is SearchTerm => {
   return "value" in option;
 };
 
+export const isViewAllRecent = (
+  option: OptionValue
+): option is ViewAllRecent => {
+  return "type" in option && option.type === "viewAll";
+};
+
 // Label helpers
 export const getRouteOptionLabel = (route: Route): string => {
   return `${route.routeId} ${route.routeLongName}`;
@@ -54,6 +66,8 @@ export const getOptionLabel = (option: SearchOption): string => {
     return getStopOptionLabel(optionValue);
   } else if (isSearchTerm(optionValue)) {
     return optionValue.value;
+  } else if (isViewAllRecent(optionValue)) {
+    return "View all recent searches";
   }
 
   return "";
@@ -81,6 +95,8 @@ export const isOptionEqualToValue = (
       isSearchTerm(value.optionValue) &&
       optionValue.value === value.optionValue.value
     );
+  } else if (isViewAllRecent(optionValue)) {
+    return isViewAllRecent(value.optionValue);
   }
 
   return false;

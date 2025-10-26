@@ -99,20 +99,6 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
   return (
     <Autocomplete<SearchOption>
       blurOnSelect={true}
-      componentsProps={{
-        paper: {
-          sx: {
-            borderRadius: "0 0 16px 16px",
-          },
-        },
-        popper: {
-          sx: {
-            width: `${SEARCH_PANEL_WIDTH} !important`,
-            marginLeft: `-24px !important`,
-            zIndex: 1,
-          },
-        },
-      }}
       filterOptions={filterOptions}
       getOptionLabel={getOptionLabel}
       inputValue={inputString}
@@ -145,6 +131,20 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
         renderOption(props, option, state, removeFromRecentSearches)
       }
       selectOnFocus={true}
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: "0 0 16px 16px",
+          },
+        },
+        popper: {
+          sx: {
+            width: `${SEARCH_PANEL_WIDTH} !important`,
+            marginLeft: `-24px !important`,
+            zIndex: 1,
+          },
+        },
+      }}
       sx={{ flex: 1 }}
       value={value}
     />

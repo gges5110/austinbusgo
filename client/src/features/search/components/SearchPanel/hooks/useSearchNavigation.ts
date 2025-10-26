@@ -9,6 +9,7 @@ import {
   isRoute,
   isSearchTerm,
   isStop,
+  isViewAllRecent,
   SearchOption,
 } from "./searchPanelUtils";
 
@@ -39,9 +40,19 @@ export const useSearchNavigation = () => {
         addToRecentSearches(optionValue);
       } else if (isSearchTerm(optionValue)) {
         handleSearch(optionValue.value);
+      } else if (isViewAllRecent(optionValue)) {
+        navigate(`/recent-searches${viewStatePathname}`);
       }
     },
-    [currentRoute, setRoute, setStop, addToRecentSearches, handleSearch]
+    [
+      currentRoute,
+      setRoute,
+      setStop,
+      addToRecentSearches,
+      handleSearch,
+      navigate,
+      viewStatePathname,
+    ]
   );
 
   const handleClear = useCallback(() => {
