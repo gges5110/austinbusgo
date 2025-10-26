@@ -96,9 +96,6 @@ export const Map: React.FunctionComponent = () => {
           showUserLocation={true}
           trackUserLocation={true}
         />
-        <Popper open={true}>
-          <AssistiveChips />
-        </Popper>
 
         <StopMarkers
           selectedStop={stop}

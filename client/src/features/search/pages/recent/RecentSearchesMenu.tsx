@@ -48,7 +48,7 @@ export const RecentSearchesMenu = () => {
   return (
     <MenuPanel>
       <Container sx={{ p: 2 }}>
-        <Box display={"flex"} alignItems={"center"} gap={1}>
+        <Box alignItems={"center"} display={"flex"} gap={1}>
           <AccessTimeIcon />
           <Typography variant={"h6"}>Recent Searches</Typography>
         </Box>
@@ -173,7 +173,7 @@ export const RecentSearchesMenu = () => {
                         value.value
                       )}${viewStatePathname}`}
                     >
-                      <Box display={"flex"} gap={1} alignItems={"center"}>
+                      <Box alignItems={"center"} display={"flex"} gap={1}>
                         <SearchIcon />
                         <Typography>{value.value}</Typography>
                       </Box>

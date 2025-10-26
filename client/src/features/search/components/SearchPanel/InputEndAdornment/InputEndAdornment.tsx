@@ -8,15 +8,12 @@ interface InputEndAdornmentProps {
   inputString: string | undefined;
 
   clearSelection(): void;
-
-  goToSearchPage(): void;
 }
 
 export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
   inputString,
   clearSelection,
   loading,
-  goToSearchPage,
 }) => {
   return (
     <>

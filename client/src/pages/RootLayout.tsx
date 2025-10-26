@@ -1,4 +1,5 @@
 import { Box, Popper } from "@mui/material";
+import { AssistiveChips } from "features/map/components/Map/AssistiveChips/AssistiveChips";
 import { Map } from "features/map/components/Map/Map";
 import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
 import * as React from "react";
@@ -22,6 +23,9 @@ export const RootLayout: React.FunctionComponent = () => {
         </Popper>
         <Popper open={true} sx={{ zIndex: 2 }}>
           <SearchPanel onMenuClick={() => setIsDrawerOpen(true)} />
+        </Popper>
+        <Popper open={true}>
+          <AssistiveChips />
         </Popper>
 
         <AppDrawer onClose={() => setIsDrawerOpen(false)} open={isDrawerOpen} />

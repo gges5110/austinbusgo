@@ -3,7 +3,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import RouteIcon from "@mui/icons-material/Route";
 import SearchIcon from "@mui/icons-material/Search";
-import { AutocompleteProps, Box, IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import * as React from "react";
 
 import { Highlight } from "./Highlight/Highlight";

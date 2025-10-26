@@ -26,7 +26,6 @@ export const SearchInput: React.FunctionComponent<SearchInputProps> = ({
       endAdornment={
         <InputEndAdornment
           clearSelection={onClearSelection}
-          goToSearchPage={onEnterPress}
           inputString={inputString}
           loading={loading}
         />

@@ -25,12 +25,12 @@ import { useAtom, useSetAtom } from "jotai";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
-import { useReloadVehiclePositions } from "./useReloadVehiclePositions";
 import {
   isAutoPollingAtom,
   recentSearchesAtom,
   showReactQueryDevtoolsAtom,
 } from "shared/state/atoms";
+import { useReloadVehiclePositions } from "./useReloadVehiclePositions";
 
 export interface AppDrawerProps {
   open: boolean;
