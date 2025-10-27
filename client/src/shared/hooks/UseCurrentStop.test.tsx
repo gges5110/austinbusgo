@@ -111,7 +111,7 @@ describe("useCurrentStop", () => {
     expect(mocks.mockAddToRecentSearches).toHaveBeenCalledWith(mockStop);
     expect(mockSetCurrentStop).toHaveBeenCalledWith(mockStop);
     expect(mocks.mockNavigate).toHaveBeenCalledWith(
-      "/@30.123,-97.456,13z/stop/123"
+      "/stop/123/@30.123,-97.456,13z"
     );
   });
 
@@ -139,7 +139,7 @@ describe("useCurrentStop", () => {
     expect(mocks.mockAddToRecentSearches).toHaveBeenCalledWith(mockStop);
     expect(mockSetCurrentStop).toHaveBeenCalledWith(mockStop);
     expect(mocks.mockNavigate).toHaveBeenCalledWith(
-      "/@30.123,-97.456,13z/stop/123?routeId=318&directionId=1"
+      "/stop/123/@30.123,-97.456,13z?routeId=318&directionId=1"
     );
   });
 

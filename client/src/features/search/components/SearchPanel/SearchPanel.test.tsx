@@ -28,6 +28,7 @@ vi.mock("react-router-dom", async () => {
     ...actual,
     useNavigate: () => vi.fn(),
     useNavigation: () => vi.fn(),
+    useRouteLoaderData: () => undefined,
   };
 });
 describe("SearchPanel", () => {

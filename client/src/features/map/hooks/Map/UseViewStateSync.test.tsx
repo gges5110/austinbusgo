@@ -28,7 +28,7 @@ describe("useViewStateSync", () => {
     Object.defineProperty(window, "location", {
       value: {
         pathname:
-          "/@30.1914967,-97.8068439,13.27z/stop/6379/trip/2699464_MRG_3",
+          "/stop/6379/trip/2699464_MRG_3/@30.1914967,-97.8068439,13.27z",
         search: "?routeId=318&directionId=1",
       },
     });
@@ -55,7 +55,7 @@ describe("useViewStateSync", () => {
     expect(
       mocks.mockUserNavigate
     ).toHaveBeenCalledWith(
-      "/@30,50,10z/stop/6379/trip/2699464_MRG_3?routeId=318&directionId=1",
+      "/stop/6379/trip/2699464_MRG_3/@30,50,10z?routeId=318&directionId=1",
       { replace: true }
     );
   });
