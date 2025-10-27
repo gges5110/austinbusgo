@@ -110,6 +110,15 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
     handleSearch(inputString.trim());
   };
 
+  // Handle blur event - keep menu open if window loses focus (e.g., dev tools clicked)
+  const handleBlur = () => {
+    // Only close the menu if the document still has focus
+    // If document doesn't have focus, user likely clicked on dev tools or another window
+    if (document.hasFocus()) {
+      onOpenChange(false);
+    }
+  };
+
   return (
     <Autocomplete<SearchOption>
       blurOnSelect={true}
@@ -118,7 +127,7 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
       inputValue={inputString}
       isOptionEqualToValue={isOptionEqualToValue}
       loading={isLoading || externalLoading}
-      onBlur={() => onOpenChange(false)}
+      onBlur={handleBlur}
       onChange={handleChange}
       onClose={(_event, reason) => {
         if (reason !== "toggleInput") {
