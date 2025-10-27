@@ -1,4 +1,4 @@
-import { Box, Paper, Slide } from "@mui/material";
+import { Box, Paper, Slide, useMediaQuery, useTheme } from "@mui/material";
 import * as React from "react";
 import { PropsWithChildren } from "react";
 
@@ -12,12 +12,16 @@ export const MenuPanel = ({
   children,
   innerRef,
 }: PropsWithChildren<MenuPanelProps>) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Paper
       ref={innerRef}
       sx={{
         height: "100vh",
-        width: MENU_PANEL_WIDTH,
+        width: isMobile ? "100vw" : MENU_PANEL_WIDTH,
+        maxWidth: isMobile ? "100vw" : MENU_PANEL_WIDTH,
         overflowY: "auto",
       }}
     >

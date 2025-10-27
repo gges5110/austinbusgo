@@ -1,4 +1,4 @@
-import { Popper, useTheme } from "@mui/material";
+import { useTheme } from "@mui/material";
 import { useMapMotion } from "features/map/hooks/Map/UseMapMotion";
 import { useRouteShape } from "features/map/hooks/Map/UseRouteShape";
 import { useRouteShapes } from "features/map/hooks/Map/useRouteShapes";
@@ -20,7 +20,6 @@ import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition } from "shared/types/interface.d";
 
-import { AssistiveChips } from "./AssistiveChips/AssistiveChips";
 import { StopMarkers } from "./Stop/StopMarkers";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
