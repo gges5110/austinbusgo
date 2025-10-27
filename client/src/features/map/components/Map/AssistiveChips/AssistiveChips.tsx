@@ -22,6 +22,8 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
   const { fetchNearByStops, isLoading } = useNearByStops();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
+  // Use 'md' breakpoint to keep chips visible on tablets (sm-md range)
+  // while hiding them on smaller mobile devices to prevent overflow
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Hide on mobile screens to prevent overflow

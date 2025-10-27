@@ -21,7 +21,7 @@ export const MenuPanel = ({
       sx={{
         height: "100vh",
         width: isMobile ? "100vw" : MENU_PANEL_WIDTH,
-        maxWidth: MENU_PANEL_WIDTH,
+        maxWidth: isMobile ? "100vw" : MENU_PANEL_WIDTH,
         overflowY: "auto",
       }}
     >
