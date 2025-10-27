@@ -1,5 +1,5 @@
 import MenuIcon from "@mui/icons-material/Menu";
-import { Box, IconButton } from "@mui/material";
+import { Box, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import * as React from "react";
 import { useState } from "react";
@@ -16,6 +16,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
   onMenuClick,
 }) => {
   const [searchPanelOpen, setSearchPanelOpen] = useState<boolean>(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Paper
@@ -23,7 +25,8 @@ export const SearchPanel: React.FunctionComponent<SearchPanelProps> = ({
         m: 1,
         borderRadius: searchPanelOpen ? "16px 16px 0 0" : "24px",
         boxShadow: searchPanelOpen ? 1 : 5,
-        width: SEARCH_PANEL_WIDTH,
+        width: isMobile ? "calc(100vw - 16px)" : SEARCH_PANEL_WIDTH,
+        maxWidth: SEARCH_PANEL_WIDTH,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>

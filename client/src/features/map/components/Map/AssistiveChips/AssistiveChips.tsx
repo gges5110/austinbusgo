@@ -2,7 +2,14 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import NearMeIcon from "@mui/icons-material/NearMe";
 import RouteIcon from "@mui/icons-material/Route";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, Paper, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Paper,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { useNearByStops } from "features/map/hooks/Map/UseNearByStops";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
@@ -14,6 +21,13 @@ interface AssistiveChipsProps {}
 export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
   const { fetchNearByStops, isLoading } = useNearByStops();
   const { viewStatePathname } = useViewStatePathname();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  // Hide on mobile screens to prevent overflow
+  if (isMobile) {
+    return null;
+  }
 
   return (
     <Box
