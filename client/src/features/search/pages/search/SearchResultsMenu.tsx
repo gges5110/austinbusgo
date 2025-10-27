@@ -52,34 +52,23 @@ export const SearchResultsMenu = () => {
 
   const setHoveringStop = useSetAtom(hoveringStopAtom);
 
-  const onFavoritesPage = location.pathname.includes("Favorites");
   return (
     <MenuPanel>
-      {noResults &&
-        (!onFavoritesPage ? (
-          <Container
-            sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
-          >
-            <Box component={"span"} display={"inherit"}>
-              <Typography mr={"4px"}>Austin Bus Go can&apos;t find</Typography>
-              <Typography fontStyle={"italic"}>{searchTerm}</Typography>
-            </Box>
+      {noResults && (
+        <Container
+          sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
+        >
+          <Box component={"span"} display={"inherit"}>
+            <Typography mr={"4px"}>Austin Bus Go can&apos;t find</Typography>
+            <Typography fontStyle={"italic"}>{searchTerm}</Typography>
+          </Box>
 
-            <Typography color={"gray"} fontSize={14}>
-              Make sure your search is spelled correctly. Try adding a route
-              number, street name, or stop code.
-            </Typography>
-          </Container>
-        ) : (
-          <Container
-            sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
-          >
-            <Typography>Start adding favorites!</Typography>
-            <Typography color={"gray"} fontSize={14}>
-              You can add route or stops to favorites.
-            </Typography>
-          </Container>
-        ))}
+          <Typography color={"gray"} fontSize={14}>
+            Make sure your search is spelled correctly. Try adding a route
+            number, street name, or stop code.
+          </Typography>
+        </Container>
+      )}
 
       {!noResults && (
         <List>

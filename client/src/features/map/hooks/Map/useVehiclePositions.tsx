@@ -1,7 +1,7 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { useAtomValue } from "jotai";
 import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { isAutoPollingAtom } from "shared/state/atoms";
@@ -13,11 +13,17 @@ export const useVehiclePositions = () => {
 
   const { directionId } = useParams();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const searchParamsData = useDataFromRouteLoader(
     "searchParams",
     searchParamsDataLoader
   );
+
+  // Only enable query when on a route or stop page
+  const isOnRoutePage = location.pathname.startsWith("/route/");
+  const isOnStopPage = location.pathname.startsWith("/stop/");
+  const shouldShowVehicles = isOnRoutePage || isOnStopPage;
 
   const { data: vehiclePositionsData } = useVehiclePositionsQuery(
     {
@@ -29,10 +35,16 @@ export const useVehiclePositions = () => {
       ),
     },
     {
-      enabled: route !== undefined,
+      enabled: route !== undefined && shouldShowVehicles,
       refetchInterval: autoPolling ? 15000 : false,
     }
   );
+
+  if (!shouldShowVehicles) {
+    return {
+      vehiclePositions: [],
+    };
+  }
 
   const vehiclePositions: VehiclePosition[] =
     searchParamsData?.vehiclePositions ||
