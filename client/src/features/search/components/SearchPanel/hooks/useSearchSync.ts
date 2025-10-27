@@ -16,6 +16,8 @@ interface UseSearchSyncParams {
   setValue: (value: SearchOption | null) => void;
   onOpenChange: (open: boolean) => void;
   search: (value: string) => void;
+  isOnFavoritesPage?: boolean;
+  isOnRecentSearchesPage?: boolean;
 }
 
 /**
@@ -31,9 +33,19 @@ export const useSearchSync = ({
   setValue,
   onOpenChange,
   search,
+  isOnFavoritesPage,
+  isOnRecentSearchesPage,
 }: UseSearchSyncParams) => {
   useEffect(() => {
-    if (searchTerm) {
+    if (isOnFavoritesPage) {
+      setInputString("Favorites");
+      setValue(null);
+      onOpenChange(false);
+    } else if (isOnRecentSearchesPage) {
+      setInputString("Recent Searches");
+      setValue(null);
+      onOpenChange(false);
+    } else if (searchTerm) {
       setInputString(searchTerm);
       setValue({
         type: SearchType.recent,
@@ -65,5 +77,5 @@ export const useSearchSync = ({
     }
     // setInputString and search are memoized in useSearchInput, so they're stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, stop, route]);
+  }, [searchTerm, stop, route, isOnFavoritesPage, isOnRecentSearchesPage]);
 };

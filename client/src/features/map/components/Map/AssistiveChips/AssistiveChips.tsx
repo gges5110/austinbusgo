@@ -101,7 +101,7 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
             textTransform: "none",
             px: "12px",
           }}
-          to={`/search/Favorites${viewStatePathname}`}
+          to={`/favorites${viewStatePathname}`}
         >
           <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>

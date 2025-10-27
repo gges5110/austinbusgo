@@ -1,4 +1,5 @@
 import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
+import { FavoritesMenu } from "features/favorites/pages/FavoritesMenu";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { RouteMenu } from "features/route/pages/route/RouteMenu";
 import { RecentSearchesMenu } from "features/search/pages/recent/RecentSearchesMenu";
@@ -51,6 +52,10 @@ export const router = createBrowserRouter(
         <Route
           element={<RecentSearchesMenu />}
           path={"recent-searches/:viewState?"}
+        ></Route>
+        <Route
+          element={<FavoritesMenu />}
+          path={"favorites/:viewState?"}
         ></Route>
         <Route
           id={"stop"}
