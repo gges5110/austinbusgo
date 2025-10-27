@@ -1,9 +1,5 @@
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "app/QueryClient";
-import {
-  isRoute,
-  isStop,
-} from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { redirect } from "react-router-dom";
 import {
   NearByStopsQuery,
@@ -19,8 +15,6 @@ import {
   useSearchQuery,
 } from "shared/api/schemas/Search.generated";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { FavoritesType } from "shared/state/atoms";
-import { Route, Stop } from "shared/types/interface.d";
 
 const searchQuery = (id: SearchQueryVariables) => ({
   queryKey: useSearchQuery.getKey(id),
@@ -61,33 +55,6 @@ export const searchLoader = async ({ params }: LoaderFunctionArgs) => {
       search: {
         stops: nearbyStopsData.nearByStops,
         routes: [],
-      },
-    };
-  } else if (
-    searchTerm.toLocaleLowerCase() === "Favorites".toLocaleLowerCase()
-  ) {
-    const favoritesRawString = localStorage.getItem("favorites");
-    if (!favoritesRawString) {
-      return {
-        search: {
-          stops: [],
-          routes: [],
-        },
-      };
-    }
-
-    const favorites = JSON.parse(favoritesRawString) as FavoritesType[];
-    const favoriteStops = favorites.filter((favorite) =>
-      isStop(favorite)
-    ) as Stop[];
-    const favoriteRoutes = favorites.filter((favorite) =>
-      isRoute(favorite)
-    ) as Route[];
-
-    return {
-      search: {
-        stops: favoriteStops,
-        routes: favoriteRoutes,
       },
     };
   }

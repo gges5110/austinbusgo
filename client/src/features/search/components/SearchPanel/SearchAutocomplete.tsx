@@ -1,7 +1,7 @@
 import { Autocomplete, createFilterOptions } from "@mui/material";
 import * as React from "react";
 import { useRef, useState } from "react";
-import { useNavigation, useParams } from "react-router-dom";
+import { useLocation, useNavigation, useParams } from "react-router-dom";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 
@@ -36,9 +36,16 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
   const { currentRoute } = useCurrentRoute();
   const { currentStop } = useCurrentStop();
   const { searchTerm } = useParams();
+  const location = useLocation();
 
   const navigation = useNavigation();
   const externalLoading = navigation.location !== undefined;
+
+  // Check if we're on the favorites or recent searches page
+  const isOnFavoritesPage = location.pathname.startsWith("/favorites");
+  const isOnRecentSearchesPage = location.pathname.startsWith(
+    "/recent-searches"
+  );
 
   // Custom hooks for managing search state
   const {
@@ -69,6 +76,8 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
     setValue,
     onOpenChange,
     search,
+    isOnFavoritesPage,
+    isOnRecentSearchesPage,
   });
 
   // Handle selection changes
@@ -84,10 +93,15 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
 
   // Clear selection and reset state
   const handleClearSelection = () => {
-    handleClear();
-    setInputString("");
-    setValue(null);
-    onOpenChange(true);
+    // If on favorites or recent searches page, navigate to base path
+    if (isOnFavoritesPage || isOnRecentSearchesPage) {
+      handleClear();
+    } else {
+      handleClear();
+      setInputString("");
+      setValue(null);
+      onOpenChange(true);
+    }
   };
 
   // Handle search page navigation
