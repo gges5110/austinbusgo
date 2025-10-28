@@ -7,6 +7,9 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
+import { DevLayout } from "features/dev/components/DevLayout";
+import { StopsDevPage } from "features/dev/pages/StopsDevPage";
+import { TripStopTimesDevPage } from "features/dev/pages/TripStopTimesDevPage";
 import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
 import { FavoritesMenu } from "features/favorites/pages/FavoritesMenu";
 import { RootLayout } from "features/layout/RootLayout";
@@ -36,7 +39,11 @@ export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route element={<VehiclePositionsDevPage />} path={"/dev/vehicles"} />
+      <Route element={<DevLayout />} path={"/dev"}>
+        <Route element={<VehiclePositionsDevPage />} path={"vehicles"} />
+        <Route element={<TripStopTimesDevPage />} path={"trip-stop-times"} />
+        <Route element={<StopsDevPage />} path={"stops"} />
+      </Route>
       <Route
         element={<RootLayout />}
         id={"searchParams"}
