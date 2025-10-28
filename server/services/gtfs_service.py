@@ -38,9 +38,10 @@ class GTFSService:
                 Match(Routes.route_id, term) | Match(Routes.route_long_name, term)
             )
         else:
+            # Use OR logic for multi-word searches to match any of the terms
             term = "|".join(search_terms)
             return Routes.select().where(
-                Match(Routes.route_id, term) & Match(Routes.route_long_name, term)
+                Match(Routes.route_id, term) | Match(Routes.route_long_name, term)
             )
 
     @staticmethod
@@ -69,9 +70,13 @@ class GTFSService:
                 | Match(Stops.stop_code, term)
             )
         else:
+            # Use OR logic for multi-word searches to match any of the terms
             term = "|".join(search_terms)
             return Stops.select().where(
-                Match(Stops.stop_name, term) & Match(Stops.stop_code, term)
+                Match(Stops.at_street, term)
+                | Match(Stops.on_street, term)
+                | Match(Stops.stop_name, term)
+                | Match(Stops.stop_code, term)
             )
 
     @staticmethod
