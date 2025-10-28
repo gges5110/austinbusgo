@@ -1,6 +1,6 @@
 import { Box, Divider } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
-import { RouteStopsTimeline } from "features/route/components/Route/RouteStopsTimeline/RouteStopsTimeline";
+import { RouteStopsTimeline } from "features/route/components/RouteStopsTimeline/RouteStopsTimeline";
 import { DirectionToggle } from "features/search/components/SearchPanel/DirectionToggle/DirectionToggle";
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";

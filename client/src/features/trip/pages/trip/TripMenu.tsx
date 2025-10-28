@@ -1,12 +1,12 @@
 import { RouteOutlined } from "@mui/icons-material";
 import { Box, Button, Divider, Typography } from "@mui/material";
-import { useDataFromLoader, useDataFromRouteLoader } from "app/Router";
-import { stopLoader } from "features/stop/pages/stop/StopLoader";
-import { TripTimeline } from "features/trip/components/Trip/TripTimeline/TripTimeline";
-import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
 import { useRef } from "react";
 import * as React from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
+import { useDataFromLoader, useDataFromRouteLoader } from "app/Router";
+import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { TripTimeline } from "features/trip/components/Trip/TripTimeline/TripTimeline";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { useTripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";

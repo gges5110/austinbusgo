@@ -1,16 +1,3 @@
-import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
-import { FavoritesMenu } from "features/favorites/pages/FavoritesMenu";
-import { routeLoader } from "features/route/pages/route/RouteLoader";
-import { RouteMenu } from "features/route/pages/route/RouteMenu";
-import { RecentSearchesMenu } from "features/search/pages/recent/RecentSearchesMenu";
-import { searchLoader } from "features/search/pages/search/SearchLoader";
-import { SearchResultsMenu } from "features/search/pages/search/SearchResultsMenu";
-import { stopLoader } from "features/stop/pages/stop/StopLoader";
-import { StopMenu } from "features/stop/pages/stop/StopMenu";
-import { tripLoader } from "features/trip/pages/trip/TripLoader";
-import { TripMenu } from "features/trip/pages/trip/TripMenu";
-import { RootLayout } from "pages/RootLayout";
-import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
 import * as React from "react";
 import {
   createBrowserRouter,
@@ -20,6 +7,19 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
+import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
+import { FavoritesMenu } from "features/favorites/pages/FavoritesMenu";
+import { RootLayout } from "features/layout/RootLayout";
+import { routeLoader } from "features/route/pages/route/RouteLoader";
+import { RouteMenu } from "features/route/pages/route/RouteMenu";
+import { RecentSearchesMenu } from "features/search/pages/recent/RecentSearchesMenu";
+import { searchLoader } from "features/search/pages/search/SearchLoader";
+import { SearchResultsMenu } from "features/search/pages/search/SearchResultsMenu";
+import { stopLoader } from "features/stop/pages/stop/StopLoader";
+import { StopMenu } from "features/stop/pages/stop/StopMenu";
+import { tripLoader } from "features/trip/pages/trip/TripLoader";
+import { TripMenu } from "features/trip/pages/trip/TripMenu";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn

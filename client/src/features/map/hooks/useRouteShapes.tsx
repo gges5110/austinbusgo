@@ -1,6 +1,6 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
-import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { LineString } from "shared/types/interface.d";
 
 export const useRouteShapes = () => {

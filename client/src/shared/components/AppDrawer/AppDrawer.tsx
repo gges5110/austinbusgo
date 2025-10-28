@@ -20,8 +20,8 @@ import {
   Toolbar,
 } from "@mui/material";
 import dayjs from "dayjs";
-import { ColorModeToggle } from "features/settings/components/ColorModeToggle/ColorModeToggle";
 import { useAtom, useSetAtom } from "jotai";
+import { ColorModeToggle } from "shared/components/AppDrawer/ColorModeToggle/ColorModeToggle";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";

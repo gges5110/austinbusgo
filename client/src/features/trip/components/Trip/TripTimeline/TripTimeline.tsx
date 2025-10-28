@@ -10,7 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 import dayjs from "dayjs";
-import { useUpdateViewState } from "features/map/hooks/Map/UseViewStateSync";
+import { useUpdateViewState } from "features/map/hooks/UseViewStateSync";
 import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useEffect, useRef } from "react";

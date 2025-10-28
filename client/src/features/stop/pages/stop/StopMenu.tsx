@@ -1,8 +1,8 @@
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { Box, Divider, Typography } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
-import { ArrivalTimeList } from "features/stop/components/Stop/ArrivalTimeList/ArrivalTimeList";
-import { RoutesSelector } from "features/stop/components/Stop/RoutesSelector/RoutesSelector";
+import { ArrivalTimeList } from "features/stop/components/ArrivalTimeList/ArrivalTimeList";
+import { RoutesSelector } from "features/stop/components/RoutesSelector/RoutesSelector";
 import { useAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";

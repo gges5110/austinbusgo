@@ -1,4 +1,4 @@
-import { vehicleZoomLevel, ViewState } from "features/map/components/Map/Map";
+import { vehicleZoomLevel, ViewState } from "features/map/components/Map";
 import { useAtomValue } from "jotai";
 import { LngLatBoundsLike } from "mapbox-gl";
 import { useEffect } from "react";

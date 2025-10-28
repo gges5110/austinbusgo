@@ -1,10 +1,10 @@
 import { useTheme } from "@mui/material";
-import { useMapMotion } from "features/map/hooks/Map/UseMapMotion";
-import { useRouteShape } from "features/map/hooks/Map/UseRouteShape";
-import { useRouteShapes } from "features/map/hooks/Map/useRouteShapes";
-import { useStops } from "features/map/hooks/Map/useStops";
-import { useVehiclePositions } from "features/map/hooks/Map/useVehiclePositions";
-import { useViewStateSync } from "features/map/hooks/Map/UseViewStateSync";
+import { useMapMotion } from "features/map/hooks/UseMapMotion";
+import { useRouteShape } from "features/map/hooks/UseRouteShape";
+import { useRouteShapes } from "features/map/hooks/useRouteShapes";
+import { useStops } from "features/map/hooks/useStops";
+import { useVehiclePositions } from "features/map/hooks/useVehiclePositions";
+import { useViewStateSync } from "features/map/hooks/UseViewStateSync";
 import * as React from "react";
 import { useState } from "react";
 import ReactMapGL, {

@@ -10,7 +10,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useNearByStops } from "features/map/hooks/Map/UseNearByStops";
+import { useNearByStops } from "features/map/hooks/UseNearByStops";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MENU_PANEL_WIDTH } from "shared/components/MenuPanel/MenuPanel";

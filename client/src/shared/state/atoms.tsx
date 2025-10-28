@@ -1,4 +1,4 @@
-import { Coordinate } from "features/map/components/Map/Map";
+import { Coordinate } from "features/map/components/Map";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { RecentSearch } from "shared/hooks/UseRecentSearches";

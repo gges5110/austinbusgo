@@ -2,8 +2,8 @@ import { useDataFromRouteLoader } from "app/Router";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
 import { isResponse } from "features/search/pages/search/SearchResultsMenu";
-import { searchParamsDataLoader } from "pages/SearchParamsDataLoader";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { Stop } from "shared/types/interface.d";
 
 export const useStops = () => {

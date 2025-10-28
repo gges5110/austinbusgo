@@ -1,6 +1,6 @@
 import { Box, Popper } from "@mui/material";
-import { AssistiveChips } from "features/map/components/Map/AssistiveChips/AssistiveChips";
-import { Map } from "features/map/components/Map/Map";
+import { AssistiveChips } from "features/layout/components/AssistiveChips";
+import { Map } from "features/map/components/Map";
 import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
 import * as React from "react";
 import { useState } from "react";
