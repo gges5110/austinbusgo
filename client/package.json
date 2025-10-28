@@ -27,7 +27,6 @@
     "typescript": "4.5"
   },
   "scripts": {
-    "pretest": "ENV TZ=UTC",
     "start": "vite",
     "build": "vite build",
     "test": "TZ=UTC vitest test",
