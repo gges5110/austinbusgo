@@ -170,7 +170,7 @@ class TestGTFSService(unittest.TestCase):
 
         mock_select.assert_called_once()
         mock_query.order_by.assert_called_once()
-        mock_query.limit.assert_called_once_with(100)
+        mock_query.limit.assert_called_once_with(20)
 
     @patch("server.services.gtfs_service.Stops.select")
     def test_get_stops_by_route_id(self, mock_select):
