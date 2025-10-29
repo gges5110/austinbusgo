@@ -13,5 +13,5 @@ typing==3.7.4.3
 graphql_server===3.0.0b6
 black===24.3.0
 testcontainers==3.7.1
-numpy<2
+numpy<3
 shapely==2.0.1
