@@ -58,7 +58,8 @@ export const ArrivalTimeListItem: React.FunctionComponent<
     }
   }
 
-  const timeDiff = scheduledArrivalTime.diff(dayjs(), "minute");
+  const actualArrivalTime = updatedArrivalTime || scheduledArrivalTime;
+  const timeDiff = actualArrivalTime.diff(dayjs(), "minute");
   const tripName =
     arrivalTime.trip.tripHeadsign?.split("-")[
       arrivalTime.trip.tripHeadsign?.split("-").length - 1
@@ -148,10 +149,10 @@ export const ArrivalTimeListItem: React.FunctionComponent<
               }}
             >
               <Typography fontSize={24} lineHeight={1}>
-                {scheduledArrivalTime.format("h:mm")}
+                {actualArrivalTime.format("h:mm")}
               </Typography>
               <Typography color={"gray"} fontSize={14}>
-                {scheduledArrivalTime.format("A")}
+                {actualArrivalTime.format("A")}
               </Typography>
             </Box>
           ) : timeDiff == 0 ? (
