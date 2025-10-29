@@ -107,11 +107,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<
             >
               {timeDiff < 60 ||
               (updatedArrivalTime && timeDiffString !== "On time") ? (
-                <>
-                  {updatedArrivalTime
-                    ? updatedArrivalTime.format("h:mm A")
-                    : scheduledArrivalTime.format("h:mm A")}
-                </>
+                <>{actualArrivalTime.format("h:mm A")}</>
               ) : null}
             </Typography>
             {arrivalTime.trip.wheelchairAccessible && (
