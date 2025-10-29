@@ -125,12 +125,10 @@ export const VehiclePositionsDevPage: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  const {
-    data: vehiclePositionsData,
-    refetch,
-  } = useRealTimeVehiclePositionsQuery(undefined, {
-    refetchInterval: 15000,
-  });
+  const { data: vehiclePositionsData, refetch } =
+    useRealTimeVehiclePositionsQuery(undefined, {
+      refetchInterval: 15000,
+    });
 
   const routes = routesData?.routes || [];
   const routeMap = new Map(routes.map((r) => [r.routeId, r]));

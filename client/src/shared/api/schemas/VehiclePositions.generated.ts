@@ -88,7 +88,7 @@ export const VehiclePositionsDocument = `
     `;
 export const useVehiclePositionsQuery = <
   TData = VehiclePositionsQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: VehiclePositionsQueryVariables,
   options?: UseQueryOptions<VehiclePositionsQuery, TError, TData>

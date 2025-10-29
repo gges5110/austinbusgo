@@ -181,18 +181,20 @@ export const TripStopTimesDevPage: React.FC = () => {
         </Card>
       )}
 
-      {selectedRoute && selectedDirection !== "" && filteredTripIds.length > 0 && (
-        <Box sx={{ mt: 2 }}>
-          {filteredTripIds.map((tripId) => (
-            <TripAccordionWithFilter
-              key={tripId}
-              routeColor={selectedRoute.routeColor || "666666"}
-              selectedDirection={selectedDirection as number}
-              tripId={tripId}
-            />
-          ))}
-        </Box>
-      )}
+      {selectedRoute &&
+        selectedDirection !== "" &&
+        filteredTripIds.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            {filteredTripIds.map((tripId) => (
+              <TripAccordionWithFilter
+                key={tripId}
+                routeColor={selectedRoute.routeColor || "666666"}
+                selectedDirection={selectedDirection as number}
+                tripId={tripId}
+              />
+            ))}
+          </Box>
+        )}
 
       {selectedRoute &&
         selectedDirection !== "" &&

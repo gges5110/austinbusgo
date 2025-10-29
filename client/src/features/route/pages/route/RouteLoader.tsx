@@ -36,24 +36,22 @@ export const routeLoader = async ({ params }: LoaderFunctionArgs) => {
   const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
     routeQuery({ routeId })
   );
-  const stopsAndShapesDataQuery = queryClient.ensureQueryData<
-    StopsAndShapesQuery
-  >(
-    stopsAndShapesQuery({
-      routeId,
-      directionId,
-      date: getDate(),
-    })
-  );
+  const stopsAndShapesDataQuery =
+    queryClient.ensureQueryData<StopsAndShapesQuery>(
+      stopsAndShapesQuery({
+        routeId,
+        directionId,
+        date: getDate(),
+      })
+    );
 
-  const vehiclePositionsDataQuery = queryClient.ensureQueryData<
-    VehiclePositionsQuery
-  >(
-    vehiclePositionsQuery({
-      routeId: routeId,
-      direction: directionId,
-    })
-  );
+  const vehiclePositionsDataQuery =
+    queryClient.ensureQueryData<VehiclePositionsQuery>(
+      vehiclePositionsQuery({
+        routeId: routeId,
+        direction: directionId,
+      })
+    );
 
   const routeData = await routeDataQuery;
   const stopsAndShapesData = await stopsAndShapesDataQuery;

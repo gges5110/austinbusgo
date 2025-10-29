@@ -80,7 +80,7 @@ export const ArrivalTimesDocument = `
     `;
 export const useArrivalTimesQuery = <
   TData = ArrivalTimesQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: ArrivalTimesQueryVariables,
   options?: UseQueryOptions<ArrivalTimesQuery, TError, TData>

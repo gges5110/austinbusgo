@@ -89,7 +89,7 @@ export const RealTimeVehiclePositionsDocument = `
     `;
 export const useRealTimeVehiclePositionsQuery = <
   TData = RealTimeVehiclePositionsQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables?: RealTimeVehiclePositionsQueryVariables,
   options?: UseQueryOptions<RealTimeVehiclePositionsQuery, TError, TData>

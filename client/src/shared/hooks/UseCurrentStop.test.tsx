@@ -146,7 +146,7 @@ describe("useCurrentStop", () => {
   test("should not navigate when stopId is undefined", () => {
     const invalidStop = {
       ...mockStop,
-      stopId: (undefined as unknown) as string,
+      stopId: undefined as unknown as string,
     };
 
     const { result } = renderHook(() => useCurrentStop(), {

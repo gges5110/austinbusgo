@@ -15,9 +15,8 @@ export interface ViewAllRecent {
   type: "viewAll";
 }
 
-type ArrayElement<
-  ArrayType extends readonly unknown[]
-> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+type ArrayElement<ArrayType extends readonly unknown[]> =
+  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 export type OptionValue =
   | ArrayElement<SearchQuery["search"]["stops"]>

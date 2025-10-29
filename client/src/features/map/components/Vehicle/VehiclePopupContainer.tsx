@@ -9,9 +9,9 @@ export interface VehiclePopupContainerProps {
   readonly vehiclePosition: VehiclePosition;
 }
 
-export const VehiclePopupContainer: React.FunctionComponent<VehiclePopupContainerProps> = ({
-  vehiclePosition,
-}) => {
+export const VehiclePopupContainer: React.FunctionComponent<
+  VehiclePopupContainerProps
+> = ({ vehiclePosition }) => {
   const { data: stop, isLoading: stopLoading } = useStopQuery({
     stopId: vehiclePosition.stopId || "",
   });

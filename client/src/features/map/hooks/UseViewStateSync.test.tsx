@@ -52,9 +52,7 @@ describe("useViewStateSync", () => {
     });
     vi.runAllTimers();
 
-    expect(
-      mocks.mockUserNavigate
-    ).toHaveBeenCalledWith(
+    expect(mocks.mockUserNavigate).toHaveBeenCalledWith(
       "/stop/6379/trip/2699464_MRG_3/@30,50,10z?routeId=318&directionId=1",
       { replace: true }
     );

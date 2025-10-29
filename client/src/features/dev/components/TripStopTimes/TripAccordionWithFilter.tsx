@@ -9,11 +9,9 @@ interface TripAccordionWithFilterProps {
   selectedDirection: number;
 }
 
-export const TripAccordionWithFilter: React.FC<TripAccordionWithFilterProps> = ({
-  tripId,
-  routeColor,
-  selectedDirection,
-}) => {
+export const TripAccordionWithFilter: React.FC<
+  TripAccordionWithFilterProps
+> = ({ tripId, routeColor, selectedDirection }) => {
   const { data: tripData } = useTripQuery(
     { tripId },
     {

@@ -80,7 +80,7 @@ export const StopsAndShapesDocument = `
     `;
 export const useStopsAndShapesQuery = <
   TData = StopsAndShapesQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: StopsAndShapesQueryVariables,
   options?: UseQueryOptions<StopsAndShapesQuery, TError, TData>

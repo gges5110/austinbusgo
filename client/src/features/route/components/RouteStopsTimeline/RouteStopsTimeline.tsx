@@ -277,8 +277,8 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   index === 0
                     ? "first"
                     : index === stops?.length - 1
-                    ? "last"
-                    : undefined
+                      ? "last"
+                      : undefined
                 }
                 sx={{
                   ml: 6,

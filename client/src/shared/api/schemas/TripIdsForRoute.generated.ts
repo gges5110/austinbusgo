@@ -42,7 +42,7 @@ export const TripIdsForRouteDocument = `
     `;
 export const useTripIdsForRouteQuery = <
   TData = TripIdsForRouteQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: TripIdsForRouteQueryVariables,
   options?: UseQueryOptions<TripIdsForRouteQuery, TError, TData>

@@ -27,10 +27,9 @@ const filterOptions = createFilterOptions<SearchOption>({
   limit: 8,
 });
 
-export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps> = ({
-  open,
-  onOpenChange,
-}) => {
+export const SearchAutocomplete: React.FunctionComponent<
+  SearchAutocompleteProps
+> = ({ open, onOpenChange }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState<SearchOption | null>(null);
   const { currentRoute } = useCurrentRoute();
@@ -43,9 +42,8 @@ export const SearchAutocomplete: React.FunctionComponent<SearchAutocompleteProps
 
   // Check if we're on the favorites or recent searches page
   const isOnFavoritesPage = location.pathname.startsWith("/favorites");
-  const isOnRecentSearchesPage = location.pathname.startsWith(
-    "/recent-searches"
-  );
+  const isOnRecentSearchesPage =
+    location.pathname.startsWith("/recent-searches");
 
   // Custom hooks for managing search state
   const {

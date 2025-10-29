@@ -10,11 +10,8 @@ interface AddToFavoritesProps {
 }
 
 export const AddToFavorites: React.FC<AddToFavoritesProps> = ({ value }) => {
-  const {
-    addToFavorites,
-    containsFavorite,
-    removeFromFavorites,
-  } = useFavorites();
+  const { addToFavorites, containsFavorite, removeFromFavorites } =
+    useFavorites();
   const alreadyAdded = containsFavorite(value);
   const onClick = () => {
     if (containsFavorite(value)) {

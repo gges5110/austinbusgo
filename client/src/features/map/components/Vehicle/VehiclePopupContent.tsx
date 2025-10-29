@@ -37,13 +37,9 @@ export interface VehiclePopupContentProps {
   readonly tripLoading: boolean;
 }
 
-export const VehiclePopupContent: React.FunctionComponent<VehiclePopupContentProps> = ({
-  vehiclePosition,
-  stop,
-  stopLoading,
-  trip,
-  tripLoading,
-}) => {
+export const VehiclePopupContent: React.FunctionComponent<
+  VehiclePopupContentProps
+> = ({ vehiclePosition, stop, stopLoading, trip, tripLoading }) => {
   return (
     <Card variant={"outlined"}>
       <CardContent sx={{ minWidth: 275, borderRadius: 6 }}>

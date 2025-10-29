@@ -43,24 +43,22 @@ export const searchParamsDataLoader = async ({
   const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
     routeQuery({ routeId })
   );
-  const stopsAndShapesDataQuery = queryClient.ensureQueryData<
-    StopsAndShapesQuery
-  >(
-    stopsAndShapesQuery({
-      routeId,
-      directionId,
-      date: getDate(),
-    })
-  );
+  const stopsAndShapesDataQuery =
+    queryClient.ensureQueryData<StopsAndShapesQuery>(
+      stopsAndShapesQuery({
+        routeId,
+        directionId,
+        date: getDate(),
+      })
+    );
 
-  const vehiclePositionsDataQuery = queryClient.ensureQueryData<
-    VehiclePositionsQuery
-  >(
-    vehiclePositionsQuery({
-      routeId: routeId,
-      direction: directionId,
-    })
-  );
+  const vehiclePositionsDataQuery =
+    queryClient.ensureQueryData<VehiclePositionsQuery>(
+      vehiclePositionsQuery({
+        routeId: routeId,
+        direction: directionId,
+      })
+    );
 
   let routeData, stopsAndShapesData, vehiclePositionsData;
   if (routeId !== "") {

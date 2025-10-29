@@ -54,7 +54,7 @@ export const EarliestArrivalTimesOnRouteDocument = `
     `;
 export const useEarliestArrivalTimesOnRouteQuery = <
   TData = EarliestArrivalTimesOnRouteQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: EarliestArrivalTimesOnRouteQueryVariables,
   options?: UseQueryOptions<EarliestArrivalTimesOnRouteQuery, TError, TData>

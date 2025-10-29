@@ -38,7 +38,7 @@ export const RecentSearchesMenu = () => {
 
   const handleRemove = (
     e: React.MouseEvent,
-    search: typeof recentSearches[0]
+    search: (typeof recentSearches)[0]
   ) => {
     e.preventDefault();
     e.stopPropagation();

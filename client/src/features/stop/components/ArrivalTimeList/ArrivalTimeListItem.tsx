@@ -17,10 +17,9 @@ export interface ArrivalTimeListItemProps {
   stop: StopQuery["stop"];
 }
 
-export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemProps> = ({
-  arrivalTime,
-  stop,
-}) => {
+export const ArrivalTimeListItem: React.FunctionComponent<
+  ArrivalTimeListItemProps
+> = ({ arrivalTime, stop }) => {
   const { viewStatePathname } = useViewStatePathname();
 
   const scheduledArrivalTime: Dayjs = dayjs(
@@ -60,9 +59,10 @@ export const ArrivalTimeListItem: React.FunctionComponent<ArrivalTimeListItemPro
   }
 
   const timeDiff = scheduledArrivalTime.diff(dayjs(), "minute");
-  const tripName = arrivalTime.trip.tripHeadsign?.split("-")[
-    arrivalTime.trip.tripHeadsign?.split("-").length - 1
-  ];
+  const tripName =
+    arrivalTime.trip.tripHeadsign?.split("-")[
+      arrivalTime.trip.tripHeadsign?.split("-").length - 1
+    ];
   return (
     <ListItemButton
       component={RouterLink}

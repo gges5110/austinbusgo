@@ -289,8 +289,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   index === 0
                     ? "first"
                     : index === stopTimes?.length - 1
-                    ? "last"
-                    : undefined
+                      ? "last"
+                      : undefined
                 }
                 sx={{
                   ml: 6,

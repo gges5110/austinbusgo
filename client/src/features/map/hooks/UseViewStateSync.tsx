@@ -24,13 +24,8 @@ const buildPathWithViewState = (
 };
 
 export const useUpdateViewState = () => {
-  const {
-    latitude,
-    longitude,
-    zoom,
-    searchParams,
-    restOfPathname,
-  } = useViewStatePathname();
+  const { latitude, longitude, zoom, searchParams, restOfPathname } =
+    useViewStatePathname();
   const getViewStateURL = (viewState: Partial<ViewState>) => {
     const viewStatePath = convertViewStateToPath({
       latitude: viewState.latitude || latitude,
@@ -47,11 +42,8 @@ export const useUpdateViewState = () => {
 export const useViewStateSync = (viewState: ViewState) => {
   const navigation = useNavigation();
   const navigate = useNavigate();
-  const {
-    viewStatePathname,
-    searchParams,
-    restOfPathname,
-  } = useViewStatePathname();
+  const { viewStatePathname, searchParams, restOfPathname } =
+    useViewStatePathname();
 
   useEffect(() => {
     if (viewStatePathname === "") {

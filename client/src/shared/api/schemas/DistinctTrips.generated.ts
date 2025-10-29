@@ -46,7 +46,7 @@ export const DistinctTripsDocument = `
     `;
 export const useDistinctTripsQuery = <
   TData = DistinctTripsQuery,
-  TError = unknown
+  TError = unknown,
 >(
   variables: DistinctTripsQueryVariables,
   options?: UseQueryOptions<DistinctTripsQuery, TError, TData>

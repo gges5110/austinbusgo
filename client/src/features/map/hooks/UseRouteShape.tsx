@@ -17,9 +17,8 @@ export const useRouteShape = (routeShapes: LineString[]) => {
     ],
   };
 
-  const [routeShapeGeoJSON, setRouteShapeGeoJSON] = useState<
-    GeoJSON.FeatureCollection<GeoJSON.LineString>
-  >(geojson);
+  const [routeShapeGeoJSON, setRouteShapeGeoJSON] =
+    useState<GeoJSON.FeatureCollection<GeoJSON.LineString>>(geojson);
 
   const setRouteShape = (lineStrings: LineString[]): void => {
     setRouteShapeGeoJSON({
