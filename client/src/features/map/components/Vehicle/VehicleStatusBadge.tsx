@@ -2,6 +2,10 @@ import { Box } from "@mui/material";
 import * as React from "react";
 import { VehicleStopStatus } from "shared/types/interface.d";
 
+// Visual constants for status badge positioning and styling
+const BADGE_TOP_OFFSET = -8; // Position above the vehicle icon
+const BADGE_FONT_SIZE = 9; // Small font to avoid clutter
+
 const getStatusDisplay = (
   status: VehicleStopStatus | null | undefined
 ): { text: string; color: string } => {
@@ -34,12 +38,12 @@ export const VehicleStatusBadge: React.FunctionComponent<
     <Box
       sx={{
         position: "absolute",
-        top: -8,
+        top: BADGE_TOP_OFFSET,
         left: "50%",
         transform: "translateX(-50%)",
         backgroundColor: color,
         color: "white",
-        fontSize: 9,
+        fontSize: BADGE_FONT_SIZE,
         fontWeight: 600,
         padding: "2px 4px",
         borderRadius: 1,
