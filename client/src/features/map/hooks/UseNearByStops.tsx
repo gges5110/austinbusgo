@@ -1,7 +1,27 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { ViewState } from "features/map/components/Map";
+import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
+import { Stop } from "shared/types/interface.d";
 
-export const useNearByStops = () => {
+export const stopsZoomThreshold = 14;
+
+export const useNearByStops = (viewState?: ViewState) => {
   const queryClient = useQueryClient();
+
+  const shouldFetch =
+    viewState !== undefined && viewState.zoom >= stopsZoomThreshold;
+
+  // Round to 3 decimal places (~111m) to reduce redundant fetches while panning
+  const lat = viewState ? parseFloat(viewState.latitude.toFixed(3)) : 0;
+  const lon = viewState ? parseFloat(viewState.longitude.toFixed(3)) : 0;
+
+  const { data, isFetching } = useNearByStopsQuery(
+    { lat, lon },
+    {
+      enabled: shouldFetch,
+      keepPreviousData: true,
+    }
+  );
 
   const fetchNearByStops = () => {
     queryClient.removeQueries({
@@ -12,10 +32,13 @@ export const useNearByStops = () => {
   const isLoading =
     queryClient.isFetching({
       queryKey: ["NearByStops"],
-    }) !== 0;
+    }) !== 0 || isFetching;
+
+  const nearByStops: Stop[] = shouldFetch ? (data?.nearByStops ?? []) : [];
 
   return {
     fetchNearByStops,
     isLoading,
+    nearByStops,
   };
 };
