@@ -53,7 +53,7 @@ export const Map: React.FunctionComponent = () => {
     zoom: zoom || 11.5,
   });
 
-  useMapMotion(viewState, stop, stops, routeShapes);
+  useMapMotion(stops, routeShapes);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
