@@ -15,3 +15,11 @@ htmlcov/*
 **/capmetro/*
 /postgres-data
 client/.claude/settings.local.json
+
+# Terraform
+terraform/.terraform/
+# terraform/.terraform.lock.hcl  # this should be committed
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+terraform/*.tfvars
