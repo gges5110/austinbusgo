@@ -3,7 +3,7 @@ import { renderHook } from "@testing-library/react";
 import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 
-import { stopsZoomThreshold, useNearByStops } from "./UseNearByStops";
+import { useNearByStops } from "./UseNearByStops";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -55,25 +55,7 @@ describe("useNearByStops", () => {
     );
   });
 
-  test("returns empty nearByStops when zoom is below threshold", () => {
-    const viewState = {
-      latitude: 30.2672,
-      longitude: -97.7431,
-      zoom: stopsZoomThreshold - 1,
-    };
-
-    const { result } = renderHook(() => useNearByStops(viewState), {
-      wrapper: createWrapper(),
-    });
-
-    expect(result.current.nearByStops).toEqual([]);
-    expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ enabled: false })
-    );
-  });
-
-  test("fetches and returns nearByStops when zoom meets threshold", () => {
+  test("fetches and returns nearByStops when viewState is provided", () => {
     const mockStops = [
       {
         stopId: "1001",
@@ -90,7 +72,7 @@ describe("useNearByStops", () => {
     const viewState = {
       latitude: 30.2672,
       longitude: -97.7431,
-      zoom: stopsZoomThreshold,
+      zoom: 10,
     };
 
     const { result } = renderHook(() => useNearByStops(viewState), {
@@ -108,7 +90,7 @@ describe("useNearByStops", () => {
     const viewState = {
       latitude: 30.26729999,
       longitude: -97.74315555,
-      zoom: stopsZoomThreshold,
+      zoom: 10,
     };
 
     renderHook(() => useNearByStops(viewState), {
@@ -130,7 +112,7 @@ describe("useNearByStops", () => {
     const viewState = {
       latitude: 30.2672,
       longitude: -97.7431,
-      zoom: stopsZoomThreshold,
+      zoom: 10,
     };
 
     const { result } = renderHook(() => useNearByStops(viewState), {
@@ -149,7 +131,7 @@ describe("useNearByStops", () => {
     const viewState = {
       latitude: 30.2672,
       longitude: -97.7431,
-      zoom: stopsZoomThreshold,
+      zoom: 10,
     };
 
     const { result } = renderHook(() => useNearByStops(viewState), {

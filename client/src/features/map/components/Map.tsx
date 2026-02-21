@@ -53,7 +53,7 @@ export const Map: React.FunctionComponent = () => {
 
   const { routeShapeGeoJSON } = useRouteShape(routeShapes);
 
-  useMapMotion(viewState, stop, contextStops, routeShapes);
+  useMapMotion(contextStops, routeShapes);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {
