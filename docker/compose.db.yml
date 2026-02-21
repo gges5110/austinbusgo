@@ -16,4 +16,4 @@ services:
       - '5438:5432'
     volumes:
       - ../etl/capmetro:/capmetro
-      - ../server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ../etl/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql
