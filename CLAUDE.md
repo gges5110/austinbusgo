@@ -147,7 +147,7 @@ npm start
 7. **Code Quality**:
    - Prettier for formatting (double quotes, trailing commas ES5)
    - ESLint with TypeScript, React, and Prettier plugins
-   - Pre-commit hooks via husky and lint-staged
+   - Pre-commit hooks via lint-staged (configured in `.githooks/pre-commit`)
 
 ### Backend (Python/Flask)
 
