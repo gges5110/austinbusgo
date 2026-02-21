@@ -15,6 +15,19 @@ vi.mock("shared/api/schemas/NearByStops.generated", () => ({
   useNearByStopsQuery: mocks.mockUseNearByStopsQuery,
 }));
 
+vi.mock("react-map-gl/mapbox", () => ({
+  useMap: vi.fn(() => ({
+    mapId: {
+      getBounds: vi.fn(() => ({
+        getSouth: () => 30.2,
+        getWest: () => -97.8,
+        getNorth: () => 30.3,
+        getEast: () => -97.7,
+      })),
+    },
+  })),
+}));
+
 vi.mock("@tanstack/react-query", async () => {
   const actual = (await vi.importActual("@tanstack/react-query")) as object;
   return {
@@ -50,8 +63,13 @@ describe("useNearByStops", () => {
 
     expect(result.current.nearByStops).toEqual([]);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      { lat: 0, lon: 0, radius: 1000, limit: 20 },
-      expect.objectContaining({ enabled: false })
+      expect.objectContaining({
+        lat: 0,
+        lon: 0,
+        radius: 1000,
+        limit: 40,
+      }),
+      { enabled: false, keepPreviousData: true }
     );
   });
 
@@ -81,8 +99,15 @@ describe("useNearByStops", () => {
 
     expect(result.current.nearByStops).toEqual(mockStops);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ radius: 20000, limit: 20 }),
-      expect.objectContaining({ enabled: true })
+      expect.objectContaining({
+        radius: 20000,
+        limit: 40,
+        minLat: 30.2,
+        minLon: -97.8,
+        maxLat: 30.3,
+        maxLon: -97.7,
+      }),
+      expect.objectContaining({ enabled: true, keepPreviousData: true })
     );
   });
 
