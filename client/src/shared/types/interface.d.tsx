@@ -132,7 +132,13 @@ export type QueryEarliestArrivalTimesOnRouteArgs = {
 
 export type QueryNearByStopsArgs = {
   lat: Scalars["Float"]["input"];
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
   lon: Scalars["Float"]["input"];
+  maxLat?: InputMaybe<Scalars["Float"]["input"]>;
+  maxLon?: InputMaybe<Scalars["Float"]["input"]>;
+  minLat?: InputMaybe<Scalars["Float"]["input"]>;
+  minLon?: InputMaybe<Scalars["Float"]["input"]>;
+  radius?: InputMaybe<Scalars["Float"]["input"]>;
 };
 
 export type QueryRouteArgs = {

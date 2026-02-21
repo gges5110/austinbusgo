@@ -135,7 +135,7 @@ class TestResolver(unittest.TestCase):
         result = self.resolver.resolve_near_by_stops(None, None, 30.2672, -97.7431)
 
         self.mock_gtfs_service.get_near_by_stops.assert_called_once_with(
-            30.2672, -97.7431, 0.01
+            30.2672, -97.7431, 1000.0, 20
         )
         self.assertEqual(result, mock_stops)
 
@@ -149,7 +149,7 @@ class TestResolver(unittest.TestCase):
         )
 
         self.mock_gtfs_service.get_near_by_stops.assert_called_once_with(
-            30.2672, -97.7431, 0.05
+            30.2672, -97.7431, 0.05, 20
         )
         self.assertEqual(result, mock_stops)
 

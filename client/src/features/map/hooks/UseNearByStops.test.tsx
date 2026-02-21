@@ -50,7 +50,7 @@ describe("useNearByStops", () => {
 
     expect(result.current.nearByStops).toEqual([]);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      { lat: 0, lon: 0 },
+      { lat: 0, lon: 0, radius: 1000, limit: 20 },
       expect.objectContaining({ enabled: false })
     );
   });
@@ -81,24 +81,41 @@ describe("useNearByStops", () => {
 
     expect(result.current.nearByStops).toEqual(mockStops);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      expect.any(Object),
+      expect.objectContaining({ radius: 20000, limit: 20 }),
       expect.objectContaining({ enabled: true })
     );
   });
 
-  test("rounds coordinates to 3 decimal places", () => {
-    const viewState = {
+  test("rounds coordinates based on zoom level", () => {
+    // Zoom 10 should use 3 decimal places
+    const viewStateLow = {
       latitude: 30.26729999,
       longitude: -97.74315555,
       zoom: 10,
     };
 
-    renderHook(() => useNearByStops(viewState), {
+    renderHook(() => useNearByStops(viewStateLow), {
       wrapper: createWrapper(),
     });
 
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      { lat: 30.267, lon: -97.743 },
+      expect.objectContaining({ lat: 30.267, lon: -97.743 }),
+      expect.any(Object)
+    );
+
+    // Zoom 16 should use 5 decimal places
+    const viewStateHigh = {
+      latitude: 30.26729999,
+      longitude: -97.74315555,
+      zoom: 16,
+    };
+
+    renderHook(() => useNearByStops(viewStateHigh), {
+      wrapper: createWrapper(),
+    });
+
+    expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ lat: 30.2673, lon: -97.74316 }),
       expect.any(Object)
     );
   });
