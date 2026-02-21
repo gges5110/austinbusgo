@@ -1,4 +1,4 @@
-import { Badge, Popover } from "@mui/material";
+import { Badge, Box, Popover } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import * as React from "react";
@@ -8,6 +8,7 @@ import { VehiclePosition } from "shared/types/interface.d";
 
 import { VehicleIcon } from "./VehicleIcon";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
+import { VehicleStatusBadge } from "./VehicleStatusBadge";
 
 interface VehicleMarkerProps {
   readonly vehiclePosition: VehiclePosition;
@@ -47,21 +48,24 @@ export const VehicleMarker: React.FunctionComponent<VehicleMarkerProps> = ({
         latitude={position?.latitude || 0}
         longitude={position?.longitude || 0}
       >
-        <Badge
-          badgeContent={vehiclePosition?.trip?.routeId}
-          color={"primary"}
-          max={999}
-          overlap={"circular"}
-        >
-          <VehicleIcon
-            bearing={Number(position?.bearing) || 0}
-            highlighted={isHighlighted}
-            innerRef={ref}
-            onClick={handleOnClick}
-            onMouseEnter={handlePopoverOpen}
-            onMouseLeave={handlePopoverClose}
-          />
-        </Badge>
+        <Box sx={{ position: "relative" }}>
+          <VehicleStatusBadge status={vehiclePosition?.currentStatus} />
+          <Badge
+            badgeContent={vehiclePosition?.trip?.routeId}
+            color={"primary"}
+            max={999}
+            overlap={"circular"}
+          >
+            <VehicleIcon
+              bearing={Number(position?.bearing) || 0}
+              highlighted={isHighlighted}
+              innerRef={ref}
+              onClick={handleOnClick}
+              onMouseEnter={handlePopoverOpen}
+              onMouseLeave={handlePopoverClose}
+            />
+          </Badge>
+        </Box>
       </Marker>
       <Popover
         anchorEl={ref.current}
