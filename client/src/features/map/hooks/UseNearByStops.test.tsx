@@ -8,8 +8,6 @@ import { stopsZoomThreshold, useNearByStops } from "./UseNearByStops";
 const mocks = vi.hoisted(() => {
   return {
     mockUseNearByStopsQuery: vi.fn(),
-    mockRemoveQueries: vi.fn(),
-    mockIsFetching: vi.fn(),
   };
 });
 
@@ -21,10 +19,6 @@ vi.mock("@tanstack/react-query", async () => {
   const actual = (await vi.importActual("@tanstack/react-query")) as object;
   return {
     ...actual,
-    useQueryClient: () => ({
-      removeQueries: mocks.mockRemoveQueries,
-      isFetching: mocks.mockIsFetching,
-    }),
   };
 });
 
@@ -47,7 +41,6 @@ describe("useNearByStops", () => {
       data: undefined,
       isFetching: false,
     });
-    mocks.mockIsFetching.mockReturnValue(0);
   });
 
   test("returns empty nearByStops when no viewState provided", () => {
@@ -126,18 +119,6 @@ describe("useNearByStops", () => {
       { lat: 30.267, lon: -97.743 },
       expect.any(Object)
     );
-  });
-
-  test("fetchNearByStops calls removeQueries", () => {
-    const { result } = renderHook(() => useNearByStops(), {
-      wrapper: createWrapper(),
-    });
-
-    result.current.fetchNearByStops();
-
-    expect(mocks.mockRemoveQueries).toHaveBeenCalledWith({
-      queryKey: ["NearByStops"],
-    });
   });
 
   test("isLoading reflects isFetching state", () => {

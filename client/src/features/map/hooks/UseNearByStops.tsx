@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { ViewState } from "features/map/components/Map";
 import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
 import { Stop } from "shared/types/interface.d";
@@ -6,8 +5,6 @@ import { Stop } from "shared/types/interface.d";
 export const stopsZoomThreshold = 12;
 
 export const useNearByStops = (viewState?: ViewState) => {
-  const queryClient = useQueryClient();
-
   const shouldFetch =
     viewState !== undefined && viewState.zoom >= stopsZoomThreshold;
 
@@ -23,21 +20,11 @@ export const useNearByStops = (viewState?: ViewState) => {
     }
   );
 
-  const fetchNearByStops = () => {
-    queryClient.removeQueries({
-      queryKey: ["NearByStops"],
-    });
-  };
-
-  const isLoading =
-    queryClient.isFetching({
-      queryKey: ["NearByStops"],
-    }) !== 0 || isFetching;
+  const isLoading = isFetching;
 
   const nearByStops: Stop[] = shouldFetch ? (data?.nearByStops ?? []) : [];
 
   return {
-    fetchNearByStops,
     isLoading,
     nearByStops,
   };
