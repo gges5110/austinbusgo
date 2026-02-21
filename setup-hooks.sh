@@ -7,35 +7,34 @@ GITHOOKS_DIR="$REPO_ROOT/.githooks"
 
 echo "Installing git hooks..."
 
-# Make sure .githooks/pre-commit is executable
+# Remove stale husky v4 hook files
+for hook in pre-commit prepare-commit-msg commit-msg pre-push post-checkout post-merge post-rewrite; do
+    HOOK_FILE="$HOOKS_DIR/$hook"
+    if [ -f "$HOOK_FILE" ] && grep -q "husky" "$HOOK_FILE" 2>/dev/null; then
+        rm "$HOOK_FILE"
+        echo "  Removed stale husky hook: $hook"
+    fi
+done
+
+for file in husky.sh husky.local.sh; do
+    if [ -f "$HOOKS_DIR/$file" ]; then
+        rm "$HOOKS_DIR/$file"
+        echo "  Removed stale husky file: $file"
+    fi
+done
+
+# Make .githooks/pre-commit executable
 chmod +x "$GITHOOKS_DIR/pre-commit"
 
-# Create a wrapper pre-commit hook that calls both Python linting and Husky
+# Install pre-commit hook pointing to .githooks/pre-commit
 cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 #!/bin/sh
-# Combined pre-commit hook for Python linting and Husky
-
-# Get repository root
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-
-# Run Python linting check
-if [ -f "$REPO_ROOT/.githooks/pre-commit" ]; then
-    "$REPO_ROOT/.githooks/pre-commit"
-    if [ $? -ne 0 ]; then
-        exit 1
-    fi
-fi
-
-# Run Husky hooks (if they exist from client setup)
-if [ -f "$REPO_ROOT/.git/hooks/husky.sh" ]; then
-    . "$REPO_ROOT/.git/hooks/husky.sh"
-fi
-
-exit 0
+"$REPO_ROOT/.githooks/pre-commit"
 EOF
 
-# Make the installed hook executable
 chmod +x "$HOOKS_DIR/pre-commit"
 
 echo "✅ Git hooks installed successfully!"
 echo "   Python files will be checked with black before commit."
+echo "   Frontend files will be checked with lint-staged before commit."

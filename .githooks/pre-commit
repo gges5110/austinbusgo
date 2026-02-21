@@ -1,40 +1,42 @@
 #!/bin/bash
-# Pre-commit hook for Python linting with black
+# Pre-commit hook: Python linting with black and frontend formatting with lint-staged
 
-# Get repository root
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Get list of staged Python files
+# --- Python: black ---
 STAGED_PY_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
 
-if [ -z "$STAGED_PY_FILES" ]; then
-    # No Python files staged, exit successfully
-    exit 0
+if [ -n "$STAGED_PY_FILES" ]; then
+    echo "Running black --check on staged Python files..."
+
+    if [ -f "$REPO_ROOT/venv/bin/activate" ]; then
+        "$REPO_ROOT/venv/bin/python" -m black --check --verbose $STAGED_PY_FILES
+        if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ Black formatting check failed!"
+            echo "Please run 'make lint' to format your Python files before committing."
+            echo ""
+            exit 1
+        fi
+        echo "✅ Black formatting check passed!"
+    else
+        echo "⚠️  Warning: venv not found at $REPO_ROOT/venv. Skipping black check."
+        echo "   Run 'make venv && make deps' to set up the Python environment."
+    fi
 fi
 
-echo "Running black --check on staged Python files..."
+# --- Frontend: lint-staged ---
+STAGED_FRONTEND_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(tsx|ts|json|md)$')
 
-# Check if virtual environment exists
-if [ -f "$REPO_ROOT/venv/bin/activate" ]; then
-    # Use black from virtual environment
-    PYTHON_BIN="$REPO_ROOT/venv/bin/python"
-
-    # Run black check on staged files
-    $PYTHON_BIN -m black --check --verbose $STAGED_PY_FILES
-    BLACK_EXIT_CODE=$?
-
-    if [ $BLACK_EXIT_CODE -ne 0 ]; then
+if [ -n "$STAGED_FRONTEND_FILES" ]; then
+    echo "Running lint-staged on staged frontend files..."
+    cd "$REPO_ROOT/client" && npx --no-install lint-staged
+    if [ $? -ne 0 ]; then
         echo ""
-        echo "❌ Black formatting check failed!"
-        echo "Please run 'make lint' to format your Python files before committing."
+        echo "❌ lint-staged check failed!"
         echo ""
         exit 1
     fi
-
-    echo "✅ Black formatting check passed!"
-else
-    echo "⚠️  Warning: venv not found at $REPO_ROOT/venv. Skipping black check."
-    echo "   Run 'make venv && make deps' to set up the Python environment."
 fi
 
 exit 0
