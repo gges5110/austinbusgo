@@ -82,7 +82,6 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-unused-imports": "^4.3.0",
-    "husky": "9.1.7",
     "jsdom": "^22.0.0",
     "lint-staged": "10.4.2",
     "pascal-case": "^3.1.2",
@@ -93,15 +92,9 @@
     "vitest": "4.0.3"
   },
   "proxy": "http://localhost:5001",
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "*.{tsx,ts,json,md}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "jest": {
