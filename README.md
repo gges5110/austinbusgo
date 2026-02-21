@@ -24,9 +24,11 @@ This is a project that aim to provide real-time bus location in Austin, Texas
 - Run tests: `make test`
 - Generate test coverage report: `make coverage`
 - Lint: `make lint`
-- Download GTFS files from CapMetro: `make downloadGTFS`
+- Download GTFS files from CapMetro: `make etl-download`
 
 ## Create PostgreSQL Database
 
-- A docker compose script is provided to set up the database. It relies on GTFS csv files being present
-  in `ci-job/capmetro` and ran with `preprocessGTFS.py` script.
+- A Docker Compose setup is provided to start the database and run the GTFS ETL job.
+  - `make db-up` — start PostgreSQL only (detached)
+  - `make setup-local` — start PostgreSQL and run the GTFS prep job
+  - GTFS CSV files are sourced from `etl/capmetro/` and processed by `etl/prepare.py`
