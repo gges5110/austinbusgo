@@ -8,7 +8,7 @@ GITHOOKS_DIR="$REPO_ROOT/.githooks"
 echo "Installing git hooks..."
 
 # Remove stale husky v4 hook files
-for hook in pre-commit prepare-commit-msg commit-msg pre-push post-checkout post-merge post-rewrite; do
+for hook in pre-commit prepare-commit-msg commit-msg pre-push post-checkout post-commit post-merge post-rewrite; do
     HOOK_FILE="$HOOKS_DIR/$hook"
     if [ -f "$HOOK_FILE" ] && grep -q "husky" "$HOOK_FILE" 2>/dev/null; then
         rm "$HOOK_FILE"
