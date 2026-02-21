@@ -1,18 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-DROP MATERIALIZED VIEW IF EXISTS routes_at_stop CASCADE;
-DROP VIEW IF EXISTS shapes_aggregated CASCADE;
-DROP TABLE IF EXISTS stop_times CASCADE;
-DROP TABLE IF EXISTS trips CASCADE;
-DROP TABLE IF EXISTS shapes CASCADE;
-DROP TABLE IF EXISTS routes CASCADE;
-DROP TABLE IF EXISTS stops CASCADE;
-DROP TABLE IF EXISTS calendar_dates CASCADE;
-DROP TABLE IF EXISTS calendar CASCADE;
-DROP TABLE IF EXISTS transfers CASCADE;
-DROP TABLE IF EXISTS feed_info CASCADE;
-DROP TABLE IF EXISTS agency CASCADE;
-
 CREATE TABLE agency
 (
   agency_id         text UNIQUE NULL,
@@ -134,19 +121,9 @@ CREATE TABLE transfers
 (
     from_stop_id        text NOT NULL,
     to_stop_id          text NOT NULL,
-    transfer_type       integer NOT NULL,
+    transfer_type       integer NULL,
     min_transfer_time   integer
 );
-
-\copy agency from './capmetro/agency.txt' with csv header
-\copy feed_info from './capmetro/feed_info.txt' with csv header
-\copy stops from './capmetro/stops.txt' with csv header
-\copy routes from './capmetro/routes.txt' with csv header
-\copy shapes from './capmetro/shapes.txt' with csv header
-\copy trips from './capmetro/trips.txt' with csv header
-\copy stop_times from './capmetro/stop_times.txt' with csv header
-\copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
-\copy transfers from './capmetro/transfers.txt' with csv header
 
 CREATE MATERIALIZED VIEW routes_at_stop AS
 SELECT routes.route_id, stop_times.stop_id
@@ -160,7 +137,5 @@ CREATE INDEX TRIPS_trip_id_route_id ON trips(trip_id, route_id);
 CREATE INDEX TRIPS_trip_id_direction_id ON trips(trip_id, direction_id);
 CREATE INDEX STOP_TIMES_trip_id ON stop_times(trip_id);
 CREATE INDEX STOP_TIMES_trip_id_stop_id ON stop_times(trip_id, stop_id);
-CREATE INDEX STOPS_stop_loc_gist ON stops USING GIST (stop_loc);
-CREATE INDEX ROUTES_AT_STOP_stop_id ON routes_at_stop(stop_id);
 CREATE INDEX ROUTES_AT_STOP_stop_id_route_id ON routes_at_stop(stop_id, route_id);
 CREATE INDEX TRANSFERS_from_stop_id_to_stop_id ON transfers(from_stop_id, to_stop_id);

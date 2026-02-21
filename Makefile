@@ -40,7 +40,19 @@ coverage-html:
 	$(VENV_ACTIVATE) coverage run -m unittest discover -s server/tests; coverage html
 
 lint:
-	$(VENV_ACTIVATE) black server ci-job
+	$(VENV_ACTIVATE) black server etl
+
+etl-download:
+	cd etl && ./download.sh
+
+etl-prepare:
+	$(PYTHON) etl/prepare.py
+
+etl-load: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
+etl-load:
+	etl/load.sh
+
+etl: etl-download etl-prepare etl-load
 
 setup-local:
 	docker-compose -f docker/docker-compose.yml up
