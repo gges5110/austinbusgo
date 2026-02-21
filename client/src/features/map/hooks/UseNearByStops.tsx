@@ -27,11 +27,11 @@ export const useNearByStops = (viewState?: ViewState) => {
 
   const limit = viewState
     ? viewState.zoom <= 11
-      ? 20
+      ? 40
       : viewState.zoom <= 14
-        ? 40
-        : 60
-    : 20;
+        ? 80
+        : 100
+    : 40;
 
   // Get current map bounds for more precise filtering
   const bounds = map?.getBounds();

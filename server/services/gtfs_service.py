@@ -113,7 +113,7 @@ class GTFSService:
         FROM stops_in_radius s
         LEFT OUTER JOIN routes_at_stop r ON s.stop_id = r.stop_id
         GROUP BY s.stop_id, s.stop_code, s.stop_name, s.stop_loc
-        ORDER BY (COUNT(r.route_id) + 1.0) / (ST_Distance(s.stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326)) * 100.0 + 1.0) DESC
+        ORDER BY (COUNT(r.route_id) + 1.0) / (ST_Distance(s.stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326)) * 10.0 + 1.0) DESC
         LIMIT %s;
         """
         # Execute raw SQL and map to Stops model
