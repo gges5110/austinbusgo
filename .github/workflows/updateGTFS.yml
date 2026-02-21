@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ci-job
+        working-directory: etl
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.x
@@ -23,8 +23,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Prepare GTFS Files
-        run: python prepareGTFSFiles.py
-      - name: Upload GTFS Files
-        run: ./uploadGTFS.sh
+        run: python prepare.py
+      - name: Load GTFS Files
+        run: ./load.sh
         env:
           DATABASE_URL: ${{ secrets.DBURI }}
