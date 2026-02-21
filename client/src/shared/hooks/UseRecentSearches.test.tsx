@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
+import { SearchTerm } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { GeometryType, Route, Stop } from "shared/types/interface.d";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { RecentSearch, useRecentSearches } from "./UseRecentSearches";
-import { SearchTerm } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 
 const mocks = vi.hoisted(() => {
   return {

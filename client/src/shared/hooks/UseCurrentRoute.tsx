@@ -1,10 +1,10 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAtom } from "jotai";
 import { useDataFromRouteLoader } from "app/Router";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
-import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
+import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { currentRouteAtom } from "shared/state/atoms";
 import { Route } from "shared/types/interface.d";
 
