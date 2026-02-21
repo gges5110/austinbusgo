@@ -1,9 +1,9 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { useAtomValue } from "jotai";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { isAutoPollingAtom } from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 
