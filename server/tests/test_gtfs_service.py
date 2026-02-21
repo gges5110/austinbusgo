@@ -258,19 +258,17 @@ class TestGTFSService(unittest.TestCase):
         mock_query.where.assert_called_once()
         self.assertEqual(len(result), 1)
 
-    @patch("server.services.gtfs_service.Stops.select")
-    def test_get_near_by_stops(self, mock_select):
+    @patch("server.services.gtfs_service.Stops.raw")
+    def test_get_near_by_stops(self, mock_raw):
         """Test finding nearby stops by coordinates"""
-        mock_query = Mock()
-        mock_select.return_value = mock_query
-        mock_query.order_by.return_value = mock_query
-        mock_query.limit.return_value = [create_mock_stop("stop_1")]
+        mock_stop = create_mock_stop("stop_1")
+        mock_raw.return_value = [mock_stop]
 
         result = self.service.get_near_by_stops(30.2672, -97.7431)
 
-        mock_select.assert_called_once()
-        mock_query.order_by.assert_called_once()
-        mock_query.limit.assert_called_once_with(20)
+        mock_raw.assert_called_once()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].stop_id, "stop_1")
 
     @patch("server.services.gtfs_service.Stops.select")
     def test_get_stops_by_route_id(self, mock_select):

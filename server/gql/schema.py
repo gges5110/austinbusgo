@@ -66,6 +66,12 @@ class Query(graphene.ObjectType):
         graphene.NonNull(graphene.List(graphene.NonNull(Stop))),
         lat=graphene.Float(required=True),
         lon=graphene.Float(required=True),
+        radius=graphene.Float(default_value=1000.0),
+        limit=graphene.Int(default_value=20),
+        min_lat=graphene.Float(),
+        min_lon=graphene.Float(),
+        max_lat=graphene.Float(),
+        max_lon=graphene.Float(),
         resolver=resolver.resolve_near_by_stops,
     )
 

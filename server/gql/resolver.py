@@ -64,9 +64,31 @@ class Resolver:
         return self.gtfs_service.get_stop(stop_id)
 
     def resolve_near_by_stops(
-        self, query, info, lat: float, lon: float, distance: float = 0.01
+        self,
+        query,
+        info,
+        lat: float,
+        lon: float,
+        radius: float = 1000.0,
+        limit: int = 20,
+        min_lat: float = None,
+        min_lon: float = None,
+        max_lat: float = None,
+        max_lon: float = None,
     ) -> List[Stops]:
-        return self.gtfs_service.get_near_by_stops(lat, lon, distance) or []
+        return (
+            self.gtfs_service.get_near_by_stops(
+                lat=lat,
+                lon=lon,
+                radius=radius,
+                limit=limit,
+                min_lat=min_lat,
+                min_lon=min_lon,
+                max_lat=max_lat,
+                max_lon=max_lon,
+            )
+            or []
+        )
 
     def resolve_stops_by_name(self, query, info, stop_name) -> List[Stops]:
         return self.gtfs_service.get_stops_by_name(stop_name) or []

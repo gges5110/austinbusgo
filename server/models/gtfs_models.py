@@ -106,6 +106,7 @@ class RoutesAtStop(db_wrapper.Model):
     class Meta:
         table_name = "routes_at_stop"
         primary_key = False
+        indexes = ((("stop_id",), False),)
 
 
 class Stops(db_wrapper.Model):
@@ -129,6 +130,7 @@ class Stops(db_wrapper.Model):
     class Meta:
         table_name = "stops"
         primary_key = False
+        indexes = ((("stop_loc",), "GIST"),)
 
 
 class Trips(db_wrapper.Model):

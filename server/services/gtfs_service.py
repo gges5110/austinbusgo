@@ -80,17 +80,45 @@ class GTFSService:
             )
 
     @staticmethod
-    def get_near_by_stops(lat: float, lon: float, distance: float = 1.0) -> List[Stops]:
-        return (
-            Stops.select()
-            .order_by(
-                peewee.fn.ST_Distance(
-                    Stops.stop_loc,
-                    peewee.fn.ST_SetSRID(peewee.fn.ST_MakePoint(lon, lat), 4326),
-                )
+    def get_near_by_stops(
+        lat: float,
+        lon: float,
+        radius: float = 1000.0,
+        limit: int = 20,
+        min_lat: float = None,
+        min_lon: float = None,
+        max_lat: float = None,
+        max_lon: float = None,
+    ) -> List[Stops]:
+        # Performance Optimization: Use a MATERIALIZED CTE to force Postgres to
+        # perform the spatial search BEFORE joining with route counts.
+
+        # Decide search filter based on whether bounding box is provided
+        if all(v is not None for v in [min_lat, min_lon, max_lat, max_lon]):
+            spatial_filter = "ST_Intersects(stop_loc, ST_MakeEnvelope(%s, %s, %s, %s, 4326)::geography)"
+            params = [min_lon, min_lat, max_lon, max_lat, lon, lat, limit]
+        else:
+            spatial_filter = (
+                "ST_DWithin(stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s)"
             )
-            .limit(20)
+            params = [lon, lat, radius, lon, lat, limit]
+
+        sql = f"""
+        WITH stops_in_radius AS MATERIALIZED (
+            SELECT stop_id, stop_code, stop_name, stop_loc 
+            FROM stops 
+            WHERE {spatial_filter}
         )
+        SELECT s.stop_id, s.stop_code, s.stop_name, s.stop_loc, COUNT(r.route_id) as route_count
+        FROM stops_in_radius s
+        LEFT OUTER JOIN routes_at_stop r ON s.stop_id = r.stop_id
+        GROUP BY s.stop_id, s.stop_code, s.stop_name, s.stop_loc
+        ORDER BY (COUNT(r.route_id) + 1.0) / (ST_Distance(s.stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326)) * 10.0 + 1.0) DESC
+        LIMIT %s;
+        """
+        # Execute raw SQL and map to Stops model
+        query = Stops.raw(sql, *params)
+        return list(query)
 
     @staticmethod
     def get_stops_by_route_id(route_id: str, direction_id: int) -> List[Stops]:
