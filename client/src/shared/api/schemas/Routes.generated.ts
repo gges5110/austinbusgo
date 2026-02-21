@@ -23,13 +23,14 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
 }
 export type RoutesQueryVariables = Types.Exact<{ [key: string]: never }>;
 
-export type RoutesQuery = { __typename?: "Query" } & {
-  routes: Array<
-    { __typename?: "Route" } & Pick<
-      Types.Route,
-      "routeLongName" | "routeId" | "routeColor"
-    >
-  >;
+export type RoutesQuery = {
+  __typename?: "Query";
+  routes: Array<{
+    __typename?: "Route";
+    routeLongName: string;
+    routeId: string;
+    routeColor?: string | null;
+  }>;
 };
 
 export const RoutesDocument = `
@@ -41,17 +42,20 @@ export const RoutesDocument = `
   }
 }
     `;
+
 export const useRoutesQuery = <TData = RoutesQuery, TError = unknown>(
   variables?: RoutesQueryVariables,
   options?: UseQueryOptions<RoutesQuery, TError, TData>
-) =>
-  useQuery<RoutesQuery, TError, TData>(
+) => {
+  return useQuery<RoutesQuery, TError, TData>(
     variables === undefined ? ["Routes"] : ["Routes", variables],
     fetcher<RoutesQuery, RoutesQueryVariables>(RoutesDocument, variables),
     options
   );
+};
 
 useRoutesQuery.getKey = (variables?: RoutesQueryVariables) =>
   variables === undefined ? ["Routes"] : ["Routes", variables];
+
 useRoutesQuery.fetcher = (variables?: RoutesQueryVariables) =>
   fetcher<RoutesQuery, RoutesQueryVariables>(RoutesDocument, variables);

@@ -3,7 +3,7 @@ import { ViewState } from "features/map/components/Map";
 import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
 import { Stop } from "shared/types/interface.d";
 
-export const stopsZoomThreshold = 14;
+export const stopsZoomThreshold = 12;
 
 export const useNearByStops = (viewState?: ViewState) => {
   const queryClient = useQueryClient();

@@ -22,36 +22,35 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type ArrivalTimesQueryVariables = Types.Exact<{
-  stopId: Types.Scalars["String"];
-  date: Types.Scalars["String"];
+  stopId: Types.Scalars["String"]["input"];
+  date: Types.Scalars["String"]["input"];
 }>;
 
-export type ArrivalTimesQuery = { __typename?: "Query" } & {
-  arrivalTimes: Array<
-    { __typename?: "ArrivalTime" } & Pick<
-      Types.ArrivalTime,
-      "updatedArrivalTime" | "scheduledArrivalTime"
-    > & {
-        trip: { __typename?: "Trip" } & Pick<
-          Types.Trip,
-          | "routeId"
-          | "serviceId"
-          | "tripId"
-          | "tripHeadsign"
-          | "tripShortName"
-          | "directionId"
-          | "blockId"
-          | "shapeId"
-          | "wheelchairAccessible"
-          | "bikesAllowed"
-        > & {
-            route: { __typename?: "Route" } & Pick<
-              Types.Route,
-              "routeColor" | "routeLongName"
-            >;
-          };
-      }
-  >;
+export type ArrivalTimesQuery = {
+  __typename?: "Query";
+  arrivalTimes: Array<{
+    __typename?: "ArrivalTime";
+    updatedArrivalTime?: string | null;
+    scheduledArrivalTime: string;
+    trip: {
+      __typename?: "Trip";
+      routeId: string;
+      serviceId: string;
+      tripId: string;
+      tripHeadsign?: string | null;
+      tripShortName?: string | null;
+      directionId?: number | null;
+      blockId?: string | null;
+      shapeId?: string | null;
+      wheelchairAccessible?: number | null;
+      bikesAllowed?: number | null;
+      route: {
+        __typename?: "Route";
+        routeColor?: string | null;
+        routeLongName: string;
+      };
+    };
+  }>;
 };
 
 export const ArrivalTimesDocument = `
@@ -78,14 +77,15 @@ export const ArrivalTimesDocument = `
   }
 }
     `;
+
 export const useArrivalTimesQuery = <
   TData = ArrivalTimesQuery,
   TError = unknown,
 >(
   variables: ArrivalTimesQueryVariables,
   options?: UseQueryOptions<ArrivalTimesQuery, TError, TData>
-) =>
-  useQuery<ArrivalTimesQuery, TError, TData>(
+) => {
+  return useQuery<ArrivalTimesQuery, TError, TData>(
     ["ArrivalTimes", variables],
     fetcher<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
       ArrivalTimesDocument,
@@ -93,11 +93,13 @@ export const useArrivalTimesQuery = <
     ),
     options
   );
+};
 
 useArrivalTimesQuery.getKey = (variables: ArrivalTimesQueryVariables) => [
   "ArrivalTimes",
   variables,
 ];
+
 useArrivalTimesQuery.fetcher = (variables: ArrivalTimesQueryVariables) =>
   fetcher<ArrivalTimesQuery, ArrivalTimesQueryVariables>(
     ArrivalTimesDocument,

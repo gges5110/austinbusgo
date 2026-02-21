@@ -23,11 +23,14 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
 }
 export type FeedInfoQueryVariables = Types.Exact<{ [key: string]: never }>;
 
-export type FeedInfoQuery = { __typename?: "Query" } & {
-  feedInfo: { __typename?: "FeedInfo" } & Pick<
-    Types.FeedInfo,
-    "feedStartDate" | "feedEndDate" | "feedVersion"
-  >;
+export type FeedInfoQuery = {
+  __typename?: "Query";
+  feedInfo: {
+    __typename?: "FeedInfo";
+    feedStartDate?: string | null;
+    feedEndDate?: string | null;
+    feedVersion?: string | null;
+  };
 };
 
 export const FeedInfoDocument = `
@@ -39,17 +42,20 @@ export const FeedInfoDocument = `
   }
 }
     `;
+
 export const useFeedInfoQuery = <TData = FeedInfoQuery, TError = unknown>(
   variables?: FeedInfoQueryVariables,
   options?: UseQueryOptions<FeedInfoQuery, TError, TData>
-) =>
-  useQuery<FeedInfoQuery, TError, TData>(
+) => {
+  return useQuery<FeedInfoQuery, TError, TData>(
     variables === undefined ? ["FeedInfo"] : ["FeedInfo", variables],
     fetcher<FeedInfoQuery, FeedInfoQueryVariables>(FeedInfoDocument, variables),
     options
   );
+};
 
 useFeedInfoQuery.getKey = (variables?: FeedInfoQueryVariables) =>
   variables === undefined ? ["FeedInfo"] : ["FeedInfo", variables];
+
 useFeedInfoQuery.fetcher = (variables?: FeedInfoQueryVariables) =>
   fetcher<FeedInfoQuery, FeedInfoQueryVariables>(FeedInfoDocument, variables);

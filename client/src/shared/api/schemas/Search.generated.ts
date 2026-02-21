@@ -22,32 +22,35 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type SearchQueryVariables = Types.Exact<{
-  searchTerm: Types.Scalars["String"];
+  searchTerm: Types.Scalars["String"]["input"];
 }>;
 
-export type SearchQuery = { __typename?: "Query" } & {
-  search: { __typename?: "Search" } & {
-    stops: Array<
-      { __typename?: "Stop" } & Pick<Types.Stop, "stopId" | "stopName"> & {
-          stopLoc?: Types.Maybe<
-            { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
-          >;
-          routes?: Types.Maybe<
-            Array<
-              { __typename?: "Route" } & Pick<
-                Types.Route,
-                "routeColor" | "routeId"
-              >
-            >
-          >;
-        }
-    >;
-    routes: Array<
-      { __typename?: "Route" } & Pick<
-        Types.Route,
-        "routeId" | "routeLongName" | "routeShortName" | "routeColor"
-      >
-    >;
+export type SearchQuery = {
+  __typename?: "Query";
+  search: {
+    __typename?: "Search";
+    stops: Array<{
+      __typename?: "Stop";
+      stopId: string;
+      stopName?: string | null;
+      stopLoc?: {
+        __typename?: "Point";
+        type: Types.GeometryType;
+        coordinates: Array<number>;
+      } | null;
+      routes?: Array<{
+        __typename?: "Route";
+        routeColor?: string | null;
+        routeId: string;
+      }> | null;
+    }>;
+    routes: Array<{
+      __typename?: "Route";
+      routeId: string;
+      routeLongName: string;
+      routeShortName?: string | null;
+      routeColor?: string | null;
+    }>;
   };
 };
 
@@ -75,19 +78,22 @@ export const SearchDocument = `
   }
 }
     `;
+
 export const useSearchQuery = <TData = SearchQuery, TError = unknown>(
   variables: SearchQueryVariables,
   options?: UseQueryOptions<SearchQuery, TError, TData>
-) =>
-  useQuery<SearchQuery, TError, TData>(
+) => {
+  return useQuery<SearchQuery, TError, TData>(
     ["Search", variables],
     fetcher<SearchQuery, SearchQueryVariables>(SearchDocument, variables),
     options
   );
+};
 
 useSearchQuery.getKey = (variables: SearchQueryVariables) => [
   "Search",
   variables,
 ];
+
 useSearchQuery.fetcher = (variables: SearchQueryVariables) =>
   fetcher<SearchQuery, SearchQueryVariables>(SearchDocument, variables);

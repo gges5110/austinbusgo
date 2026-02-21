@@ -45,7 +45,7 @@ export const Map: React.FunctionComponent = () => {
     zoom: zoom || 11.5,
   });
   const { vehiclePositions } = useVehiclePositions();
-  const { stops } = useStops(viewState);
+  const { stops, contextStops } = useStops(viewState);
   const { routeShapes } = useRouteShapes();
   const theme = useTheme();
   const { currentRoute: route } = useCurrentRoute();
@@ -53,7 +53,7 @@ export const Map: React.FunctionComponent = () => {
 
   const { routeShapeGeoJSON } = useRouteShape(routeShapes);
 
-  useMapMotion(viewState, stop, stops, routeShapes);
+  useMapMotion(viewState, stop, contextStops, routeShapes);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {

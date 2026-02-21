@@ -1,41 +1,57 @@
 export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
+    };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
 };
 
 export type ArrivalTime = {
   __typename?: "ArrivalTime";
-  scheduledArrivalTime: Scalars["String"];
+  scheduledArrivalTime: Scalars["String"]["output"];
   trip: Trip;
-  updatedArrivalTime?: Maybe<Scalars["String"]>;
+  updatedArrivalTime?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type ArrivalTimeAtStop = {
   __typename?: "ArrivalTimeAtStop";
-  scheduledArrivalTime: Scalars["String"];
+  scheduledArrivalTime: Scalars["String"]["output"];
   /** Identifies a stop, station, or station entrance. */
-  stopId: Scalars["String"];
-  stopSequence: Scalars["Int"];
-  tripId?: Maybe<Scalars["String"]>;
-  updatedArrivalTime?: Maybe<Scalars["String"]>;
+  stopId: Scalars["String"]["output"];
+  stopSequence: Scalars["Int"]["output"];
+  tripId?: Maybe<Scalars["String"]["output"]>;
+  updatedArrivalTime?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type FeedInfo = {
   __typename?: "FeedInfo";
-  feedEndDate?: Maybe<Scalars["String"]>;
-  feedLang: Scalars["String"];
-  feedPublisherName: Scalars["String"];
-  feedPublisherUrl: Scalars["String"];
-  feedStartDate?: Maybe<Scalars["String"]>;
-  feedVersion?: Maybe<Scalars["String"]>;
+  feedEndDate?: Maybe<Scalars["String"]["output"]>;
+  feedLang: Scalars["String"]["output"];
+  feedPublisherName: Scalars["String"]["output"];
+  feedPublisherUrl: Scalars["String"]["output"];
+  feedStartDate?: Maybe<Scalars["String"]["output"]>;
+  feedVersion?: Maybe<Scalars["String"]["output"]>;
 };
 
 export enum GeometryType {
@@ -51,27 +67,27 @@ export enum GeometryType {
 /** LineString Scalar Description */
 export type LineString = {
   __typename?: "LineString";
-  coordinates: Array<Array<Scalars["Float"]>>;
+  coordinates: Array<Array<Scalars["Float"]["output"]>>;
   type: GeometryType;
 };
 
 /** Point Scalar Description */
 export type Point = {
   __typename?: "Point";
-  coordinates: Array<Scalars["Float"]>;
+  coordinates: Array<Scalars["Float"]["output"]>;
   type: GeometryType;
 };
 
 export type Position = {
   __typename?: "Position";
   /** Bearing, in degrees, clockwise from True North, i.e., 0 is North and 90 is East. This can be the compass bearing, or the direction towards the next stop or intermediate location. This should not be deduced from the sequence of previous positions, which clients can compute from previous data. */
-  bearing?: Maybe<Scalars["Float"]>;
+  bearing?: Maybe<Scalars["Float"]["output"]>;
   /** Degrees North, in the WGS-84 coordinate system. */
-  latitude: Scalars["Float"];
+  latitude: Scalars["Float"]["output"];
   /** Degrees East, in the WGS-84 coordinate system. */
-  longitude: Scalars["Float"];
+  longitude: Scalars["Float"]["output"];
   /** Momentary speed measured by the vehicle, in meters per second. */
-  speed?: Maybe<Scalars["Float"]>;
+  speed?: Maybe<Scalars["Float"]["output"]>;
 };
 
 export type Query = {
@@ -83,13 +99,13 @@ export type Query = {
   nearByStops: Array<Stop>;
   realTimeVehiclePositions: Array<Maybe<VehiclePosition>>;
   route: Route;
-  routes: Array<Route>;
   routeShapes: LineString;
+  routes: Array<Route>;
   search: Search;
   stop: Stop;
+  stopTimes: Array<StopTimes>;
   stopsAndShapes: StopsAndShapes;
   stopsByName: Array<Stop>;
-  stopTimes: Array<StopTimes>;
   trip: Trip;
   tripIdsForRoute: TripIdsForRoute;
   tripUpdate?: Maybe<TripUpdate>;
@@ -98,91 +114,91 @@ export type Query = {
 };
 
 export type QueryArrivalTimesArgs = {
-  date: Scalars["String"];
-  stopId: Scalars["String"];
+  date: Scalars["String"]["input"];
+  stopId: Scalars["String"]["input"];
 };
 
 export type QueryDistinctTripsArgs = {
-  date: Scalars["String"];
-  routeId: Scalars["String"];
+  date: Scalars["String"]["input"];
+  routeId: Scalars["String"]["input"];
 };
 
 export type QueryEarliestArrivalTimesOnRouteArgs = {
-  date: Scalars["String"];
-  directionId: Scalars["Int"];
-  routeId: Scalars["String"];
-  time: Scalars["String"];
+  date: Scalars["String"]["input"];
+  directionId: Scalars["Int"]["input"];
+  routeId: Scalars["String"]["input"];
+  time: Scalars["String"]["input"];
 };
 
 export type QueryNearByStopsArgs = {
-  lat: Scalars["Float"];
-  lon: Scalars["Float"];
+  lat: Scalars["Float"]["input"];
+  lon: Scalars["Float"]["input"];
 };
 
 export type QueryRouteArgs = {
-  routeId: Scalars["String"];
+  routeId: Scalars["String"]["input"];
 };
 
 export type QueryRouteShapesArgs = {
-  tripId: Scalars["String"];
+  tripId: Scalars["String"]["input"];
 };
 
 export type QuerySearchArgs = {
-  searchTerm: Scalars["String"];
+  searchTerm: Scalars["String"]["input"];
 };
 
 export type QueryStopArgs = {
-  stopId: Scalars["String"];
-};
-
-export type QueryStopsAndShapesArgs = {
-  date: Scalars["String"];
-  directionId: Scalars["Int"];
-  routeId: Scalars["String"];
-};
-
-export type QueryStopsByNameArgs = {
-  stopName: Scalars["String"];
+  stopId: Scalars["String"]["input"];
 };
 
 export type QueryStopTimesArgs = {
-  tripId: Scalars["String"];
+  tripId: Scalars["String"]["input"];
+};
+
+export type QueryStopsAndShapesArgs = {
+  date: Scalars["String"]["input"];
+  directionId: Scalars["Int"]["input"];
+  routeId: Scalars["String"]["input"];
+};
+
+export type QueryStopsByNameArgs = {
+  stopName: Scalars["String"]["input"];
 };
 
 export type QueryTripArgs = {
-  tripId: Scalars["String"];
+  tripId: Scalars["String"]["input"];
 };
 
 export type QueryTripIdsForRouteArgs = {
-  date: Scalars["String"];
-  routeId: Scalars["String"];
+  date: Scalars["String"]["input"];
+  routeId: Scalars["String"]["input"];
 };
 
 export type QueryTripUpdateArgs = {
-  tripId: Scalars["String"];
+  tripId: Scalars["String"]["input"];
 };
 
 export type QueryTripUpdatesArgs = {
-  filter?: Maybe<TripUpdatesFilter>;
+  filter?: InputMaybe<TripUpdatesFilter>;
 };
 
 export type QueryVehiclePositionsArgs = {
-  direction: Scalars["Int"];
-  routeId: Scalars["String"];
+  direction: Scalars["Int"]["input"];
+  routeId: Scalars["String"]["input"];
 };
 
 export type Route = {
   __typename?: "Route";
   /** Agency for the specified route. */
-  agencyId?: Maybe<Scalars["String"]>;
+  agencyId?: Maybe<Scalars["String"]["output"]>;
   /** Route color designation that matches public facing material. */
-  routeColor?: Maybe<Scalars["String"]>;
+  routeColor?: Maybe<Scalars["String"]["output"]>;
   /** Identifies a route. */
-  routeId: Scalars["String"];
+  routeId: Scalars["String"]["output"];
   /** Full name of a route. */
-  routeLongName: Scalars["String"];
+  routeLongName: Scalars["String"]["output"];
   /** Short name of a route. */
-  routeShortName?: Maybe<Scalars["String"]>;
+  routeShortName?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type Search = {
@@ -195,40 +211,20 @@ export type Stop = {
   __typename?: "Stop";
   routes?: Maybe<Array<Route>>;
   /** Short text or a number that identifies the location for riders. */
-  stopCode?: Maybe<Scalars["String"]>;
+  stopCode?: Maybe<Scalars["String"]["output"]>;
   /** Identifies a stop, station, or station entrance. */
-  stopId: Scalars["String"];
+  stopId: Scalars["String"]["output"];
   /** Stop Location. GeoJSON string. */
   stopLoc?: Maybe<Point>;
   /** Name of the location. Use a name that people will understand in the local and tourist vernacular. */
-  stopName?: Maybe<Scalars["String"]>;
-};
-
-export type StopsAndShapes = {
-  __typename?: "StopsAndShapes";
-  shapes: Array<LineString>;
-  stops: Array<Stop>;
+  stopName?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type StopTimeEvent = {
   __typename?: "StopTimeEvent";
-  delay?: Maybe<Scalars["Int"]>;
-  time?: Maybe<Scalars["Int"]>;
-  uncertainty?: Maybe<Scalars["Int"]>;
-};
-
-export type StopTimes = {
-  __typename?: "StopTimes";
-  arrivalTime: Scalars["String"];
-  departureTime: Scalars["String"];
-  dropOffType?: Maybe<Scalars["Int"]>;
-  pickupType?: Maybe<Scalars["Int"]>;
-  shapeDistTraveled?: Maybe<Scalars["Float"]>;
-  stop: Stop;
-  stopId: Scalars["String"];
-  stopSequence: Scalars["Int"];
-  timepoint?: Maybe<Scalars["Int"]>;
-  tripId: Scalars["String"];
+  delay?: Maybe<Scalars["Int"]["output"]>;
+  time?: Maybe<Scalars["Int"]["output"]>;
+  uncertainty?: Maybe<Scalars["Int"]["output"]>;
 };
 
 export type StopTimeUpdate = {
@@ -237,95 +233,115 @@ export type StopTimeUpdate = {
   arrival?: Maybe<StopTimeEvent>;
   /** If schedule_relationship is empty or SCHEDULED, either arrival or departure must be provided within a StopTimeUpdate - both fields cannot be empty. arrival and departure may both be empty when schedule_relationship is SKIPPED. If schedule_relationship is NO_DATA, arrival and departure must be empty. */
   departure?: Maybe<StopTimeEvent>;
-  scheduleRelationship?: Maybe<Scalars["Int"]>;
+  scheduleRelationship?: Maybe<Scalars["Int"]["output"]>;
   /** Must be the same as in stops.txt in the corresponding GTFS feed. */
-  stopId?: Maybe<Scalars["String"]>;
+  stopId?: Maybe<Scalars["String"]["output"]>;
   /** Must be the same as in stop_times.txt in the corresponding GTFS feed. */
-  stopSequence?: Maybe<Scalars["Int"]>;
+  stopSequence?: Maybe<Scalars["Int"]["output"]>;
+};
+
+export type StopTimes = {
+  __typename?: "StopTimes";
+  arrivalTime: Scalars["String"]["output"];
+  departureTime: Scalars["String"]["output"];
+  dropOffType?: Maybe<Scalars["Int"]["output"]>;
+  pickupType?: Maybe<Scalars["Int"]["output"]>;
+  shapeDistTraveled?: Maybe<Scalars["Float"]["output"]>;
+  stop: Stop;
+  stopId: Scalars["String"]["output"];
+  stopSequence: Scalars["Int"]["output"];
+  timepoint?: Maybe<Scalars["Int"]["output"]>;
+  tripId: Scalars["String"]["output"];
+};
+
+export type StopsAndShapes = {
+  __typename?: "StopsAndShapes";
+  shapes: Array<LineString>;
+  stops: Array<Stop>;
 };
 
 export type Trip = {
   __typename?: "Trip";
   /** Indicates whether bikes are allowed. */
-  bikesAllowed?: Maybe<Scalars["Int"]>;
+  bikesAllowed?: Maybe<Scalars["Int"]["output"]>;
   /** Identifies the block to which the trip belongs. */
-  blockId?: Maybe<Scalars["String"]>;
+  blockId?: Maybe<Scalars["String"]["output"]>;
   /** Indicates the direction of travel for a trip. */
-  directionId?: Maybe<Scalars["Int"]>;
+  directionId?: Maybe<Scalars["Int"]["output"]>;
   route: Route;
   /** Identifies a route. */
-  routeId: Scalars["String"];
+  routeId: Scalars["String"]["output"];
   /** Identifies the scheduled trip ID from the transit agency. */
-  scheduledTripId?: Maybe<Scalars["String"]>;
+  scheduledTripId?: Maybe<Scalars["String"]["output"]>;
   /** Identifies a set of dates when service is available for one or more routes. */
-  serviceId: Scalars["String"];
+  serviceId: Scalars["String"]["output"];
   /** Identifies a geospatial shape describing the vehicle travel path for a trip. */
-  shapeId?: Maybe<Scalars["String"]>;
+  shapeId?: Maybe<Scalars["String"]["output"]>;
   /** Text that appears on signage identifying the trip's destination to riders. */
-  tripHeadsign?: Maybe<Scalars["String"]>;
+  tripHeadsign?: Maybe<Scalars["String"]["output"]>;
   /** Identifies a trip. */
-  tripId: Scalars["String"];
+  tripId: Scalars["String"]["output"];
   /** Public facing text used to identify the trip to riders, for instance, to identify train numbers for commuter rail trips. */
-  tripShortName?: Maybe<Scalars["String"]>;
+  tripShortName?: Maybe<Scalars["String"]["output"]>;
   /** Indicates wheelchair accessibility. */
-  wheelchairAccessible?: Maybe<Scalars["Int"]>;
+  wheelchairAccessible?: Maybe<Scalars["Int"]["output"]>;
 };
 
 /** A descriptor that identifies a single instance of a GTFS trip. */
 export type TripDescriptor = {
   __typename?: "TripDescriptor";
   /** The route_id from the GTFS feed that this selector refers to. If trip_id is omitted, then route_id, direction_id, start_time, and schedule_relationship=SCHEDULED must all be set to identify a trip instance. */
-  routeId?: Maybe<Scalars["String"]>;
+  routeId?: Maybe<Scalars["String"]["output"]>;
   /** The start date of this trip instance in YYYYMMDD format. */
-  startDate?: Maybe<Scalars["String"]>;
+  startDate?: Maybe<Scalars["String"]["output"]>;
   /** The initially scheduled start time of this trip instance. The field type Time defines the format of this field, for example 11:15:35 or 25:15:35. */
-  startTime?: Maybe<Scalars["String"]>;
+  startTime?: Maybe<Scalars["String"]["output"]>;
   /** The trip_id from the GTFS feed that this selector refers to. */
-  tripId?: Maybe<Scalars["String"]>;
+  tripId?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type TripIdsForRoute = {
   __typename?: "TripIdsForRoute";
-  tripIds: Array<Scalars["String"]>;
+  tripIds: Array<Scalars["String"]["output"]>;
 };
 
 export type TripUpdate = {
   __typename?: "TripUpdate";
-  delay?: Maybe<Scalars["Int"]>;
+  delay?: Maybe<Scalars["Int"]["output"]>;
   stopTimeUpdate: Array<Maybe<StopTimeUpdate>>;
-  timestamp: Scalars["Int"];
+  timestamp: Scalars["Int"]["output"];
   trip: TripDescriptor;
   vehicle: VehicleDescriptor;
 };
 
 export type TripUpdatesFilter = {
-  routeId?: Maybe<Scalars["String"]>;
-  tripId?: Maybe<Scalars["String"]>;
+  routeId?: InputMaybe<Scalars["String"]["input"]>;
+  tripId?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type VehicleDescriptor = {
   __typename?: "VehicleDescriptor";
   /** Internal system identification of the vehicle. Should be unique per vehicle, and is used for tracking the vehicle as it proceeds through the system. This id should not be made visible to the end-user; for that purpose use the label field */
-  id?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["String"]["output"]>;
   /** User visible label, i.e., something that must be shown to the passenger to help identify the correct vehicle. */
-  label?: Maybe<Scalars["String"]>;
+  label?: Maybe<Scalars["String"]["output"]>;
   /** The license plate of the vehicle. */
-  licensePlate?: Maybe<Scalars["String"]>;
+  licensePlate?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type VehiclePosition = {
   __typename?: "VehiclePosition";
-  congestionLevel?: Maybe<Scalars["Int"]>;
+  congestionLevel?: Maybe<Scalars["Int"]["output"]>;
   /** The exact status of the vehicle with respect to the current stop. Ignored if current_stop_sequence is missing. */
   currentStatus?: Maybe<VehicleStopStatus>;
   /** The stop sequence index of the current stop. The meaning of current_stop_sequence (i.e., the stop that it refers to) is determined by current_status. If current_status is missing IN_TRANSIT_TO is assumed. */
-  currentStopSequence?: Maybe<Scalars["Int"]>;
+  currentStopSequence?: Maybe<Scalars["Int"]["output"]>;
   /** Current position of this vehicle. */
   position?: Maybe<Position>;
   /** Identifies the current stop. The value must be the same as in stops.txt in the corresponding GTFS feed. */
-  stopId?: Maybe<Scalars["String"]>;
+  stopId?: Maybe<Scalars["String"]["output"]>;
   /** Moment at which the vehicle's position was measured. In POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC). */
-  timestamp?: Maybe<Scalars["Int"]>;
+  timestamp?: Maybe<Scalars["Int"]["output"]>;
   /** The Trip that this vehicle is serving. Can be empty or partial if the vehicle can not be identified with a given trip instance. */
   trip?: Maybe<TripDescriptor>;
   /** Additional information on the vehicle that is serving this trip. Each entry should have a unique vehicle id. */
@@ -333,10 +349,10 @@ export type VehiclePosition = {
 };
 
 export enum VehicleStopStatus {
-  /** The vehicle has departed the previous stop and is in transit. */
-  InTransitTo = "IN_TRANSIT_TO",
   /** The vehicle is just about to arrive at the stop (on a stop display, the vehicle symbol typically flashes).  */
   IncomingAt = "INCOMING_AT",
+  /** The vehicle has departed the previous stop and is in transit. */
+  InTransitTo = "IN_TRANSIT_TO",
   /** The vehicle is standing at the stop. */
   StoppedAt = "STOPPED_AT",
 }

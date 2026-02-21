@@ -22,14 +22,17 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type RouteQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
+  routeId: Types.Scalars["String"]["input"];
 }>;
 
-export type RouteQuery = { __typename?: "Query" } & {
-  route: { __typename?: "Route" } & Pick<
-    Types.Route,
-    "routeLongName" | "routeId" | "routeColor"
-  >;
+export type RouteQuery = {
+  __typename?: "Query";
+  route: {
+    __typename?: "Route";
+    routeLongName: string;
+    routeId: string;
+    routeColor?: string | null;
+  };
 };
 
 export const RouteDocument = `
@@ -41,16 +44,19 @@ export const RouteDocument = `
   }
 }
     `;
+
 export const useRouteQuery = <TData = RouteQuery, TError = unknown>(
   variables: RouteQueryVariables,
   options?: UseQueryOptions<RouteQuery, TError, TData>
-) =>
-  useQuery<RouteQuery, TError, TData>(
+) => {
+  return useQuery<RouteQuery, TError, TData>(
     ["Route", variables],
     fetcher<RouteQuery, RouteQueryVariables>(RouteDocument, variables),
     options
   );
+};
 
 useRouteQuery.getKey = (variables: RouteQueryVariables) => ["Route", variables];
+
 useRouteQuery.fetcher = (variables: RouteQueryVariables) =>
   fetcher<RouteQuery, RouteQueryVariables>(RouteDocument, variables);

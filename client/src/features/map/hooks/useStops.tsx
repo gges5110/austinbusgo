@@ -45,5 +45,11 @@ export const useStops = (viewState?: ViewState) => {
   });
   const uniqueStops = Object.values(uniqueStopsMap);
 
-  return { stops: uniqueStops };
+  const contextStopsMap: Record<string, Stop> = {};
+  [...routeStops, ...searchStops, ...currentStopArray].forEach((stop) => {
+    contextStopsMap[stop.stopId] = stop as Stop;
+  });
+  const uniqueContextStops = Object.values(contextStopsMap);
+
+  return { stops: uniqueStops, contextStops: uniqueContextStops };
 };

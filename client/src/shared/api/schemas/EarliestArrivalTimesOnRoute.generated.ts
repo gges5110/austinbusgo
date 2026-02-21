@@ -22,28 +22,32 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type EarliestArrivalTimesOnRouteQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
-  directionId: Types.Scalars["Int"];
-  date: Types.Scalars["String"];
-  time: Types.Scalars["String"];
+  routeId: Types.Scalars["String"]["input"];
+  directionId: Types.Scalars["Int"]["input"];
+  date: Types.Scalars["String"]["input"];
+  time: Types.Scalars["String"]["input"];
 }>;
 
-export type EarliestArrivalTimesOnRouteQuery = { __typename?: "Query" } & {
-  earliestArrivalTimesOnRoute: Array<
-    { __typename?: "ArrivalTimeAtStop" } & Pick<
-      Types.ArrivalTimeAtStop,
-      | "stopSequence"
-      | "stopId"
-      | "scheduledArrivalTime"
-      | "updatedArrivalTime"
-      | "tripId"
-    >
-  >;
+export type EarliestArrivalTimesOnRouteQuery = {
+  __typename?: "Query";
+  earliestArrivalTimesOnRoute: Array<{
+    __typename?: "ArrivalTimeAtStop";
+    stopSequence: number;
+    stopId: string;
+    scheduledArrivalTime: string;
+    updatedArrivalTime?: string | null;
+    tripId?: string | null;
+  }>;
 };
 
 export const EarliestArrivalTimesOnRouteDocument = `
     query EarliestArrivalTimesOnRoute($routeId: String!, $directionId: Int!, $date: String!, $time: String!) {
-  earliestArrivalTimesOnRoute(routeId: $routeId, directionId: $directionId, date: $date, time: $time) {
+  earliestArrivalTimesOnRoute(
+    routeId: $routeId
+    directionId: $directionId
+    date: $date
+    time: $time
+  ) {
     stopSequence
     stopId
     scheduledArrivalTime
@@ -52,14 +56,15 @@ export const EarliestArrivalTimesOnRouteDocument = `
   }
 }
     `;
+
 export const useEarliestArrivalTimesOnRouteQuery = <
   TData = EarliestArrivalTimesOnRouteQuery,
   TError = unknown,
 >(
   variables: EarliestArrivalTimesOnRouteQueryVariables,
   options?: UseQueryOptions<EarliestArrivalTimesOnRouteQuery, TError, TData>
-) =>
-  useQuery<EarliestArrivalTimesOnRouteQuery, TError, TData>(
+) => {
+  return useQuery<EarliestArrivalTimesOnRouteQuery, TError, TData>(
     ["EarliestArrivalTimesOnRoute", variables],
     fetcher<
       EarliestArrivalTimesOnRouteQuery,
@@ -67,10 +72,12 @@ export const useEarliestArrivalTimesOnRouteQuery = <
     >(EarliestArrivalTimesOnRouteDocument, variables),
     options
   );
+};
 
 useEarliestArrivalTimesOnRouteQuery.getKey = (
   variables: EarliestArrivalTimesOnRouteQueryVariables
 ) => ["EarliestArrivalTimesOnRoute", variables];
+
 useEarliestArrivalTimesOnRouteQuery.fetcher = (
   variables: EarliestArrivalTimesOnRouteQueryVariables
 ) =>
