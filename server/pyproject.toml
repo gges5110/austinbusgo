@@ -1,3 +1,4 @@
 [tool.black]
-max_line_length = 120
-include = '\.py'
+line-length = 88
+target-version = ["py311"]
+include = '\.py$'
