@@ -112,9 +112,9 @@ def check_feed_dates():
 
 def prepare():
     if shutil.which("curl") is None:
-        subprocess.call(SCRIPT_DIR / "getCurl.sh")
+        subprocess.call(["sh", str(SCRIPT_DIR / "getCurl.sh")])
 
-    subprocess.call(SCRIPT_DIR / "download.sh")
+    subprocess.call(["sh", str(SCRIPT_DIR / "download.sh")])
 
     check_feed_dates()
 

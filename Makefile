@@ -59,3 +59,4 @@ db-up:
 
 setup-local: db-up
 	docker compose -f docker/compose.etl.yml run --rm setup-gtfs
+	$(MAKE) etl-load
