@@ -22,40 +22,40 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type VehiclePositionsQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
-  direction: Types.Scalars["Int"];
+  routeId: Types.Scalars["String"]["input"];
+  direction: Types.Scalars["Int"]["input"];
 }>;
 
-export type VehiclePositionsQuery = { __typename?: "Query" } & {
-  vehiclePositions: Array<
-    { __typename?: "VehiclePosition" } & Pick<
-      Types.VehiclePosition,
-      | "stopId"
-      | "currentStatus"
-      | "timestamp"
-      | "congestionLevel"
-      | "currentStopSequence"
-    > & {
-        trip?: Types.Maybe<
-          { __typename?: "TripDescriptor" } & Pick<
-            Types.TripDescriptor,
-            "tripId" | "routeId" | "startDate" | "startTime"
-          >
-        >;
-        vehicle?: Types.Maybe<
-          { __typename?: "VehicleDescriptor" } & Pick<
-            Types.VehicleDescriptor,
-            "id" | "label" | "licensePlate"
-          >
-        >;
-        position?: Types.Maybe<
-          { __typename?: "Position" } & Pick<
-            Types.Position,
-            "latitude" | "longitude" | "bearing" | "speed"
-          >
-        >;
-      }
-  >;
+export type VehiclePositionsQuery = {
+  __typename?: "Query";
+  vehiclePositions: Array<{
+    __typename?: "VehiclePosition";
+    stopId?: string | null;
+    currentStatus?: Types.VehicleStopStatus | null;
+    timestamp?: number | null;
+    congestionLevel?: number | null;
+    currentStopSequence?: number | null;
+    trip?: {
+      __typename?: "TripDescriptor";
+      tripId?: string | null;
+      routeId?: string | null;
+      startDate?: string | null;
+      startTime?: string | null;
+    } | null;
+    vehicle?: {
+      __typename?: "VehicleDescriptor";
+      id?: string | null;
+      label?: string | null;
+      licensePlate?: string | null;
+    } | null;
+    position?: {
+      __typename?: "Position";
+      latitude: number;
+      longitude: number;
+      bearing?: number | null;
+      speed?: number | null;
+    } | null;
+  }>;
 };
 
 export const VehiclePositionsDocument = `
@@ -86,14 +86,15 @@ export const VehiclePositionsDocument = `
   }
 }
     `;
+
 export const useVehiclePositionsQuery = <
   TData = VehiclePositionsQuery,
   TError = unknown,
 >(
   variables: VehiclePositionsQueryVariables,
   options?: UseQueryOptions<VehiclePositionsQuery, TError, TData>
-) =>
-  useQuery<VehiclePositionsQuery, TError, TData>(
+) => {
+  return useQuery<VehiclePositionsQuery, TError, TData>(
     ["VehiclePositions", variables],
     fetcher<VehiclePositionsQuery, VehiclePositionsQueryVariables>(
       VehiclePositionsDocument,
@@ -101,10 +102,12 @@ export const useVehiclePositionsQuery = <
     ),
     options
   );
+};
 
 useVehiclePositionsQuery.getKey = (
   variables: VehiclePositionsQueryVariables
 ) => ["VehiclePositions", variables];
+
 useVehiclePositionsQuery.fetcher = (
   variables: VehiclePositionsQueryVariables
 ) =>

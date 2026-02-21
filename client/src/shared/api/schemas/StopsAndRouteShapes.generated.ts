@@ -22,36 +22,38 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type StopsAndShapesQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
-  directionId: Types.Scalars["Int"];
-  date: Types.Scalars["String"];
+  routeId: Types.Scalars["String"]["input"];
+  directionId: Types.Scalars["Int"]["input"];
+  date: Types.Scalars["String"]["input"];
 }>;
 
-export type StopsAndShapesQuery = { __typename?: "Query" } & {
-  stopsAndShapes: { __typename?: "StopsAndShapes" } & {
-    stops: Array<
-      { __typename?: "Stop" } & Pick<
-        Types.Stop,
-        "stopId" | "stopCode" | "stopName"
-      > & {
-          stopLoc?: Types.Maybe<
-            { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
-          >;
-        }
-    >;
-    shapes: Array<
-      { __typename?: "LineString" } & Pick<
-        Types.LineString,
-        "type" | "coordinates"
-      >
-    >;
+export type StopsAndShapesQuery = {
+  __typename?: "Query";
+  stopsAndShapes: {
+    __typename?: "StopsAndShapes";
+    stops: Array<{
+      __typename?: "Stop";
+      stopId: string;
+      stopCode?: string | null;
+      stopName?: string | null;
+      stopLoc?: {
+        __typename?: "Point";
+        type: Types.GeometryType;
+        coordinates: Array<number>;
+      } | null;
+    }>;
+    shapes: Array<{
+      __typename?: "LineString";
+      type: Types.GeometryType;
+      coordinates: Array<Array<number>>;
+    }>;
   };
-  distinctTrips: Array<
-    { __typename?: "Trip" } & Pick<
-      Types.Trip,
-      "tripId" | "tripShortName" | "directionId"
-    >
-  >;
+  distinctTrips: Array<{
+    __typename?: "Trip";
+    tripId: string;
+    tripShortName?: string | null;
+    directionId?: number | null;
+  }>;
 };
 
 export const StopsAndShapesDocument = `
@@ -78,14 +80,15 @@ export const StopsAndShapesDocument = `
   }
 }
     `;
+
 export const useStopsAndShapesQuery = <
   TData = StopsAndShapesQuery,
   TError = unknown,
 >(
   variables: StopsAndShapesQueryVariables,
   options?: UseQueryOptions<StopsAndShapesQuery, TError, TData>
-) =>
-  useQuery<StopsAndShapesQuery, TError, TData>(
+) => {
+  return useQuery<StopsAndShapesQuery, TError, TData>(
     ["StopsAndShapes", variables],
     fetcher<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
       StopsAndShapesDocument,
@@ -93,11 +96,13 @@ export const useStopsAndShapesQuery = <
     ),
     options
   );
+};
 
 useStopsAndShapesQuery.getKey = (variables: StopsAndShapesQueryVariables) => [
   "StopsAndShapes",
   variables,
 ];
+
 useStopsAndShapesQuery.fetcher = (variables: StopsAndShapesQueryVariables) =>
   fetcher<StopsAndShapesQuery, StopsAndShapesQueryVariables>(
     StopsAndShapesDocument,

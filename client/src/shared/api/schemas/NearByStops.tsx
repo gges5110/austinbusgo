@@ -13,6 +13,7 @@ export const NEAR_BY_STOPS_QUERY = gql`
       routes {
         routeId
         routeColor
+        routeLongName
       }
     }
   }

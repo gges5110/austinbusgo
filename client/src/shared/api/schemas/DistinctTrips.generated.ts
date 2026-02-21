@@ -22,17 +22,18 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type DistinctTripsQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
-  date: Types.Scalars["String"];
+  routeId: Types.Scalars["String"]["input"];
+  date: Types.Scalars["String"]["input"];
 }>;
 
-export type DistinctTripsQuery = { __typename?: "Query" } & {
-  distinctTrips: Array<
-    { __typename?: "Trip" } & Pick<
-      Types.Trip,
-      "tripId" | "tripShortName" | "directionId"
-    >
-  >;
+export type DistinctTripsQuery = {
+  __typename?: "Query";
+  distinctTrips: Array<{
+    __typename?: "Trip";
+    tripId: string;
+    tripShortName?: string | null;
+    directionId?: number | null;
+  }>;
 };
 
 export const DistinctTripsDocument = `
@@ -44,14 +45,15 @@ export const DistinctTripsDocument = `
   }
 }
     `;
+
 export const useDistinctTripsQuery = <
   TData = DistinctTripsQuery,
   TError = unknown,
 >(
   variables: DistinctTripsQueryVariables,
   options?: UseQueryOptions<DistinctTripsQuery, TError, TData>
-) =>
-  useQuery<DistinctTripsQuery, TError, TData>(
+) => {
+  return useQuery<DistinctTripsQuery, TError, TData>(
     ["DistinctTrips", variables],
     fetcher<DistinctTripsQuery, DistinctTripsQueryVariables>(
       DistinctTripsDocument,
@@ -59,11 +61,13 @@ export const useDistinctTripsQuery = <
     ),
     options
   );
+};
 
 useDistinctTripsQuery.getKey = (variables: DistinctTripsQueryVariables) => [
   "DistinctTrips",
   variables,
 ];
+
 useDistinctTripsQuery.fetcher = (variables: DistinctTripsQueryVariables) =>
   fetcher<DistinctTripsQuery, DistinctTripsQueryVariables>(
     DistinctTripsDocument,

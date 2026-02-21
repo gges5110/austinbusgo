@@ -25,38 +25,36 @@ export type RealTimeVehiclePositionsQueryVariables = Types.Exact<{
   [key: string]: never;
 }>;
 
-export type RealTimeVehiclePositionsQuery = { __typename?: "Query" } & {
-  realTimeVehiclePositions: Array<
-    Types.Maybe<
-      { __typename?: "VehiclePosition" } & Pick<
-        Types.VehiclePosition,
-        | "stopId"
-        | "currentStatus"
-        | "timestamp"
-        | "congestionLevel"
-        | "currentStopSequence"
-      > & {
-          trip?: Types.Maybe<
-            { __typename?: "TripDescriptor" } & Pick<
-              Types.TripDescriptor,
-              "tripId" | "routeId" | "startDate" | "startTime"
-            >
-          >;
-          vehicle?: Types.Maybe<
-            { __typename?: "VehicleDescriptor" } & Pick<
-              Types.VehicleDescriptor,
-              "id" | "label" | "licensePlate"
-            >
-          >;
-          position?: Types.Maybe<
-            { __typename?: "Position" } & Pick<
-              Types.Position,
-              "latitude" | "longitude" | "bearing" | "speed"
-            >
-          >;
-        }
-    >
-  >;
+export type RealTimeVehiclePositionsQuery = {
+  __typename?: "Query";
+  realTimeVehiclePositions: Array<{
+    __typename?: "VehiclePosition";
+    stopId?: string | null;
+    currentStatus?: Types.VehicleStopStatus | null;
+    timestamp?: number | null;
+    congestionLevel?: number | null;
+    currentStopSequence?: number | null;
+    trip?: {
+      __typename?: "TripDescriptor";
+      tripId?: string | null;
+      routeId?: string | null;
+      startDate?: string | null;
+      startTime?: string | null;
+    } | null;
+    vehicle?: {
+      __typename?: "VehicleDescriptor";
+      id?: string | null;
+      label?: string | null;
+      licensePlate?: string | null;
+    } | null;
+    position?: {
+      __typename?: "Position";
+      latitude: number;
+      longitude: number;
+      bearing?: number | null;
+      speed?: number | null;
+    } | null;
+  } | null>;
 };
 
 export const RealTimeVehiclePositionsDocument = `
@@ -87,14 +85,15 @@ export const RealTimeVehiclePositionsDocument = `
   }
 }
     `;
+
 export const useRealTimeVehiclePositionsQuery = <
   TData = RealTimeVehiclePositionsQuery,
   TError = unknown,
 >(
   variables?: RealTimeVehiclePositionsQueryVariables,
   options?: UseQueryOptions<RealTimeVehiclePositionsQuery, TError, TData>
-) =>
-  useQuery<RealTimeVehiclePositionsQuery, TError, TData>(
+) => {
+  return useQuery<RealTimeVehiclePositionsQuery, TError, TData>(
     variables === undefined
       ? ["RealTimeVehiclePositions"]
       : ["RealTimeVehiclePositions", variables],
@@ -104,6 +103,7 @@ export const useRealTimeVehiclePositionsQuery = <
     >(RealTimeVehiclePositionsDocument, variables),
     options
   );
+};
 
 useRealTimeVehiclePositionsQuery.getKey = (
   variables?: RealTimeVehiclePositionsQueryVariables
@@ -111,6 +111,7 @@ useRealTimeVehiclePositionsQuery.getKey = (
   variables === undefined
     ? ["RealTimeVehiclePositions"]
     : ["RealTimeVehiclePositions", variables];
+
 useRealTimeVehiclePositionsQuery.fetcher = (
   variables?: RealTimeVehiclePositionsQueryVariables
 ) =>

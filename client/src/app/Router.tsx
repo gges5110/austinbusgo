@@ -1,12 +1,3 @@
-import * as React from "react";
-import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  LoaderFunction,
-  Route,
-  useLoaderData,
-  useRouteLoaderData,
-} from "react-router-dom";
 import { DevLayout } from "features/dev/components/DevLayout";
 import { StopsDevPage } from "features/dev/pages/StopsDevPage";
 import { TripStopTimesDevPage } from "features/dev/pages/TripStopTimesDevPage";
@@ -22,6 +13,15 @@ import { stopLoader } from "features/stop/pages/stop/StopLoader";
 import { StopMenu } from "features/stop/pages/stop/StopMenu";
 import { tripLoader } from "features/trip/pages/trip/TripLoader";
 import { TripMenu } from "features/trip/pages/trip/TripMenu";
+import * as React from "react";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  LoaderFunction,
+  Route,
+  useLoaderData,
+  useRouteLoaderData,
+} from "react-router-dom";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(

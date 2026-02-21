@@ -22,28 +22,30 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type TripQueryVariables = Types.Exact<{
-  tripId: Types.Scalars["String"];
+  tripId: Types.Scalars["String"]["input"];
 }>;
 
-export type TripQuery = { __typename?: "Query" } & {
-  trip: { __typename?: "Trip" } & Pick<
-    Types.Trip,
-    | "routeId"
-    | "serviceId"
-    | "tripId"
-    | "tripHeadsign"
-    | "tripShortName"
-    | "directionId"
-    | "blockId"
-    | "shapeId"
-    | "wheelchairAccessible"
-    | "bikesAllowed"
-  > & {
-      route: { __typename?: "Route" } & Pick<
-        Types.Route,
-        "routeId" | "routeLongName" | "routeColor"
-      >;
+export type TripQuery = {
+  __typename?: "Query";
+  trip: {
+    __typename?: "Trip";
+    routeId: string;
+    serviceId: string;
+    tripId: string;
+    tripHeadsign?: string | null;
+    tripShortName?: string | null;
+    directionId?: number | null;
+    blockId?: string | null;
+    shapeId?: string | null;
+    wheelchairAccessible?: number | null;
+    bikesAllowed?: number | null;
+    route: {
+      __typename?: "Route";
+      routeId: string;
+      routeLongName: string;
+      routeColor?: string | null;
     };
+  };
 };
 
 export const TripDocument = `
@@ -67,16 +69,19 @@ export const TripDocument = `
   }
 }
     `;
+
 export const useTripQuery = <TData = TripQuery, TError = unknown>(
   variables: TripQueryVariables,
   options?: UseQueryOptions<TripQuery, TError, TData>
-) =>
-  useQuery<TripQuery, TError, TData>(
+) => {
+  return useQuery<TripQuery, TError, TData>(
     ["Trip", variables],
     fetcher<TripQuery, TripQueryVariables>(TripDocument, variables),
     options
   );
+};
 
 useTripQuery.getKey = (variables: TripQueryVariables) => ["Trip", variables];
+
 useTripQuery.fetcher = (variables: TripQueryVariables) =>
   fetcher<TripQuery, TripQueryVariables>(TripDocument, variables);

@@ -22,15 +22,13 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type TripIdsForRouteQueryVariables = Types.Exact<{
-  routeId: Types.Scalars["String"];
-  date: Types.Scalars["String"];
+  routeId: Types.Scalars["String"]["input"];
+  date: Types.Scalars["String"]["input"];
 }>;
 
-export type TripIdsForRouteQuery = { __typename?: "Query" } & {
-  tripIdsForRoute: { __typename?: "TripIdsForRoute" } & Pick<
-    Types.TripIdsForRoute,
-    "tripIds"
-  >;
+export type TripIdsForRouteQuery = {
+  __typename?: "Query";
+  tripIdsForRoute: { __typename?: "TripIdsForRoute"; tripIds: Array<string> };
 };
 
 export const TripIdsForRouteDocument = `
@@ -40,14 +38,15 @@ export const TripIdsForRouteDocument = `
   }
 }
     `;
+
 export const useTripIdsForRouteQuery = <
   TData = TripIdsForRouteQuery,
   TError = unknown,
 >(
   variables: TripIdsForRouteQueryVariables,
   options?: UseQueryOptions<TripIdsForRouteQuery, TError, TData>
-) =>
-  useQuery<TripIdsForRouteQuery, TError, TData>(
+) => {
+  return useQuery<TripIdsForRouteQuery, TError, TData>(
     ["TripIdsForRoute", variables],
     fetcher<TripIdsForRouteQuery, TripIdsForRouteQueryVariables>(
       TripIdsForRouteDocument,
@@ -55,11 +54,13 @@ export const useTripIdsForRouteQuery = <
     ),
     options
   );
+};
 
 useTripIdsForRouteQuery.getKey = (variables: TripIdsForRouteQueryVariables) => [
   "TripIdsForRoute",
   variables,
 ];
+
 useTripIdsForRouteQuery.fetcher = (variables: TripIdsForRouteQueryVariables) =>
   fetcher<TripIdsForRouteQuery, TripIdsForRouteQueryVariables>(
     TripIdsForRouteDocument,

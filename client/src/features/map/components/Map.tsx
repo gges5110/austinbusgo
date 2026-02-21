@@ -38,22 +38,22 @@ export declare type Coordinate = [number, number];
 
 export const Map: React.FunctionComponent = () => {
   const { mapId: map } = useMap();
-  const { vehiclePositions } = useVehiclePositions();
-  const { stops } = useStops();
-  const { routeShapes } = useRouteShapes();
-  const theme = useTheme();
-  const { currentRoute: route } = useCurrentRoute();
-  const { currentStop: stop, setStop: setSelectedStop } = useCurrentStop();
-
-  const { routeShapeGeoJSON } = useRouteShape(routeShapes);
   const { latitude, longitude, zoom } = useViewStatePathname();
   const [viewState, setViewState] = useState<ViewState>({
     latitude: latitude || defaultCenter[1],
     longitude: longitude || defaultCenter[0],
     zoom: zoom || 11.5,
   });
+  const { vehiclePositions } = useVehiclePositions();
+  const { stops, contextStops } = useStops(viewState);
+  const { routeShapes } = useRouteShapes();
+  const theme = useTheme();
+  const { currentRoute: route } = useCurrentRoute();
+  const { currentStop: stop, setStop: setSelectedStop } = useCurrentStop();
 
-  useMapMotion(stops, routeShapes);
+  const { routeShapeGeoJSON } = useRouteShape(routeShapes);
+
+  useMapMotion(contextStops, routeShapes);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onViewportChange = (event: ViewStateChangeEvent) => {

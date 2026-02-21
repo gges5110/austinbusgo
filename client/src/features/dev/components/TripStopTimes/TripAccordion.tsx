@@ -83,11 +83,11 @@ export const TripAccordion: React.FC<TripAccordionProps> = ({
           <Table size={"small"}>
             <TableHead>
               <TableRow>
-                <TableCell>{"Seq"}</TableCell>
-                <TableCell>{"Stop Name"}</TableCell>
-                <TableCell>{"Stop ID"}</TableCell>
-                <TableCell>{"Arrival Time"}</TableCell>
-                <TableCell>{"Departure Time"}</TableCell>
+                <TableCell>Seq</TableCell>
+                <TableCell>Stop Name</TableCell>
+                <TableCell>Stop ID</TableCell>
+                <TableCell>Arrival Time</TableCell>
+                <TableCell>Departure Time</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

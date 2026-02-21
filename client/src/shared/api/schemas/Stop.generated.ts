@@ -22,18 +22,22 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type StopQueryVariables = Types.Exact<{
-  stopId: Types.Scalars["String"];
+  stopId: Types.Scalars["String"]["input"];
 }>;
 
-export type StopQuery = { __typename?: "Query" } & {
-  stop: { __typename?: "Stop" } & Pick<
-    Types.Stop,
-    "stopId" | "stopCode" | "stopName"
-  > & {
-      stopLoc?: Types.Maybe<
-        { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
-      >;
-    };
+export type StopQuery = {
+  __typename?: "Query";
+  stop: {
+    __typename?: "Stop";
+    stopId: string;
+    stopCode?: string | null;
+    stopName?: string | null;
+    stopLoc?: {
+      __typename?: "Point";
+      type: Types.GeometryType;
+      coordinates: Array<number>;
+    } | null;
+  };
 };
 
 export const StopDocument = `
@@ -49,16 +53,19 @@ export const StopDocument = `
   }
 }
     `;
+
 export const useStopQuery = <TData = StopQuery, TError = unknown>(
   variables: StopQueryVariables,
   options?: UseQueryOptions<StopQuery, TError, TData>
-) =>
-  useQuery<StopQuery, TError, TData>(
+) => {
+  return useQuery<StopQuery, TError, TData>(
     ["Stop", variables],
     fetcher<StopQuery, StopQueryVariables>(StopDocument, variables),
     options
   );
+};
 
 useStopQuery.getKey = (variables: StopQueryVariables) => ["Stop", variables];
+
 useStopQuery.fetcher = (variables: StopQueryVariables) =>
   fetcher<StopQuery, StopQueryVariables>(StopDocument, variables);

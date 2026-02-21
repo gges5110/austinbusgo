@@ -1,10 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import React from "react";
-import { vi } from "vitest";
 
 import { mapsFlyToCoordinateAtom } from "shared/state/atoms";
 import { LineString, Stop } from "shared/types/interface.d";
+import { vi } from "vitest";
 
 import { useMapMotion } from "./UseMapMotion";
 
@@ -23,21 +23,25 @@ vi.mock("react-map-gl/mapbox", () => ({
 
 // --- helpers ---
 
-const makeStop = (lng: number, lat: number): Stop => ({
-  stopId: "s1",
-  stopLoc: { coordinates: [lng, lat], type: "Point" as any },
-});
+const makeStop = (lng: number, lat: number): Stop =>
+  ({
+    stopId: "s1",
+    stopLoc: { coordinates: [lng, lat], type: "Point" },
+  }) as unknown as Stop;
 
-const makeLineString = (coords: Array<[number, number]>): LineString => ({
-  coordinates: coords,
-  type: "LineString" as any,
-});
+const makeLineString = (coords: Array<[number, number]>): LineString =>
+  ({
+    coordinates: coords,
+    type: "LineString",
+  }) as unknown as LineString;
 
-const makeWrapper =
-  (store: ReturnType<typeof createStore>) =>
-  ({ children }: { children: React.ReactNode }) => (
+const makeWrapper = (store: ReturnType<typeof createStore>) => {
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>{children}</Provider>
   );
+  Wrapper.displayName = "Wrapper";
+  return Wrapper;
+};
 
 // --- tests ---
 

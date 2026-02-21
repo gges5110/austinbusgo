@@ -12,7 +12,7 @@ describe("MobileMenuPanel", () => {
     render(
       <ThemeProvider theme={theme}>
         <MobileMenuPanel>
-          <div data-testid="test-content">Test Content</div>
+          <div data-testid={"test-content"}>Test Content</div>
         </MobileMenuPanel>
       </ThemeProvider>
     );
@@ -24,7 +24,7 @@ describe("MobileMenuPanel", () => {
     render(
       <ThemeProvider theme={theme}>
         <MobileMenuPanel>
-          <div data-testid="test-content">Test Content</div>
+          <div data-testid={"test-content"}>Test Content</div>
         </MobileMenuPanel>
       </ThemeProvider>
     );
@@ -41,7 +41,7 @@ describe("MobileMenuPanel", () => {
     render(
       <ThemeProvider theme={theme}>
         <MobileMenuPanel>
-          <div data-testid="test-content">Test Content</div>
+          <div data-testid={"test-content"}>Test Content</div>
         </MobileMenuPanel>
       </ThemeProvider>
     );
@@ -126,7 +126,7 @@ describe("MobileMenuPanel", () => {
     render(
       <ThemeProvider theme={theme}>
         <MobileMenuPanel>
-          <div data-testid="test-content">Test Content</div>
+          <div data-testid={"test-content"}>Test Content</div>
         </MobileMenuPanel>
       </ThemeProvider>
     );

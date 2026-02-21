@@ -22,39 +22,36 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type TripUpdateQueryVariables = Types.Exact<{
-  tripId: Types.Scalars["String"];
+  tripId: Types.Scalars["String"]["input"];
 }>;
 
-export type TripUpdateQuery = { __typename?: "Query" } & {
-  tripUpdate?: Types.Maybe<
-    { __typename?: "TripUpdate" } & {
-      trip: { __typename?: "TripDescriptor" } & Pick<
-        Types.TripDescriptor,
-        "tripId" | "startDate" | "startTime" | "routeId"
-      >;
-      stopTimeUpdate: Array<
-        Types.Maybe<
-          { __typename?: "StopTimeUpdate" } & Pick<
-            Types.StopTimeUpdate,
-            "stopId" | "stopSequence"
-          > & {
-              arrival?: Types.Maybe<
-                { __typename?: "StopTimeEvent" } & Pick<
-                  Types.StopTimeEvent,
-                  "time" | "delay"
-                >
-              >;
-              departure?: Types.Maybe<
-                { __typename?: "StopTimeEvent" } & Pick<
-                  Types.StopTimeEvent,
-                  "time" | "delay"
-                >
-              >;
-            }
-        >
-      >;
-    }
-  >;
+export type TripUpdateQuery = {
+  __typename?: "Query";
+  tripUpdate?: {
+    __typename?: "TripUpdate";
+    trip: {
+      __typename?: "TripDescriptor";
+      tripId?: string | null;
+      startDate?: string | null;
+      startTime?: string | null;
+      routeId?: string | null;
+    };
+    stopTimeUpdate: Array<{
+      __typename?: "StopTimeUpdate";
+      stopId?: string | null;
+      stopSequence?: number | null;
+      arrival?: {
+        __typename?: "StopTimeEvent";
+        time?: number | null;
+        delay?: number | null;
+      } | null;
+      departure?: {
+        __typename?: "StopTimeEvent";
+        time?: number | null;
+        delay?: number | null;
+      } | null;
+    } | null>;
+  } | null;
 };
 
 export const TripUpdateDocument = `
@@ -81,11 +78,12 @@ export const TripUpdateDocument = `
   }
 }
     `;
+
 export const useTripUpdateQuery = <TData = TripUpdateQuery, TError = unknown>(
   variables: TripUpdateQueryVariables,
   options?: UseQueryOptions<TripUpdateQuery, TError, TData>
-) =>
-  useQuery<TripUpdateQuery, TError, TData>(
+) => {
+  return useQuery<TripUpdateQuery, TError, TData>(
     ["TripUpdate", variables],
     fetcher<TripUpdateQuery, TripUpdateQueryVariables>(
       TripUpdateDocument,
@@ -93,11 +91,13 @@ export const useTripUpdateQuery = <TData = TripUpdateQuery, TError = unknown>(
     ),
     options
   );
+};
 
 useTripUpdateQuery.getKey = (variables: TripUpdateQueryVariables) => [
   "TripUpdate",
   variables,
 ];
+
 useTripUpdateQuery.fetcher = (variables: TripUpdateQueryVariables) =>
   fetcher<TripUpdateQuery, TripUpdateQueryVariables>(
     TripUpdateDocument,

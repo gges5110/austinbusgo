@@ -13,13 +13,12 @@ import {
   Typography,
 } from "@mui/material";
 import dayjs from "dayjs";
+import { TripAccordionWithFilter } from "features/dev/components/TripStopTimes/TripAccordionWithFilter";
 import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useRoutesQuery } from "shared/api/schemas/Routes.generated";
 import { useTripIdsForRouteQuery } from "shared/api/schemas/TripIdsForRoute.generated";
 import { Route } from "shared/types/interface.d";
-
-import { TripAccordionWithFilter } from "../components/TripStopTimes/TripAccordionWithFilter";
 
 export const TripStopTimesDevPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();

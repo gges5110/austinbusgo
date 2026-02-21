@@ -22,16 +22,20 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type StopTimesQueryVariables = Types.Exact<{
-  tripId: Types.Scalars["String"];
+  tripId: Types.Scalars["String"]["input"];
 }>;
 
-export type StopTimesQuery = { __typename?: "Query" } & {
-  stopTimes: Array<
-    { __typename?: "StopTimes" } & Pick<
-      Types.StopTimes,
-      "tripId" | "arrivalTime" | "departureTime" | "stopId" | "stopSequence"
-    > & { stop: { __typename?: "Stop" } & Pick<Types.Stop, "stopName"> }
-  >;
+export type StopTimesQuery = {
+  __typename?: "Query";
+  stopTimes: Array<{
+    __typename?: "StopTimes";
+    tripId: string;
+    arrivalTime: string;
+    departureTime: string;
+    stopId: string;
+    stopSequence: number;
+    stop: { __typename?: "Stop"; stopName?: string | null };
+  }>;
 };
 
 export const StopTimesDocument = `
@@ -48,11 +52,12 @@ export const StopTimesDocument = `
   }
 }
     `;
+
 export const useStopTimesQuery = <TData = StopTimesQuery, TError = unknown>(
   variables: StopTimesQueryVariables,
   options?: UseQueryOptions<StopTimesQuery, TError, TData>
-) =>
-  useQuery<StopTimesQuery, TError, TData>(
+) => {
+  return useQuery<StopTimesQuery, TError, TData>(
     ["StopTimes", variables],
     fetcher<StopTimesQuery, StopTimesQueryVariables>(
       StopTimesDocument,
@@ -60,11 +65,13 @@ export const useStopTimesQuery = <TData = StopTimesQuery, TError = unknown>(
     ),
     options
   );
+};
 
 useStopTimesQuery.getKey = (variables: StopTimesQueryVariables) => [
   "StopTimes",
   variables,
 ];
+
 useStopTimesQuery.fetcher = (variables: StopTimesQueryVariables) =>
   fetcher<StopTimesQuery, StopTimesQueryVariables>(
     StopTimesDocument,

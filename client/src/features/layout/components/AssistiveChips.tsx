@@ -1,7 +1,5 @@
 import BookmarkIcon from "@mui/icons-material/Bookmark";
-import NearMeIcon from "@mui/icons-material/NearMe";
 import RouteIcon from "@mui/icons-material/Route";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -10,7 +8,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useNearByStops } from "features/map/hooks/UseNearByStops";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MENU_PANEL_WIDTH } from "shared/components/MenuPanel/MenuPanel";
@@ -19,7 +16,6 @@ import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 interface AssistiveChipsProps {}
 
 export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
-  const { fetchNearByStops, isLoading } = useNearByStops();
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
   // Use 'md' breakpoint to keep chips visible on tablets (sm-md range)
@@ -42,29 +38,6 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
         mt: 2,
       }}
     >
-      <Paper
-        sx={{
-          backgroundColor: "background.default",
-          borderRadius: "32px",
-        }}
-      >
-        <LoadingButton
-          component={RouterLink}
-          loading={isLoading}
-          onClick={fetchNearByStops}
-          sx={{
-            whiteSpace: "nowrap",
-            color: "text.primary",
-            textTransform: "none",
-          }}
-          to={`/search/Nearby%20stops${viewStatePathname}`}
-        >
-          <NearMeIcon sx={{ fontSize: 18, mr: "4px" }} />
-          <Typography fontSize={14} fontWeight={500}>
-            Search nearby stops
-          </Typography>
-        </LoadingButton>
-      </Paper>
       <Paper
         sx={{
           backgroundColor: "background.default",

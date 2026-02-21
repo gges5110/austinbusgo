@@ -1,12 +1,11 @@
 import { RouteOutlined } from "@mui/icons-material";
 import { Box, Button, Divider, Typography } from "@mui/material";
-import { useRef } from "react";
-import * as React from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
 import { useDataFromLoader, useDataFromRouteLoader } from "app/Router";
 import { stopLoader } from "features/stop/pages/stop/StopLoader";
 import { TripTimeline } from "features/trip/components/Trip/TripTimeline/TripTimeline";
-import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
+import * as React from "react";
+import { useRef } from "react";
+import { Link as RouterLink, useParams } from "react-router-dom";
 import { useTripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";
@@ -14,6 +13,7 @@ import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
 import { RouteDisplayBanner } from "shared/components/RouteDisplayBanner/RouteDisplayBanner";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 
 import { tripLoader } from "./TripLoader";
 

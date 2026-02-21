@@ -22,29 +22,29 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type NearByStopsQueryVariables = Types.Exact<{
-  lat: Types.Scalars["Float"];
-  lon: Types.Scalars["Float"];
+  lat: Types.Scalars["Float"]["input"];
+  lon: Types.Scalars["Float"]["input"];
 }>;
 
-export type NearByStopsQuery = { __typename?: "Query" } & {
-  nearByStops: Array<
-    { __typename?: "Stop" } & Pick<
-      Types.Stop,
-      "stopId" | "stopCode" | "stopName"
-    > & {
-        stopLoc?: Types.Maybe<
-          { __typename?: "Point" } & Pick<Types.Point, "type" | "coordinates">
-        >;
-        routes?: Types.Maybe<
-          Array<
-            { __typename?: "Route" } & Pick<
-              Types.Route,
-              "routeId" | "routeColor"
-            >
-          >
-        >;
-      }
-  >;
+export type NearByStopsQuery = {
+  __typename?: "Query";
+  nearByStops: Array<{
+    __typename?: "Stop";
+    stopId: string;
+    stopCode?: string | null;
+    stopName?: string | null;
+    stopLoc?: {
+      __typename?: "Point";
+      type: Types.GeometryType;
+      coordinates: Array<number>;
+    } | null;
+    routes?: Array<{
+      __typename?: "Route";
+      routeId: string;
+      routeColor?: string | null;
+      routeLongName: string;
+    }> | null;
+  }>;
 };
 
 export const NearByStopsDocument = `
@@ -60,15 +60,17 @@ export const NearByStopsDocument = `
     routes {
       routeId
       routeColor
+      routeLongName
     }
   }
 }
     `;
+
 export const useNearByStopsQuery = <TData = NearByStopsQuery, TError = unknown>(
   variables: NearByStopsQueryVariables,
   options?: UseQueryOptions<NearByStopsQuery, TError, TData>
-) =>
-  useQuery<NearByStopsQuery, TError, TData>(
+) => {
+  return useQuery<NearByStopsQuery, TError, TData>(
     ["NearByStops", variables],
     fetcher<NearByStopsQuery, NearByStopsQueryVariables>(
       NearByStopsDocument,
@@ -76,11 +78,13 @@ export const useNearByStopsQuery = <TData = NearByStopsQuery, TError = unknown>(
     ),
     options
   );
+};
 
 useNearByStopsQuery.getKey = (variables: NearByStopsQueryVariables) => [
   "NearByStops",
   variables,
 ];
+
 useNearByStopsQuery.fetcher = (variables: NearByStopsQueryVariables) =>
   fetcher<NearByStopsQuery, NearByStopsQueryVariables>(
     NearByStopsDocument,
