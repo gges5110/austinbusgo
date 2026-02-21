@@ -1,15 +1,16 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { stopLoader } from "features/stop/pages/stop/StopLoader";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { currentStopAtom } from "shared/state/atoms";
+import { currentStopAtom, mapsFlyToCoordinateAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
 export const useCurrentStop = () => {
   const [currentStop, setCurrentStop] = useAtom(currentStopAtom);
+  const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const { addToRecentSearches } = useRecentSearches();
@@ -30,6 +31,12 @@ export const useCurrentStop = () => {
     if (stopId !== undefined) {
       addToRecentSearches(stop);
       setCurrentStop(stop);
+      if (stop.stopLoc?.coordinates) {
+        setMapsFlyToCoordinate([
+          stop.stopLoc.coordinates[0],
+          stop.stopLoc.coordinates[1],
+        ]);
+      }
       if (location.pathname.includes("/route")) {
         navigate(
           `/stop/${stopId}${viewStatePathname}?routeId=${routeId}&directionId=${directionId}`
