@@ -1,0 +1,9 @@
+name: austinbusgo
+
+services:
+  setup-gtfs:
+    image: python:3.7-alpine
+    command: sh -c "python prepare.py"
+    working_dir: /etl
+    volumes:
+      - ../etl:/etl

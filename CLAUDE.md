@@ -25,8 +25,8 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 │   ├── models/         # Peewee ORM models
 │   ├── services/       # Business logic (GTFS service, RT client)
 │   └── tests/          # Unit tests
-├── ci-job/             # GTFS data processing scripts
-├── docker/             # Docker compose for PostgreSQL
+├── etl/                 # GTFS data download, prepare, and load scripts
+├── docker/              # Docker Compose files for PostgreSQL
 └── Makefile            # Development commands
 ```
 
@@ -93,7 +93,7 @@ npm start
 - `make test` - Run Python unit tests
 - `make coverage` - Generate test coverage report
 - `make lint` - Format Python code with Black
-- `make downloadGTFS` - Download GTFS data from CapMetro
+- `make etl-download` - Download GTFS data from CapMetro
 
 **Frontend (in client/ directory):**
 - `npm start` - Start Vite dev server
@@ -192,12 +192,13 @@ npm start
 - PostgreSQL runs on port 5438 (to avoid conflicts with default 5432)
 - Default credentials: `local-user:local-password@localhost:5438/local-db`
 - Requires GTFS CSV files processed with `preprocessGTFS.py`
-- Docker Compose config in `docker/docker-compose.yml`
+- Docker Compose split into `docker/compose.db.yml` (database) and `docker/compose.etl.yml` (GTFS prep job)
+- `make db-up` — start PostgreSQL only; `make setup-local` — start DB + run GTFS prep
 
 ### GTFS Data
 - Static GTFS data: routes, stops, schedules
 - Real-time data: vehicle positions, trip updates
-- Data stored in `ci-job/capmetro/`
+- Data stored in `etl/capmetro/`
 
 ### Git Workflow
 - Git hooks installed via `./setup-hooks.sh`

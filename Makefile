@@ -54,5 +54,8 @@ etl-load:
 
 etl: etl-download etl-prepare etl-load
 
-setup-local:
-	docker-compose -f docker/docker-compose.yml up
+db-up:
+	docker compose -f docker/compose.db.yml up -d
+
+setup-local: db-up
+	docker compose -f docker/compose.etl.yml run --rm setup-gtfs
