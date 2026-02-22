@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.fastapi import BaseContext, GraphQLRouter
 
 from server.config import db_url
+from server import database
 from server.database import (
-    AsyncSessionLocal,
     database_sanity_check,
     get_db,
     init_database,
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     if db_url is None:
         raise RuntimeError("Environment variable $DATABASE_URL was not set")
     init_database(db_url)
-    async with AsyncSessionLocal() as session:
+    async with database.AsyncSessionLocal() as session:
         await database_sanity_check(session)
     yield
 
