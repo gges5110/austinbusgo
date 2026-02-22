@@ -39,13 +39,18 @@ export declare type Coordinate = [number, number];
 export const Map: React.FunctionComponent = () => {
   const { mapId: map } = useMap();
   const { latitude, longitude, zoom } = useViewStatePathname();
-  const [viewState, setViewState] = useState<ViewState>({
+  const initialViewState = {
     latitude: latitude || defaultCenter[1],
     longitude: longitude || defaultCenter[0],
     zoom: zoom || 11.5,
-  });
+  };
+  const [viewState, setViewState] = useState<ViewState>(initialViewState);
+  // Separate state for query params — only updated when panning stops to
+  // prevent firing a NearByStops query on every animation frame.
+  const [queryViewState, setQueryViewState] =
+    useState<ViewState>(initialViewState);
   const { vehiclePositions } = useVehiclePositions();
-  const { stops, contextStops } = useStops(viewState);
+  const { stops, contextStops } = useStops(queryViewState);
   const { routeShapes } = useRouteShapes();
   const theme = useTheme();
   const { currentRoute: route } = useCurrentRoute();
@@ -63,6 +68,7 @@ export const Map: React.FunctionComponent = () => {
   const onMoveEnd = (event: ViewStateChangeEvent) => {
     // only setting view state in url after movement to prevent quick navigation from infinite loop
     setViewStateInUrl(event.viewState);
+    setQueryViewState(event.viewState);
   };
 
   const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
