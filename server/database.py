@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs, urlencode, urlparse
+
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -26,8 +28,20 @@ class Base(DeclarativeBase):
 
 def init_database(db_url: str) -> None:
     global engine, AsyncSessionLocal
-    async_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    engine = create_async_engine(async_url, pool_size=5, max_overflow=10)
+    parsed = urlparse(db_url.replace("postgresql://", "postgresql+asyncpg://", 1))
+    params = parse_qs(parsed.query)
+
+    connect_args = {}
+    if "sslmode" in params:
+        connect_args["ssl"] = True
+        params.pop("sslmode")
+
+    clean_url = parsed._replace(
+        query=urlencode({k: v[0] for k, v in params.items()})
+    ).geturl()
+    engine = create_async_engine(
+        clean_url, pool_size=5, max_overflow=10, connect_args=connect_args
+    )
     AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
