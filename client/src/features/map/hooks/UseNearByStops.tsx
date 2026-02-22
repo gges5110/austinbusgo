@@ -1,3 +1,4 @@
+import { useDebounce } from "shared/hooks/useDebounce";
 import { ViewState } from "features/map/components/Map";
 import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
 import { Stop } from "shared/types/interface.d";
@@ -16,10 +17,8 @@ export const useNearByStops = (viewState?: ViewState) => {
         : 5
     : 3;
 
-  const lat = viewState ? parseFloat(viewState.latitude.toFixed(precision)) : 0;
-  const lon = viewState
-    ? parseFloat(viewState.longitude.toFixed(precision))
-    : 0;
+  const lat = viewState ? viewState.latitude : 0;
+  const lon = viewState ? viewState.longitude : 0;
 
   const radius = viewState
     ? Math.min(20000, Math.round(5000 * Math.pow(2, 14 - viewState.zoom)))
@@ -40,13 +39,15 @@ export const useNearByStops = (viewState?: ViewState) => {
   const maxLat = bounds?.getNorth();
   const maxLon = bounds?.getEast();
 
-  const { data, isFetching } = useNearByStopsQuery(
+  const debouncedQueryParams = useDebounce(
     { lat, lon, radius, limit, minLat, minLon, maxLat, maxLon },
-    {
-      enabled: shouldFetch,
-      keepPreviousData: true,
-    }
+    500
   );
+
+  const { data, isFetching } = useNearByStopsQuery(debouncedQueryParams, {
+    enabled: shouldFetch,
+    keepPreviousData: true,
+  });
 
   const isLoading = isFetching;
 
