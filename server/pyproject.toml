@@ -19,7 +19,7 @@ dependencies = [
     "alembic==1.14.0",
     # GTFS
     "gtfs-realtime-bindings==1.0.0",
-    "shapely==2.0.1",
+    "shapely==2.1.2",
     "pytz==2025.2",
     # Production server (Gunicorn + UvicornWorker)
     "gunicorn==22.0.0",
