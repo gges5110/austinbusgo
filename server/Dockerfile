@@ -14,12 +14,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements first (Better for Docker caching)
-COPY server/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Copy pyproject.toml first (better for Docker caching)
+COPY server/pyproject.toml .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel hatchling
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir ".[dev]"
 
 # Copy the server directory
 COPY server /app/server
