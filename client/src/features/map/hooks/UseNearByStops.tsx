@@ -17,8 +17,9 @@ export const useNearByStops = (viewState?: ViewState) => {
         : 5
     : 3;
 
-  const lat = viewState ? viewState.latitude : 0;
-  const lon = viewState ? viewState.longitude : 0;
+  const factor = Math.pow(10, precision);
+  const lat = viewState ? Math.round(viewState.latitude * factor) / factor : 0;
+  const lon = viewState ? Math.round(viewState.longitude * factor) / factor : 0;
 
   const radius = viewState
     ? Math.min(20000, Math.round(5000 * Math.pow(2, 14 - viewState.zoom)))
