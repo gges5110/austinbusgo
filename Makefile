@@ -16,6 +16,7 @@ venv: $(VENV_PYTHON)
 
 deps:
 	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e "server[dev]"
 
 .PHONY: venv deps
 
