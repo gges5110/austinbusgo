@@ -1,6 +1,6 @@
 from typing import List
 
-import requests
+import httpx
 from google.transit import gtfs_realtime_pb2
 from google.transit.gtfs_realtime_pb2 import TripUpdate, VehiclePosition, FeedEntity
 
@@ -24,12 +24,11 @@ class GTFSRTClient:
         feed_entities = GTFSRTClient._get_feed_message_entity_from_url(
             self.vehicle_positions_pb_file_url
         )
-        # Convert feed to dict: https://mayors-ic.github.io/examples/gtfs-example.html
         return GTFSRTClient._get_valid_vehicles(feed_entities, route_id)
 
     @staticmethod
     def _get_feed_message_entity_from_url(url: str) -> FeedEntity:
-        response = requests.get(url)
+        response = httpx.get(url)
         feed_message = gtfs_realtime_pb2.FeedMessage()
         feed_message.ParseFromString(response.content)
         return feed_message.entity

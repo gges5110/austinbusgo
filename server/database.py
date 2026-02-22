@@ -1,7 +1,6 @@
-from playhouse.flask_utils import FlaskDB
+from playhouse.pool import PooledPostgresqlExtDatabase
+from peewee import Model
 
-# This module is for connecting to database
-db_wrapper = FlaskDB()
 ALL_TABLES_SET = {
     "trips",
     "routes",
@@ -13,16 +12,33 @@ ALL_TABLES_SET = {
     "transfers",
 }
 
+database = PooledPostgresqlExtDatabase(None)  # deferred init
+
+
+class BaseModel(Model):
+    class Meta:
+        database = database
+
+
+class _DBWrapper:
+    """Thin wrapper that exposes .Model (for gtfs_models.py) and delegates
+    all other attribute access to the underlying database instance."""
+
+    Model = BaseModel
+
+    def __getattr__(self, name: str):
+        return getattr(database, name)
+
+
+# Preserve `from server.database import db_wrapper` imports in models
+db_wrapper = _DBWrapper()
+
 
 def database_sanity_check():
-    # 1. Open the connection for this specific check
     try:
-        db_wrapper.database.connect()
-
-        # 2. Perform the database operation now that the connection is open
-        tables = db_wrapper.database.get_tables()
+        database.connect()
+        tables = database.get_tables()
         tables_set = set(tables)
-
         if len(ALL_TABLES_SET.difference(tables_set)):
             raise RuntimeError(
                 "Some of the tables are missing: {}".format(
@@ -30,6 +46,5 @@ def database_sanity_check():
                 )
             )
     finally:
-        # 3. CRITICAL: Close the connection after the check is complete
-        if not db_wrapper.database.is_closed():
-            db_wrapper.database.close()
+        if not database.is_closed():
+            database.close()

@@ -21,23 +21,24 @@ deps:
 
 run: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 run:
-	$(VENV_ACTIVATE) flask --app 'server/app:create_app()' --debug run --port=5001
+	$(VENV_ACTIVATE) uvicorn server.main:app --reload --port 5001
 
 run-prod: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 run-prod:
-	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 'server.app:create_app()'
+	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 --workers 4 \
+	    --worker-class uvicorn.workers.UvicornWorker server.main:app
 
 test:
-	$(PYTHON) -m unittest discover -s server/tests
+	$(PYTHON) -m pytest server/tests
 
 integration-tests:
-	$(PYTHON) -m unittest discover -s integration-tests
+	$(PYTHON) -m pytest integration-tests
 
 coverage:
-	$(VENV_ACTIVATE) coverage run -m unittest discover -s server/tests; coverage report
+	$(VENV_ACTIVATE) coverage run -m pytest server/tests; coverage report
 
 coverage-html:
-	$(VENV_ACTIVATE) coverage run -m unittest discover -s server/tests; coverage html
+	$(VENV_ACTIVATE) coverage run -m pytest server/tests; coverage html
 
 lint:
 	$(VENV_ACTIVATE) black server etl

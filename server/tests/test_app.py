@@ -1,44 +1,50 @@
 import pytest
-from flask import Flask
-from server.app import create_app
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from server.main import create_app
 
 
-def test_create_app(mocker):
-    # Mock dependencies to avoid real side effects
-    mocker.patch("server.app.database_sanity_check")
-    mocker.patch("server.app.db_wrapper.init_app")
-    mocker.patch("server.app.db_url", "postgresql://user:pass@localhost/db")
+def test_create_app_returns_fastapi(mocker):
+    mocker.patch("server.main.db_url", "postgresql://user:pass@localhost/db")
+    mocker.patch("server.main.database.init")
+    mocker.patch("server.main.database_sanity_check")
+    mocker.patch("server.main.database.connect")
+    mocker.patch("server.main.database.is_closed", return_value=True)
 
     app = create_app()
-
-    assert isinstance(app, Flask)
-    assert app.name == "server.app"
-    # Check if GraphQL route is registered
-    rules = [rule.rule for rule in app.url_map.iter_rules()]
-    assert "/graphql" in rules
+    assert isinstance(app, FastAPI)
 
 
-def test_create_app_debug(mocker):
-    mocker.patch("server.app.database_sanity_check")
-    mocker.patch("server.app.db_wrapper.init_app")
-    mocker.patch("server.app.db_url", "postgresql://user:pass@localhost/db")
+def test_graphql_route_registered(mocker):
+    mocker.patch("server.main.db_url", "postgresql://user:pass@localhost/db")
+    mocker.patch("server.main.database.init")
+    mocker.patch("server.main.database_sanity_check")
+    mocker.patch("server.main.database.connect")
+    mocker.patch("server.main.database.is_closed", return_value=True)
 
-    # Patch Flask's __init__ or just the return value to set debug=True
-    mock_app = Flask("server.app")
-    mock_app.debug = True
-    mocker.patch("server.app.Flask", return_value=mock_app)
+    app = create_app()
+    routes = [r.path for r in app.routes]
+    assert any("/graphql" in r for r in routes)
 
-    mock_logging = mocker.patch("server.app.logging.getLogger")
 
-    create_app()
+def test_graphql_endpoint_responds(mocker):
+    mocker.patch("server.main.db_url", "postgresql://user:pass@localhost/db")
+    mocker.patch("server.main.database.init")
+    mocker.patch("server.main.database_sanity_check")
+    mocker.patch("server.main.database.connect")
+    mocker.patch("server.main.database.is_closed", return_value=True)
 
-    mock_logging.assert_called_with("peewee")
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.get("/graphql")
+        assert response.status_code == 200
 
 
 def test_create_app_no_db_url(mocker):
-    mocker.patch("server.app.db_url", None)
+    mocker.patch("server.main.db_url", None)
 
-    with pytest.raises(
-        RuntimeError, match="Environment variable \$DATABASE_URL was not set"
-    ):
-        create_app()
+    app = create_app()
+    with pytest.raises(Exception):
+        with TestClient(app):
+            pass

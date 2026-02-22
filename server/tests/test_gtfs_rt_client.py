@@ -59,7 +59,7 @@ def test_load_trip_updates(client, mocker):
 
 
 def test_get_feed_message_entity_from_url(client, mocker):
-    mock_get = mocker.patch("server.services.gtfs_rt_client.requests.get")
+    mock_get = mocker.patch("server.services.gtfs_rt_client.httpx.get")
 
     feed_message = FeedMessage()
     feed_message.header.gtfs_realtime_version = "2.0"
