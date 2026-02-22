@@ -36,9 +36,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: client/package-lock.json
+      - name: Cache Vite transform cache
+        uses: actions/cache@v3
+        with:
+          path: client/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: vite-${{ runner.os }}-
       - name: Install dependencies
         working-directory: ./client
         run: npm ci
