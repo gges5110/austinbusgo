@@ -4,13 +4,13 @@ import strawberry
 from strawberry.types import Info
 
 from server.gql.inputs.gtfs_inputs import TripUpdatesFilter
-from server.gql.types.geometry_types import LineString
+from server.gql.types.geometry_types import LineString, geom_to_dict
 from server.gql.types.gtfs_rt_types import TripUpdate, VehiclePosition
 from server.gql.types.gtfs_types import FeedInfo, Route, Stop, StopTimes, Trip
 
 
 # ---------------------------------------------------------------------------
-# Response-only types (not backed by Peewee models)
+# Response-only types (not backed by ORM models)
 # ---------------------------------------------------------------------------
 
 
@@ -56,8 +56,12 @@ class ArrivalTimeAtStop:
 @strawberry.type
 class Query:
     @strawberry.field
-    def arrival_times(self, info: Info, stop_id: str, date: str) -> List[ArrivalTime]:
-        results = info.context.resolver.resolve_arrival_times(None, None, stop_id, date)
+    async def arrival_times(
+        self, info: Info, stop_id: str, date: str
+    ) -> List[ArrivalTime]:
+        results = await info.context.resolver.resolve_arrival_times(
+            None, None, stop_id, date
+        )
         return [
             ArrivalTime(
                 scheduled_arrival_time=r["scheduled_arrival_time"],
@@ -68,13 +72,15 @@ class Query:
         ]
 
     @strawberry.field
-    def distinct_trips(self, info: Info, route_id: str, date: str) -> List[Trip]:
+    async def distinct_trips(self, info: Info, route_id: str, date: str) -> List[Trip]:
         return list(
-            info.context.resolver.resolve_distinct_trips(None, None, route_id, date)
+            await info.context.resolver.resolve_distinct_trips(
+                None, None, route_id, date
+            )
         )
 
     @strawberry.field
-    def earliest_arrival_times_on_route(
+    async def earliest_arrival_times_on_route(
         self,
         info: Info,
         route_id: str,
@@ -82,7 +88,7 @@ class Query:
         date: str,
         time: str,
     ) -> List[ArrivalTimeAtStop]:
-        results = info.context.resolver.resolve_earliest_arrival_times_on_route(
+        results = await info.context.resolver.resolve_earliest_arrival_times_on_route(
             None, None, route_id, direction_id, date, time
         )
         return [
@@ -97,11 +103,11 @@ class Query:
         ]
 
     @strawberry.field
-    def feed_info(self, info: Info) -> FeedInfo:
-        return info.context.resolver.resolve_feed_info(None, None)
+    async def feed_info(self, info: Info) -> FeedInfo:
+        return await info.context.resolver.resolve_feed_info(None, None)
 
     @strawberry.field
-    def near_by_stops(
+    async def near_by_stops(
         self,
         info: Info,
         lat: float,
@@ -114,7 +120,7 @@ class Query:
         max_lon: Optional[float] = None,
     ) -> List[Stop]:
         return list(
-            info.context.resolver.resolve_near_by_stops(
+            await info.context.resolver.resolve_near_by_stops(
                 None,
                 None,
                 lat=lat,
@@ -134,59 +140,61 @@ class Query:
         return [VehiclePosition.from_proto(vp) for vp in protos]
 
     @strawberry.field
-    def route(self, info: Info, route_id: str) -> Route:
-        return info.context.resolver.resolve_route(None, None, route_id)
+    async def route(self, info: Info, route_id: str) -> Route:
+        return await info.context.resolver.resolve_route(None, None, route_id)
 
     @strawberry.field
-    def routes(self, info: Info) -> List[Route]:
-        return list(info.context.resolver.resolve_routes(None, None))
+    async def routes(self, info: Info) -> List[Route]:
+        return list(await info.context.resolver.resolve_routes(None, None))
 
     @strawberry.field
-    def route_shapes(self, info: Info, trip_id: str) -> LineString:
-        shape = info.context.resolver.resolve_route_shapes(None, None, trip_id)
-        return LineString.from_dict(shape)
+    async def route_shapes(self, info: Info, trip_id: str) -> LineString:
+        agg = await info.context.resolver.resolve_route_shapes(None, None, trip_id)
+        return LineString.from_dict(geom_to_dict(agg.shape))
 
     @strawberry.field
-    def search(self, info: Info, search_term: str) -> Search:
-        result = info.context.resolver.resolve_search(None, None, search_term)
+    async def search(self, info: Info, search_term: str) -> Search:
+        result = await info.context.resolver.resolve_search(None, None, search_term)
         return Search(
             stops=list(result["stops"]),
             routes=list(result["routes"]),
         )
 
     @strawberry.field
-    def stop(self, info: Info, stop_id: str) -> Stop:
-        return info.context.resolver.resolve_stop(None, None, stop_id)
+    async def stop(self, info: Info, stop_id: str) -> Stop:
+        return await info.context.resolver.resolve_stop(None, None, stop_id)
 
     @strawberry.field
-    def stops_and_shapes(
+    async def stops_and_shapes(
         self, info: Info, route_id: str, direction_id: int, date: str
     ) -> StopsAndShapes:
-        result = info.context.resolver.resolve_stops_and_shapes(
+        result = await info.context.resolver.resolve_stops_and_shapes(
             None, None, route_id, direction_id, date
         )
         return StopsAndShapes(
             stops=list(result["stops"]),
-            shapes=[LineString.from_dict(s) for s in result["shapes"]],
+            shapes=[LineString.from_dict(geom_to_dict(s)) for s in result["shapes"]],
         )
 
     @strawberry.field
-    def stops_by_name(self, info: Info, stop_name: str) -> List[Stop]:
-        return list(info.context.resolver.resolve_stops_by_name(None, None, stop_name))
+    async def stops_by_name(self, info: Info, stop_name: str) -> List[Stop]:
+        return list(
+            await info.context.resolver.resolve_stops_by_name(None, None, stop_name)
+        )
 
     @strawberry.field
-    def stop_times(self, info: Info, trip_id: str) -> List[StopTimes]:
-        return list(info.context.resolver.resolve_stop_times(None, None, trip_id))
+    async def stop_times(self, info: Info, trip_id: str) -> List[StopTimes]:
+        return list(await info.context.resolver.resolve_stop_times(None, None, trip_id))
 
     @strawberry.field
-    def trip(self, info: Info, trip_id: str) -> Trip:
-        return info.context.resolver.resolve_trip(None, None, trip_id)
+    async def trip(self, info: Info, trip_id: str) -> Trip:
+        return await info.context.resolver.resolve_trip(None, None, trip_id)
 
     @strawberry.field
-    def trip_ids_for_route(
+    async def trip_ids_for_route(
         self, info: Info, route_id: str, date: str
     ) -> TripIdsForRoute:
-        result = info.context.resolver.resolve_trip_ids_for_route(
+        result = await info.context.resolver.resolve_trip_ids_for_route(
             None, None, route_id, date
         )
         return TripIdsForRoute(trip_ids=result["tripIds"])
@@ -206,10 +214,10 @@ class Query:
         return [TripUpdate.from_proto(p) for p in protos]
 
     @strawberry.field
-    def vehicle_positions(
+    async def vehicle_positions(
         self, info: Info, route_id: str, direction: int
     ) -> List[VehiclePosition]:
-        protos = info.context.resolver.resolve_vehicle_positions(
+        protos = await info.context.resolver.resolve_vehicle_positions(
             None, None, route_id, direction
         )
         return [VehiclePosition.from_proto(vp) for vp in protos]

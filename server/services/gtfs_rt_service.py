@@ -1,6 +1,6 @@
 from typing import List
 
-from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
+from google.transit.gtfs_realtime_pb2 import TripUpdate, VehiclePosition
 
 from server.config import (
     capital_metro_trip_updates_pb_file_url,
@@ -12,33 +12,34 @@ from server.services.gtfs_service import GTFSService
 
 class GTFSRTService:
     """
-    A class that handles retrieving information about real time GTFS data, including vehicle positions and trip updates.
+    Handles retrieving real-time GTFS data including vehicle positions and trip updates.
     """
 
-    def __init__(self, gtfs_rt_client: GTFSRTClient = None):
+    def __init__(
+        self,
+        gtfs_service: GTFSService,
+        gtfs_rt_client: GTFSRTClient = None,
+    ):
+        self.gtfs_service = gtfs_service
         self.gtfs_rt_client = gtfs_rt_client or GTFSRTClient(
             capital_metro_trip_updates_pb_file_url,
             capital_metro_vehicle_positions_pb_file_url,
         )
 
-    def get_real_time_vehicle_positions_on_route(
+    async def get_real_time_vehicle_positions_on_route(
         self, route_id: str, direction: int
     ) -> List[VehiclePosition]:
         current_vehicle_positions = self.gtfs_rt_client.load_vehicle_positions(
             route_id=route_id
         )
-        trip_ids = [
-            self.get_trip_id(vehicle_position)
-            for vehicle_position in current_vehicle_positions
-        ]
-
-        trips_on_route = GTFSService.get_trips_with_direction_and_route(
+        trip_ids = [self.get_trip_id(vp) for vp in current_vehicle_positions]
+        trips_on_route = await self.gtfs_service.get_trips_with_direction_and_route(
             trip_ids, route_id, direction
         )
         return [
-            vehicle_position
-            for vehicle_position in current_vehicle_positions
-            if self.get_trip_id(vehicle_position) in trips_on_route
+            vp
+            for vp in current_vehicle_positions
+            if self.get_trip_id(vp) in trips_on_route
         ]
 
     def get_real_time_vehicle_positions(self) -> List[VehiclePosition]:
@@ -53,49 +54,34 @@ class GTFSRTService:
     ) -> List[TripUpdate]:
         trip_updates = self.gtfs_rt_client.load_trip_updates()
         if trip_id:
-            return [
-                trip_update_list
-                for trip_update_list in trip_updates
-                if trip_update_list.trip.trip_id == trip_id
-            ]
+            return [tu for tu in trip_updates if tu.trip.trip_id == trip_id]
         elif route_id:
-            return [
-                trip_update_list
-                for trip_update_list in trip_updates
-                if trip_update_list.trip.route_id == route_id
-            ]
+            return [tu for tu in trip_updates if tu.trip.route_id == route_id]
         else:
             return trip_updates
 
     def get_real_time_trip_updates(self, trip_ids: List[str]) -> List[TripUpdate]:
         trip_updates = self.gtfs_rt_client.load_trip_updates()
-        return [
-            trip_update_list
-            for trip_update_list in trip_updates
-            if trip_update_list.trip.trip_id in trip_ids
-        ]
+        return [tu for tu in trip_updates if tu.trip.trip_id in trip_ids]
 
-    def get_real_time_trip_updates_on_route(
+    async def get_real_time_trip_updates_on_route(
         self, route_id: str, direction_id: int
     ) -> List[TripUpdate]:
         trip_updates = self.gtfs_rt_client.load_trip_updates()
-        return [
-            trip_update
-            for trip_update in trip_updates
-            if trip_update.trip.route_id == route_id
-            and GTFSService.get_trip_by_id(trip_update.trip.trip_id).direction_id
-            == direction_id
-        ]
+        result = []
+        for tu in trip_updates:
+            if tu.trip.route_id != route_id:
+                continue
+            trip = await self.gtfs_service.get_trip_by_id(tu.trip.trip_id)
+            if trip.direction_id == direction_id:
+                result.append(tu)
+        return result
 
     @staticmethod
     def get_arrival_time_by_stop_id(
         stop_time_updates: List[TripUpdate.StopTimeUpdate], stop_id: str
-    ) -> TripUpdate.StopTimeUpdate or None:
+    ):
         try:
-            return next(
-                stop_time_update
-                for stop_time_update in stop_time_updates
-                if stop_time_update.stop_id == stop_id
-            )
+            return next(stu for stu in stop_time_updates if stu.stop_id == stop_id)
         except StopIteration:
             return None
