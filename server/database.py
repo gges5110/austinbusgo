@@ -27,6 +27,8 @@ class Base(DeclarativeBase):
 def init_database(db_url: str) -> None:
     global engine, AsyncSessionLocal
     async_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # asyncpg uses ?ssl=require, not ?sslmode=require (psycopg2 style)
+    async_url = async_url.replace("sslmode=", "ssl=")
     engine = create_async_engine(async_url, pool_size=5, max_overflow=10)
     AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
