@@ -1,30 +1,38 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.fastapi import BaseContext, GraphQLRouter
 
 from server.config import db_url
-from server.database import database, database_sanity_check
+from server.database import (
+    AsyncSessionLocal,
+    database_sanity_check,
+    get_db,
+    init_database,
+)
 from server.gql.resolver import Resolver
 from server.gql.schema import schema
 
 
 class GraphQLContext(BaseContext):
-    def __init__(self):
-        self.resolver = Resolver()
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.resolver = Resolver(session)
 
 
-async def get_context() -> GraphQLContext:
-    return GraphQLContext()
+async def get_context(session: AsyncSession = Depends(get_db)) -> GraphQLContext:
+    return GraphQLContext(session)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if db_url is None:
         raise RuntimeError("Environment variable $DATABASE_URL was not set")
-    database.init(db_url)
-    database_sanity_check()
+    init_database(db_url)
+    async with AsyncSessionLocal() as session:
+        await database_sanity_check(session)
     yield
 
 
@@ -37,16 +45,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    @app.middleware("http")
-    async def db_connection_middleware(request: Request, call_next):
-        database.connect(reuse_if_open=True)
-        try:
-            response = await call_next(request)
-        finally:
-            if not database.is_closed():
-                database.close()
-        return response
 
     graphql_app = GraphQLRouter(
         schema, context_getter=get_context, graphql_ide="graphiql"

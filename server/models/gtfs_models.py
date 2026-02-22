@@ -1,178 +1,126 @@
-import json
-
-from peewee import (
-    TextField,
-    IntegerField,
-    FloatField,
-    BooleanField,
-    DateField,
-    Field,
-    fn,
-)
-from shapely import wkb, to_geojson
-
-from server.database import db_wrapper
-
-
 # GTFS reference: https://developers.google.com/transit/gtfs/reference
+from geoalchemy2 import Geometry
+from sqlalchemy import Boolean, Column, Date, Float, Integer, Text
+
+from server.database import Base
 
 
-class GeometryField(Field):
-    field_type = "geometry"
+class FeedInfo(Base):
+    __tablename__ = "feed_info"
 
-    def db_value(self, value):
-        return fn.ST_GeomFromGeoJSON(value)
-
-    def python_value(self, value):
-        if value:
-            return json.loads(to_geojson(wkb.loads(value, hex=True)))
-        else:
-            return value
+    feed_publisher_name = Column(Text, primary_key=True)
+    feed_publisher_url = Column(Text)
+    feed_lang = Column(Text)
+    feed_start_date = Column(Date, nullable=True)
+    feed_end_date = Column(Date, nullable=True)
+    feed_version = Column(Text)
 
 
-class UnknownField(object):
-    def __init__(self, *_, **__):
-        pass
+class Routes(Base):
+    __tablename__ = "routes"
+
+    route_id = Column(Text, primary_key=True)
+    agency_id = Column(Text, nullable=True)
+    route_short_name = Column(Text, nullable=True)
+    route_long_name = Column(Text, nullable=True)
+    route_type = Column(Integer, nullable=True)
+    route_url = Column(Text, nullable=True)
+    route_color = Column(Text, nullable=True)
+    route_text_color = Column(Text, nullable=True)
 
 
-class FeedInfo(db_wrapper.Model):
-    feed_publisher_name = TextField()
-    feed_publisher_url = TextField()
-    feed_lang = TextField()
-    feed_start_date = DateField(null=True)
-    feed_end_date = DateField(null=True)
-    feed_version = TextField()
+class Shapes(Base):
+    __tablename__ = "shapes"
 
-    class Meta:
-        table_name = "feed_info"
-        primary_key = False
+    shape_id = Column(Text, primary_key=True)
+    shape_pt_sequence = Column(Integer, primary_key=True)
+    shape_pt_loc = Column(Geometry("POINT", srid=4326), nullable=True)
+    shape_dist_traveled = Column(Float, nullable=True)
 
 
-class Routes(db_wrapper.Model):
-    route_id = TextField(index=True, null=True, primary_key=True, unique=True)
-    agency_id = TextField(null=True)
-    route_short_name = TextField(null=True, unique=True)
-    route_long_name = TextField(null=True)
-    route_type = IntegerField(null=True)
-    route_url = TextField(null=True)
-    route_color = TextField(null=True)
-    route_text_color = TextField(null=True)
+class AggregatedShape(Base):
+    __tablename__ = "shapes_aggregated"
 
-    class Meta:
-        table_name = "routes"
-        primary_key = False
+    shape_id = Column(Text, primary_key=True)
+    shape = Column(Geometry("LINESTRING", srid=4326), nullable=True)
 
 
-class Shapes(db_wrapper.Model):
-    shape_id = TextField(index=True, null=True)
-    shape_pt_loc = GeometryField(null=True)
-    shape_pt_sequence = IntegerField(index=True, null=True)
-    shape_dist_traveled = FloatField(null=True)
+class StopTimes(Base):
+    __tablename__ = "stop_times"
 
-    class Meta:
-        table_name = "shapes"
-        primary_key = False
-
-
-class AggregatedShape(db_wrapper.Model):
-    shape_id = TextField(index=True, null=True)
-    shape = GeometryField(null=True)
-
-    class Meta:
-        table_name = "shapes_aggregated"
-        primary_key = False
+    trip_id = Column(Text, primary_key=True)
+    stop_sequence = Column(Integer, primary_key=True)
+    arrival_time = Column(Text, nullable=True)
+    departure_time = Column(Text, nullable=True)
+    stop_id = Column(Text, nullable=True)
+    pickup_type = Column(Integer, nullable=True)
+    drop_off_type = Column(Integer, nullable=True)
+    shape_dist_traveled = Column(Float, nullable=True)
+    timepoint = Column(Integer, nullable=True)
 
 
-class StopTimes(db_wrapper.Model):
-    trip_id = TextField(index=True, null=True)
-    arrival_time = TextField(null=True)
-    departure_time = TextField(null=True)
-    stop_id = TextField(index=True, null=True)
-    stop_sequence = IntegerField(index=True, null=True)
-    pickup_type = IntegerField(null=True)
-    drop_off_type = IntegerField(null=True)
-    shape_dist_traveled = FloatField(null=True)
-    timepoint = IntegerField(null=True)
+class RoutesAtStop(Base):
+    __tablename__ = "routes_at_stop"
 
-    class Meta:
-        table_name = "stop_times"
-        primary_key = False
+    stop_id = Column(Text, primary_key=True)
+    route_id = Column(Text, primary_key=True)
 
 
-class RoutesAtStop(db_wrapper.Model):
-    stop_id = TextField(null=True)
-    route_id = TextField(null=True)
+class Stops(Base):
+    __tablename__ = "stops"
 
-    class Meta:
-        table_name = "routes_at_stop"
-        primary_key = False
-        indexes = ((("stop_id",), False),)
-
-
-class Stops(db_wrapper.Model):
-    stop_id = TextField(index=True, null=True, primary_key=True, unique=True)
-    stop_code = TextField(null=True)
-    stop_name = TextField(null=True)
-    stop_desc = TextField(null=True)
-    stop_loc = GeometryField(null=True)
-    zone_id = TextField(null=True)
-    stop_url = TextField(null=True)
-    location_type = IntegerField(null=True)
-    parent_station = TextField(null=True)
-    stop_timezone = TextField(null=True)
-    wheelchair_boarding = IntegerField(null=True)
-    corner_placement = TextField(null=True)
-    stop_position = TextField(null=True)
-    on_street = TextField(null=True)
-    at_street = TextField(null=True)
-    heading = IntegerField(null=True)
-
-    class Meta:
-        table_name = "stops"
-        primary_key = False
-        indexes = ((("stop_loc",), "GIST"),)
+    stop_id = Column(Text, primary_key=True)
+    stop_code = Column(Text, nullable=True)
+    stop_name = Column(Text, nullable=True)
+    stop_desc = Column(Text, nullable=True)
+    stop_loc = Column(Geometry("POINT", srid=4326), nullable=True)
+    zone_id = Column(Text, nullable=True)
+    stop_url = Column(Text, nullable=True)
+    location_type = Column(Integer, nullable=True)
+    parent_station = Column(Text, nullable=True)
+    stop_timezone = Column(Text, nullable=True)
+    wheelchair_boarding = Column(Integer, nullable=True)
+    corner_placement = Column(Text, nullable=True)
+    stop_position = Column(Text, nullable=True)
+    on_street = Column(Text, nullable=True)
+    at_street = Column(Text, nullable=True)
+    heading = Column(Integer, nullable=True)
 
 
-class Trips(db_wrapper.Model):
-    route_id = TextField(index=True, null=True)
-    service_id = TextField(null=True)
-    trip_id = TextField(index=True, null=True, primary_key=True, unique=True)
-    trip_headsign = TextField(null=True)
-    direction_id = IntegerField(index=True, null=True)
-    block_id = TextField(null=True)
-    shape_id = TextField(index=True, null=True)
-    scheduled_trip_id = TextField(null=True)
-    trip_short_name = TextField(null=True)
-    wheelchair_accessible = IntegerField(null=True)
-    bikes_allowed = IntegerField(null=True)
+class Trips(Base):
+    __tablename__ = "trips"
 
-    class Meta:
-        table_name = "trips"
-        primary_key = False
+    trip_id = Column(Text, primary_key=True)
+    route_id = Column(Text, nullable=True)
+    service_id = Column(Text, nullable=True)
+    trip_headsign = Column(Text, nullable=True)
+    direction_id = Column(Integer, nullable=True)
+    block_id = Column(Text, nullable=True)
+    shape_id = Column(Text, nullable=True)
+    scheduled_trip_id = Column(Text, nullable=True)
+    trip_short_name = Column(Text, nullable=True)
+    wheelchair_accessible = Column(Integer, nullable=True)
+    bikes_allowed = Column(Integer, nullable=True)
 
 
-class Calendar(db_wrapper.Model):
-    service_id = TextField(index=True, null=True, primary_key=True, unique=True)
-    monday = BooleanField(index=True, null=True)
-    tuesday = BooleanField(index=True, null=True)
-    wednesday = BooleanField(index=True, null=True)
-    thursday = BooleanField(index=True, null=True)
-    friday = BooleanField(index=True, null=True)
-    saturday = BooleanField(index=True, null=True)
-    sunday = BooleanField(index=True, null=True)
-    start_date = DateField(null=True)
-    end_date = DateField(null=True)
+class Calendar(Base):
+    __tablename__ = "calendar"
 
-    class Meta:
-        table_name = "calendar"
-        primary_key = False
+    service_id = Column(Text, primary_key=True)
+    monday = Column(Boolean, nullable=True)
+    tuesday = Column(Boolean, nullable=True)
+    wednesday = Column(Boolean, nullable=True)
+    thursday = Column(Boolean, nullable=True)
+    friday = Column(Boolean, nullable=True)
+    saturday = Column(Boolean, nullable=True)
+    sunday = Column(Boolean, nullable=True)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
 
 
-class CalendarDates(db_wrapper.Model):
-    service_id = TextField(null=True)
-    date = DateField(null=True)
-    exception_type = IntegerField(null=True)
+class CalendarDates(Base):
+    __tablename__ = "calendar_dates"
 
-    class Meta:
-        table_name = "calendar_dates"
-        primary_key = False
+    service_id = Column(Text, primary_key=True)
+    date = Column(Date, primary_key=True)
+    exception_type = Column(Integer, nullable=True)

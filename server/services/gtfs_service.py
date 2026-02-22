@@ -1,277 +1,442 @@
-""" This file contains methods to retrieve data from database """
-from datetime import datetime, timedelta
-from typing import List
+"""This file contains methods to retrieve data from database"""
 
-import peewee
-from playhouse.postgres_ext import Match
+from datetime import datetime, timedelta
+from types import SimpleNamespace
+from typing import List, Optional
+
+from sqlalchemy import func, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.models.gtfs_models import (
+    AggregatedShape,
+    CalendarDates,
+    FeedInfo,
     Routes,
-    Trips,
+    RoutesAtStop,
     Stops,
     StopTimes,
-    CalendarDates,
-    AggregatedShape,
-    RoutesAtStop,
-    FeedInfo,
+    Trips,
 )
 
 
 class GTFSService:
-    def __init__(self):
-        pass
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
     # Routes
-    @staticmethod
-    def get_route(route_id: str) -> Routes:
-        return Routes.get_by_id(route_id)
-
-    @staticmethod
-    def get_routes() -> List[Routes]:
-        return Routes.select()
-
-    @staticmethod
-    def get_routes_by_name(search_terms: List[str]) -> List[Routes]:
-        if len(search_terms) == 1:
-            term = search_terms[0]
-            return Routes.select().where(
-                Match(Routes.route_id, term) | Match(Routes.route_long_name, term)
-            )
-        else:
-            # Use OR logic for multi-word searches to match any of the terms
-            term = "|".join(search_terms)
-            return Routes.select().where(
-                Match(Routes.route_id, term) | Match(Routes.route_long_name, term)
-            )
-
-    @staticmethod
-    def get_routes_at_stop(stop_id: str) -> List[Routes]:
-        return Routes.select(Routes).join(
-            RoutesAtStop,
-            on=(
-                (RoutesAtStop.route_id == Routes.route_id)
-                & (RoutesAtStop.stop_id == stop_id)
-            ),
+    async def get_route(self, route_id: str) -> Routes:
+        result = await self.session.execute(
+            select(Routes).where(Routes.route_id == route_id)
         )
+        return result.scalar_one()
+
+    async def get_routes(self) -> List[Routes]:
+        result = await self.session.execute(select(Routes))
+        return result.scalars().all()
+
+    async def get_routes_by_name(self, search_terms: List[str]) -> List[Routes]:
+        term = "|".join(search_terms)
+        result = await self.session.execute(
+            select(Routes).where(
+                Routes.route_id.op("~*")(term) | Routes.route_long_name.op("~*")(term)
+            )
+        )
+        return result.scalars().all()
+
+    async def get_routes_at_stop(self, stop_id: str) -> List[Routes]:
+        result = await self.session.execute(
+            select(Routes)
+            .join(RoutesAtStop, RoutesAtStop.route_id == Routes.route_id)
+            .where(RoutesAtStop.stop_id == stop_id)
+        )
+        return result.scalars().all()
 
     # Stops
-    @staticmethod
-    def get_stop(stop_id: str) -> Stops:
-        return Stops.get_by_id(stop_id)
+    async def get_stop(self, stop_id: str) -> Stops:
+        result = await self.session.execute(
+            select(
+                Stops.stop_id,
+                Stops.stop_code,
+                Stops.stop_name,
+                Stops.stop_desc,
+                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+                Stops.zone_id,
+                Stops.stop_url,
+                Stops.location_type,
+                Stops.parent_station,
+                Stops.stop_timezone,
+                Stops.wheelchair_boarding,
+                Stops.corner_placement,
+                Stops.stop_position,
+                Stops.on_street,
+                Stops.at_street,
+                Stops.heading,
+            ).where(Stops.stop_id == stop_id)
+        )
+        row = result.one()
+        return SimpleNamespace(**row._mapping)
 
-    @staticmethod
-    def get_stops_by_name(search_terms: List[str]) -> List[Stops]:
-        if len(search_terms) == 1:
-            term = search_terms[0]
-            return Stops.select().where(
-                Match(Stops.at_street, term)
-                | Match(Stops.on_street, term)
-                | Match(Stops.stop_name, term)
-                | Match(Stops.stop_code, term)
+    async def get_stops_by_name(self, search_terms: List[str]) -> List[Stops]:
+        term = "|".join(search_terms)
+        result = await self.session.execute(
+            select(
+                Stops.stop_id,
+                Stops.stop_code,
+                Stops.stop_name,
+                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+            ).where(
+                Stops.at_street.op("~*")(term)
+                | Stops.on_street.op("~*")(term)
+                | Stops.stop_name.op("~*")(term)
+                | Stops.stop_code.op("~*")(term)
             )
-        else:
-            # Use OR logic for multi-word searches to match any of the terms
-            term = "|".join(search_terms)
-            return Stops.select().where(
-                Match(Stops.at_street, term)
-                | Match(Stops.on_street, term)
-                | Match(Stops.stop_name, term)
-                | Match(Stops.stop_code, term)
-            )
+        )
+        return [SimpleNamespace(**row._mapping) for row in result]
 
-    @staticmethod
-    def get_near_by_stops(
+    async def get_near_by_stops(
+        self,
         lat: float,
         lon: float,
         radius: float = 1000.0,
         limit: int = 20,
-        min_lat: float = None,
-        min_lon: float = None,
-        max_lat: float = None,
-        max_lon: float = None,
-    ) -> List[Stops]:
-        # Performance Optimization: Use a MATERIALIZED CTE to force Postgres to
-        # perform the spatial search BEFORE joining with route counts.
-
-        # Decide search filter based on whether bounding box is provided
+        min_lat: Optional[float] = None,
+        min_lon: Optional[float] = None,
+        max_lat: Optional[float] = None,
+        max_lon: Optional[float] = None,
+    ) -> List[SimpleNamespace]:
         if all(v is not None for v in [min_lat, min_lon, max_lat, max_lon]):
-            spatial_filter = "ST_Intersects(stop_loc, ST_MakeEnvelope(%s, %s, %s, %s, 4326)::geography)"
-            params = [min_lon, min_lat, max_lon, max_lat, lon, lat, limit]
+            spatial_filter = (
+                "ST_Intersects(stop_loc,"
+                " ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)::geography)"
+            )
+            params = {
+                "min_lon": min_lon,
+                "min_lat": min_lat,
+                "max_lon": max_lon,
+                "max_lat": max_lat,
+                "center_lon": lon,
+                "center_lat": lat,
+                "limit": limit,
+            }
         else:
             spatial_filter = (
-                "ST_DWithin(stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s)"
+                "ST_DWithin(stop_loc,"
+                " ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326), :radius)"
             )
-            params = [lon, lat, radius, lon, lat, limit]
+            params = {
+                "radius": radius,
+                "center_lon": lon,
+                "center_lat": lat,
+                "limit": limit,
+            }
 
         sql = f"""
         WITH stops_in_radius AS MATERIALIZED (
-            SELECT stop_id, stop_code, stop_name, stop_loc 
-            FROM stops 
+            SELECT stop_id, stop_code, stop_name,
+                   ST_AsGeoJSON(stop_loc) AS stop_loc
+            FROM stops
             WHERE {spatial_filter}
         )
-        SELECT s.stop_id, s.stop_code, s.stop_name, s.stop_loc, COUNT(r.route_id) as route_count
+        SELECT s.stop_id, s.stop_code, s.stop_name, s.stop_loc,
+               COUNT(r.route_id) as route_count
         FROM stops_in_radius s
         LEFT OUTER JOIN routes_at_stop r ON s.stop_id = r.stop_id
         GROUP BY s.stop_id, s.stop_code, s.stop_name, s.stop_loc
-        ORDER BY (COUNT(r.route_id) + 1.0) / (ST_Distance(s.stop_loc, ST_SetSRID(ST_MakePoint(%s, %s), 4326)) * 10.0 + 1.0) DESC
-        LIMIT %s;
+        ORDER BY (COUNT(r.route_id) + 1.0) /
+                 (ST_Distance(
+                     ST_SetSRID(ST_GeomFromGeoJSON(s.stop_loc), 4326),
+                     ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326)
+                 ) * 10.0 + 1.0) DESC
+        LIMIT :limit;
         """
-        # Execute raw SQL and map to Stops model
-        query = Stops.raw(sql, *params)
-        return list(query)
+        result = await self.session.execute(text(sql), params)
+        return [SimpleNamespace(**row._mapping) for row in result]
 
-    @staticmethod
-    def get_stops_by_route_id(route_id: str, direction_id: int) -> List[Stops]:
-        return (
-            Stops.select(Stops, StopTimes, Trips)
-            .distinct(Stops.stop_id)
-            .join(StopTimes, on=(Stops.stop_id == StopTimes.stop_id).alias("stop_time"))
-            .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
-            .where((Trips.route_id == route_id) & (Trips.direction_id == direction_id))
+    async def get_stops_by_route_id(
+        self, route_id: str, direction_id: int
+    ) -> List[SimpleNamespace]:
+        sql = text(
+            """
+            SELECT DISTINCT ON (stops.stop_id)
+                stops.stop_id, stops.stop_code, stops.stop_name,
+                ST_AsGeoJSON(stops.stop_loc) AS stop_loc,
+                stop_times.stop_sequence AS st_stop_sequence,
+                trips.shape_id AS t_shape_id
+            FROM stops
+            JOIN stop_times ON stops.stop_id = stop_times.stop_id
+            JOIN trips ON stop_times.trip_id = trips.trip_id
+            WHERE trips.route_id = :route_id
+              AND trips.direction_id = :direction_id
+            ORDER BY stops.stop_id, stop_times.stop_sequence
+            """
         )
+        result = await self.session.execute(
+            sql, {"route_id": route_id, "direction_id": direction_id}
+        )
+        stops = []
+        for row in result:
+            stop = SimpleNamespace(
+                stop_id=row.stop_id,
+                stop_code=row.stop_code,
+                stop_name=row.stop_name,
+                stop_loc=row.stop_loc,
+                stop_time=SimpleNamespace(
+                    stop_sequence=row.st_stop_sequence,
+                    trip=SimpleNamespace(shape_id=row.t_shape_id),
+                ),
+            )
+            stops.append(stop)
+        return stops
 
     # Trips
-    @staticmethod
-    def get_trips_by_distinct_short_name(route_id: str, date: str) -> List[Trips]:
-        return (
-            Trips.select(Trips)
-            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .distinct(Trips.direction_id, Trips.trip_headsign)
-            .where((Trips.route_id == route_id) & (CalendarDates.date == date))
-            .order_by(Trips.direction_id, Trips.trip_headsign)
-        )
-
-    @staticmethod
-    def get_all_trips() -> List[Trips]:
-        return (
-            Trips.select(Trips, Routes)
-            .distinct(Trips.trip_headsign)
-            .join(Routes, on=(Trips.route_id == Routes.route_id).alias("routes"))
-        )
-
-    @staticmethod
-    def get_trips_for_date(route_id: str, date: str) -> List[Trips]:
-        return (
-            Trips.select(Trips, Routes)
-            .join(Routes, on=(Trips.route_id == Routes.route_id).alias("routes"))
-            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .where((CalendarDates.date == date) & (Routes.route_id == route_id))
-        )
-
-    @staticmethod
-    def get_trips_with_direction_and_route(
-        trip_ids: List[str], route_id: str, direction: int
+    async def get_trips_by_distinct_short_name(
+        self, route_id: str, date: str
     ) -> List[Trips]:
-        return [
-            trip.trip_id
-            for trip in Trips.select(Trips.trip_id).where(
-                (Trips.trip_id.in_(trip_ids))
+        sql = text(
+            """
+            SELECT DISTINCT ON (trips.direction_id, trips.trip_headsign)
+                trips.trip_id, trips.route_id, trips.service_id,
+                trips.trip_headsign, trips.direction_id, trips.block_id,
+                trips.shape_id, trips.scheduled_trip_id, trips.trip_short_name,
+                trips.wheelchair_accessible, trips.bikes_allowed
+            FROM trips
+            JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
+            WHERE trips.route_id = :route_id
+              AND calendar_dates.date = :date
+            ORDER BY trips.direction_id, trips.trip_headsign
+            """
+        )
+        result = await self.session.execute(sql, {"route_id": route_id, "date": date})
+        return [SimpleNamespace(**row._mapping) for row in result]
+
+    async def get_trips_for_date(self, route_id: str, date: str) -> List[Trips]:
+        result = await self.session.execute(
+            select(Trips)
+            .join(CalendarDates, CalendarDates.service_id == Trips.service_id)
+            .where((CalendarDates.date == date) & (Trips.route_id == route_id))
+        )
+        return result.scalars().all()
+
+    async def get_trips_with_direction_and_route(
+        self, trip_ids: List[str], route_id: str, direction: int
+    ) -> List[str]:
+        result = await self.session.execute(
+            select(Trips.trip_id).where(
+                Trips.trip_id.in_(trip_ids)
                 & (Trips.route_id == route_id)
                 & (Trips.direction_id == direction)
             )
-        ]
-
-    @staticmethod
-    def get_trip_by_id(trip_id: str) -> Trips:
-        trips = list(
-            Trips.select(Trips, Routes)
-            .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route"))
-            .where(Trips.trip_id == trip_id)
         )
-        return trips[0]
+        return [row[0] for row in result]
+
+    async def get_trip_by_id(self, trip_id: str) -> SimpleNamespace:
+        sql = text(
+            """
+            SELECT trips.trip_id, trips.route_id, trips.service_id,
+                   trips.trip_headsign, trips.direction_id, trips.block_id,
+                   trips.shape_id, trips.scheduled_trip_id, trips.trip_short_name,
+                   trips.wheelchair_accessible, trips.bikes_allowed,
+                   routes.route_id AS r_route_id,
+                   routes.route_short_name, routes.route_long_name,
+                   routes.agency_id, routes.route_color
+            FROM trips
+            JOIN routes ON routes.route_id = trips.route_id
+            WHERE trips.trip_id = :trip_id
+            LIMIT 1
+            """
+        )
+        result = await self.session.execute(sql, {"trip_id": trip_id})
+        row = result.one()
+        route = SimpleNamespace(
+            route_id=row.r_route_id,
+            route_short_name=row.route_short_name,
+            route_long_name=row.route_long_name,
+            agency_id=row.agency_id,
+            route_color=row.route_color,
+        )
+        trip = SimpleNamespace(
+            trip_id=row.trip_id,
+            route_id=row.route_id,
+            service_id=row.service_id,
+            trip_headsign=row.trip_headsign,
+            direction_id=row.direction_id,
+            block_id=row.block_id,
+            shape_id=row.shape_id,
+            scheduled_trip_id=row.scheduled_trip_id,
+            trip_short_name=row.trip_short_name,
+            wheelchair_accessible=row.wheelchair_accessible,
+            bikes_allowed=row.bikes_allowed,
+            route=route,
+        )
+        return trip
 
     # Shapes
-    @staticmethod
-    def get_shapes_by_trip_id(trip_id: str) -> AggregatedShape:
-        trip = Trips.get_by_id(trip_id)
-        return GTFSService.get_shapes_by_shape_id(trip.shape_id)
+    async def get_shapes_by_trip_id(self, trip_id: str) -> SimpleNamespace:
+        result = await self.session.execute(
+            select(Trips.shape_id).where(Trips.trip_id == trip_id)
+        )
+        shape_id = result.scalar_one()
+        return await self.get_shapes_by_shape_id(shape_id)
 
-    @staticmethod
-    def get_shapes_by_shape_id(shape_id: str) -> AggregatedShape:
-        return AggregatedShape.select(AggregatedShape).where(
-            AggregatedShape.shape_id == shape_id
-        )[0]
+    async def get_shapes_by_shape_id(self, shape_id: str) -> SimpleNamespace:
+        result = await self.session.execute(
+            select(
+                AggregatedShape.shape_id,
+                func.ST_AsGeoJSON(AggregatedShape.shape).label("shape"),
+            ).where(AggregatedShape.shape_id == shape_id)
+        )
+        row = result.one()
+        return SimpleNamespace(shape_id=row.shape_id, shape=row.shape)
 
     # StopTimes
-    @staticmethod
-    def get_stop_time(trip_id: str, stop_id: str) -> StopTimes:
-        return StopTimes.get(
-            (StopTimes.trip_id == trip_id) & (StopTimes.stop_id == stop_id)
+    async def get_stop_times_by_trip_id(self, trip_id: str) -> List[SimpleNamespace]:
+        sql = text(
+            """
+            SELECT st.trip_id, st.arrival_time, st.departure_time,
+                   st.stop_id, st.stop_sequence, st.pickup_type,
+                   st.drop_off_type, st.shape_dist_traveled, st.timepoint,
+                   stops.stop_id AS s_stop_id,
+                   stops.stop_code, stops.stop_name,
+                   ST_AsGeoJSON(stops.stop_loc) AS stop_loc
+            FROM stop_times st
+            JOIN stops ON stops.stop_id = st.stop_id
+            WHERE st.trip_id = :trip_id
+            ORDER BY st.stop_sequence
+            """
         )
+        result = await self.session.execute(sql, {"trip_id": trip_id})
+        stop_times = []
+        for row in result:
+            stop = SimpleNamespace(
+                stop_id=row.s_stop_id,
+                stop_code=row.stop_code,
+                stop_name=row.stop_name,
+                stop_loc=row.stop_loc,
+            )
+            st = SimpleNamespace(
+                trip_id=row.trip_id,
+                arrival_time=row.arrival_time,
+                departure_time=row.departure_time,
+                stop_id=row.stop_id,
+                stop_sequence=row.stop_sequence,
+                pickup_type=row.pickup_type,
+                drop_off_type=row.drop_off_type,
+                shape_dist_traveled=row.shape_dist_traveled,
+                timepoint=row.timepoint,
+                stop=stop,
+            )
+            stop_times.append(st)
+        return stop_times
 
-    @staticmethod
-    def get_stop_times_by_trip_id(trip_id: str) -> List[StopTimes]:
-        return (
-            StopTimes.select(StopTimes, Stops)
-            .join(Stops, on=(Stops.stop_id == StopTimes.stop_id).alias("stop"))
-            .where((StopTimes.trip_id == trip_id))
+    async def get_stop_times_by_stop_id(
+        self, stop_id: str, date: str
+    ) -> List[SimpleNamespace]:
+        cutoff = (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
+        sql = text(
+            """
+            SELECT st.trip_id, st.arrival_time, st.departure_time,
+                   st.stop_id, st.stop_sequence,
+                   trips.trip_id AS t_trip_id, trips.route_id,
+                   trips.trip_headsign, trips.direction_id,
+                   trips.shape_id, trips.service_id,
+                   trips.scheduled_trip_id, trips.trip_short_name,
+                   trips.wheelchair_accessible, trips.bikes_allowed,
+                   trips.block_id,
+                   routes.route_id AS r_route_id,
+                   routes.route_short_name, routes.route_long_name,
+                   routes.agency_id, routes.route_color
+            FROM stop_times st
+            JOIN trips ON st.trip_id = trips.trip_id
+            JOIN routes ON routes.route_id = trips.route_id
+            JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
+            WHERE st.stop_id = :stop_id
+              AND calendar_dates.date = :date
+              AND st.arrival_time > :cutoff
+            ORDER BY st.arrival_time
+            """
         )
-
-    @staticmethod
-    def get_stop_times_by_stop_id(
-        stop_id: str, date: str, page_number: int = 1
-    ) -> List[StopTimes]:
-        # TODO: add index for CalendarDates
-        return (
-            StopTimes.select(StopTimes, Stops, Trips, Routes)
-            .join(Trips, on=(StopTimes.trip_id == Trips.trip_id).alias("trip"))
-            .join(Routes, on=(Routes.route_id == Trips.route_id).alias("route"))
-            .join(Stops, on=(Stops.stop_id == StopTimes.stop_id))
-            .join(CalendarDates, on=(CalendarDates.service_id == Trips.service_id))
-            .where(
-                (StopTimes.stop_id == stop_id)
-                & (CalendarDates.date == date)
-                & (
-                    StopTimes.arrival_time
-                    > (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
-                )
-            )
-            .order_by(StopTimes.arrival_time)
+        result = await self.session.execute(
+            sql, {"stop_id": stop_id, "date": date, "cutoff": cutoff}
         )
+        stop_times = []
+        for row in result:
+            route = SimpleNamespace(
+                route_id=row.r_route_id,
+                route_short_name=row.route_short_name,
+                route_long_name=row.route_long_name,
+                agency_id=row.agency_id,
+                route_color=row.route_color,
+            )
+            trip = SimpleNamespace(
+                trip_id=row.t_trip_id,
+                route_id=row.route_id,
+                service_id=row.service_id,
+                trip_headsign=row.trip_headsign,
+                direction_id=row.direction_id,
+                block_id=row.block_id,
+                shape_id=row.shape_id,
+                scheduled_trip_id=row.scheduled_trip_id,
+                trip_short_name=row.trip_short_name,
+                wheelchair_accessible=row.wheelchair_accessible,
+                bikes_allowed=row.bikes_allowed,
+                route=route,
+            )
+            st = SimpleNamespace(
+                trip_id=row.trip_id,
+                arrival_time=row.arrival_time,
+                departure_time=row.departure_time,
+                stop_id=row.stop_id,
+                stop_sequence=row.stop_sequence,
+                trip=trip,
+            )
+            stop_times.append(st)
+        return stop_times
 
-    @staticmethod
-    def get_earliest_arrival_times_on_route(
-        route_id: str, direction_id: int, date: str, time: str
-    ):
-        subquery = (
-            StopTimes.select(
-                StopTimes.stop_id,
-                StopTimes.stop_sequence,
-                peewee.fn.MIN(StopTimes.arrival_time).alias("arrival_time"),
-            )
-            .join(Trips, on=(Trips.trip_id == StopTimes.trip_id))
-            .join(Routes, on=(Routes.route_id == Trips.route_id))
-            .join(CalendarDates, on=(Trips.service_id == CalendarDates.service_id))
-            .where(
-                (StopTimes.arrival_time >= time)
-                & (CalendarDates.date == date)
-                & (Routes.route_id == route_id)
-                & (Trips.direction_id == direction_id)
-            )
-            .group_by(StopTimes.stop_id, StopTimes.stop_sequence)
-            .alias("subquery")
+    async def get_earliest_arrival_times_on_route(
+        self, route_id: str, direction_id: int, date: str, time: str
+    ) -> List[SimpleNamespace]:
+        sql = text(
+            """
+            SELECT st.arrival_time, st.stop_id, st.stop_sequence, st.trip_id
+            FROM stop_times st
+            JOIN (
+                SELECT st2.stop_id, st2.stop_sequence, MIN(st2.arrival_time) AS min_arrival
+                FROM stop_times st2
+                JOIN trips t2 ON t2.trip_id = st2.trip_id
+                JOIN routes r2 ON r2.route_id = t2.route_id
+                JOIN calendar_dates cd2 ON cd2.service_id = t2.service_id
+                WHERE st2.arrival_time >= :time
+                  AND cd2.date = :date
+                  AND r2.route_id = :route_id
+                  AND t2.direction_id = :direction_id
+                GROUP BY st2.stop_id, st2.stop_sequence
+            ) sub ON st.stop_id = sub.stop_id
+                  AND st.arrival_time = sub.min_arrival
+            JOIN trips t ON t.trip_id = st.trip_id
+            JOIN calendar_dates cd ON cd.service_id = t.service_id
+            WHERE cd.date = :date
+            ORDER BY st.stop_sequence
+            """
         )
-
-        return (
-            StopTimes.select(
-                StopTimes.arrival_time,
-                StopTimes.stop_id,
-                StopTimes.stop_sequence,
-                StopTimes.trip_id,
-            )
-            .join(Trips, on=(Trips.trip_id == StopTimes.trip_id))
-            .join(
-                subquery,
-                on=(
-                    (StopTimes.arrival_time == subquery.c.arrival_time)
-                    & (StopTimes.stop_id == subquery.c.stop_id)
-                ),
-            )
-            .join(CalendarDates, on=(Trips.service_id == CalendarDates.service_id))
-            .where((CalendarDates.date == date))
-            .order_by(StopTimes.stop_sequence)
+        result = await self.session.execute(
+            sql,
+            {
+                "route_id": route_id,
+                "direction_id": direction_id,
+                "date": date,
+                "time": time,
+            },
         )
+        return [SimpleNamespace(**row._mapping) for row in result]
 
-    @staticmethod
-    def get_feed_info() -> FeedInfo:
-        return FeedInfo.get()
+    async def get_feed_info(self) -> SimpleNamespace:
+        result = await self.session.execute(select(FeedInfo))
+        row = result.scalar_one()
+        return SimpleNamespace(
+            feed_publisher_name=row.feed_publisher_name,
+            feed_publisher_url=row.feed_publisher_url,
+            feed_lang=row.feed_lang,
+            feed_start_date=(str(row.feed_start_date) if row.feed_start_date else None),
+            feed_end_date=(str(row.feed_end_date) if row.feed_end_date else None),
+            feed_version=row.feed_version,
+        )

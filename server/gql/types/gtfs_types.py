@@ -1,9 +1,9 @@
 from typing import List, Optional
 
 import strawberry
+from strawberry.types import Info
 
-from server.gql.types.geometry_types import Point
-from server.services.gtfs_service import GTFSService
+from server.gql.types.geometry_types import Point, geom_to_dict
 
 
 @strawberry.type
@@ -23,15 +23,17 @@ class Stop:
 
     @strawberry.field
     def stop_loc(self) -> Optional[Point]:
-        # self is a Peewee Stops model instance; GeometryField returns a GeoJSON dict
-        raw = getattr(self, "stop_loc", None)
-        if raw is None or not isinstance(raw, dict):
+        d = geom_to_dict(getattr(self, "stop_loc", None))
+        if d is None:
             return None
-        return Point.from_dict(raw)
+        return Point.from_dict(d)
 
     @strawberry.field
-    def routes(self) -> List[Route]:
-        return list(GTFSService.get_routes_at_stop(self.stop_id))
+    async def routes(self, info: Info) -> List[Route]:
+        session = info.context.session
+        from server.services.gtfs_service import GTFSService
+
+        return await GTFSService(session).get_routes_at_stop(self.stop_id)
 
 
 @strawberry.type
@@ -50,7 +52,6 @@ class Trip:
 
     @strawberry.field
     def route(self) -> Optional[Route]:
-        # self is a Peewee Trips instance; 'route' may be a join alias
         return getattr(self, "route", None)
 
 

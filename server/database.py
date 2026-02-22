@@ -1,5 +1,9 @@
-from playhouse.pool import PooledPostgresqlExtDatabase
-from peewee import Model
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
 
 ALL_TABLES_SET = {
     "trips",
@@ -12,39 +16,36 @@ ALL_TABLES_SET = {
     "transfers",
 }
 
-database = PooledPostgresqlExtDatabase(None)  # deferred init
+engine = None
+AsyncSessionLocal = None
 
 
-class BaseModel(Model):
-    class Meta:
-        database = database
+class Base(DeclarativeBase):
+    pass
 
 
-class _DBWrapper:
-    """Thin wrapper that exposes .Model (for gtfs_models.py) and delegates
-    all other attribute access to the underlying database instance."""
-
-    Model = BaseModel
-
-    def __getattr__(self, name: str):
-        return getattr(database, name)
+def init_database(db_url: str) -> None:
+    global engine, AsyncSessionLocal
+    async_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    engine = create_async_engine(async_url, pool_size=5, max_overflow=10)
+    AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
-# Preserve `from server.database import db_wrapper` imports in models
-db_wrapper = _DBWrapper()
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
 
 
-def database_sanity_check():
-    try:
-        database.connect()
-        tables = database.get_tables()
-        tables_set = set(tables)
-        if len(ALL_TABLES_SET.difference(tables_set)):
-            raise RuntimeError(
-                "Some of the tables are missing: {}".format(
-                    ALL_TABLES_SET.difference(tables_set)
-                )
-            )
-    finally:
-        if not database.is_closed():
-            database.close()
+async def database_sanity_check(session: AsyncSession) -> None:
+    from sqlalchemy import text
+
+    result = await session.execute(
+        text(
+            "SELECT table_name FROM information_schema.tables"
+            " WHERE table_schema = 'public'"
+        )
+    )
+    tables_set = {row[0] for row in result}
+    missing = ALL_TABLES_SET.difference(tables_set)
+    if missing:
+        raise RuntimeError(f"Some of the tables are missing: {missing}")
