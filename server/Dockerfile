@@ -14,28 +14,27 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the server directory contents as a package
-COPY server /app/server
-
-# Set working directory to the application root within the container
-WORKDIR /app/server
-
-# Copy requirements file (now relative to /app/server)
+# Copy the requirements first (Better for Docker caching)
 COPY server/requirements.txt .
-
-# Upgrade pip and install build essentials
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the server directory
+COPY server /app/server
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-ENV FLASK_APP=server.app:create_app()
+# Ensure /app is in the path so 'import server' works
+ENV PYTHONPATH=/app 
 
-# Expose port 8080 (as referenced in deployment script)
 EXPOSE 8080
 
-# Run gunicorn with the Flask app
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "server.app:create_app()"]
+# The Fix: Use the Uvicorn worker and point to the actual file (main.py) and variable (app)
+CMD ["gunicorn", \
+     "-w", "4", \
+     "-k", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8080", \
+     "--timeout", "120", \
+     "server.main:app"]
