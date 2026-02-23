@@ -1,0 +1,87 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  GCP_REGION: us-central1
+  CLOUD_RUN_SERVICE: austinbusgo-backend
+  WORKLOAD_IDENTITY_PROVIDER: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-actions@austin-bus-go.iam.gserviceaccount.com
+
+jobs:
+  cleanup-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR preview directory
+        run: |
+          PR_DIR="pr-preview/pr-${{ github.event.pull_request.number }}"
+          if [ -d "$PR_DIR" ]; then
+            rm -rf "$PR_DIR"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: remove PR #${{ github.event.pull_request.number }} preview"
+            git push
+          else
+            echo "No preview directory found for PR #${{ github.event.pull_request.number }}, skipping."
+          fi
+
+  cleanup-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Remove Cloud Run traffic tag and revision
+        run: |
+          PR_TAG="pr-${{ github.event.pull_request.number }}"
+
+          # Find the revision name associated with this PR's traffic tag
+          REVISION=$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE }} \
+            --region=${{ env.GCP_REGION }} \
+            --format='json' \
+            | python3 -c "
+          import sys, json
+          svc = json.load(sys.stdin)
+          tag = '$PR_TAG'
+          for t in svc.get('spec', {}).get('traffic', []):
+              if t.get('tag') == tag:
+                  print(t.get('revisionName', ''))
+                  break
+          " 2>/dev/null || echo "")
+
+          # Remove the traffic tag so the tagged URL stops working
+          gcloud run services update-traffic ${{ env.CLOUD_RUN_SERVICE }} \
+            --region=${{ env.GCP_REGION }} \
+            --remove-tags="$PR_TAG" \
+            --quiet || echo "Tag $PR_TAG not found, skipping."
+
+          # Delete the revision to free resources
+          if [ -n "$REVISION" ]; then
+            echo "Deleting revision $REVISION"
+            gcloud run revisions delete "$REVISION" \
+              --region=${{ env.GCP_REGION }} \
+              --quiet || echo "Could not delete revision $REVISION, skipping."
+          else
+            echo "No revision found for tag $PR_TAG, skipping revision deletion."
+          fi

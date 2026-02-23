@@ -89,5 +89,6 @@ export const router = createBrowserRouter(
         <Route path={"/:viewState"} />
       </Route>
     </>
-  )
+  ),
+  { basename: import.meta.env.BASE_URL }
 );

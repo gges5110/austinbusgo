@@ -4,7 +4,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(() => {
   return {
-    base: "/",
+    base: process.env.VITE_BASE || "/",
     build: {
       outDir: "build",
       rollupOptions: {
