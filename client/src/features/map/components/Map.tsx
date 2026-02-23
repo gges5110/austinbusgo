@@ -47,6 +47,7 @@ export const Map: React.FunctionComponent = () => {
     zoom: zoom || 11.5,
   };
   const [viewState, setViewState] = useState<ViewState>(initialViewState);
+  const [cursor, setCursor] = useState("auto");
   // Separate state for query params — only updated when panning stops to
   // prevent firing a NearByStops query on every animation frame.
   const [queryViewState, setQueryViewState] =
@@ -82,6 +83,8 @@ export const Map: React.FunctionComponent = () => {
     }
   };
 
+  const darkMode = theme.palette.mode === "dark";
+
   const onStopLayerClick = (event: MapLayerMouseEvent) => {
     const feature = event.features?.[0];
     if (!feature) return;
@@ -98,14 +101,17 @@ export const Map: React.FunctionComponent = () => {
       <ReactMapGL
         id={"mapId"}
         {...viewState}
+        cursor={cursor}
         interactiveLayerIds={[STOP_CIRCLES_LAYER_ID, STOP_LABELS_LAYER_ID]}
         mapStyle={
-          theme.palette.mode === "dark"
+          darkMode
             ? "mapbox://styles/mapbox/dark-v11"
             : "mapbox://styles/mapbox/streets-v12"
         }
         mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
         onClick={onStopLayerClick}
+        onMouseEnter={() => setCursor("pointer")}
+        onMouseLeave={() => setCursor("auto")}
         onMove={onViewportChange}
         onMoveEnd={onMoveEnd}
       >
@@ -117,7 +123,7 @@ export const Map: React.FunctionComponent = () => {
           trackUserLocation={true}
         />
 
-        <StopMarkers selectedStop={stop} stops={stops} />
+        <StopMarkers darkMode={darkMode} selectedStop={stop} stops={stops} />
         <VehicleMarkers
           onClick={vehicleMarkerOnClick}
           vehiclePositions={vehiclePositions}

@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { Layer, Source, useMap } from "react-map-gl/mapbox";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
@@ -9,13 +9,15 @@ export const STOP_CIRCLES_LAYER_ID = "stop-circles";
 export const STOP_LABELS_LAYER_ID = "stop-labels";
 
 interface StopLayerProps {
+  readonly darkMode?: boolean;
   readonly selectedStop: Stop | undefined;
   readonly stops: Stop[];
 }
 
-export const StopLayer: React.FC<StopLayerProps> = ({
+export const StopLayer: FC<StopLayerProps> = ({
   stops,
   selectedStop,
+  darkMode = false,
 }) => {
   const { mapId: map } = useMap();
   const hoveringStop = useAtomValue(hoveringStopAtom);
@@ -50,8 +52,8 @@ export const StopLayer: React.FC<StopLayerProps> = ({
   // Sync hoveringStop atom with Mapbox feature state so sidebar hover
   // highlights the corresponding circle on the map.
   useEffect(() => {
-    if (!map) return;
-    if (!hoveringStop) return;
+    if (!map || !hoveringStop) return;
+    if (!map.getSource("stops-source")) return;
 
     map.setFeatureState(
       { id: hoveringStop.stopId, source: "stops-source" },
@@ -59,12 +61,17 @@ export const StopLayer: React.FC<StopLayerProps> = ({
     );
 
     return () => {
-      map.setFeatureState(
-        { id: hoveringStop.stopId, source: "stops-source" },
-        { hovered: false }
-      );
+      if (map.getSource("stops-source")) {
+        map.setFeatureState(
+          { id: hoveringStop.stopId, source: "stops-source" },
+          { hovered: false }
+        );
+      }
     };
   }, [map, hoveringStop]);
+
+  const textColor = darkMode ? "#e8eaed" : "#202124";
+  const textHaloColor = darkMode ? "#1a1a1a" : "#ffffff";
 
   return (
     <Source
@@ -86,7 +93,6 @@ export const StopLayer: React.FC<StopLayerProps> = ({
             "#EA4335",
             "#1A73E8",
           ],
-          "circle-opacity": ["step", ["zoom"], 0, 11, 1],
           "circle-radius": [
             "interpolate",
             ["linear"],
@@ -121,8 +127,8 @@ export const StopLayer: React.FC<StopLayerProps> = ({
         }}
         minzoom={11}
         paint={{
-          "text-color": "#202124",
-          "text-halo-color": "#ffffff",
+          "text-color": textColor,
+          "text-halo-color": textHaloColor,
           "text-halo-width": 1,
         }}
         type={"symbol"}
