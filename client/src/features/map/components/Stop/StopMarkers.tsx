@@ -25,7 +25,7 @@ export const StopMarkers: React.FC<StopMarkersProps> = ({
           stop={stop}
         />
       )),
-    [stops, stop]
+    [stops, selectedStop]
   );
 
   return <>{stopMarkers}</>;

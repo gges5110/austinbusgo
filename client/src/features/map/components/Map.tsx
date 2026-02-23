@@ -20,7 +20,7 @@ import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition } from "shared/types/interface.d";
 
-import { StopMarkers } from "./Stop/StopMarkers";
+import { StopLayer } from "./Stop/StopLayer";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {
@@ -102,7 +102,7 @@ export const Map: React.FunctionComponent = () => {
           trackUserLocation={true}
         />
 
-        <StopMarkers
+        <StopLayer
           selectedStop={stop}
           setSelectedStop={setSelectedStop}
           stops={stops}
