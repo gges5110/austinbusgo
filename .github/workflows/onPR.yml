@@ -1,5 +1,9 @@
 name: Pull Request
-on: pull_request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
 jobs:
   linting:
     runs-on: ubuntu-latest
@@ -13,6 +17,7 @@ jobs:
         with:
           options: "--check --verbose"
           version: "23.3.0"
+
   testing:
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +33,7 @@ jobs:
       - name: Test with unittest
         run: |
           python -m unittest discover -s server/tests
+
   integration-testing:
     runs-on: ubuntu-latest
     steps:
@@ -43,6 +49,7 @@ jobs:
       - name: Run integration tests
         run: |
           python -m pytest integration-tests -v
+
   client-testing:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -66,3 +73,87 @@ jobs:
       - name: Run tests
         working-directory: ./client
         run: npm test
+
+  deploy-frontend-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Build Client
+        working-directory: ./client
+        env:
+          VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
+          VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: abg
+          directory: client/build
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: pr-${{ github.event.number }}
+
+  comment-preview-url:
+    needs: [deploy-frontend-preview]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Find or Create Preview Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ needs.deploy-frontend-preview.outputs.url }}';
+            const marker = '<!-- preview-environment-comment -->';
+
+            const body = [
+              marker,
+              '## Preview Environment',
+              '',
+              `**Frontend**: [${url}](${url})`,
+            ].join('\n');
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.data.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
