@@ -32,11 +32,23 @@ export type StopQuery = {
     stopId: string;
     stopCode?: string | null;
     stopName?: string | null;
+    stopDesc?: string | null;
+    stopUrl?: string | null;
+    wheelchairBoarding?: number | null;
+    onStreet?: string | null;
+    atStreet?: string | null;
     stopLoc?: {
       __typename?: "Point";
       type: Types.GeometryType;
       coordinates: Array<number>;
     } | null;
+    routes: Array<{
+      __typename?: "Route";
+      routeId: string;
+      routeShortName?: string | null;
+      routeLongName: string;
+      routeColor?: string | null;
+    }>;
   };
 };
 
@@ -46,9 +58,20 @@ export const StopDocument = `
     stopId
     stopCode
     stopName
+    stopDesc
+    stopUrl
+    wheelchairBoarding
+    onStreet
+    atStreet
     stopLoc {
       type
       coordinates
+    }
+    routes {
+      routeId
+      routeShortName
+      routeLongName
+      routeColor
     }
   }
 }
