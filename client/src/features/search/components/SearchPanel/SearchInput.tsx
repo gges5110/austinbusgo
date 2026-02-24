@@ -40,7 +40,7 @@ export const SearchInput: React.FunctionComponent<SearchInputProps> = ({
           onEnterPress();
         }
       }}
-      placeholder={"Search Routes or Stops"}
+      placeholder={"Search routes or stops..."}
       ref={params.InputProps.ref}
       sx={{
         paddingLeft: 2.5,
