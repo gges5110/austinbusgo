@@ -6,24 +6,6 @@ import { Stop } from "shared/types/interface.d";
 
 export const useNearByStops = (viewState?: ViewState) => {
   const { mapId: map } = useMap();
-  const shouldFetch = viewState !== undefined;
-
-  // Rounding precision based on zoom level to prevent search area from "jumping" too far
-  const precision = viewState
-    ? viewState.zoom < 12
-      ? 3
-      : viewState.zoom < 16
-        ? 4
-        : 5
-    : 3;
-
-  const factor = Math.pow(10, precision);
-  const lat = viewState ? Math.round(viewState.latitude * factor) / factor : 0;
-  const lon = viewState ? Math.round(viewState.longitude * factor) / factor : 0;
-
-  const radius = viewState
-    ? Math.min(20000, Math.round(5000 * Math.pow(2, 14 - viewState.zoom)))
-    : 1000;
 
   const limit = viewState
     ? viewState.zoom <= 11
@@ -33,15 +15,27 @@ export const useNearByStops = (viewState?: ViewState) => {
         : 100
     : 40;
 
-  // Get current map bounds for more precise filtering
   const bounds = map?.getBounds();
   const minLat = bounds?.getSouth();
   const minLon = bounds?.getWest();
   const maxLat = bounds?.getNorth();
   const maxLon = bounds?.getEast();
 
+  const hasBounds =
+    minLat !== undefined &&
+    minLon !== undefined &&
+    maxLat !== undefined &&
+    maxLon !== undefined;
+  const shouldFetch = viewState !== undefined && hasBounds;
+
   const debouncedQueryParams = useDebounce(
-    { lat, lon, radius, limit, minLat, minLon, maxLat, maxLon },
+    {
+      minLat: minLat ?? 0,
+      minLon: minLon ?? 0,
+      maxLat: maxLat ?? 0,
+      maxLon: maxLon ?? 0,
+      limit,
+    },
     500
   );
 

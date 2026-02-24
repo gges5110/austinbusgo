@@ -54,25 +54,19 @@ class Resolver:
         self,
         query,
         info,
-        lat: float,
-        lon: float,
-        radius: float = 1000.0,
+        min_lat: float,
+        min_lon: float,
+        max_lat: float,
+        max_lon: float,
         limit: int = 20,
-        min_lat: float = None,
-        min_lon: float = None,
-        max_lat: float = None,
-        max_lon: float = None,
     ):
         return (
             await self.gtfs_service.get_near_by_stops(
-                lat=lat,
-                lon=lon,
-                radius=radius,
-                limit=limit,
                 min_lat=min_lat,
                 min_lon=min_lon,
                 max_lat=max_lat,
                 max_lon=max_lon,
+                limit=limit,
             )
             or []
         )

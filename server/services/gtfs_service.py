@@ -95,40 +95,25 @@ class GTFSService:
 
     async def get_near_by_stops(
         self,
-        lat: float,
-        lon: float,
-        radius: float = 1000.0,
+        min_lat: float,
+        min_lon: float,
+        max_lat: float,
+        max_lon: float,
         limit: int = 20,
-        min_lat: Optional[float] = None,
-        min_lon: Optional[float] = None,
-        max_lat: Optional[float] = None,
-        max_lon: Optional[float] = None,
     ) -> List[SimpleNamespace]:
-        if all(v is not None for v in [min_lat, min_lon, max_lat, max_lon]):
-            spatial_filter = (
-                "ST_Intersects(stop_loc,"
-                " ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)::geography)"
-            )
-            params = {
-                "min_lon": min_lon,
-                "min_lat": min_lat,
-                "max_lon": max_lon,
-                "max_lat": max_lat,
-                "center_lon": lon,
-                "center_lat": lat,
-                "limit": limit,
-            }
-        else:
-            spatial_filter = (
-                "ST_DWithin(stop_loc,"
-                " ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326), :radius)"
-            )
-            params = {
-                "radius": radius,
-                "center_lon": lon,
-                "center_lat": lat,
-                "limit": limit,
-            }
+        spatial_filter = (
+            "ST_Intersects(stop_loc,"
+            " ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)::geography)"
+        )
+        params = {
+            "min_lon": min_lon,
+            "min_lat": min_lat,
+            "max_lon": max_lon,
+            "max_lat": max_lat,
+            "center_lon": (min_lon + max_lon) / 2,
+            "center_lat": (min_lat + max_lat) / 2,
+            "limit": limit,
+        }
 
         sql = f"""
         WITH stops_in_radius AS MATERIALIZED (

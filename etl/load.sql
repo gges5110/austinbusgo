@@ -7,3 +7,4 @@
 \copy stop_times from './capmetro/stop_times.txt' with csv header
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 \copy transfers from './capmetro/transfers.txt' with csv header
+REFRESH MATERIALIZED VIEW routes_at_stop;

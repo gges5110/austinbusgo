@@ -22,14 +22,11 @@ function fetcher<TData, TVariables>(query: string, variables?: TVariables) {
   };
 }
 export type NearByStopsQueryVariables = Types.Exact<{
-  lat: Types.Scalars["Float"]["input"];
-  lon: Types.Scalars["Float"]["input"];
-  radius?: Types.InputMaybe<Types.Scalars["Float"]["input"]>;
+  minLat: Types.Scalars["Float"]["input"];
+  minLon: Types.Scalars["Float"]["input"];
+  maxLat: Types.Scalars["Float"]["input"];
+  maxLon: Types.Scalars["Float"]["input"];
   limit?: Types.InputMaybe<Types.Scalars["Int"]["input"]>;
-  minLat?: Types.InputMaybe<Types.Scalars["Float"]["input"]>;
-  minLon?: Types.InputMaybe<Types.Scalars["Float"]["input"]>;
-  maxLat?: Types.InputMaybe<Types.Scalars["Float"]["input"]>;
-  maxLon?: Types.InputMaybe<Types.Scalars["Float"]["input"]>;
 }>;
 
 export type NearByStopsQuery = {
@@ -54,16 +51,13 @@ export type NearByStopsQuery = {
 };
 
 export const NearByStopsDocument = `
-    query NearByStops($lat: Float!, $lon: Float!, $radius: Float, $limit: Int, $minLat: Float, $minLon: Float, $maxLat: Float, $maxLon: Float) {
+    query NearByStops($minLat: Float!, $minLon: Float!, $maxLat: Float!, $maxLon: Float!, $limit: Int) {
   nearByStops(
-    lat: $lat
-    lon: $lon
-    radius: $radius
-    limit: $limit
     minLat: $minLat
     minLon: $minLon
     maxLat: $maxLat
     maxLon: $maxLon
+    limit: $limit
   ) {
     stopId
     stopCode

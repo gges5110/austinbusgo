@@ -154,21 +154,23 @@ async def test_get_near_by_stops():
     result_mock.__iter__ = MagicMock(return_value=iter([row]))
     session.execute.return_value = result_mock
 
-    result = await svc.get_near_by_stops(30.27, -97.74)
+    result = await svc.get_near_by_stops(
+        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+    )
 
     session.execute.assert_called_once()
     assert len(result) == 1
 
 
 @pytest.mark.asyncio
-async def test_get_near_by_stops_bounding_box():
+async def test_get_near_by_stops_empty():
     svc, session = make_service()
     result_mock = MagicMock()
     result_mock.__iter__ = MagicMock(return_value=iter([]))
     session.execute.return_value = result_mock
 
     result = await svc.get_near_by_stops(
-        30.27, -97.74, min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
     )
 
     session.execute.assert_called_once()
