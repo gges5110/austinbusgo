@@ -29,6 +29,12 @@ resource "google_project_iam_member" "github_actions_artifact_writer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+resource "google_project_iam_member" "github_actions_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Workload Identity Pool for GitHub Actions (keyless auth)
 resource "google_iam_workload_identity_pool" "github_pool" {
   workload_identity_pool_id = "github-pool"
