@@ -1,6 +1,10 @@
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "app/QueryClient";
 import {
+  NearByStopsQuery,
+  useNearByStopsQuery,
+} from "shared/api/schemas/NearByStops.generated";
+import {
   RouteQuery,
   RouteQueryVariables,
   useRouteQuery,
@@ -16,6 +20,10 @@ import {
   VehiclePositionsQueryVariables,
 } from "shared/api/schemas/VehiclePositions.generated";
 import { getDate } from "shared/utils/dateUtils";
+import {
+  computeBoundsFromViewState,
+  parseViewStateFromPathname,
+} from "shared/utils/viewStateUtils";
 
 const routeQuery = (id: RouteQueryVariables) => ({
   queryKey: useRouteQuery.getKey(id),
@@ -37,7 +45,23 @@ export const searchParamsDataLoader = async ({
   const directionId = Number(url.searchParams.get("directionId") || "");
 
   if (routeId === "") {
-    return {};
+    const { latitude, longitude, zoom } = parseViewStateFromPathname(
+      url.pathname
+    );
+    const bounds = computeBoundsFromViewState(
+      latitude,
+      longitude,
+      zoom,
+      window.innerWidth,
+      window.innerHeight
+    );
+    const nearByStopsData = await queryClient.ensureQueryData<NearByStopsQuery>(
+      {
+        queryKey: useNearByStopsQuery.getKey(bounds),
+        queryFn: useNearByStopsQuery.fetcher(bounds),
+      }
+    );
+    return { nearByStops: nearByStopsData?.nearByStops ?? [] };
   }
 
   const routeDataQuery = queryClient.ensureQueryData<RouteQuery>(
