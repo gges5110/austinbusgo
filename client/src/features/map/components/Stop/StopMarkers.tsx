@@ -1,32 +1,20 @@
-import { default as React, useMemo } from "react";
+import * as React from "react";
 import { Stop } from "shared/types/interface.d";
 
-import { StopMarker } from "./StopMarker";
+import { StopLayer } from "./StopLayer";
 
 interface StopMarkersProps {
-  readonly stops: Stop[];
+  readonly darkMode?: boolean;
   readonly selectedStop: Stop | undefined;
-
-  setSelectedStop(stop: Stop): void;
+  readonly stops: Stop[];
 }
 
 export const StopMarkers: React.FC<StopMarkersProps> = ({
   stops,
-  setSelectedStop,
   selectedStop,
+  darkMode,
 }) => {
-  const stopMarkers = useMemo(
-    () =>
-      stops.map((stop) => (
-        <StopMarker
-          highlighted={selectedStop?.stopId === stop.stopId}
-          key={stop.stopId}
-          setSelectedStop={setSelectedStop}
-          stop={stop}
-        />
-      )),
-    [stops, stop]
+  return (
+    <StopLayer darkMode={darkMode} selectedStop={selectedStop} stops={stops} />
   );
-
-  return <>{stopMarkers}</>;
 };

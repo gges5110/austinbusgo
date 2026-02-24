@@ -1,8 +1,8 @@
-import { useDebounce } from "shared/hooks/useDebounce";
 import { ViewState } from "features/map/components/Map";
-import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
-import { Stop } from "shared/types/interface.d";
 import { useMap } from "react-map-gl/mapbox";
+import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
+import { useDebounce } from "shared/hooks/useDebounce";
+import { Stop } from "shared/types/interface.d";
 
 export const useNearByStops = (viewState?: ViewState) => {
   const { mapId: map } = useMap();
