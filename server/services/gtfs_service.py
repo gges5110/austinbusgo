@@ -237,6 +237,7 @@ class GTFSService:
     async def get_trips_by_distinct_short_name(
         self, route_id: str, date: str
     ) -> List[Trips]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text(
             """
             SELECT DISTINCT ON (trips.direction_id, trips.trip_headsign)
@@ -251,14 +252,19 @@ class GTFSService:
             ORDER BY trips.direction_id, trips.trip_headsign
             """
         )
-        result = await self.session.execute(sql, {"route_id": route_id, "date": date})
+        result = await self.session.execute(
+            sql, {"route_id": route_id, "date": parsed_date}
+        )
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_trips_for_date(self, route_id: str, date: str) -> List[Trips]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         result = await self.session.execute(
             select(Trips)
             .join(CalendarDates, CalendarDates.service_id == Trips.service_id)
-            .where((CalendarDates.date == date) & (Trips.route_id == route_id))
+            .where(
+                (CalendarDates.date == parsed_date) & (Trips.route_id == route_id)
+            )
         )
         return result.scalars().all()
 
@@ -376,6 +382,7 @@ class GTFSService:
     async def get_stop_times_by_stop_id(
         self, stop_id: str, date: str
     ) -> List[SimpleNamespace]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         cutoff = (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
         sql = text(
             """
@@ -401,7 +408,7 @@ class GTFSService:
             """
         )
         result = await self.session.execute(
-            sql, {"stop_id": stop_id, "date": date, "cutoff": cutoff}
+            sql, {"stop_id": stop_id, "date": parsed_date, "cutoff": cutoff}
         )
         stop_times = []
         for row in result:
@@ -440,6 +447,7 @@ class GTFSService:
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str
     ) -> List[SimpleNamespace]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text(
             """
             SELECT st.arrival_time, st.stop_id, st.stop_sequence, st.trip_id
@@ -468,7 +476,7 @@ class GTFSService:
             {
                 "route_id": route_id,
                 "direction_id": direction_id,
-                "date": date,
+                "date": parsed_date,
                 "time": time,
             },
         )
