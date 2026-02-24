@@ -99,17 +99,16 @@ async def test_resolve_near_by_stops():
     stops = [SimpleNamespace(stop_id="stop_1"), SimpleNamespace(stop_id="stop_2")]
     gtfs_service.get_near_by_stops.return_value = stops
 
-    result = await resolver.resolve_near_by_stops(None, None, 30.27, -97.74)
+    result = await resolver.resolve_near_by_stops(
+        None, None, min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+    )
 
     gtfs_service.get_near_by_stops.assert_called_once_with(
-        lat=30.27,
-        lon=-97.74,
-        radius=1000.0,
+        min_lat=30.0,
+        min_lon=-98.0,
+        max_lat=31.0,
+        max_lon=-97.0,
         limit=20,
-        min_lat=None,
-        min_lon=None,
-        max_lat=None,
-        max_lon=None,
     )
     assert result == stops
 
@@ -119,7 +118,9 @@ async def test_resolve_near_by_stops_empty():
     resolver, gtfs_service, _ = make_resolver()
     gtfs_service.get_near_by_stops.return_value = None
 
-    result = await resolver.resolve_near_by_stops(None, None, 30.27, -97.74)
+    result = await resolver.resolve_near_by_stops(
+        None, None, min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+    )
 
     assert result == []
 

@@ -64,9 +64,10 @@ describe("useNearByStops", () => {
     expect(result.current.nearByStops).toEqual([]);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        lat: 0,
-        lon: 0,
-        radius: 1000,
+        minLat: 30.2,
+        minLon: -97.8,
+        maxLat: 30.3,
+        maxLon: -97.7,
         limit: 40,
       }),
       { enabled: false, keepPreviousData: true }
@@ -100,47 +101,34 @@ describe("useNearByStops", () => {
     expect(result.current.nearByStops).toEqual(mockStops);
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        radius: 20000,
-        limit: 40,
         minLat: 30.2,
         minLon: -97.8,
         maxLat: 30.3,
         maxLon: -97.7,
+        limit: 40,
       }),
       expect.objectContaining({ enabled: true, keepPreviousData: true })
     );
   });
 
-  test("rounds coordinates based on zoom level", () => {
-    // Zoom 10 should use 3 decimal places
-    const viewStateLow = {
+  test("uses bbox from map bounds as query params", () => {
+    const viewState = {
       latitude: 30.26729999,
       longitude: -97.74315555,
       zoom: 10,
     };
 
-    renderHook(() => useNearByStops(viewStateLow), {
+    renderHook(() => useNearByStops(viewState), {
       wrapper: createWrapper(),
     });
 
     expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ lat: 30.267, lon: -97.743 }),
-      expect.any(Object)
-    );
-
-    // Zoom 16 should use 5 decimal places
-    const viewStateHigh = {
-      latitude: 30.26729999,
-      longitude: -97.74315555,
-      zoom: 16,
-    };
-
-    renderHook(() => useNearByStops(viewStateHigh), {
-      wrapper: createWrapper(),
-    });
-
-    expect(mocks.mockUseNearByStopsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ lat: 30.2673, lon: -97.74316 }),
+      expect.objectContaining({
+        minLat: 30.2,
+        minLon: -97.8,
+        maxLat: 30.3,
+        maxLon: -97.7,
+      }),
       expect.any(Object)
     );
   });

@@ -110,27 +110,21 @@ class Query:
     async def near_by_stops(
         self,
         info: Info,
-        lat: float,
-        lon: float,
-        radius: float = 1000.0,
+        min_lat: float,
+        min_lon: float,
+        max_lat: float,
+        max_lon: float,
         limit: int = 20,
-        min_lat: Optional[float] = None,
-        min_lon: Optional[float] = None,
-        max_lat: Optional[float] = None,
-        max_lon: Optional[float] = None,
     ) -> List[Stop]:
         return list(
             await info.context.resolver.resolve_near_by_stops(
                 None,
                 None,
-                lat=lat,
-                lon=lon,
-                radius=radius,
-                limit=limit,
                 min_lat=min_lat,
                 min_lon=min_lon,
                 max_lat=max_lat,
                 max_lon=max_lon,
+                limit=limit,
             )
         )
 

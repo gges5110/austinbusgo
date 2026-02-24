@@ -35,6 +35,7 @@ dev = [
     "coverage==7.2.3",
     # Integration tests
     "testcontainers[postgres]>=4.0.0",
+    "psycopg2-binary>=2.9",
 ]
 
 [tool.hatch.build.targets.wheel]
