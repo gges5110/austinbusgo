@@ -60,10 +60,10 @@ def test_search_returns_empty_results(app_client):
 
 
 def test_near_by_stops_returns_empty_list(app_client):
-    """nearByStops returns [] for coordinates in Austin when no stops are seeded."""
+    """nearByStops returns [] for a bbox in Austin when no stops are seeded."""
     data = _gql(
         app_client,
-        "{ nearByStops(lat: 30.2672, lon: -97.7431) { stopId stopName } }",
+        "{ nearByStops(minLat: 30.25, minLon: -97.76, maxLat: 30.29, maxLon: -97.72) { stopId stopName } }",
     )
     assert "errors" not in data
     assert isinstance(data["data"]["nearByStops"], list)
