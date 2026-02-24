@@ -1,6 +1,6 @@
 """This file contains methods to retrieve data from database"""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
 
@@ -200,8 +200,7 @@ class GTFSService:
     async def get_stops_by_route_id(
         self, route_id: str, direction_id: int
     ) -> List[SimpleNamespace]:
-        sql = text(
-            """
+        sql = text("""
             SELECT DISTINCT ON (stops.stop_id)
                 stops.stop_id, stops.stop_code, stops.stop_name,
                 ST_AsGeoJSON(stops.stop_loc) AS stop_loc,
@@ -213,8 +212,7 @@ class GTFSService:
             WHERE trips.route_id = :route_id
               AND trips.direction_id = :direction_id
             ORDER BY stops.stop_id, stop_times.stop_sequence
-            """
-        )
+            """)
         result = await self.session.execute(
             sql, {"route_id": route_id, "direction_id": direction_id}
         )
@@ -237,8 +235,7 @@ class GTFSService:
     async def get_trips_by_distinct_short_name(
         self, route_id: str, date: str
     ) -> List[Trips]:
-        sql = text(
-            """
+        sql = text("""
             SELECT DISTINCT ON (trips.direction_id, trips.trip_headsign)
                 trips.trip_id, trips.route_id, trips.service_id,
                 trips.trip_headsign, trips.direction_id, trips.block_id,
@@ -249,16 +246,24 @@ class GTFSService:
             WHERE trips.route_id = :route_id
               AND calendar_dates.date = :date
             ORDER BY trips.direction_id, trips.trip_headsign
-            """
+            """)
+        result = await self.session.execute(
+            sql,
+            {
+                "route_id": route_id,
+                "date": datetime.strptime(date, "%Y%m%d").date(),
+            },
         )
-        result = await self.session.execute(sql, {"route_id": route_id, "date": date})
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_trips_for_date(self, route_id: str, date: str) -> List[Trips]:
         result = await self.session.execute(
             select(Trips)
             .join(CalendarDates, CalendarDates.service_id == Trips.service_id)
-            .where((CalendarDates.date == date) & (Trips.route_id == route_id))
+            .where(
+                (CalendarDates.date == datetime.strptime(date, "%Y%m%d").date())
+                & (Trips.route_id == route_id)
+            )
         )
         return result.scalars().all()
 
@@ -275,8 +280,7 @@ class GTFSService:
         return [row[0] for row in result]
 
     async def get_trip_by_id(self, trip_id: str) -> SimpleNamespace:
-        sql = text(
-            """
+        sql = text("""
             SELECT trips.trip_id, trips.route_id, trips.service_id,
                    trips.trip_headsign, trips.direction_id, trips.block_id,
                    trips.shape_id, trips.scheduled_trip_id, trips.trip_short_name,
@@ -288,8 +292,7 @@ class GTFSService:
             JOIN routes ON routes.route_id = trips.route_id
             WHERE trips.trip_id = :trip_id
             LIMIT 1
-            """
-        )
+            """)
         result = await self.session.execute(sql, {"trip_id": trip_id})
         row = result.one()
         route = SimpleNamespace(
@@ -335,8 +338,7 @@ class GTFSService:
 
     # StopTimes
     async def get_stop_times_by_trip_id(self, trip_id: str) -> List[SimpleNamespace]:
-        sql = text(
-            """
+        sql = text("""
             SELECT st.trip_id, st.arrival_time, st.departure_time,
                    st.stop_id, st.stop_sequence, st.pickup_type,
                    st.drop_off_type, st.shape_dist_traveled, st.timepoint,
@@ -347,8 +349,7 @@ class GTFSService:
             JOIN stops ON stops.stop_id = st.stop_id
             WHERE st.trip_id = :trip_id
             ORDER BY st.stop_sequence
-            """
-        )
+            """)
         result = await self.session.execute(sql, {"trip_id": trip_id})
         stop_times = []
         for row in result:
@@ -377,8 +378,7 @@ class GTFSService:
         self, stop_id: str, date: str
     ) -> List[SimpleNamespace]:
         cutoff = (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
-        sql = text(
-            """
+        sql = text("""
             SELECT st.trip_id, st.arrival_time, st.departure_time,
                    st.stop_id, st.stop_sequence,
                    trips.trip_id AS t_trip_id, trips.route_id,
@@ -398,10 +398,14 @@ class GTFSService:
               AND calendar_dates.date = :date
               AND st.arrival_time > :cutoff
             ORDER BY st.arrival_time
-            """
-        )
+            """)
         result = await self.session.execute(
-            sql, {"stop_id": stop_id, "date": date, "cutoff": cutoff}
+            sql,
+            {
+                "stop_id": stop_id,
+                "date": datetime.strptime(date, "%Y%m%d").date(),
+                "cutoff": cutoff,
+            },
         )
         stop_times = []
         for row in result:
@@ -440,8 +444,7 @@ class GTFSService:
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str
     ) -> List[SimpleNamespace]:
-        sql = text(
-            """
+        sql = text("""
             SELECT st.arrival_time, st.stop_id, st.stop_sequence, st.trip_id
             FROM stop_times st
             JOIN (
@@ -461,14 +464,13 @@ class GTFSService:
             JOIN calendar_dates cd ON cd.service_id = t.service_id
             WHERE cd.date = :date
             ORDER BY st.stop_sequence
-            """
-        )
+            """)
         result = await self.session.execute(
             sql,
             {
                 "route_id": route_id,
                 "direction_id": direction_id,
-                "date": date,
+                "date": datetime.strptime(date, "%Y%m%d").date(),
                 "time": time,
             },
         )
