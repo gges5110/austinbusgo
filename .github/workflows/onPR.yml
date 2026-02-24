@@ -1,5 +1,17 @@
 name: Pull Request
-on: pull_request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  GCP_PROJECT: austin-bus-go
+  GCP_REGION: us-central1
+  IMAGE: gcr.io/austin-bus-go/austinbusgo-backend
+  STAGING_SERVICE: austinbusgo-backend-staging
+  WORKLOAD_IDENTITY_PROVIDER: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-actions@austin-bus-go.iam.gserviceaccount.com
+
 jobs:
   linting:
     runs-on: ubuntu-latest
@@ -13,6 +25,7 @@ jobs:
         with:
           options: "--check --verbose"
           version: "23.3.0"
+
   testing:
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +41,7 @@ jobs:
       - name: Test with unittest
         run: |
           python -m unittest discover -s server/tests
+
   client-testing:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -51,3 +65,151 @@ jobs:
       - name: Run tests
         working-directory: ./client
         run: npm test
+
+  build-backend-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and Push Docker Image
+        id: build
+        run: |
+          IMAGE_TAG="${{ env.IMAGE }}:pr-${{ github.event.number }}"
+          docker build --platform linux/amd64 \
+            -t "$IMAGE_TAG" \
+            -f server/Dockerfile .
+          docker push "$IMAGE_TAG"
+          echo "image=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+  deploy-backend-staging:
+    needs: [build-backend-preview]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Deploy to Cloud Run Staging
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.STAGING_SERVICE }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ needs.build-backend-preview.outputs.image }}
+
+  deploy-frontend-preview:
+    needs: [deploy-backend-staging]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Build Client
+        working-directory: ./client
+        env:
+          VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
+          VITE_API_BASE: ${{ needs.deploy-backend-staging.outputs.url }}
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: austinbusgo
+          directory: client/build
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: pr-${{ github.event.number }}
+
+  comment-preview-urls:
+    needs: [deploy-frontend-preview, deploy-backend-staging]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Find or Create Preview Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const frontendUrl = '${{ needs.deploy-frontend-preview.outputs.url }}';
+            const backendUrl = '${{ needs.deploy-backend-staging.outputs.url }}';
+            const prNumber = context.issue.number;
+            const marker = '<!-- preview-environment-comment -->';
+
+            const body = [
+              marker,
+              '## Preview Environments',
+              '',
+              '| Service | URL |',
+              '|---------|-----|',
+              `| Frontend | [${frontendUrl}](${frontendUrl}) |`,
+              `| Backend (GraphQL) | [${backendUrl}/graphql](${backendUrl}/graphql) |`,
+              '',
+              '> **Note**: The backend staging environment is shared across all open PRs.',
+            ].join('\n');
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existing = comments.data.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }

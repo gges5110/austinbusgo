@@ -1,0 +1,32 @@
+name: PR Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  IMAGE: gcr.io/austin-bus-go/austinbusgo-backend
+  WORKLOAD_IDENTITY_PROVIDER: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-actions@austin-bus-go.iam.gserviceaccount.com
+
+jobs:
+  cleanup-preview-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Delete PR Docker Image
+        run: |
+          gcloud container images delete \
+            "${{ env.IMAGE }}:pr-${{ github.event.number }}" \
+            --quiet --force-delete-tags || true
