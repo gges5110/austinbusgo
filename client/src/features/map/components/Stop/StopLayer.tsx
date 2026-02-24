@@ -8,6 +8,10 @@ import { Stop } from "shared/types/interface.d";
 export const STOP_CIRCLES_LAYER_ID = "stop-circles";
 export const STOP_LABELS_LAYER_ID = "stop-labels";
 
+// Stops whose priority is at or below this threshold (i.e. they serve
+// enough routes) remain visible regardless of zoom level.
+const ALWAYS_VISIBLE_PRIORITY = 4; // roughly 6+ routes serving the stop
+
 interface StopLayerProps {
   readonly darkMode?: boolean;
   readonly selectedStop: Stop | undefined;
@@ -80,10 +84,11 @@ export const StopLayer: FC<StopLayerProps> = ({
       promoteId={"stopId"}
       type={"geojson"}
     >
-      {/* Circle layer for stop pin dots — WebGL rendered, no DOM overhead */}
+      {/* Circle layer for stop pin dots — WebGL rendered, no DOM overhead.
+          High-importance stops (many routes) are always visible; the rest
+          fade in at zoom 11. */}
       <Layer
         id={STOP_CIRCLES_LAYER_ID}
-        minzoom={11}
         paint={{
           "circle-color": [
             "case",
@@ -93,10 +98,20 @@ export const StopLayer: FC<StopLayerProps> = ({
             "#EA4335",
             "#1A73E8",
           ],
+          // Always-visible stops are fully opaque at any zoom; others only
+          // appear at zoom 11+.
+          "circle-opacity": [
+            "case",
+            ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY],
+            1,
+            ["step", ["zoom"], 0, 11, 1],
+          ],
           "circle-radius": [
             "interpolate",
             ["linear"],
             ["zoom"],
+            6,
+            3,
             11,
             4,
             14,
@@ -105,7 +120,23 @@ export const StopLayer: FC<StopLayerProps> = ({
             10,
           ],
           "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
+          // Keep stroke thin at low zoom so small dots don't become
+          // all-stroke with no fill.
+          "circle-stroke-opacity": [
+            "case",
+            ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY],
+            1,
+            ["step", ["zoom"], 0, 11, 1],
+          ],
+          "circle-stroke-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            6,
+            1,
+            11,
+            2,
+          ],
         }}
         type={"circle"}
       />
