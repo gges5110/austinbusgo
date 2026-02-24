@@ -30,10 +30,12 @@ class Stop:
 
     @strawberry.field
     async def routes(self, info: Info) -> List[Route]:
-        session = info.context.session
+        cache = getattr(info.context, "stop_routes_cache", None)
+        if cache is not None:
+            return cache.get(self.stop_id, [])
         from server.services.gtfs_service import GTFSService
 
-        return await GTFSService(session).get_routes_at_stop(self.stop_id)
+        return await GTFSService(info.context.session).get_routes_at_stop(self.stop_id)
 
 
 @strawberry.type

@@ -178,6 +178,119 @@ async def test_get_near_by_stops_empty():
 
 
 @pytest.mark.asyncio
+async def test_get_near_by_stops_with_route_counts_cache():
+    """When route_counts is provided, uses simplified SQL and ranks in Python."""
+    svc, session = make_service()
+
+    # Two stops: stop_1 has 3 routes and stop_2 has 1 route,
+    # but stop_2 is closer, so ranking depends on combined score.
+    row1 = MagicMock()
+    row1.stop_id = "stop_1"
+    row1.stop_code = None
+    row1.stop_name = "Major Stop"
+    row1.stop_loc = None
+    row1.distance = 500.0  # metres
+
+    row2 = MagicMock()
+    row2.stop_id = "stop_2"
+    row2.stop_code = None
+    row2.stop_name = "Minor Stop"
+    row2.stop_loc = None
+    row2.distance = 100.0  # metres
+
+    result_mock = MagicMock()
+    result_mock.__iter__ = MagicMock(return_value=iter([row1, row2]))
+    session.execute.return_value = result_mock
+
+    route_counts = {"stop_1": 3, "stop_2": 1}
+    result = await svc.get_near_by_stops(
+        min_lat=30.0,
+        min_lon=-98.0,
+        max_lat=31.0,
+        max_lon=-97.0,
+        route_counts=route_counts,
+    )
+
+    session.execute.assert_called_once()
+    assert len(result) == 2
+    # stop_1: score = (3+1)/(500*10+1) = 4/5001 ≈ 0.000799
+    # stop_2: score = (1+1)/(100*10+1) = 2/1001 ≈ 0.001998  → stop_2 ranks first
+    assert result[0].stop_id == "stop_2"
+    assert result[1].stop_id == "stop_1"
+
+
+@pytest.mark.asyncio
+async def test_get_near_by_stops_with_route_counts_cache_respects_limit():
+    svc, session = make_service()
+    rows = []
+    for i in range(5):
+        row = MagicMock()
+        row.stop_id = f"stop_{i}"
+        row.stop_code = None
+        row.stop_name = f"Stop {i}"
+        row.stop_loc = None
+        row.distance = float(i + 1) * 100
+        rows.append(row)
+
+    result_mock = MagicMock()
+    result_mock.__iter__ = MagicMock(return_value=iter(rows))
+    session.execute.return_value = result_mock
+
+    result = await svc.get_near_by_stops(
+        min_lat=30.0,
+        min_lon=-98.0,
+        max_lat=31.0,
+        max_lon=-97.0,
+        limit=3,
+        route_counts={},
+    )
+
+    assert len(result) == 3
+
+
+@pytest.mark.asyncio
+async def test_get_all_routes_at_stops():
+    svc, session = make_service()
+
+    row1 = MagicMock()
+    row1.stop_id = "stop_1"
+    row1.route_id = "1"
+    row1.agency_id = None
+    row1.route_short_name = "1"
+    row1.route_long_name = "Route 1"
+    row1.route_color = "FF0000"
+
+    row2 = MagicMock()
+    row2.stop_id = "stop_1"
+    row2.route_id = "2"
+    row2.agency_id = None
+    row2.route_short_name = "2"
+    row2.route_long_name = "Route 2"
+    row2.route_color = None
+
+    row3 = MagicMock()
+    row3.stop_id = "stop_2"
+    row3.route_id = "1"
+    row3.agency_id = None
+    row3.route_short_name = "1"
+    row3.route_long_name = "Route 1"
+    row3.route_color = "FF0000"
+
+    result_mock = MagicMock()
+    result_mock.__iter__ = MagicMock(return_value=iter([row1, row2, row3]))
+    session.execute.return_value = result_mock
+
+    cache = await svc.get_all_routes_at_stops()
+
+    session.execute.assert_called_once()
+    assert len(cache) == 2
+    assert len(cache["stop_1"]) == 2
+    assert len(cache["stop_2"]) == 1
+    assert cache["stop_1"][0].route_id == "1"
+    assert cache["stop_2"][0].route_id == "1"
+
+
+@pytest.mark.asyncio
 async def test_get_stops_by_route_id():
     svc, session = make_service()
     row = MagicMock()
