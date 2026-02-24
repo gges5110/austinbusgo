@@ -99,12 +99,14 @@ export const StopLayer: FC<StopLayerProps> = ({
             "#1A73E8",
           ],
           // Always-visible stops are fully opaque at any zoom; others only
-          // appear at zoom 11+.
+          // appear at zoom 11+.  The zoom step must be the top-level
+          // expression when mixing camera and data expressions.
           "circle-opacity": [
-            "case",
-            ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY],
+            "step",
+            ["zoom"],
+            ["case", ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY], 1, 0],
+            11,
             1,
-            ["step", ["zoom"], 0, 11, 1],
           ],
           "circle-radius": [
             "interpolate",
@@ -121,12 +123,13 @@ export const StopLayer: FC<StopLayerProps> = ({
           ],
           "circle-stroke-color": "#ffffff",
           // Keep stroke thin at low zoom so small dots don't become
-          // all-stroke with no fill.
+          // all-stroke with no fill.  Same camera+data ordering rule applies.
           "circle-stroke-opacity": [
-            "case",
-            ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY],
+            "step",
+            ["zoom"],
+            ["case", ["<=", ["get", "priority"], ALWAYS_VISIBLE_PRIORITY], 1, 0],
+            11,
             1,
-            ["step", ["zoom"], 0, 11, 1],
           ],
           "circle-stroke-width": [
             "interpolate",
