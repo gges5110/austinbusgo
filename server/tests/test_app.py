@@ -14,8 +14,11 @@ def make_app(mocker):
     mock_session = MagicMock()
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=False)
-    mocker.patch("server.main.AsyncSessionLocal", return_value=mock_session)
     mocker.patch("server.database.AsyncSessionLocal", return_value=mock_session)
+    # Mock GTFSService so the startup cache load does not require a real DB
+    mock_gtfs = MagicMock()
+    mock_gtfs.get_all_routes_at_stops = AsyncMock(return_value={})
+    mocker.patch("server.main.GTFSService", return_value=mock_gtfs)
     return create_app()
 
 

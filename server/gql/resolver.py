@@ -60,6 +60,8 @@ class Resolver:
         max_lon: float,
         limit: int = 20,
     ):
+        context = getattr(info, "context", None)
+        route_counts = getattr(context, "stop_route_counts", None)
         return (
             await self.gtfs_service.get_near_by_stops(
                 min_lat=min_lat,
@@ -67,6 +69,7 @@ class Resolver:
                 max_lat=max_lat,
                 max_lon=max_lon,
                 limit=limit,
+                route_counts=route_counts,
             )
             or []
         )
