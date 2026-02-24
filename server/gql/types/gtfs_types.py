@@ -20,6 +20,11 @@ class Stop:
     stop_id: str
     stop_code: Optional[str] = None
     stop_name: Optional[str] = None
+    stop_desc: Optional[str] = None
+    stop_url: Optional[str] = None
+    wheelchair_boarding: Optional[int] = None
+    on_street: Optional[str] = None
+    at_street: Optional[str] = None
 
     @strawberry.field
     def stop_loc(self) -> Optional[Point]:

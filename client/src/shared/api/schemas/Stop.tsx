@@ -6,9 +6,20 @@ export const STOP_QUERY = gql`
       stopId
       stopCode
       stopName
+      stopDesc
+      stopUrl
+      wheelchairBoarding
+      onStreet
+      atStreet
       stopLoc {
         type
         coordinates
+      }
+      routes {
+        routeId
+        routeShortName
+        routeLongName
+        routeColor
       }
     }
   }
