@@ -93,7 +93,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: abg-exb
+          projectName: abg
           directory: client/build
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: pr-${{ github.event.number }}
