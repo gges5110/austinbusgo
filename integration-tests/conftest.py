@@ -116,7 +116,6 @@ VALUES
     ('trip-1', '23:50:00', '23:50:00', 'stop-1', 1),
     ('trip-1', '23:59:00', '23:59:00', 'stop-2', 2);
 
-REFRESH MATERIALIZED VIEW shapes_aggregated;
 REFRESH MATERIALIZED VIEW routes_at_stop;
 """
 
