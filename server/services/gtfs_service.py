@@ -262,9 +262,7 @@ class GTFSService:
         result = await self.session.execute(
             select(Trips)
             .join(CalendarDates, CalendarDates.service_id == Trips.service_id)
-            .where(
-                (CalendarDates.date == parsed_date) & (Trips.route_id == route_id)
-            )
+            .where((CalendarDates.date == parsed_date) & (Trips.route_id == route_id))
         )
         return result.scalars().all()
 
