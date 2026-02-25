@@ -15,6 +15,10 @@ vi.mock("shared/api/schemas/NearByStops.generated", () => ({
   useNearByStopsQuery: mocks.mockUseNearByStopsQuery,
 }));
 
+vi.mock("react-router-dom", () => ({
+  useRouteLoaderData: vi.fn(() => undefined),
+}));
+
 vi.mock("react-map-gl/mapbox", () => ({
   useMap: vi.fn(() => ({
     mapId: {
@@ -70,7 +74,7 @@ describe("useNearByStops", () => {
         maxLon: -97.7,
         limit: 40,
       }),
-      { enabled: false, keepPreviousData: true }
+      expect.objectContaining({ enabled: false, keepPreviousData: true })
     );
   });
 
