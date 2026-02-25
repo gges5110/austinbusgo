@@ -1,4 +1,5 @@
 import { DevLayout } from "features/dev/components/DevLayout";
+import { GtfsRtFrontendDevPage } from "features/dev/pages/GtfsRtFrontendDevPage";
 import { StopsDevPage } from "features/dev/pages/StopsDevPage";
 import { TripStopTimesDevPage } from "features/dev/pages/TripStopTimesDevPage";
 import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
@@ -43,6 +44,7 @@ export const router = createBrowserRouter(
         <Route element={<VehiclePositionsDevPage />} path={"vehicles"} />
         <Route element={<TripStopTimesDevPage />} path={"trip-stop-times"} />
         <Route element={<StopsDevPage />} path={"stops"} />
+        <Route element={<GtfsRtFrontendDevPage />} path={"gtfs-rt-frontend"} />
       </Route>
       <Route
         element={<RootLayout />}
