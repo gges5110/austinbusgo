@@ -284,10 +284,11 @@ export const StopLayer: FC<StopLayerProps> = ({
         layout={{
           "symbol-sort-key": ["get", "priority"],
           "text-allow-overlap": false,
+          "text-anchor": "right",
           // Only show labels at zoom 14+; collision detection hides overlaps
           "text-field": ["step", ["zoom"], "", 10, ["get", "stopName"]],
           "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-          "text-offset": [0, 1.5],
+          "text-offset": [-1, 0],
           // Show the circle pin even when the label text collides
           "text-optional": true,
           "text-size": 12,
@@ -296,6 +297,14 @@ export const StopLayer: FC<StopLayerProps> = ({
           "text-color": textColor,
           "text-halo-color": textHaloColor,
           "text-halo-width": 1,
+          "text-opacity": [
+            "case",
+            ["==", ["get", "stopId"], selectedStopId],
+            0.9,
+            ["boolean", ["feature-state", "hovered"], false],
+            0.9,
+            1,
+          ],
         }}
         type={"symbol"}
       />
