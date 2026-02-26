@@ -195,17 +195,19 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   >
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={600}>{stop.stopName}</Typography>
-                      <Typography
-                        color={
-                          updatedArrivalTime
-                            ? theme.palette.success.light
-                            : theme.palette.grey["500"]
-                        }
-                        fontSize={14}
-                        fontWeight={updatedArrivalTime ? 600 : undefined}
-                      >
-                        {updatedArrivalTime ? "Live" : "Scheduled"}
-                      </Typography>
+                      {at && (
+                        <Typography
+                          color={
+                            updatedArrivalTime
+                              ? theme.palette.success.light
+                              : theme.palette.grey["500"]
+                          }
+                          fontSize={14}
+                          fontWeight={updatedArrivalTime ? 600 : undefined}
+                        >
+                          {updatedArrivalTime ? "Live" : "Scheduled"}
+                        </Typography>
+                      )}
                     </Box>
 
                     {timeDiff !== undefined && at && (

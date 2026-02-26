@@ -1,8 +1,11 @@
+import AccessibleIcon from "@mui/icons-material/Accessible";
+import NotAccessibleIcon from "@mui/icons-material/NotAccessible";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Tooltip, Typography } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
 import { ArrivalTimeList } from "features/stop/components/ArrivalTimeList/ArrivalTimeList";
 import { RoutesSelector } from "features/stop/components/RoutesSelector/RoutesSelector";
+import { StopRoutes } from "features/stop/components/StopRoutes/StopRoutes";
 import { useAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";
@@ -21,6 +24,26 @@ import { stopLoader } from "./StopLoader";
 interface StopMenuProps {
   hideBackButton?: boolean;
 }
+
+const WheelchairBoardingIcon: React.FC<{
+  wheelchairBoarding?: number | null;
+}> = ({ wheelchairBoarding }) => {
+  if (wheelchairBoarding === 1) {
+    return (
+      <Tooltip title={"Wheelchair accessible"}>
+        <AccessibleIcon color={"success"} fontSize={"small"} />
+      </Tooltip>
+    );
+  }
+  if (wheelchairBoarding === 2) {
+    return (
+      <Tooltip title={"Not wheelchair accessible"}>
+        <NotAccessibleIcon color={"disabled"} fontSize={"small"} />
+      </Tooltip>
+    );
+  }
+  return null;
+};
 
 export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const [searchParams] = useSearchParams();
@@ -83,6 +106,11 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
     setSelectedRouteInitialValues(routeIds);
   }, []);
 
+  const intersection =
+    stop.onStreet && stop.atStreet
+      ? `${stop.onStreet} at ${stop.atStreet}`
+      : null;
+
   return (
     <MenuPanel>
       <Box
@@ -111,7 +139,20 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
             >
               <PlaceOutlinedIcon />
               <Typography variant={"subtitle1"}>{stop.stopName}</Typography>
+              <WheelchairBoardingIcon
+                wheelchairBoarding={stop.wheelchairBoarding}
+              />
             </Box>
+
+            {intersection && (
+              <Typography
+                color={"text.secondary"}
+                textAlign={"center"}
+                variant={"caption"}
+              >
+                {intersection}
+              </Typography>
+            )}
 
             <Typography textAlign={"center"} variant={"subtitle2"}>
               Stop ID: {stop.stopId}
@@ -124,6 +165,9 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
           <ShareButton />
         </Box>
 
+        <Divider />
+        <StopRoutes routes={stop.routes} />
+
         {!isLoading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (
           <Box
             sx={{
@@ -133,6 +177,9 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               pr: 1,
             }}
           >
+            <Typography color={"text.secondary"} mb={0.5} variant={"caption"}>
+              Filter by route
+            </Typography>
             <RoutesSelector
               arrivalTimes={arrivalTimes}
               selectedRouteIds={selectedRouteIds}
@@ -140,6 +187,11 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
             />
           </Box>
         )}
+      </Box>
+      <Box px={2} pt={1}>
+        <Typography color={"text.secondary"} variant={"caption"}>
+          Upcoming arrivals
+        </Typography>
       </Box>
       <ArrivalTimeList
         arrivalTimes={arrivalTimes}

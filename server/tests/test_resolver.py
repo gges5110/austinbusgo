@@ -109,6 +109,7 @@ async def test_resolve_near_by_stops():
         max_lat=31.0,
         max_lon=-97.0,
         limit=20,
+        route_counts=None,
     )
     assert result == stops
 

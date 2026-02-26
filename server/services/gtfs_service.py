@@ -93,6 +93,30 @@ class GTFSService:
         )
         return [SimpleNamespace(**row._mapping) for row in result]
 
+    async def get_all_routes_at_stops(self) -> dict:
+        """Load all routes per stop into memory. Returns {stop_id: [route, ...]}."""
+        result = await self.session.execute(
+            select(
+                RoutesAtStop.stop_id,
+                Routes.route_id,
+                Routes.agency_id,
+                Routes.route_short_name,
+                Routes.route_long_name,
+                Routes.route_color,
+            ).join(Routes, Routes.route_id == RoutesAtStop.route_id)
+        )
+        cache: dict = {}
+        for row in result:
+            route = SimpleNamespace(
+                route_id=row.route_id,
+                agency_id=row.agency_id,
+                route_short_name=row.route_short_name,
+                route_long_name=row.route_long_name,
+                route_color=row.route_color,
+            )
+            cache.setdefault(row.stop_id, []).append(route)
+        return cache
+
     async def get_near_by_stops(
         self,
         min_lat: float,
@@ -100,20 +124,56 @@ class GTFSService:
         max_lat: float,
         max_lon: float,
         limit: int = 20,
+        route_counts: Optional[dict] = None,
     ) -> List[SimpleNamespace]:
         spatial_filter = (
             "ST_Intersects(stop_loc,"
             " ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)::geography)"
         )
+        center_lon = (min_lon + max_lon) / 2
+        center_lat = (min_lat + max_lat) / 2
         params = {
             "min_lon": min_lon,
             "min_lat": min_lat,
             "max_lon": max_lon,
             "max_lat": max_lat,
-            "center_lon": (min_lon + max_lon) / 2,
-            "center_lat": (min_lat + max_lat) / 2,
+            "center_lon": center_lon,
+            "center_lat": center_lat,
             "limit": limit,
         }
+
+        if route_counts is not None:
+            # Simplified query: skip the routes_at_stop JOIN and GROUP BY.
+            # Ranking is done in Python using the pre-loaded route_counts cache.
+            sql = f"""
+            SELECT stop_id, stop_code, stop_name,
+                   ST_AsGeoJSON(stop_loc) AS stop_loc,
+                   ST_Distance(
+                       stop_loc::geography,
+                       ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326)::geography
+                   ) AS distance
+            FROM stops
+            WHERE {spatial_filter};
+            """
+            result = await self.session.execute(text(sql), params)
+            scored = []
+            for row in result:
+                count = route_counts.get(row.stop_id, 0)
+                score = (count + 1.0) / (row.distance * 10.0 + 1.0)
+                scored.append(
+                    (
+                        score,
+                        SimpleNamespace(
+                            stop_id=row.stop_id,
+                            stop_code=row.stop_code,
+                            stop_name=row.stop_name,
+                            stop_loc=row.stop_loc,
+                            route_count=count,
+                        ),
+                    )
+                )
+            scored.sort(key=lambda x: x[0], reverse=True)
+            return [s for _, s in scored[:limit]]
 
         sql = f"""
         WITH stops_in_radius AS MATERIALIZED (
@@ -177,6 +237,7 @@ class GTFSService:
     async def get_trips_by_distinct_short_name(
         self, route_id: str, date: str
     ) -> List[Trips]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text(
             """
             SELECT DISTINCT ON (trips.direction_id, trips.trip_headsign)
@@ -191,14 +252,17 @@ class GTFSService:
             ORDER BY trips.direction_id, trips.trip_headsign
             """
         )
-        result = await self.session.execute(sql, {"route_id": route_id, "date": date})
+        result = await self.session.execute(
+            sql, {"route_id": route_id, "date": parsed_date}
+        )
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_trips_for_date(self, route_id: str, date: str) -> List[Trips]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         result = await self.session.execute(
             select(Trips)
             .join(CalendarDates, CalendarDates.service_id == Trips.service_id)
-            .where((CalendarDates.date == date) & (Trips.route_id == route_id))
+            .where((CalendarDates.date == parsed_date) & (Trips.route_id == route_id))
         )
         return result.scalars().all()
 
@@ -316,6 +380,7 @@ class GTFSService:
     async def get_stop_times_by_stop_id(
         self, stop_id: str, date: str
     ) -> List[SimpleNamespace]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         cutoff = (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
         sql = text(
             """
@@ -341,7 +406,7 @@ class GTFSService:
             """
         )
         result = await self.session.execute(
-            sql, {"stop_id": stop_id, "date": date, "cutoff": cutoff}
+            sql, {"stop_id": stop_id, "date": parsed_date, "cutoff": cutoff}
         )
         stop_times = []
         for row in result:
@@ -380,6 +445,7 @@ class GTFSService:
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str
     ) -> List[SimpleNamespace]:
+        parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text(
             """
             SELECT st.arrival_time, st.stop_id, st.stop_sequence, st.trip_id
@@ -408,7 +474,7 @@ class GTFSService:
             {
                 "route_id": route_id,
                 "direction_id": direction_id,
-                "date": date,
+                "date": parsed_date,
                 "time": time,
             },
         )
