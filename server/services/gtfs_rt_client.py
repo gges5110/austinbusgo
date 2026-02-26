@@ -28,7 +28,7 @@ class GTFSRTClient:
 
     @staticmethod
     def _get_feed_message_entity_from_url(url: str) -> FeedEntity:
-        response = httpx.get(url)
+        response = httpx.get(url, follow_redirects=True)
         feed_message = gtfs_realtime_pb2.FeedMessage()
         feed_message.ParseFromString(response.content)
         return feed_message.entity
