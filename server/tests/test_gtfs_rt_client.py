@@ -72,7 +72,7 @@ def test_get_feed_message_entity_from_url(client, mocker):
 
     result = client._get_feed_message_entity_from_url("http://test-url")
 
-    mock_get.assert_called_with("http://test-url")
+    mock_get.assert_called_with("http://test-url", follow_redirects=True)
     assert len(result) == 1
     assert result[0].id == "1"
 

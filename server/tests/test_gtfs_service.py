@@ -334,7 +334,7 @@ async def test_get_trips_by_distinct_short_name():
     result_mock.__iter__ = MagicMock(return_value=iter([row]))
     session.execute.return_value = result_mock
 
-    result = await svc.get_trips_by_distinct_short_name("1", "2025-01-01")
+    result = await svc.get_trips_by_distinct_short_name("1", "20250101")
 
     assert len(result) == 1
 
@@ -345,7 +345,7 @@ async def test_get_trips_for_date():
     trip = SimpleNamespace(trip_id="trip_1")
     session.execute.return_value = make_exec_result([trip])
 
-    result = await svc.get_trips_for_date("1", "2025-01-01")
+    result = await svc.get_trips_for_date("1", "20250101")
 
     session.execute.assert_called_once()
     assert len(result) == 1
@@ -488,7 +488,7 @@ async def test_get_stop_times_by_stop_id():
     result_mock.__iter__ = MagicMock(return_value=iter([row]))
     session.execute.return_value = result_mock
 
-    result = await svc.get_stop_times_by_stop_id("stop_1", "2025-01-01")
+    result = await svc.get_stop_times_by_stop_id("stop_1", "20250101")
 
     assert len(result) == 1
     assert result[0].trip.trip_id == "trip_1"
@@ -510,7 +510,7 @@ async def test_get_earliest_arrival_times_on_route():
     session.execute.return_value = result_mock
 
     result = await svc.get_earliest_arrival_times_on_route(
-        "1", 0, "2025-01-01", "10:00:00"
+        "1", 0, "20250101", "10:00:00"
     )
 
     assert len(result) == 1
