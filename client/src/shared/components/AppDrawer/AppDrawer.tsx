@@ -29,11 +29,11 @@ import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
 import { ColorModeToggle } from "shared/components/AppDrawer/ColorModeToggle/ColorModeToggle";
+import { useShowAllVehicles } from "shared/hooks/UseShowAllVehicles";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   isAutoPollingAtom,
   recentSearchesAtom,
-  showAllVehiclesAtom,
   showReactQueryDevtoolsAtom,
 } from "shared/state/atoms";
 import { useReloadVehiclePositions } from "./useReloadVehiclePositions";
@@ -53,7 +53,7 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
-  const [showAllVehicles, setShowAllVehicles] = useAtom(showAllVehiclesAtom);
+  const [showAllVehicles, setShowAllVehicles] = useShowAllVehicles();
   const setRecentSearches = useSetAtom(recentSearchesAtom);
   const [showReactQueryDevtools, setShowReactQueryDevtools] = useAtom(
     showReactQueryDevtoolsAtom

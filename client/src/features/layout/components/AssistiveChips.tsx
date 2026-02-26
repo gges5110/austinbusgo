@@ -9,19 +9,18 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useAtom } from "jotai";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MENU_PANEL_WIDTH } from "shared/components/MenuPanel/MenuPanel";
+import { useShowAllVehicles } from "shared/hooks/UseShowAllVehicles";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { showAllVehiclesAtom } from "shared/state/atoms";
 
 interface AssistiveChipsProps {}
 
 export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
-  const [showAllVehicles, setShowAllVehicles] = useAtom(showAllVehiclesAtom);
+  const [showAllVehicles, setShowAllVehicles] = useShowAllVehicles();
   // Use 'md' breakpoint to keep chips visible on tablets (sm-md range)
   // while hiding them on smaller mobile devices to prevent overflow
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));

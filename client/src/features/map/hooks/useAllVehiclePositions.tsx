@@ -1,10 +1,11 @@
 import { useAtomValue } from "jotai";
 import { useRealTimeVehiclePositionsQuery } from "shared/api/schemas/RealTimeVehiclePositions.generated";
-import { isAutoPollingAtom, showAllVehiclesAtom } from "shared/state/atoms";
+import { useShowAllVehicles } from "shared/hooks/UseShowAllVehicles";
+import { isAutoPollingAtom } from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 
 export const useAllVehiclePositions = () => {
-  const showAllVehicles = useAtomValue(showAllVehiclesAtom);
+  const [showAllVehicles] = useShowAllVehicles();
   const autoPolling = useAtomValue(isAutoPollingAtom);
 
   const { data } = useRealTimeVehiclePositionsQuery(undefined, {
