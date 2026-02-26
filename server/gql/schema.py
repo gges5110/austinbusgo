@@ -147,8 +147,10 @@ class Query:
         return LineString.from_dict(geom_to_dict(agg.shape))
 
     @strawberry.field
-    async def search(self, info: Info, search_term: str) -> Search:
-        result = await info.context.resolver.resolve_search(None, None, search_term)
+    async def search(self, info: Info, search_term: str, limit: int = 8) -> Search:
+        result = await info.context.resolver.resolve_search(
+            None, None, search_term, limit
+        )
         return Search(
             stops=list(result["stops"]),
             routes=list(result["routes"]),

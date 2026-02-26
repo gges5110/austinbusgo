@@ -43,13 +43,13 @@ export const useSearchOptions = ({
       }
     } else {
       options = [
-        ...stops.map((stop) => ({
-          type: SearchType.search,
-          optionValue: stop,
-        })),
         ...routes.map((route) => ({
           type: SearchType.search,
           optionValue: route,
+        })),
+        ...stops.map((stop) => ({
+          type: SearchType.search,
+          optionValue: stop,
         })),
       ];
 

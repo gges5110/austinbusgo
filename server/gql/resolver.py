@@ -100,11 +100,15 @@ class Resolver:
     async def resolve_stop_times(self, query, info, trip_id: str):
         return await self.gtfs_service.get_stop_times_by_trip_id(trip_id)
 
-    async def resolve_search(self, query, info, search_term: str):
+    async def resolve_search(self, query, info, search_term: str, limit: int = 8):
         search_terms = search_term.split(" ")
         return {
-            "stops": await self.gtfs_service.get_stops_by_name(search_terms),
-            "routes": await self.gtfs_service.get_routes_by_name(search_terms),
+            "stops": await self.gtfs_service.get_stops_by_name(
+                search_terms, limit=limit
+            ),
+            "routes": await self.gtfs_service.get_routes_by_name(
+                search_terms, limit=limit
+            ),
         }
 
     async def resolve_earliest_arrival_times_on_route(

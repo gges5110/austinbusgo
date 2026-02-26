@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
 
-from sqlalchemy import Integer, cast, func, select, text
+from sqlalchemy import Integer, case, cast, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.models.gtfs_models import (
@@ -36,13 +36,26 @@ class GTFSService:
         )
         return result.scalars().all()
 
-    async def get_routes_by_name(self, search_terms: List[str]) -> List[Routes]:
+    async def get_routes_by_name(
+        self, search_terms: List[str], limit: Optional[int] = None
+    ) -> List[Routes]:
         term = "|".join(search_terms)
-        result = await self.session.execute(
-            select(Routes).where(
-                Routes.route_id.op("~*")(term) | Routes.route_long_name.op("~*")(term)
-            )
+        exact_term = search_terms[0] if len(search_terms) == 1 else None
+        exact_match = (
+            case((Routes.route_id.op("~")(f"^{exact_term}$"), 0), else_=1)
+            if exact_term
+            else None
         )
+        query = select(Routes).where(
+            Routes.route_id.op("~*")(term) | Routes.route_long_name.op("~*")(term)
+        )
+        if exact_match is not None:
+            query = query.order_by(exact_match, cast(Routes.route_id, Integer))
+        else:
+            query = query.order_by(cast(Routes.route_id, Integer))
+        if limit is not None:
+            query = query.limit(limit)
+        result = await self.session.execute(query)
         return result.scalars().all()
 
     async def get_routes_at_stop(self, stop_id: str) -> List[Routes]:
@@ -89,21 +102,24 @@ class GTFSService:
         )
         return [SimpleNamespace(**row._mapping) for row in result]
 
-    async def get_stops_by_name(self, search_terms: List[str]) -> List[Stops]:
+    async def get_stops_by_name(
+        self, search_terms: List[str], limit: Optional[int] = None
+    ) -> List[Stops]:
         term = "|".join(search_terms)
-        result = await self.session.execute(
-            select(
-                Stops.stop_id,
-                Stops.stop_code,
-                Stops.stop_name,
-                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
-            ).where(
-                Stops.at_street.op("~*")(term)
-                | Stops.on_street.op("~*")(term)
-                | Stops.stop_name.op("~*")(term)
-                | Stops.stop_code.op("~*")(term)
-            )
+        query = select(
+            Stops.stop_id,
+            Stops.stop_code,
+            Stops.stop_name,
+            func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+        ).where(
+            Stops.at_street.op("~*")(term)
+            | Stops.on_street.op("~*")(term)
+            | Stops.stop_name.op("~*")(term)
+            | Stops.stop_code.op("~*")(term)
         )
+        if limit is not None:
+            query = query.limit(limit)
+        result = await self.session.execute(query)
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_all_routes_at_stops(self) -> dict:
