@@ -110,6 +110,12 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
     stop.onStreet && stop.atStreet
       ? `${stop.onStreet} at ${stop.atStreet}`
       : null;
+  const showIntersection =
+    intersection &&
+    !(
+      stop.stopName?.toLowerCase().includes(stop.onStreet!.toLowerCase()) &&
+      stop.stopName?.toLowerCase().includes(stop.atStreet!.toLowerCase())
+    );
 
   return (
     <MenuPanel>
@@ -144,7 +150,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               />
             </Box>
 
-            {intersection && (
+            {showIntersection && (
               <Typography
                 color={"text.secondary"}
                 textAlign={"center"}
