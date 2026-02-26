@@ -106,17 +106,6 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
     setSelectedRouteInitialValues(routeIds);
   }, []);
 
-  const intersection =
-    stop.onStreet && stop.atStreet
-      ? `${stop.onStreet} at ${stop.atStreet}`
-      : null;
-  const showIntersection =
-    intersection &&
-    !(
-      stop.stopName?.toLowerCase().includes(stop.onStreet!.toLowerCase()) &&
-      stop.stopName?.toLowerCase().includes(stop.atStreet!.toLowerCase())
-    );
-
   return (
     <MenuPanel>
       <Box
@@ -149,16 +138,6 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
                 wheelchairBoarding={stop.wheelchairBoarding}
               />
             </Box>
-
-            {showIntersection && (
-              <Typography
-                color={"text.secondary"}
-                textAlign={"center"}
-                variant={"caption"}
-              >
-                {intersection}
-              </Typography>
-            )}
 
             <Typography textAlign={"center"} variant={"subtitle2"}>
               Stop ID: {stop.stopId}
