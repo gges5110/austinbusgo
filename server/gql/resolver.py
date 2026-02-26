@@ -74,6 +74,9 @@ class Resolver:
             or []
         )
 
+    async def resolve_stops(self, query, info):
+        return await self.gtfs_service.get_stops()
+
     async def resolve_stops_by_name(self, query, info, stop_name: str):
         return await self.gtfs_service.get_stops_by_name(stop_name.split(" ")) or []
 

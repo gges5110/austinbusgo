@@ -159,6 +159,10 @@ class Query:
         return await info.context.resolver.resolve_stop(None, None, stop_id)
 
     @strawberry.field
+    async def stops(self, info: Info) -> List[Stop]:
+        return list(await info.context.resolver.resolve_stops(None, None))
+
+    @strawberry.field
     async def stops_and_shapes(
         self, info: Info, route_id: str, direction_id: int, date: str
     ) -> StopsAndShapes:

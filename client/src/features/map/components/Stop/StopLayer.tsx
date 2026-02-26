@@ -50,6 +50,7 @@ function buildLabelGridWinners(stops: Stop[], zoom: number): Set<string> {
 
 interface StopLayerProps {
   readonly darkMode?: boolean;
+  readonly disableLod?: boolean;
   readonly selectedStop: Stop | undefined;
   readonly stops: Stop[];
 }
@@ -58,6 +59,7 @@ export const StopLayer: FC<StopLayerProps> = ({
   stops,
   selectedStop,
   darkMode = false,
+  disableLod = false,
 }) => {
   const { mapId: map } = useMap();
   const hoveringStop = useAtomValue(hoveringStopAtom);
@@ -150,13 +152,15 @@ export const StopLayer: FC<StopLayerProps> = ({
             "#EA4335",
             "#1A73E8",
           ],
-          "circle-opacity": [
-            "step",
-            ["zoom"],
-            ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-            16,
-            1,
-          ],
+          "circle-opacity": disableLod
+            ? 1
+            : [
+                "step",
+                ["zoom"],
+                ["case", ["==", ["get", "gridRank"], 1], 1, 0],
+                16,
+                1,
+              ],
           "circle-radius": [
             "interpolate",
             ["linear"],
@@ -171,13 +175,15 @@ export const StopLayer: FC<StopLayerProps> = ({
             10,
           ],
           "circle-stroke-color": "#ffffff",
-          "circle-stroke-opacity": [
-            "step",
-            ["zoom"],
-            ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-            16,
-            1,
-          ],
+          "circle-stroke-opacity": disableLod
+            ? 1
+            : [
+                "step",
+                ["zoom"],
+                ["case", ["==", ["get", "gridRank"], 1], 1, 0],
+                16,
+                1,
+              ],
           "circle-stroke-width": [
             "interpolate",
             ["linear"],
@@ -194,7 +200,11 @@ export const StopLayer: FC<StopLayerProps> = ({
       {/* Symbol layer for stop name labels — native collision detection and
           importance ranking via symbol-sort-key */}
       <Layer
-        filter={["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true]}
+        filter={
+          disableLod
+            ? true
+            : ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true]
+        }
         id={STOP_LABELS_LAYER_ID}
         layout={{
           "symbol-sort-key": ["get", "priority"],

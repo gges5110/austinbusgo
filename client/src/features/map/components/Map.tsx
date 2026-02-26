@@ -83,6 +83,7 @@ export const Map: React.FunctionComponent = () => {
     }
   };
 
+  const isRoutesPage = !!route;
   const darkMode = theme.palette.mode === "dark";
 
   const onStopLayerClick = (event: MapLayerMouseEvent) => {
@@ -123,7 +124,6 @@ export const Map: React.FunctionComponent = () => {
           trackUserLocation={true}
         />
 
-        <StopMarkers darkMode={darkMode} selectedStop={stop} stops={stops} />
         <VehicleMarkers
           onClick={vehicleMarkerOnClick}
           vehiclePositions={vehiclePositions}
@@ -139,6 +139,13 @@ export const Map: React.FunctionComponent = () => {
             type={"line"}
           />
         </Source>
+
+        <StopMarkers
+          darkMode={darkMode}
+          disableLod={isRoutesPage}
+          selectedStop={stop}
+          stops={stops}
+        />
       </ReactMapGL>
     </>
   );

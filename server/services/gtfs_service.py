@@ -76,6 +76,17 @@ class GTFSService:
         row = result.one()
         return SimpleNamespace(**row._mapping)
 
+    async def get_stops(self) -> List[SimpleNamespace]:
+        result = await self.session.execute(
+            select(
+                Stops.stop_id,
+                Stops.stop_code,
+                Stops.stop_name,
+                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+            )
+        )
+        return [SimpleNamespace(**row._mapping) for row in result]
+
     async def get_stops_by_name(self, search_terms: List[str]) -> List[Stops]:
         term = "|".join(search_terms)
         result = await self.session.execute(
@@ -240,7 +251,7 @@ class GTFSService:
         parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text(
             """
-            SELECT DISTINCT ON (trips.direction_id, trips.trip_headsign)
+            SELECT DISTINCT ON (trips.direction_id)
                 trips.trip_id, trips.route_id, trips.service_id,
                 trips.trip_headsign, trips.direction_id, trips.block_id,
                 trips.shape_id, trips.scheduled_trip_id, trips.trip_short_name,
@@ -249,7 +260,7 @@ class GTFSService:
             JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
             WHERE trips.route_id = :route_id
               AND calendar_dates.date = :date
-            ORDER BY trips.direction_id, trips.trip_headsign
+            ORDER BY trips.direction_id, trips.trip_id
             """
         )
         result = await self.session.execute(
