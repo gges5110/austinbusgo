@@ -39,3 +39,7 @@ export const favoritesAtom = atomWithStorage<Array<FavoritesType>>(
 
 export const currentRouteAtom = atom<Route | undefined>(undefined);
 export const currentStopAtom = atom<Stop | undefined>(undefined);
+export const showAllVehiclesAtom = atomWithStorage<boolean>(
+  "showAllVehicles",
+  false
+);
