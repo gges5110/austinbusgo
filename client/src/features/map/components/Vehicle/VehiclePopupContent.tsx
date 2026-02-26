@@ -43,13 +43,29 @@ export const VehiclePopupContent: React.FunctionComponent<
   const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   return (
     <Box display={"flex"} flexDirection={"column"} gap={1} minWidth={275}>
-      <Box alignItems={"center"} display={"flex"} gap={1}>
+      <Box
+        alignItems={"center"}
+        component={trip?.trip.routeId ? Link : "div"}
+        display={"flex"}
+        gap={1}
+        sx={{ color: "inherit", textDecoration: "none" }}
+        to={`/route/${trip?.trip.routeId}/direction/0${viewStatePathname}${withPreservedSearch()}`}
+      >
         <RouteIcon />
         <RouteIdDisplay
           routeColor={trip?.trip.route.routeColor}
           routeId={trip?.trip.routeId || ""}
         />
-        <Typography component={"p"} fontSize={14} variant={"body2"}>
+        <Typography
+          component={"p"}
+          fontSize={14}
+          sx={
+            trip?.trip.routeId
+              ? { "&:hover": { textDecoration: "underline" } }
+              : undefined
+          }
+          variant={"body2"}
+        >
           {tripLoading ? <Skeleton /> : trip?.trip.route.routeLongName}
         </Typography>
       </Box>

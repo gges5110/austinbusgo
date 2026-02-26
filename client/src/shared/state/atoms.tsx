@@ -28,6 +28,9 @@ export const hoveringStopAtom = atom<Stop | undefined>(undefined);
 export const hoveringVehiclePositionAtom = atom<VehiclePosition | undefined>(
   undefined
 );
+export const pinnedVehiclePositionAtom = atom<VehiclePosition | undefined>(
+  undefined
+);
 
 export const mapsFlyToCoordinateAtom = atom<Coordinate | undefined>(undefined);
 export type FavoritesType = Stop | Route;

@@ -1,9 +1,20 @@
-import { useAtomValue } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useEffect, useMemo, useState } from "react";
-import { Layer, Source, useMap } from "react-map-gl/mapbox";
-import { hoveringStopAtom } from "shared/state/atoms";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Layer, Popup, Source, useMap } from "react-map-gl/mapbox";
+import {
+  hoveringStopAtom,
+  hoveringVehiclePositionAtom,
+  pinnedVehiclePositionAtom,
+} from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
+
+import { StopPopupContent } from "./StopPopupContent";
+
+// mapboxgl.MapLayerMouseEvent is deprecated in mapbox-gl v3; use this alias
+type LayerMouseEvent = mapboxgl.MapMouseEvent & {
+  features?: mapboxgl.GeoJSONFeature[];
+};
 
 export const STOP_CIRCLES_LAYER_ID = "stop-circles";
 export const STOP_LABELS_LAYER_ID = "stop-labels";
@@ -62,8 +73,33 @@ export const StopLayer: FC<StopLayerProps> = ({
   disableLod = false,
 }) => {
   const { mapId: map } = useMap();
-  const hoveringStop = useAtomValue(hoveringStopAtom);
+  const [hoveringStop, setHoveringStop] = useAtom(hoveringStopAtom);
+  const setHoveringVehicle = useSetAtom(hoveringVehiclePositionAtom);
+  const setPinnedVehicle = useSetAtom(pinnedVehiclePositionAtom);
   const selectedStopId = selectedStop?.stopId ?? "";
+
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleHoverClose = useCallback(() => {
+    closeTimerRef.current = setTimeout(() => {
+      setHoveringStop(undefined);
+    }, 200);
+  }, [setHoveringStop]);
+
+  const cancelHoverClose = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const stopsById = useMemo(() => {
+    const m = new Map<string, Stop>();
+    for (const stop of stops) {
+      m.set(stop.stopId, stop);
+    }
+    return m;
+  }, [stops]);
 
   // Track integer zoom so the grid only recomputes on whole-zoom-level changes.
   const [zoom, setZoom] = useState<number>(() =>
@@ -127,6 +163,45 @@ export const StopLayer: FC<StopLayerProps> = ({
       }
     };
   }, [map, hoveringStop]);
+
+  const handleStopMouseEnter = useCallback(
+    (e: LayerMouseEvent) => {
+      cancelHoverClose();
+      setHoveringVehicle(undefined);
+      setPinnedVehicle(undefined);
+      const stopId = e.features?.[0]?.properties?.stopId as string | undefined;
+      if (stopId && stopsById.has(stopId)) {
+        setHoveringStop(stopsById.get(stopId));
+      }
+    },
+    [
+      cancelHoverClose,
+      setHoveringVehicle,
+      setPinnedVehicle,
+      stopsById,
+      setHoveringStop,
+    ]
+  );
+
+  const handleStopMouseLeave = useCallback(() => {
+    scheduleHoverClose();
+  }, [scheduleHoverClose]);
+
+  useEffect(() => {
+    if (!map) return;
+    map.on("mouseenter", STOP_CIRCLES_LAYER_ID, handleStopMouseEnter);
+    map.on("mouseleave", STOP_CIRCLES_LAYER_ID, handleStopMouseLeave);
+    map.on("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
+    map.on("mouseleave", STOP_LABELS_LAYER_ID, handleStopMouseLeave);
+    return () => {
+      map.off("mouseenter", STOP_CIRCLES_LAYER_ID, handleStopMouseEnter);
+      map.off("mouseleave", STOP_CIRCLES_LAYER_ID, handleStopMouseLeave);
+      map.off("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
+      map.off("mouseleave", STOP_LABELS_LAYER_ID, handleStopMouseLeave);
+    };
+  }, [map, handleStopMouseEnter, handleStopMouseLeave]);
+
+  const popupCoords = hoveringStop?.stopLoc?.coordinates;
 
   const textColor = darkMode ? "#e8eaed" : "#202124";
   const textHaloColor = darkMode ? "#1a1a1a" : "#ffffff";
@@ -224,6 +299,24 @@ export const StopLayer: FC<StopLayerProps> = ({
         }}
         type={"symbol"}
       />
+      {/* Popup: shown on hover; mouse can pan into popup to keep it open */}
+      {hoveringStop && popupCoords && (
+        <Popup
+          closeButton={false}
+          closeOnClick={false}
+          latitude={popupCoords[1]}
+          longitude={popupCoords[0]}
+          maxWidth={"none"}
+          offset={14}
+        >
+          <div
+            onMouseEnter={cancelHoverClose}
+            onMouseLeave={scheduleHoverClose}
+          >
+            <StopPopupContent stop={hoveringStop} />
+          </div>
+        </Popup>
+      )}
     </Source>
   );
 };

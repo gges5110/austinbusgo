@@ -1,10 +1,14 @@
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef } from "react";
 import { Layer, MapRef, Popup, Source, useMap } from "react-map-gl/mapbox";
 import { useNavigate } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { hoveringVehiclePositionAtom } from "shared/state/atoms";
+import {
+  hoveringStopAtom,
+  hoveringVehiclePositionAtom,
+  pinnedVehiclePositionAtom,
+} from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
@@ -73,9 +77,8 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
     hoveringVehiclePositionAtom
   );
   // Separate "pinned" state — set on click, cleared by clicking the map background
-  const [pinnedVehicle, setPinnedVehicle] = useState<
-    VehiclePosition | undefined
-  >(undefined);
+  const [pinnedVehicle, setPinnedVehicle] = useAtom(pinnedVehiclePositionAtom);
+  const setHoveringStop = useSetAtom(hoveringStopAtom);
   // Ref flag so the map-level click handler can tell if a vehicle circle was just clicked
   const vehicleJustClickedRef = useRef(false);
   // Delayed-close timer — cancelled when the mouse moves into the popup
@@ -160,6 +163,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   const handleVehicleMouseEnter = useCallback(
     (e: LayerMouseEvent) => {
       cancelHoverClose();
+      setHoveringStop(undefined);
       const vehicleId = e.features?.[0]?.properties?.vehicleId as
         | string
         | undefined;
@@ -167,7 +171,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         setHoveringVehicle(vehiclesById.get(vehicleId));
       }
     },
-    [cancelHoverClose, vehiclesById, setHoveringVehicle]
+    [cancelHoverClose, setHoveringStop, vehiclesById, setHoveringVehicle]
   );
 
   const handleVehicleMouseLeave = useCallback(() => {
@@ -184,13 +188,14 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
       // Mark that this click was on a vehicle so the map background handler
       // does not immediately clear the pinned popup
       vehicleJustClickedRef.current = true;
+      setHoveringStop(undefined);
       setPinnedVehicle(vp);
       const routeId = vp.trip?.routeId;
       if (routeId) {
         navigate(`/route/${routeId}/direction/0${viewStatePathname}`);
       }
     },
-    [navigate, vehiclesById, viewStatePathname]
+    [navigate, setHoveringStop, vehiclesById, viewStatePathname]
   );
 
   // Map background click: dismiss the pinned popup when clicking outside a vehicle

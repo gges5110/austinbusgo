@@ -41,6 +41,11 @@ export type StopsAndShapesQuery = {
         type: Types.GeometryType;
         coordinates: Array<number>;
       } | null;
+      routes?: Array<{
+        __typename?: "Route";
+        routeId: string;
+        routeColor?: string | null;
+      }> | null;
     }>;
     shapes: Array<{
       __typename?: "LineString";
@@ -66,6 +71,10 @@ export const StopsAndShapesDocument = `
       stopLoc {
         type
         coordinates
+      }
+      routes {
+        routeId
+        routeColor
       }
     }
     shapes {
