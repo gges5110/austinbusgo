@@ -131,8 +131,6 @@ export const Map: React.FunctionComponent = () => {
           trackUserLocation={true}
         />
 
-        <VehicleLayer vehiclePositions={mergedVehiclePositions} />
-
         <Source data={routeShapeGeoJSON} id={"route-shapes"} type={"geojson"}>
           <Layer
             id={"point"}
@@ -150,6 +148,8 @@ export const Map: React.FunctionComponent = () => {
           selectedStop={stop}
           stops={stops}
         />
+
+        <VehicleLayer vehiclePositions={mergedVehiclePositions} />
       </ReactMapGL>
     </>
   );
