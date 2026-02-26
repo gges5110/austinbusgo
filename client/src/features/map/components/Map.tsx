@@ -21,8 +21,11 @@ import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition } from "shared/types/interface.d";
 
-import { STOP_CIRCLES_LAYER_ID, STOP_LABELS_LAYER_ID } from "./Stop/StopLayer";
-import { StopMarkers } from "./Stop/StopMarkers";
+import {
+  STOP_CIRCLES_LAYER_ID,
+  STOP_LABELS_LAYER_ID,
+  StopLayer,
+} from "./Stop/StopLayer";
 import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
 
 export type ViewState = {
@@ -140,7 +143,7 @@ export const Map: React.FunctionComponent = () => {
           />
         </Source>
 
-        <StopMarkers
+        <StopLayer
           darkMode={darkMode}
           disableLod={isRoutesPage}
           selectedStop={stop}

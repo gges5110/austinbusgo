@@ -188,7 +188,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
           </Box>
         )}
       </Box>
-      <Box px={2} pt={1}>
+      <Box pt={1} px={2}>
         <Typography color={"text.secondary"} variant={"caption"}>
           Upcoming arrivals
         </Typography>
