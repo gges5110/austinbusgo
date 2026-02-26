@@ -27,7 +27,7 @@ import { Stop } from "shared/types/interface.d";
 
 export const FavoritesMenu = () => {
   const { favorites } = useFavorites();
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   const setHoveringStop = useSetAtom(hoveringStopAtom);
 
   useTitle("Favorites - Austin Bus Go");
@@ -69,7 +69,7 @@ export const FavoritesMenu = () => {
                     setHoveringStop(undefined);
                   }}
                   sx={{ py: 2 }}
-                  to={`/stop/${stop.stopId}${viewStatePathname}`}
+                  to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch()}`}
                 >
                   <Box display={"flex"} flexDirection={"column"} gap={1}>
                     <Box display={"flex"} gap={1}>

@@ -35,7 +35,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
   stops,
 }) => {
   const { directionId } = useParams();
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   const setHoveringStop = useSetAtom(hoveringStopAtom);
   const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
   const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
@@ -177,7 +177,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   pl: 6,
                   py: 2.5,
                 }}
-                to={`/stop/${stop.stopId}${viewStatePathname}?routeId=${route.routeId}&directionId=${directionId}`}
+                to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch({ routeId: route.routeId, directionId: directionId! })}`}
               >
                 <Box
                   display={"flex"}

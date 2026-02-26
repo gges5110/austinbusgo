@@ -5,9 +5,11 @@ import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { StopQuery } from "shared/api/schemas/Stop.generated";
 import { TripQuery } from "shared/api/schemas/Trip.generated";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 dayjs.extend(relativeTime);
@@ -38,6 +40,7 @@ export interface VehiclePopupContentProps {
 export const VehiclePopupContent: React.FunctionComponent<
   VehiclePopupContentProps
 > = ({ vehiclePosition, stop, stopLoading, trip, tripLoading }) => {
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   return (
     <Box display={"flex"} flexDirection={"column"} gap={1} minWidth={275}>
       <Box alignItems={"center"} display={"flex"} gap={1}>
@@ -54,9 +57,25 @@ export const VehiclePopupContent: React.FunctionComponent<
         {vehiclePosition.currentStatus &&
           getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
       </Typography>
-      <Box alignItems={"center"} display={"flex"} gap={1}>
+      <Box
+        alignItems={"center"}
+        component={vehiclePosition.stopId ? Link : "div"}
+        display={"flex"}
+        gap={1}
+        sx={{ color: "inherit", textDecoration: "none" }}
+        to={`/stop/${vehiclePosition.stopId}${viewStatePathname}${withPreservedSearch()}`}
+      >
         <PlaceOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
-        <Typography fontSize={16} fontWeight={600} variant={"body2"}>
+        <Typography
+          fontSize={16}
+          fontWeight={600}
+          sx={
+            vehiclePosition.stopId
+              ? { "&:hover": { textDecoration: "underline" } }
+              : undefined
+          }
+          variant={"body2"}
+        >
           {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
         </Typography>
       </Box>

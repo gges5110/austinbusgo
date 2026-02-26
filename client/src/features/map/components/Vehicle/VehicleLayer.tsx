@@ -21,7 +21,7 @@ type LayerMouseEvent = mapboxgl.MapMouseEvent & {
 
 function addVehicleArrowImage(map: MapRef) {
   if (map.hasImage(VEHICLE_ARROW_IMAGE_ID)) return;
-  const size = 40;
+  const size = 32;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -29,37 +29,29 @@ function addVehicleArrowImage(map: MapRef) {
   if (!ctx) return;
 
   const cx = size / 2;
-  // Bus-from-above shape: rounded rectangular body with a pointed front (top = north).
-  // When rotated by bearing, the pointed end shows the direction of travel.
+  // Navigation chevron: the same pattern used by Google Maps / Apple Maps / Waze
+  // for live vehicle direction — a solid arrowhead with a notched tail so it
+  // reads as motion rather than a static triangle.
+  //
+  //       ^   ← tip (north / direction of travel)
+  //      / \
+  //     /   \
+  //    / · · \
+  //   /___^___\  ← notched rear
+  //
   ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
   ctx.beginPath();
-  // Arrow tip (front of bus)
-  ctx.moveTo(cx, 2);
-  // Front-right shoulder
-  ctx.lineTo(cx + 9, 13);
-  // Right side down to rear
-  ctx.lineTo(cx + 9, size - 8);
-  // Rear-right rounded corner
-  ctx.quadraticCurveTo(cx + 9, size - 2, cx + 4, size - 2);
-  // Rear edge
-  ctx.lineTo(cx - 4, size - 2);
-  // Rear-left rounded corner
-  ctx.quadraticCurveTo(cx - 9, size - 2, cx - 9, size - 8);
-  // Left side up to front
-  ctx.lineTo(cx - 9, 13);
+  ctx.moveTo(cx, 2); // tip
+  ctx.lineTo(cx + 11, size - 4); // bottom-right
+  ctx.lineTo(cx, size - 10); // rear notch (inner)
+  ctx.lineTo(cx - 11, size - 4); // bottom-left
   ctx.closePath();
   ctx.fill();
 
-  // Windows: two small rounded rects on each side to read as a bus
-  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-  // Left window
-  ctx.beginPath();
-  ctx.roundRect(cx - 8, 16, 5, 7, 1);
-  ctx.fill();
-  // Right window
-  ctx.beginPath();
-  ctx.roundRect(cx + 3, 16, 5, 7, 1);
-  ctx.fill();
+  // Thin dark stroke so the white arrow is visible on light-coloured circles
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.lineWidth = 0.75;
+  ctx.stroke();
 
   const imageData = ctx.getImageData(0, 0, size, size);
   map.addImage(VEHICLE_ARROW_IMAGE_ID, {
@@ -86,6 +78,21 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   >(undefined);
   // Ref flag so the map-level click handler can tell if a vehicle circle was just clicked
   const vehicleJustClickedRef = useRef(false);
+  // Delayed-close timer — cancelled when the mouse moves into the popup
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleHoverClose = useCallback(() => {
+    closeTimerRef.current = setTimeout(() => {
+      setHoveringVehicle(undefined);
+    }, 200);
+  }, [setHoveringVehicle]);
+
+  const cancelHoverClose = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
 
   // Add custom arrow image to map on load
   useEffect(() => {
@@ -152,6 +159,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
 
   const handleVehicleMouseEnter = useCallback(
     (e: LayerMouseEvent) => {
+      cancelHoverClose();
       const vehicleId = e.features?.[0]?.properties?.vehicleId as
         | string
         | undefined;
@@ -159,12 +167,12 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         setHoveringVehicle(vehiclesById.get(vehicleId));
       }
     },
-    [vehiclesById, setHoveringVehicle]
+    [cancelHoverClose, vehiclesById, setHoveringVehicle]
   );
 
   const handleVehicleMouseLeave = useCallback(() => {
-    setHoveringVehicle(undefined);
-  }, [setHoveringVehicle]);
+    scheduleHoverClose();
+  }, [scheduleHoverClose]);
 
   const handleVehicleClick = useCallback(
     (e: LayerMouseEvent) => {
@@ -278,7 +286,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
           "icon-image": VEHICLE_ARROW_IMAGE_ID,
           "icon-rotate": ["get", "bearing"],
           "icon-rotation-alignment": "map",
-          "icon-size": 0.75,
+          "icon-size": 0.85,
         }}
         paint={{
           "icon-opacity": [
@@ -327,7 +335,13 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
           maxWidth={"none"}
           offset={20}
         >
-          <VehiclePopupContainer vehiclePosition={popupVehicle} />
+          {/* Keep popup visible when mouse moves from circle to popup */}
+          <div
+            onMouseEnter={cancelHoverClose}
+            onMouseLeave={scheduleHoverClose}
+          >
+            <VehiclePopupContainer vehiclePosition={popupVehicle} />
+          </div>
         </Popup>
       )}
     </Source>

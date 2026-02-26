@@ -20,7 +20,7 @@ export interface ArrivalTimeListItemProps {
 export const ArrivalTimeListItem: React.FunctionComponent<
   ArrivalTimeListItemProps
 > = ({ arrivalTime, stop }) => {
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
 
   const scheduledArrivalTime: Dayjs = dayjs(
     arrivalTime.scheduledArrivalTime,
@@ -68,7 +68,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<
       component={RouterLink}
       key={arrivalTime.scheduledArrivalTime}
       sx={{ py: 1.5 }}
-      to={`/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}${viewStatePathname}?routeId=${arrivalTime.trip.routeId}&directionId=${arrivalTime.trip.directionId}`}
+      to={`/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}${viewStatePathname}${withPreservedSearch({ routeId: arrivalTime.trip.routeId, directionId: String(arrivalTime.trip.directionId) })}`}
     >
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>

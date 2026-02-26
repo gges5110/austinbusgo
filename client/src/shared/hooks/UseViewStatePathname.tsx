@@ -12,6 +12,21 @@ export const useViewStatePathname = () => {
   const zoom = viewStateMatch?.[3] ? Number(viewStateMatch[3]) : 0;
   const isBasePath = restOfPathname === "" || restOfPathname === "/";
 
+  // Merges preserved params (e.g. buses=1) with any additional query params.
+  // Pass a URLSearchParams or plain object of extra params to include.
+  const withPreservedSearch = (extra?: Record<string, string>): string => {
+    const sp = new URLSearchParams(location.search);
+    const kept = new URLSearchParams();
+    if (sp.get("buses") === "1") kept.set("buses", "1");
+    if (extra) {
+      for (const [k, v] of Object.entries(extra)) {
+        kept.set(k, v);
+      }
+    }
+    const s = kept.toString();
+    return s ? `?${s}` : "";
+  };
+
   return {
     viewStatePathname,
     latitude,
@@ -20,5 +35,6 @@ export const useViewStatePathname = () => {
     restOfPathname,
     searchParams: location.search,
     isBasePath,
+    withPreservedSearch,
   };
 };

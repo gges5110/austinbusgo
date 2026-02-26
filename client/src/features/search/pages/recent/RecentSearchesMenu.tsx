@@ -31,7 +31,7 @@ import { Stop } from "shared/types/interface.d";
 
 export const RecentSearchesMenu = () => {
   const { recentSearches, removeFromRecentSearches } = useRecentSearches();
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   const setHoveringStop = useSetAtom(hoveringStopAtom);
 
   useTitle("Recent Searches - Austin Bus Go");
@@ -90,7 +90,7 @@ export const RecentSearchesMenu = () => {
                         setHoveringStop(undefined);
                       }}
                       sx={{ py: 2 }}
-                      to={`/stop/${value.stopId}${viewStatePathname}`}
+                      to={`/stop/${value.stopId}${viewStatePathname}${withPreservedSearch()}`}
                     >
                       <Box display={"flex"} flexDirection={"column"} gap={1}>
                         <Box display={"flex"} gap={1}>

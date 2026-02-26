@@ -43,7 +43,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   vehiclePosition,
   tripUpdate,
 }) => {
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
   const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
   const [searchParams] = useSearchParams();
@@ -218,12 +218,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 }}
                 to={
                   searchParams.get("routeId")
-                    ? `/stop/${
-                        stopTime.stopId
-                      }${viewStatePathname}?routeId=${searchParams.get(
-                        "routeId"
-                      )}&directionId=${searchParams.get("directionId")}`
-                    : `/stop/${stopTime.stopId}${viewStatePathname}`
+                    ? `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch({ routeId: searchParams.get("routeId")!, directionId: searchParams.get("directionId")! })}`
+                    : `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch()}`
                 }
               >
                 <Box

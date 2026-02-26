@@ -12,7 +12,7 @@ export const useCurrentStop = () => {
   const [currentStop, setCurrentStop] = useAtom(currentStopAtom);
   const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
   const navigate = useNavigate();
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   const { addToRecentSearches } = useRecentSearches();
   const { routeId, directionId } = useParams();
 
@@ -39,10 +39,10 @@ export const useCurrentStop = () => {
       }
       if (location.pathname.includes("/route")) {
         navigate(
-          `/stop/${stopId}${viewStatePathname}?routeId=${routeId}&directionId=${directionId}`
+          `/stop/${stopId}${viewStatePathname}${withPreservedSearch({ routeId: routeId!, directionId: directionId! })}`
         );
       } else {
-        navigate(`/stop/${stopId}${viewStatePathname}`);
+        navigate(`/stop/${stopId}${viewStatePathname}${withPreservedSearch()}`);
       }
     }
   };

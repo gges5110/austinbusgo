@@ -32,7 +32,7 @@ export const isResponse = (data: Response | SearchQuery): data is Response => {
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
   const { searchTerm } = useParams();
-  const { viewStatePathname } = useViewStatePathname();
+  const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
 
   const { addToRecentSearches } = useRecentSearches();
   useTitle(`${searchTerm} - Austin Bus Go`);
@@ -88,7 +88,7 @@ export const SearchResultsMenu = () => {
                       setHoveringStop(undefined);
                     }}
                     sx={{ py: 2 }}
-                    to={`/stop/${stop.stopId}${viewStatePathname}`}
+                    to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch()}`}
                   >
                     <Box display={"flex"} flexDirection={"column"} gap={1}>
                       <Box display={"flex"} gap={1}>
