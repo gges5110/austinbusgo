@@ -303,8 +303,12 @@ async def test_resolve_search():
 
     result = await resolver.resolve_search(None, None, "Airport Flyer")
 
-    gtfs_service.get_stops_by_name.assert_called_once_with(["Airport", "Flyer"])
-    gtfs_service.get_routes_by_name.assert_called_once_with(["Airport", "Flyer"])
+    gtfs_service.get_stops_by_name.assert_called_once_with(
+        ["Airport", "Flyer"], limit=8
+    )
+    gtfs_service.get_routes_by_name.assert_called_once_with(
+        ["Airport", "Flyer"], limit=8
+    )
     assert result["stops"] == stops
     assert result["routes"] == routes
 
