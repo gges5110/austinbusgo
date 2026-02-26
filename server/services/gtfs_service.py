@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
 
-from sqlalchemy import func, select, text
+from sqlalchemy import Integer, cast, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.models.gtfs_models import (
@@ -31,7 +31,9 @@ class GTFSService:
         return result.scalar_one()
 
     async def get_routes(self) -> List[Routes]:
-        result = await self.session.execute(select(Routes))
+        result = await self.session.execute(
+            select(Routes).order_by(cast(Routes.route_id, Integer))
+        )
         return result.scalars().all()
 
     async def get_routes_by_name(self, search_terms: List[str]) -> List[Routes]:
