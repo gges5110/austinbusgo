@@ -1,13 +1,13 @@
 # Austin Bus Location
 
-This project provides real-time bus location tracking for Austin, Texas using CapMetro GTFS data. It consists of a React TypeScript frontend and a Python Flask backend with GraphQL API.
+This project provides real-time bus location tracking for Austin, Texas using CapMetro GTFS data. It consists of a React TypeScript frontend and a Python FastAPI backend with GraphQL API.
 
 ## Project Overview
 
 - **Purpose**: Real-time bus tracking application for Austin's CapMetro transit system
 - **Architecture**:
   - Frontend: React 18 with TypeScript, Material-UI, Mapbox GL
-  - Backend: Flask with GraphQL (Graphene), PostgreSQL database
+  - Backend: FastAPI with GraphQL (Strawberry), PostgreSQL database
   - Data: GTFS (General Transit Feed Specification) static and real-time feeds
 
 ## Directory Structure
@@ -19,10 +19,11 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 │   │   ├── app/        # App setup, routing, theming
 │   │   ├── features/   # Feature-based modules (search, route, stop, favorites)
 │   │   └── shared/     # Shared utilities, hooks, components, API clients
-├── server/              # Python Flask backend
-│   ├── app.py          # Flask app factory
-│   ├── gql/            # GraphQL schema and resolvers
-│   ├── models/         # Peewee ORM models
+├── server/              # Python FastAPI backend
+│   ├── main.py         # FastAPI app entry point
+│   ├── database.py     # SQLAlchemy async database setup
+│   ├── gql/            # GraphQL schema, resolvers, types, inputs
+│   ├── models/         # SQLAlchemy ORM models
 │   ├── services/       # Business logic (GTFS service, RT client)
 │   └── tests/          # Unit tests
 ├── etl/                 # GTFS data download, prepare, and load scripts
@@ -44,12 +45,13 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 - **Styling**: Emotion (CSS-in-JS)
 
 ### Backend
-- **Framework**: Flask 2.2.5
-- **API**: GraphQL with Graphene 3.2
-- **Database**: PostgreSQL with Peewee ORM
+- **Framework**: FastAPI 0.115 with Uvicorn
+- **API**: GraphQL with Strawberry (strawberry-graphql[fastapi])
+- **Database**: PostgreSQL with SQLAlchemy 2.0 (async) + asyncpg driver
+- **Migrations**: Alembic
 - **Real-time Data**: gtfs-realtime-bindings
-- **Production Server**: Gunicorn
-- **Testing**: unittest with testcontainers
+- **Production Server**: Gunicorn with UvicornWorker
+- **Testing**: pytest with testcontainers
 
 ## Development Workflow
 
@@ -65,7 +67,7 @@ make setup-local
 # Setup Python environment
 python3 -m venv venv
 source venv/bin/activate
-pip install -r server/requirements.txt
+pip install -e "server[dev]"
 
 # Setup client
 cd client
@@ -78,7 +80,7 @@ npm ci
 # Terminal 1: Start PostgreSQL (if not running)
 make setup-local
 
-# Terminal 2: Start Flask backend (port 5001)
+# Terminal 2: Start FastAPI backend (port 5001)
 make run
 
 # Terminal 3: Start React frontend (Vite dev server)
@@ -89,10 +91,12 @@ npm start
 ### Common Commands
 
 **Backend:**
-- `make run` - Run Flask dev server (port 5001)
-- `make test` - Run Python unit tests
+- `make run` - Run FastAPI dev server via Uvicorn (port 5001, hot reload)
+- `make run-prod` - Run production server via Gunicorn + UvicornWorker
+- `make test` - Run Python unit tests with pytest
 - `make coverage` - Generate test coverage report
 - `make lint` - Format Python code with Black
+- `make deps` - Install Python dependencies from server/pyproject.toml
 - `make etl-download` - Download GTFS data from CapMetro
 
 **Frontend (in client/ directory):**
@@ -149,40 +153,47 @@ npm start
    - ESLint with TypeScript, React, and Prettier plugins
    - Pre-commit hooks via lint-staged (configured in `.githooks/pre-commit`)
 
-### Backend (Python/Flask)
+### Backend (Python/FastAPI)
 
 1. **Code Style**:
    - Black formatter (line length: default 88)
    - Python 3.11+ features
-   - Type hints encouraged (typing module available)
+   - Type hints required (used by FastAPI and Strawberry)
 
 2. **Project Structure**:
-   - Flask app factory pattern in `app.py`
+   - FastAPI app entry point in `server/main.py`
    - GraphQL schema in `server/gql/schema.py`
-   - Peewee models in `server/models/`
+   - GraphQL types in `server/gql/types/`
+   - GraphQL inputs in `server/gql/inputs/`
+   - Resolvers in `server/gql/resolver.py`
+   - SQLAlchemy models in `server/models/`
    - Business logic in `server/services/`
 
 3. **Database**:
-   - Peewee ORM with PostgreSQL
-   - Models inherit from Peewee base models
-   - Database connection managed by `db_wrapper`
+   - SQLAlchemy 2.0 async ORM with PostgreSQL
+   - Models use `DeclarativeBase` pattern
+   - Async sessions via `async_sessionmaker`
+   - asyncpg driver for async PostgreSQL connections
+   - Migrations managed with Alembic
    - Environment variable: `DATABASE_URL`
 
 4. **GraphQL API**:
-   - Schema defined with Graphene
-   - Types in `gql/gtfs_types.py`, `gql/gtfs_rt_types.py`, `gql/geometry_types.py`
+   - Schema defined with Strawberry (`@strawberry.type` decorators)
+   - Types in `gql/types/gtfs_types.py`, `gql/types/gtfs_rt_types.py`, `gql/types/geometry_types.py`
+   - Inputs in `gql/inputs/gtfs_inputs.py`
    - Resolvers in `gql/resolver.py`
-   - GraphiQL enabled in development
+   - Mounted via `strawberry.fastapi.GraphQLRouter`
+   - GraphiQL enabled at `/graphql`
 
 5. **Testing**:
-   - Standard unittest framework
+   - pytest framework
    - Tests in `server/tests/`
    - Coverage with coverage.py
    - Test containers for integration tests
 
 6. **Environment**:
    - Virtual environment in `venv/`
-   - Dependencies in `requirements.txt`
+   - Dependencies in `server/pyproject.toml` (install with `pip install -e "server[dev]"`)
    - Configuration in `server/config.py`
    - PYTHONPATH set to `./server` in Makefile
 
@@ -226,12 +237,13 @@ npm start
 
 ### Updating Dependencies
 - Frontend: `cd client && npm update`
-- Backend: Update `server/requirements.txt` and reinstall
+- Backend: Update `server/pyproject.toml` and reinstall with `pip install -e "server[dev]"`
 
 ### Debugging
 - Frontend: Browser DevTools, React DevTools, React Query DevTools
-- Backend: Flask debug mode enabled with `make run`, Peewee query logging in debug mode
+- Backend: Uvicorn hot reload enabled with `make run`, SQLAlchemy query logging available via config
 - GraphiQL available at `http://localhost:5001/graphql`
+- FastAPI auto-generated docs at `http://localhost:5001/docs`
 
 ## Testing
 
@@ -253,7 +265,7 @@ make integration-tests  # Run integration tests
 
 - [client/src/app/Router.tsx](client/src/app/Router.tsx) - Frontend routing
 - [client/src/shared/api/graphqlClient.ts](client/src/shared/api/graphqlClient.ts) - GraphQL client setup
-- [server/app.py](server/app.py) - Flask app factory
+- [server/main.py](server/main.py) - FastAPI app entry point
 - [server/gql/schema.py](server/gql/schema.py) - GraphQL schema
 - [server/database.py](server/database.py) - Database connection
 - [client/.eslintrc.json](client/.eslintrc.json) - ESLint configuration

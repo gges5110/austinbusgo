@@ -25,9 +25,9 @@ interface StopMenuProps {
   hideBackButton?: boolean;
 }
 
-const WheelchairBoardingIcon: React.FC<{ wheelchairBoarding?: number | null }> = ({
-  wheelchairBoarding,
-}) => {
+const WheelchairBoardingIcon: React.FC<{
+  wheelchairBoarding?: number | null;
+}> = ({ wheelchairBoarding }) => {
   if (wheelchairBoarding === 1) {
     return (
       <Tooltip title={"Wheelchair accessible"}>
@@ -139,11 +139,17 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
             >
               <PlaceOutlinedIcon />
               <Typography variant={"subtitle1"}>{stop.stopName}</Typography>
-              <WheelchairBoardingIcon wheelchairBoarding={stop.wheelchairBoarding} />
+              <WheelchairBoardingIcon
+                wheelchairBoarding={stop.wheelchairBoarding}
+              />
             </Box>
 
             {intersection && (
-              <Typography color={"text.secondary"} textAlign={"center"} variant={"caption"}>
+              <Typography
+                color={"text.secondary"}
+                textAlign={"center"}
+                variant={"caption"}
+              >
                 {intersection}
               </Typography>
             )}
