@@ -64,6 +64,7 @@ export const useMapMotion = (stops: Stop[], routeShapes: LineString[]) => {
 
     const isMobile = window.innerWidth < 768;
     map?.fitBounds(bounds, {
+      maxZoom: 16,
       padding: {
         top: 10,
         left: isMobile ? 0 : 420,
