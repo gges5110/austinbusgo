@@ -1,4 +1,5 @@
 import { useTheme } from "@mui/material";
+import { useAllVehiclePositions } from "features/map/hooks/useAllVehiclePositions";
 import { useMapMotion } from "features/map/hooks/UseMapMotion";
 import { useRouteShape } from "features/map/hooks/UseRouteShape";
 import { useRouteShapes } from "features/map/hooks/useRouteShapes";
@@ -13,20 +14,18 @@ import ReactMapGL, {
   MapLayerMouseEvent,
   NavigationControl,
   Source,
-  useMap,
   ViewStateChangeEvent,
 } from "react-map-gl/mapbox";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { VehiclePosition } from "shared/types/interface.d";
 
 import {
   STOP_CIRCLES_LAYER_ID,
   STOP_LABELS_LAYER_ID,
   StopLayer,
 } from "./Stop/StopLayer";
-import { VehicleMarkers } from "./Vehicle/VehicleMarkers";
+import { VEHICLE_CIRCLES_LAYER_ID, VehicleLayer } from "./Vehicle/VehicleLayer";
 
 export type ViewState = {
   /** Longitude at map center */
@@ -37,12 +36,10 @@ export type ViewState = {
   zoom: number;
 };
 
-export const vehicleZoomLevel = 16;
 const defaultCenter: Coordinate = [-97.7431, 30.2672];
 export declare type Coordinate = [number, number];
 
 export const Map: React.FunctionComponent = () => {
-  const { mapId: map } = useMap();
   const { latitude, longitude, zoom } = useViewStatePathname();
   const initialViewState = {
     latitude: latitude || defaultCenter[1],
@@ -56,6 +53,18 @@ export const Map: React.FunctionComponent = () => {
   const [queryViewState, setQueryViewState] =
     useState<ViewState>(initialViewState);
   const { vehiclePositions } = useVehiclePositions();
+  const { allVehiclePositions } = useAllVehiclePositions();
+
+  // Merge route-specific and all-vehicles, deduplicating by vehicle id
+  const routeVehicleIds = new Set(
+    vehiclePositions.map((v) => v.vehicle?.id).filter(Boolean)
+  );
+  const mergedVehiclePositions = [
+    ...vehiclePositions,
+    ...allVehiclePositions.filter(
+      (v) => !v.vehicle?.id || !routeVehicleIds.has(v.vehicle.id)
+    ),
+  ];
   const { stops, contextStops } = useStops(queryViewState);
   const { routeShapes } = useRouteShapes();
   const theme = useTheme();
@@ -75,15 +84,6 @@ export const Map: React.FunctionComponent = () => {
     // only setting view state in url after movement to prevent quick navigation from infinite loop
     setViewStateInUrl(event.viewState);
     setQueryViewState(event.viewState);
-  };
-
-  const vehicleMarkerOnClick = (vehicle: VehiclePosition) => {
-    if (map && vehicle.position) {
-      map.flyTo({
-        center: [vehicle.position.longitude, vehicle.position.latitude],
-        zoom: vehicleZoomLevel,
-      });
-    }
   };
 
   const isRoutesPage = !!route;
@@ -106,7 +106,11 @@ export const Map: React.FunctionComponent = () => {
         id={"mapId"}
         {...viewState}
         cursor={cursor}
-        interactiveLayerIds={[STOP_CIRCLES_LAYER_ID, STOP_LABELS_LAYER_ID]}
+        interactiveLayerIds={[
+          STOP_CIRCLES_LAYER_ID,
+          STOP_LABELS_LAYER_ID,
+          VEHICLE_CIRCLES_LAYER_ID,
+        ]}
         mapStyle={
           darkMode
             ? "mapbox://styles/mapbox/dark-v11"
@@ -127,11 +131,6 @@ export const Map: React.FunctionComponent = () => {
           trackUserLocation={true}
         />
 
-        <VehicleMarkers
-          onClick={vehicleMarkerOnClick}
-          vehiclePositions={vehiclePositions}
-        />
-
         <Source data={routeShapeGeoJSON} id={"route-shapes"} type={"geojson"}>
           <Layer
             id={"point"}
@@ -149,6 +148,8 @@ export const Map: React.FunctionComponent = () => {
           selectedStop={stop}
           stops={stops}
         />
+
+        <VehicleLayer vehiclePositions={mergedVehiclePositions} />
       </ReactMapGL>
     </>
   );

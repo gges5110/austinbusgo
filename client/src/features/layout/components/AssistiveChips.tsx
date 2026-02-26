@@ -1,4 +1,5 @@
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import RouteIcon from "@mui/icons-material/Route";
 import {
   Box,
@@ -8,16 +9,19 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { useAtom } from "jotai";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { MENU_PANEL_WIDTH } from "shared/components/MenuPanel/MenuPanel";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { showAllVehiclesAtom } from "shared/state/atoms";
 
 interface AssistiveChipsProps {}
 
 export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
+  const [showAllVehicles, setShowAllVehicles] = useAtom(showAllVehiclesAtom);
   // Use 'md' breakpoint to keep chips visible on tablets (sm-md range)
   // while hiding them on smaller mobile devices to prevent overflow
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -79,6 +83,29 @@ export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
           <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
           <Typography fontSize={14} fontWeight={500}>
             Show favorites
+          </Typography>
+        </Button>
+      </Paper>
+      <Paper
+        sx={{
+          backgroundColor: showAllVehicles
+            ? "primary.main"
+            : "background.default",
+          borderRadius: "32px",
+        }}
+      >
+        <Button
+          onClick={() => setShowAllVehicles(!showAllVehicles)}
+          sx={{
+            color: showAllVehicles ? "primary.contrastText" : "text.primary",
+            px: "12px",
+            textTransform: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <DirectionsBusIcon sx={{ fontSize: 18, mr: "4px" }} />
+          <Typography fontSize={14} fontWeight={500}>
+            Show all buses
           </Typography>
         </Button>
       </Paper>

@@ -1,8 +1,11 @@
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import CloseIcon from "@mui/icons-material/Close";
 import CodeIcon from "@mui/icons-material/Code";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import DeveloperModeIcon from "@mui/icons-material/DeveloperMode";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import RouteIcon from "@mui/icons-material/Route";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import {
   Box,
@@ -23,11 +26,14 @@ import dayjs from "dayjs";
 import { useAtom, useSetAtom } from "jotai";
 import { useSnackbar } from "notistack";
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
 import { ColorModeToggle } from "shared/components/AppDrawer/ColorModeToggle/ColorModeToggle";
+import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   isAutoPollingAtom,
   recentSearchesAtom,
+  showAllVehiclesAtom,
   showReactQueryDevtoolsAtom,
 } from "shared/state/atoms";
 import { useReloadVehiclePositions } from "./useReloadVehiclePositions";
@@ -44,7 +50,10 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
   const { reloadVehiclePositions } = useReloadVehiclePositions();
   const { data } = useFeedInfoQuery();
   const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+  const { viewStatePathname } = useViewStatePathname();
   const [autoPolling, setAutoPolling] = useAtom(isAutoPollingAtom);
+  const [showAllVehicles, setShowAllVehicles] = useAtom(showAllVehiclesAtom);
   const setRecentSearches = useSetAtom(recentSearchesAtom);
   const [showReactQueryDevtools, setShowReactQueryDevtools] = useAtom(
     showReactQueryDevtoolsAtom
@@ -88,6 +97,34 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
           </Toolbar>
           <Divider />
           <List>
+            <ListSubheader>Explore</ListSubheader>
+            <ListItem disablePadding={true}>
+              <ListItemButton
+                onClick={() => {
+                  navigate(`/search/All%20routes${viewStatePathname}`);
+                  onClose();
+                }}
+              >
+                <ListItemIcon>
+                  <RouteIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Search all routes"} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding={true}>
+              <ListItemButton
+                onClick={() => {
+                  navigate(`/favorites${viewStatePathname}`);
+                  onClose();
+                }}
+              >
+                <ListItemIcon>
+                  <BookmarkIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Show favorites"} />
+              </ListItemButton>
+            </ListItem>
+
             <ListSubheader>Appearance</ListSubheader>
             <ListItem>
               <ListItemIcon>
@@ -100,6 +137,21 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
             </ListItem>
 
             <ListSubheader>Vehicle Live Position</ListSubheader>
+            <ListItem>
+              <ListItemIcon>
+                <DirectionsBusIcon />
+              </ListItemIcon>
+              <ListItemText primary={"Show all buses"} />
+              <ListItemSecondaryAction>
+                <Switch
+                  checked={showAllVehicles}
+                  edge={"end"}
+                  inputProps={{ "aria-label": "show all vehicles" }}
+                  onChange={(e) => setShowAllVehicles(e.target.checked)}
+                  value={"showAllVehicles"}
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
             <ListItem>
               <ListItemIcon>
                 <AutorenewIcon />
