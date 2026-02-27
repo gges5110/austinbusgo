@@ -20,15 +20,37 @@ This is a project that aim to provide real-time bus location in Austin, Texas
 
 ## Commands
 
-- Run dev server: `make run`
-- Run tests: `make test`
-- Generate test coverage report: `make coverage`
-- Lint: `make lint`
-- Download GTFS files from CapMetro: `make etl-download`
+**Server & Tests:**
+- `make run` - Run dev server (FastAPI on port 5001)
+- `make test` - Run backend tests
+- `make coverage` - Generate test coverage report
+- `make lint` - Format code with Black and Prettier
 
-## Create PostgreSQL Database
+**Database & ETL:**
+- `make db-up` - Start PostgreSQL (detached)
+- `make setup-local` - Start PostgreSQL + run GTFS ETL pipeline
+- `make etl` - Run full ETL pipeline (download → prepare → load)
+- `make etl-download` - Download GTFS data only
+- `make etl-prepare` - Preprocess GTFS files only
+- `make etl-load` - Load data into database only
 
-- A Docker Compose setup is provided to start the database and run the GTFS ETL job.
-  - `make db-up` — start PostgreSQL only (detached)
-  - `make setup-local` — start PostgreSQL and run the GTFS prep job
-  - GTFS CSV files are sourced from `etl/capmetro/` and processed by `etl/prepare.py`
+## GTFS ETL Pipeline
+
+The ETL pipeline automatically downloads, preprocesses, and loads GTFS data into PostgreSQL.
+
+**Features:**
+- Automatic feed version checking (skips reload if feed hasn't changed)
+- Preprocesses CSV files (normalizes times, converts coordinates to PostGIS geometry)
+- Creates database schema and indexes optimally (indexes after bulk load)
+- Generates GitHub Actions job summary (shows feed status, dates, timestamp)
+
+**Quick start:**
+```bash
+make setup-local    # Start DB + run full ETL pipeline
+```
+
+**See [etl/README.md](etl/README.md) for detailed documentation**, including:
+- How each step works
+- Local development setup
+- Troubleshooting
+- CI/CD integration

@@ -45,16 +45,18 @@ lint:
 	$(VENV_ACTIVATE) black server etl
 
 etl-download:
-	cd etl && ./download.sh
+	$(PYTHON) etl/download.py
 
 etl-prepare:
 	$(PYTHON) etl/prepare.py
 
 etl-load: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 etl-load:
-	etl/load.sh
+	$(PYTHON) etl/load_db.py
 
-etl: etl-download etl-prepare etl-load
+etl: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
+etl:
+	$(PYTHON) etl/main.py
 
 db-up:
 	docker compose -f docker/compose.db.yml up -d

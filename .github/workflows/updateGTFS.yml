@@ -36,9 +36,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
-      - name: Prepare GTFS Files
-        run: python prepare.py
-      - name: Load GTFS Files
-        run: ./load.sh
+      - name: Run GTFS ETL Pipeline
+        run: python main.py
         env:
           DATABASE_URL: ${{ secrets.DBURI }}
