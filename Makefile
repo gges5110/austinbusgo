@@ -24,6 +24,9 @@ help:
 	@echo "Development:"
 	@grep "^## start-dev\|^## format:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
+	@echo "Frontend:"
+	@grep "^## start-fe\|^## build-fe\|^## test-fe\|^## generate:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
 	@echo "Testing:"
 	@grep "^## test:\|^## test-integration\|^## coverage" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
@@ -82,6 +85,28 @@ format:
 	$(VENV_ACTIVATE) black server etl
 
 .PHONY: start-dev format
+
+# ============================================================================
+# Frontend
+# ============================================================================
+
+## start-fe: Start frontend dev server with Vite (port 5173)
+start-fe:
+	cd client && npm start
+
+## build-fe: Build frontend for production
+build-fe:
+	cd client && npm run build
+
+## test-fe: Run frontend tests
+test-fe:
+	cd client && npm test
+
+## generate: Generate GraphQL TypeScript types
+generate:
+	cd client && npm run generate
+
+.PHONY: start-fe build-fe test-fe generate
 
 # ============================================================================
 # Testing
