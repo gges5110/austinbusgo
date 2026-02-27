@@ -7,18 +7,24 @@ SYSTEM_PYTHON  = $(or $(shell which python3), $(shell which python))
 PYTHON         = $(or $(wildcard $(VENV_PYTHON)), $(SYSTEM_PYTHON))
 VENV_ACTIVATE  = . $(VENV)/bin/activate;
 
+# ============================================================================
+# Help
+# ============================================================================
+
 ## help: Display this help message
 help:
 	@echo "Austin Bus Go - Makefile Commands"
 	@echo ""
-	@echo "Setup:"
 	@sed -n 's/^## //p' $(MAKEFILE_LIST) | column -t -s ':' | sed 's/^/  /'
 	@echo ""
 	@echo "Run 'make <command>' to execute a command."
 
 .PHONY: help
 
-## Dev/build environment
+# ============================================================================
+# Setup & Environment
+# ============================================================================
+
 $(VENV_PYTHON):
 	rm -rf $(VENV)
 	$(SYSTEM_PYTHON) -m venv $(VENV)
@@ -31,18 +37,41 @@ deps:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e "server[dev]"
 
-.PHONY: venv deps
+## setup-local: Complete local setup (database + GTFS data)
+setup-local: db-up
+	docker compose -f docker/compose.etl.yml run --rm setup-gtfs
+	$(MAKE) etl-load
+
+.PHONY: venv deps setup-local
+
+# ============================================================================
+# Database
+# ============================================================================
+
+## db-up: Start PostgreSQL database with Docker (port 5438)
+db-up:
+	docker compose -f docker/compose.db.yml up -d
+
+.PHONY: db-up
+
+# ============================================================================
+# Development
+# ============================================================================
 
 ## run: Start FastAPI dev server with auto-reload (port 5001)
 run: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 run:
 	$(VENV_ACTIVATE) uvicorn server.main:app --reload --port 5001
 
-## run-prod: Start production server with Gunicorn + UvicornWorker (port 5001)
-run-prod: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
-run-prod:
-	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 --workers 4 \
-	    --worker-class uvicorn.workers.UvicornWorker server.main:app
+## lint: Format Python code with Black
+lint:
+	$(VENV_ACTIVATE) black server etl
+
+.PHONY: run lint
+
+# ============================================================================
+# Testing
+# ============================================================================
 
 ## test: Run unit tests
 test:
@@ -60,9 +89,16 @@ coverage:
 coverage-html:
 	$(VENV_ACTIVATE) coverage run -m pytest server/tests; coverage html
 
-## lint: Format Python code with Black
-lint:
-	$(VENV_ACTIVATE) black server etl
+.PHONY: test integration-tests coverage coverage-html
+
+# ============================================================================
+# ETL (Extract, Transform, Load)
+# ============================================================================
+
+## etl: Run full ETL pipeline (download, prepare, load)
+etl: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
+etl:
+	$(PYTHON) etl/main.py
 
 ## etl-download: Download GTFS data from CapMetro
 etl-download:
@@ -77,16 +113,16 @@ etl-load: export DATABASE_URL=postgresql://local-user:local-password@localhost:5
 etl-load:
 	$(PYTHON) etl/load_db.py
 
-## etl: Run full ETL pipeline (download, prepare, load)
-etl: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
-etl:
-	$(PYTHON) etl/main.py
+.PHONY: etl etl-download etl-prepare etl-load
 
-## db-up: Start PostgreSQL database with Docker (port 5438)
-db-up:
-	docker compose -f docker/compose.db.yml up -d
+# ============================================================================
+# Production
+# ============================================================================
 
-## setup-local: Complete local setup (database + GTFS data)
-setup-local: db-up
-	docker compose -f docker/compose.etl.yml run --rm setup-gtfs
-	$(MAKE) etl-load
+## run-prod: Start production server with Gunicorn + UvicornWorker (port 5001)
+run-prod: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
+run-prod:
+	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 --workers 4 \
+	    --worker-class uvicorn.workers.UvicornWorker server.main:app
+
+.PHONY: run-prod
