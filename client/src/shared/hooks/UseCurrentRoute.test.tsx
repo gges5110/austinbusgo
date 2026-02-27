@@ -157,7 +157,7 @@ describe("useCurrentRoute", () => {
     mocks.mockNavigate.mockClear();
 
     act(() => {
-      result.current.setRoute(null as any);
+      result.current.setRoute(null as unknown as Route);
     });
 
     expect(mockSetCurrentRoute).not.toHaveBeenCalled();

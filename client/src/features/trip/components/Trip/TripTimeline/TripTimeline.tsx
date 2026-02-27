@@ -69,6 +69,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
   const vehicleStopId = vehiclePosition?.stopId;
   const vehicleStopSequence = vehiclePosition?.currentStopSequence || 0;
   const theme = useTheme();
+  const routeId = searchParams.get("routeId");
+  const directionId = searchParams.get("directionId");
   // TODO: fix timeline rail styling of border radius
   return (
     <Box component={"div"}>
@@ -217,8 +219,8 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   color: isPastStop ? "gray" : "unset",
                 }}
                 to={
-                  searchParams.get("routeId")
-                    ? `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch({ routeId: searchParams.get("routeId")!, directionId: searchParams.get("directionId")! })}`
+                  routeId
+                    ? `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch({ routeId, directionId })}`
                     : `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch()}`
                 }
               >

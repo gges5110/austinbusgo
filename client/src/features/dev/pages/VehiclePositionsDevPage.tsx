@@ -148,8 +148,8 @@ export const VehiclePositionsDevPage: React.FC = () => {
 
   const getComparator = (order: Order, orderBy: OrderBy) => {
     return (a: VehiclePosition, b: VehiclePosition) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (orderBy) {
         case "route":

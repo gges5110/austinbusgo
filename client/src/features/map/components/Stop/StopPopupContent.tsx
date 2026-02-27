@@ -23,8 +23,7 @@ export const StopPopupContent: React.FC<StopPopupContentProps> = ({ stop }) => {
       </Box>
       {stop.stopCode && (
         <Typography color={"textSecondary"} fontSize={12} variant={"body2"}>
-          {"Stop #"}
-          {stop.stopCode}
+          Stop #{stop.stopCode}
         </Typography>
       )}
       {stop.routes && stop.routes.length > 0 && (

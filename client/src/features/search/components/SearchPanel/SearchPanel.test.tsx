@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
   },
 });
 const theme = createTheme();
-const wrapper = ({ children }: { children: any }) => {
+const wrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider theme={theme}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

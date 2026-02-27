@@ -37,9 +37,9 @@ export const useCurrentStop = () => {
           stop.stopLoc.coordinates[1],
         ]);
       }
-      if (location.pathname.includes("/route")) {
+      if (location.pathname.includes("/route") && routeId && directionId) {
         navigate(
-          `/stop/${stopId}${viewStatePathname}${withPreservedSearch({ routeId: routeId!, directionId: directionId! })}`
+          `/stop/${stopId}${viewStatePathname}${withPreservedSearch({ routeId, directionId })}`
         );
       } else {
         navigate(`/stop/${stopId}${viewStatePathname}${withPreservedSearch()}`);

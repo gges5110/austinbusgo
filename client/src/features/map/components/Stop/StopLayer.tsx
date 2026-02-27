@@ -277,7 +277,7 @@ export const StopLayer: FC<StopLayerProps> = ({
       <Layer
         filter={
           disableLod
-            ? true
+            ? undefined
             : ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true]
         }
         id={STOP_LABELS_LAYER_ID}

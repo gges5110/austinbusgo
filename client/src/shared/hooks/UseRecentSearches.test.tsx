@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { SearchTerm } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { GeometryType, Route, Stop } from "shared/types/interface.d";
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test, vi, beforeEach, Mock } from "vitest";
 import { RecentSearch, useRecentSearches } from "./UseRecentSearches";
 
 const mocks = vi.hoisted(() => {
@@ -41,7 +41,10 @@ describe("useRecentSearches", () => {
   };
 
   let mockRecentSearches: RecentSearch[] = [];
-  let mockSetRecentSearches: any;
+  let mockSetRecentSearches: Mock<
+    [updater: RecentSearch[] | ((prev: RecentSearch[]) => RecentSearch[])],
+    void
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();

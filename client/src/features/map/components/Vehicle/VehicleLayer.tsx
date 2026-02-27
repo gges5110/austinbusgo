@@ -117,27 +117,27 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   }, [vehiclePositions]);
 
   // Build GeoJSON source
-  const vehiclesGeoJSON = useMemo<GeoJSON.FeatureCollection>(
-    () => ({
+  const vehiclesGeoJSON = useMemo<GeoJSON.FeatureCollection>(() => {
+    const featuresWithPosition = vehiclePositions.filter(
+      (vp) => vp.position != null
+    );
+    return {
       type: "FeatureCollection",
-      features: vehiclePositions
-        .filter((vp) => vp.position != null)
-        .map((vp) => ({
-          type: "Feature" as const,
-          geometry: {
-            type: "Point" as const,
-            coordinates: [vp.position!.longitude, vp.position!.latitude],
-          },
-          properties: {
-            bearing: vp.position?.bearing ?? 0,
-            currentStatus: vp.currentStatus ?? "",
-            routeId: vp.trip?.routeId ?? "",
-            vehicleId: vp.vehicle?.id ?? "",
-          },
-        })),
-    }),
-    [vehiclePositions]
-  );
+      features: featuresWithPosition.map((vp) => ({
+        type: "Feature" as const,
+        geometry: {
+          type: "Point" as const,
+          coordinates: [vp.position.longitude, vp.position.latitude],
+        },
+        properties: {
+          bearing: vp.position.bearing ?? 0,
+          currentStatus: vp.currentStatus ?? "",
+          routeId: vp.trip?.routeId ?? "",
+          vehicleId: vp.vehicle?.id ?? "",
+        },
+      })),
+    };
+  }, [vehiclePositions]);
 
   // Sync hoveringVehicle atom → Mapbox feature state for circle highlight
   useEffect(() => {
@@ -184,7 +184,8 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         | string
         | undefined;
       if (!vehicleId || !vehiclesById.has(vehicleId)) return;
-      const vp = vehiclesById.get(vehicleId)!;
+      const vp = vehiclesById.get(vehicleId);
+      if (!vp) return;
       // Mark that this click was on a vehicle so the map background handler
       // does not immediately clear the pinned popup
       vehicleJustClickedRef.current = true;
