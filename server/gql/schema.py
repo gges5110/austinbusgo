@@ -3,7 +3,7 @@
 import strawberry
 from strawberry.types import Info
 
-from server.gql.logging import GraphQLLoggingExtension
+from server.gql.profiling import GraphQLProfilingExtension
 from server.gql.types.gtfs_types import FeedInfo
 from server.gql.queries.arrivals import ArrivalQueries
 from server.gql.queries.real_time import RealTimeQueries
@@ -28,4 +28,4 @@ class Query(
         return await info.context.resolver.resolve_feed_info()
 
 
-schema = strawberry.Schema(query=Query, extensions=[GraphQLLoggingExtension])
+schema = strawberry.Schema(query=Query, extensions=[GraphQLProfilingExtension])
