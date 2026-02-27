@@ -22,7 +22,7 @@ help:
 	@grep "^## start-db:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
 	@echo "Development:"
-	@grep "^## start-dev\|^## format:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@grep "^## start-be\|^## format:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
 	@echo "Frontend:"
 	@grep "^## start-fe\|^## build-fe\|^## test-fe\|^## generate:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
@@ -75,16 +75,16 @@ start-db:
 # Development
 # ============================================================================
 
-## start-dev: Start FastAPI dev server with auto-reload (port 5001)
-start-dev: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
-start-dev:
+## start-be: Start FastAPI backend server with auto-reload (port 5001)
+start-be: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
+start-be:
 	$(VENV_ACTIVATE) uvicorn server.main:app --reload --port 5001
 
 ## format: Format Python code with Black
 format:
 	$(VENV_ACTIVATE) black server etl
 
-.PHONY: start-dev format
+.PHONY: start-be format
 
 # ============================================================================
 # Frontend
