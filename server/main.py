@@ -14,16 +14,23 @@ from server.database import (
     get_db,
     init_database,
 )
+from server.gql.dataloaders import create_dataloaders
 from server.gql.resolver import Resolver
 from server.gql.schema import schema
 from server.services.gtfs_service import GTFSService
 
 
 class GraphQLContext(BaseContext):
-    def __init__(self, session: AsyncSession, stop_routes_cache: dict | None = None):
+    def __init__(
+        self,
+        session: AsyncSession,
+        stop_routes_cache: dict | None = None,
+        dataloaders: dict | None = None,
+    ):
         self.session = session
         self.resolver = Resolver(session)
         self.stop_routes_cache = stop_routes_cache
+        self.dataloaders = dataloaders or {}
         # Pre-derive route counts for use in get_near_by_stops ranking
         self.stop_route_counts = (
             {stop_id: len(routes) for stop_id, routes in stop_routes_cache.items()}
@@ -36,7 +43,9 @@ async def get_context(
     request: Request, session: AsyncSession = Depends(get_db)
 ) -> GraphQLContext:
     cache = getattr(request.app.state, "stop_routes_cache", None)
-    return GraphQLContext(session, cache)
+    gtfs_service = GTFSService(session)
+    dataloaders = create_dataloaders(gtfs_service)
+    return GraphQLContext(session, cache, dataloaders)
 
 
 @asynccontextmanager

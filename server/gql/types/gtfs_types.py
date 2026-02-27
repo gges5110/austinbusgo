@@ -35,9 +35,18 @@ class Stop:
 
     @strawberry.field
     async def routes(self, info: Info) -> List[Route]:
+        # Try to use dataloader first (prevents N+1 queries)
+        dataloaders = getattr(info.context, "dataloaders", {})
+        routes_loader = dataloaders.get("routes_by_stop")
+        if routes_loader is not None:
+            return await routes_loader.load(self.stop_id)
+
+        # Fall back to cache
         cache = getattr(info.context, "stop_routes_cache", None)
         if cache is not None:
             return cache.get(self.stop_id, [])
+
+        # Fall back to direct query
         from server.services.gtfs_service import GTFSService
 
         return await GTFSService(info.context.session).get_routes_at_stop(self.stop_id)
@@ -58,8 +67,21 @@ class Trip:
     bikes_allowed: Optional[int] = None
 
     @strawberry.field
-    def route(self) -> Optional[Route]:
-        return getattr(self, "route", None)
+    async def route(self, info: Info) -> Optional[Route]:
+        # Check if route is already loaded on the object
+        if hasattr(self, "route") and self.route is not None:
+            return self.route
+
+        # Use dataloader to batch-load route by ID (prevents N+1)
+        dataloaders = getattr(info.context, "dataloaders", {})
+        route_loader = dataloaders.get("route_by_id")
+        if route_loader is not None:
+            return await route_loader.load(self.route_id)
+
+        # Fall back to direct query
+        from server.services.gtfs_service import GTFSService
+
+        return await GTFSService(info.context.session).get_route(self.route_id)
 
 
 @strawberry.type
