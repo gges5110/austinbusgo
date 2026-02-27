@@ -15,7 +15,23 @@ VENV_ACTIVATE  = . $(VENV)/bin/activate;
 help:
 	@echo "Austin Bus Go - Makefile Commands"
 	@echo ""
-	@sed -n 's/^## //p' $(MAKEFILE_LIST) | column -t -s ':' | sed 's/^/  /'
+	@echo "Setup & Environment:"
+	@grep "^## setup-env\|^## install-deps\|^## setup:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
+	@echo "Database:"
+	@grep "^## start-db:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
+	@echo "Development:"
+	@grep "^## start-dev\|^## format:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
+	@echo "Testing:"
+	@grep "^## test:\|^## test-integration\|^## coverage" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
+	@echo "ETL (Extract, Transform, Load):"
+	@grep "^## run-etl\|^## download-gtfs\|^## prepare-gtfs\|^## load-gtfs:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
+	@echo ""
+	@echo "Production:"
+	@grep "^## start-prod:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
 	@echo "Run 'make <command>' to execute a command."
 
