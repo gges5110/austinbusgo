@@ -26,7 +26,14 @@ def make_resolver():
     gtfs_service.session = session
     gtfs_rt_service = MagicMock(spec=GTFSRTService)
     res = Resolver(session=session, gtfs_service=gtfs_service)
+    # Set gtfs_rt_service on all feature resolvers
     res.gtfs_rt_service = gtfs_rt_service
+    res.routes.gtfs_rt_service = gtfs_rt_service
+    res.stops.gtfs_rt_service = gtfs_rt_service
+    res.trips.gtfs_rt_service = gtfs_rt_service
+    res.real_time.gtfs_rt_service = gtfs_rt_service
+    res.search.gtfs_rt_service = gtfs_rt_service
+    res.arrivals.gtfs_rt_service = gtfs_rt_service
     return res, gtfs_service, gtfs_rt_service
 
 
@@ -50,7 +57,7 @@ async def test_resolve_trip():
     )
     gtfs_service.get_trip_by_id.return_value = trip
 
-    result = await resolver.resolve_trip(None, None, "trip_1")
+    result = await resolver.trips.resolve_trip("trip_1")
 
     gtfs_service.get_trip_by_id.assert_called_once_with("trip_1")
     assert result == trip
@@ -62,7 +69,7 @@ async def test_resolve_distinct_trips():
     trips = [SimpleNamespace(trip_id="trip_1"), SimpleNamespace(trip_id="trip_2")]
     gtfs_service.get_trips_by_distinct_short_name.return_value = trips
 
-    result = await resolver.resolve_distinct_trips(None, None, "1", "2025-01-01")
+    result = await resolver.trips.resolve_distinct_trips("1", "2025-01-01")
 
     assert result == trips
 
@@ -73,9 +80,9 @@ async def test_resolve_trip_ids_for_route():
     trips = [SimpleNamespace(trip_id="trip_1"), SimpleNamespace(trip_id="trip_2")]
     gtfs_service.get_trips_for_date.return_value = trips
 
-    result = await resolver.resolve_trip_ids_for_route(None, None, "1", "2025-01-01")
+    result = await resolver.trips.resolve_trip_ids_for_route("1", "2025-01-01")
 
-    assert result == {"tripIds": ["trip_1", "trip_2"]}
+    assert result.trip_ids == ["trip_1", "trip_2"]
 
 
 # Stop Tests
@@ -87,7 +94,7 @@ async def test_resolve_stop():
     )
     gtfs_service.get_stop.return_value = stop
 
-    result = await resolver.resolve_stop(None, None, "stop_1")
+    result = await resolver.stops.resolve_stop("stop_1")
 
     gtfs_service.get_stop.assert_called_once_with("stop_1")
     assert result == stop
@@ -99,8 +106,8 @@ async def test_resolve_near_by_stops():
     stops = [SimpleNamespace(stop_id="stop_1"), SimpleNamespace(stop_id="stop_2")]
     gtfs_service.get_near_by_stops.return_value = stops
 
-    result = await resolver.resolve_near_by_stops(
-        None, None, min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+    result = await resolver.stops.resolve_near_by_stops(
+        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
     )
 
     gtfs_service.get_near_by_stops.assert_called_once_with(
@@ -119,8 +126,8 @@ async def test_resolve_near_by_stops_empty():
     resolver, gtfs_service, _ = make_resolver()
     gtfs_service.get_near_by_stops.return_value = None
 
-    result = await resolver.resolve_near_by_stops(
-        None, None, min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+    result = await resolver.stops.resolve_near_by_stops(
+        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
     )
 
     assert result == []
@@ -132,7 +139,7 @@ async def test_resolve_stops_by_name():
     stops = [SimpleNamespace(stop_id="stop_1")]
     gtfs_service.get_stops_by_name.return_value = stops
 
-    result = await resolver.resolve_stops_by_name(None, None, "Airport")
+    result = await resolver.stops.resolve_stops_by_name("Airport")
 
     assert result == stops
 
@@ -157,11 +164,11 @@ async def test_resolve_stops_and_shapes():
         shape_id="shape_1", shape='{"type":"LineString","coordinates":[[0,0],[1,1]]}'
     )
 
-    result = await resolver.resolve_stops_and_shapes(None, None, "1", 0, "2025-01-01")
+    result = await resolver.stops.resolve_stops_and_shapes("1", 0, "2025-01-01")
 
-    assert len(result["stops"]) == 2
-    assert result["stops"][0].stop_id == "stop_2"  # sorted by sequence
-    assert len(result["shapes"]) == 1
+    assert len(result.stops) == 2
+    assert result.stops[0].stop_id == "stop_2"  # sorted by sequence
+    assert len(result.shapes) == 1
 
 
 # Route Tests
@@ -177,7 +184,7 @@ async def test_resolve_route():
     )
     gtfs_service.get_route.return_value = route
 
-    result = await resolver.resolve_route(None, None, "1")
+    result = await resolver.routes.resolve_route("1")
 
     gtfs_service.get_route.assert_called_once_with("1")
     assert result == route
@@ -189,7 +196,7 @@ async def test_resolve_routes():
     routes = [SimpleNamespace(route_id="1"), SimpleNamespace(route_id="2")]
     gtfs_service.get_routes.return_value = routes
 
-    result = await resolver.resolve_routes(None, None)
+    result = await resolver.routes.resolve_routes()
 
     assert result == routes
 
@@ -202,10 +209,11 @@ async def test_resolve_route_shapes():
     )
     gtfs_service.get_shapes_by_trip_id.return_value = agg
 
-    result = await resolver.resolve_route_shapes(None, None, "trip_1")
+    result = await resolver.routes.resolve_route_shapes("trip_1")
 
     gtfs_service.get_shapes_by_trip_id.assert_called_once_with("trip_1")
-    assert result.shape_id == "shape_1"
+    assert result.type.value == "LineString"
+    assert len(result.coordinates) == 2
 
 
 # Real-time Tests
@@ -217,9 +225,10 @@ async def test_resolve_vehicle_positions():
         return_value=positions
     )
 
-    result = await resolver.resolve_vehicle_positions(None, None, "1", 0)
+    result = await resolver.real_time.resolve_vehicle_positions("1", 0)
 
-    assert result == positions
+    # Result is converted from protos to Strawberry types
+    assert len(result) == 2
 
 
 def test_resolve_vehicle_positions_debug():
@@ -227,9 +236,10 @@ def test_resolve_vehicle_positions_debug():
     positions = [VehiclePosition(), VehiclePosition()]
     gtfs_rt_service.get_real_time_vehicle_positions.return_value = positions
 
-    result = resolver.resolve_vehicle_positions_debug(None, None)
+    result = resolver.real_time.resolve_vehicle_positions_debug()
 
-    assert result == positions
+    # Result is converted from protos to Strawberry types
+    assert len(result) == 2
 
 
 def test_resolve_trip_update():
@@ -238,16 +248,18 @@ def test_resolve_trip_update():
     tu.trip.trip_id = "trip_1"
     gtfs_rt_service.get_all_real_time_trip_updates.return_value = [tu]
 
-    result = resolver.resolve_trip_update(None, None, "trip_1")
+    result = resolver.real_time.resolve_trip_update("trip_1")
 
-    assert result == tu
+    # Result is converted from proto to Strawberry type
+    assert result is not None
+    assert result.trip.trip_id == "trip_1"
 
 
 def test_resolve_trip_update_not_found():
     resolver, _, gtfs_rt_service = make_resolver()
     gtfs_rt_service.get_all_real_time_trip_updates.return_value = []
 
-    result = resolver.resolve_trip_update(None, None, "nonexistent")
+    result = resolver.real_time.resolve_trip_update("nonexistent")
 
     assert result is None
 
@@ -260,9 +272,10 @@ def test_resolve_trip_updates():
     mock_filter.trip_id = "trip_1"
     gtfs_rt_service.get_all_real_time_trip_updates.return_value = trip_updates
 
-    result = resolver.resolve_trip_updates(None, None, mock_filter)
+    result = resolver.real_time.resolve_trip_updates(route_id="1", trip_id="trip_1")
 
-    assert result == trip_updates
+    # Result is converted from protos to Strawberry types
+    assert len(result) == 2
 
 
 # Stop Times Tests
@@ -286,7 +299,7 @@ async def test_resolve_stop_times():
     ]
     gtfs_service.get_stop_times_by_trip_id.return_value = stop_times
 
-    result = await resolver.resolve_stop_times(None, None, "trip_1")
+    result = await resolver.trips.resolve_stop_times("trip_1")
 
     gtfs_service.get_stop_times_by_trip_id.assert_called_once_with("trip_1")
     assert result == stop_times
@@ -301,7 +314,7 @@ async def test_resolve_search():
     gtfs_service.get_stops_by_name.return_value = stops
     gtfs_service.get_routes_by_name.return_value = routes
 
-    result = await resolver.resolve_search(None, None, "Airport Flyer")
+    result = await resolver.search.resolve_search("Airport Flyer")
 
     gtfs_service.get_stops_by_name.assert_called_once_with(
         ["Airport", "Flyer"], limit=8
@@ -309,8 +322,8 @@ async def test_resolve_search():
     gtfs_service.get_routes_by_name.assert_called_once_with(
         ["Airport", "Flyer"], limit=8
     )
-    assert result["stops"] == stops
-    assert result["routes"] == routes
+    assert result.stops == stops
+    assert result.routes == routes
 
 
 # Arrival Times Tests
@@ -349,13 +362,15 @@ async def test_resolve_arrival_times(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolver.datetime").fromtimestamp.return_value = mock_dt
-    mocker.patch("server.gql.resolver.timezone")
+    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
+        mock_dt
+    )
+    mocker.patch("server.gql.resolvers.base.timezone")
 
-    result = await resolver.resolve_arrival_times(None, None, "stop_1", "2025-01-01")
+    result = await resolver.arrivals.resolve_arrival_times("stop_1", "2025-01-01")
 
     assert len(result) == 1
-    assert result[0]["scheduled_arrival_time"] == "10:00:00"
+    assert result[0].scheduled_arrival_time == "10:00:00"
 
 
 @pytest.mark.asyncio
@@ -372,16 +387,18 @@ async def test_resolve_earliest_arrival_times_on_route(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolver.datetime").fromtimestamp.return_value = mock_dt
-    mocker.patch("server.gql.resolver.timezone")
+    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
+        mock_dt
+    )
+    mocker.patch("server.gql.resolvers.base.timezone")
 
-    result = await resolver.resolve_earliest_arrival_times_on_route(
-        None, None, "1", 0, "2025-01-01", "10:00:00"
+    result = await resolver.arrivals.resolve_earliest_arrival_times_on_route(
+        "1", 0, "2025-01-01", "10:00:00"
     )
 
     assert len(result) == 1
-    assert result[0]["scheduled_arrival_time"] == "10:00:00"
-    assert result[0]["stop_id"] == "stop_1"
+    assert result[0].scheduled_arrival_time == "10:00:00"
+    assert result[0].stop_id == "stop_1"
 
 
 # Feed Info Tests
@@ -398,7 +415,7 @@ async def test_resolve_feed_info():
     )
     gtfs_service.get_feed_info.return_value = feed_info
 
-    result = await resolver.resolve_feed_info(None, None)
+    result = await resolver.resolve_feed_info()
 
     assert result == feed_info
 
@@ -413,10 +430,12 @@ def test_get_updated_arrival_time_with_arrival_field(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolver.datetime").fromtimestamp.return_value = mock_dt
-    mocker.patch("server.gql.resolver.timezone")
+    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
+        mock_dt
+    )
+    mocker.patch("server.gql.resolvers.base.timezone")
 
-    result = resolver._get_updated_arrival_time("stop_1", [])
+    result = resolver.arrivals._get_updated_arrival_time("stop_1", [])
     assert result == "10:05:00"
 
 
@@ -424,7 +443,7 @@ def test_get_updated_arrival_time_not_found():
     resolver, _, gtfs_rt_service = make_resolver()
     gtfs_rt_service.get_arrival_time_by_stop_id.return_value = None
 
-    result = resolver._get_updated_arrival_time("stop_1", [])
+    result = resolver.arrivals._get_updated_arrival_time("stop_1", [])
     assert result is None
 
 
@@ -435,23 +454,25 @@ def test_get_updated_arrival_time_skipped_stop():
     stu.schedule_relationship = 1
     gtfs_rt_service.get_arrival_time_by_stop_id.return_value = stu
 
-    result = resolver._get_updated_arrival_time("stop_1", [])
+    result = resolver.arrivals._get_updated_arrival_time("stop_1", [])
     assert result is None
 
 
 def test_get_earliest_updated_arrival_time(mocker):
     resolver, _, _ = make_resolver()
-    mock_get = mocker.patch.object(resolver, "_get_updated_arrival_time")
+    mock_get = mocker.patch.object(resolver.arrivals, "_get_updated_arrival_time")
     mock_get.side_effect = ["10:30:00", "10:15:00", "10:45:00"]
 
-    result = resolver._get_earliest_updated_arrival_time("stop_1", [[], [], []])
+    result = resolver.arrivals._get_earliest_updated_arrival_time(
+        "stop_1", [[], [], []]
+    )
     assert result == "10:15:00"
 
 
 def test_get_earliest_updated_arrival_time_all_none(mocker):
     resolver, _, _ = make_resolver()
-    mock_get = mocker.patch.object(resolver, "_get_updated_arrival_time")
+    mock_get = mocker.patch.object(resolver.arrivals, "_get_updated_arrival_time")
     mock_get.return_value = None
 
-    result = resolver._get_earliest_updated_arrival_time("stop_1", [[]])
+    result = resolver.arrivals._get_earliest_updated_arrival_time("stop_1", [[]])
     assert result is None
