@@ -61,8 +61,8 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 # Install git hooks (Python linting on commit)
 ./setup-hooks.sh
 
-# Setup PostgreSQL database via Docker
-make setup-local
+# Setup PostgreSQL database and load GTFS data
+make setup
 
 # Setup Python environment
 python3 -m venv venv
@@ -77,37 +77,46 @@ npm ci
 ### Running the Application
 
 ```bash
-# Terminal 1: Start PostgreSQL (if not running)
-make setup-local
+# Terminal 1: Start PostgreSQL (if not already running)
+make start-db
 
 # Terminal 2: Start FastAPI backend (port 5001)
-make run
+make start-be
 
 # Terminal 3: Start React frontend (Vite dev server)
-cd client
-npm start
+make start-fe
 ```
 
 ### Common Commands
 
-**Backend:**
-- `make run` - Run FastAPI dev server via Uvicorn (port 5001, hot reload)
-- `make run-prod` - Run production server via Gunicorn + UvicornWorker
-- `make test` - Run Python unit tests with pytest
-- `make coverage` - Generate test coverage report
-- `make lint` - Format Python code with Black
-- `make deps` - Install Python dependencies from server/pyproject.toml
-- `make etl-download` - Download GTFS data from CapMetro
+Run `make help` to see all available targets organized by category.
 
-**Frontend (in client/ directory):**
-- `npm start` - Start Vite dev server
-- `npm run build` - Production build
-- `npm test` - Run tests with Vitest
-- `npm run coverage` - Generate test coverage
-- `npm run lint` - Lint TypeScript/React code
-- `npm run lint:fix` - Auto-fix linting issues
-- `npm run format` - Format code with Prettier
-- `npm run generate` - Generate GraphQL TypeScript types
+**Setup & Environment:**
+- `make setup-env` - Create Python virtual environment
+- `make install-deps` - Install Python dependencies from server[dev]
+- `make setup` - Complete local setup (database + GTFS data)
+
+**Database:**
+- `make start-db` - Start PostgreSQL database with Docker (port 5438)
+
+**Development:**
+- `make start-be` - Start FastAPI backend server (port 5001, hot reload)
+- `make format` - Format Python code with Black
+
+**Frontend:**
+- `make start-fe` - Start Vite dev server (port 5173)
+- `make build-fe` - Build frontend for production
+- `make test-fe` - Run frontend tests with Vitest
+- `make generate` - Generate GraphQL TypeScript types
+
+**Testing:**
+- `make test` - Run Python unit tests with pytest
+- `make test-integration` - Run integration tests
+- `make coverage` - Run tests and generate coverage report
+- `make coverage-html` - Run tests and generate HTML coverage report
+
+**Production:**
+- `make start-prod` - Start production server with Gunicorn + UvicornWorker (port 5001)
 
 ## Coding Conventions
 
