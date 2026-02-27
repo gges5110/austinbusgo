@@ -27,9 +27,6 @@ help:
 	@echo "Testing:"
 	@grep "^## test:\|^## test-integration\|^## coverage" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
-	@echo "ETL (Extract, Transform, Load):"
-	@grep "^## run-etl\|^## download-gtfs\|^## prepare-gtfs\|^## load-gtfs:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
-	@echo ""
 	@echo "Production:"
 	@grep "^## start-prod:" $(MAKEFILE_LIST) | sed 's/^## /  /' | column -t -s ':'
 	@echo ""
@@ -54,9 +51,10 @@ install-deps:
 	$(PYTHON) -m pip install -e "server[dev]"
 
 ## setup: Complete local setup (database + GTFS data)
+setup: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
 setup: start-db
 	docker compose -f docker/compose.etl.yml run --rm setup-gtfs
-	$(MAKE) load-gtfs
+	$(PYTHON) etl/load_db.py
 
 .PHONY: setup-env install-deps setup
 
@@ -106,30 +104,6 @@ coverage-html:
 	$(VENV_ACTIVATE) coverage run -m pytest server/tests; coverage html
 
 .PHONY: test test-integration coverage coverage-html
-
-# ============================================================================
-# ETL (Extract, Transform, Load)
-# ============================================================================
-
-## run-etl: Run full ETL pipeline (download, prepare, load)
-run-etl: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
-run-etl:
-	$(PYTHON) etl/main.py
-
-## download-gtfs: Download GTFS data from CapMetro
-download-gtfs:
-	$(PYTHON) etl/download.py
-
-## prepare-gtfs: Prepare GTFS data
-prepare-gtfs:
-	$(PYTHON) etl/prepare.py
-
-## load-gtfs: Load prepared GTFS data into database
-load-gtfs: export DATABASE_URL=postgresql://local-user:local-password@localhost:5438/local-db
-load-gtfs:
-	$(PYTHON) etl/load_db.py
-
-.PHONY: run-etl download-gtfs prepare-gtfs load-gtfs
 
 # ============================================================================
 # Production
