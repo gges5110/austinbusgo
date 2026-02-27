@@ -7,50 +7,56 @@ This is a project that aim to provide real-time bus location in Austin, Texas
 ### Initial Setup
 
 - Install git hooks: `./setup-hooks.sh` (enables Python linting on commit)
+- Complete local setup: `make setup` (starts database + loads GTFS data)
 
-### Server + Setup Database
+### Running the Application
 
-- Setup and start database: `make setup-local`
-- Start the server: `make run`
+**Terminal 1: Start the database (if not already running)**
+```bash
+make start-db
+```
 
-### Client
+**Terminal 2: Start the backend server**
+```bash
+make start-be
+```
 
-- Install dependencies: `npm ci`
-- Start client: `npm start`
+**Terminal 3: Start the frontend**
+```bash
+make start-fe
+```
 
 ## Commands
 
-**Server & Tests:**
-- `make run` - Run dev server (FastAPI on port 5001)
-- `make test` - Run backend tests
+Run `make help` to see all available commands organized by category.
+
+**Setup & Environment:**
+- `make setup-env` - Create Python virtual environment
+- `make install-deps` - Install Python dependencies
+- `make setup` - Complete local setup (database + GTFS data)
+
+**Development:**
+- `make start-be` - Start FastAPI backend (port 5001, hot reload)
+- `make start-fe` - Start Vite frontend (port 5173)
+- `make start-db` - Start PostgreSQL database (port 5438)
+- `make format` - Format Python code with Black
+
+**Frontend:**
+- `make build-fe` - Build frontend for production
+- `make test-fe` - Run frontend tests
+- `make generate` - Generate GraphQL TypeScript types
+
+**Testing:**
+- `make test` - Run Python unit tests
+- `make test-integration` - Run integration tests
 - `make coverage` - Generate test coverage report
-- `make lint` - Format code with Black and Prettier
+- `make coverage-html` - Generate HTML coverage report
 
-**Database & ETL:**
-- `make db-up` - Start PostgreSQL (detached)
-- `make setup-local` - Start PostgreSQL + run GTFS ETL pipeline
-- `make etl` - Run full ETL pipeline (download → prepare → load)
-- `make etl-download` - Download GTFS data only
-- `make etl-prepare` - Preprocess GTFS files only
-- `make etl-load` - Load data into database only
+**Production:**
+- `make start-prod` - Start production server (Gunicorn + UvicornWorker)
 
-## GTFS ETL Pipeline
+## GTFS Data Loading
 
-The ETL pipeline automatically downloads, preprocesses, and loads GTFS data into PostgreSQL.
+The `make setup` command automatically loads GTFS data into PostgreSQL on first setup.
 
-**Features:**
-- Automatic feed version checking (skips reload if feed hasn't changed)
-- Preprocesses CSV files (normalizes times, converts coordinates to PostGIS geometry)
-- Creates database schema and indexes optimally (indexes after bulk load)
-- Generates GitHub Actions job summary (shows feed status, dates, timestamp)
-
-**Quick start:**
-```bash
-make setup-local    # Start DB + run full ETL pipeline
-```
-
-**See [etl/README.md](etl/README.md) for detailed documentation**, including:
-- How each step works
-- Local development setup
-- Troubleshooting
-- CI/CD integration
+For detailed information about the ETL pipeline, data sources, and troubleshooting, see [etl/README.md](etl/README.md).
