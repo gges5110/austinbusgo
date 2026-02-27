@@ -83,6 +83,21 @@ class Trip:
 
         return await GTFSService(info.context.session).get_route(self.route_id)
 
+    @strawberry.field
+    async def stop_times(self, info: Info) -> List["StopTimes"]:
+        # Use dataloader to batch-load stop times by trip ID (prevents N+1)
+        dataloaders = getattr(info.context, "dataloaders", {})
+        stop_times_loader = dataloaders.get("stop_times_by_trip")
+        if stop_times_loader is not None:
+            return await stop_times_loader.load(self.trip_id)
+
+        # Fall back to direct query
+        from server.services.gtfs_service import GTFSService
+
+        return await GTFSService(info.context.session).get_stop_times_by_trip_id(
+            self.trip_id
+        )
+
 
 @strawberry.type
 class StopTimes:
