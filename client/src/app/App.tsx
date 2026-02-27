@@ -9,28 +9,31 @@ import { SnackbarProvider } from "notistack";
 import * as React from "react";
 import { RouterProvider } from "react-router-dom";
 import { showReactQueryDevtoolsAtom } from "shared/state/atoms";
+import { ErrorBoundary } from "shared/components/ErrorBoundary";
 
 export const App: React.FunctionComponent = () => {
   const appTheme = useAppTheme();
   const showReactQueryDevtools = useAtomValue(showReactQueryDevtoolsAtom);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={appTheme}>
-        <CssBaseline enableColorScheme={true} />
-        <SnackbarProvider
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "left",
-          }}
-          autoHideDuration={2000}
-          maxSnack={3}
-          preventDuplicate={true}
-        >
-          <RouterProvider router={router} />
-        </SnackbarProvider>
-      </ThemeProvider>
-      {showReactQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={appTheme}>
+          <CssBaseline enableColorScheme={true} />
+          <SnackbarProvider
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+            autoHideDuration={2000}
+            maxSnack={3}
+            preventDuplicate={true}
+          >
+            <RouterProvider router={router} />
+          </SnackbarProvider>
+        </ThemeProvider>
+        {showReactQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };

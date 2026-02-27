@@ -22,6 +22,7 @@ import {
   useLoaderData,
   useRouteLoaderData,
 } from "react-router-dom";
+import { RouteErrorFallback } from "shared/components/RouteErrorFallback";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
@@ -52,6 +53,7 @@ export const router = createBrowserRouter(
       >
         <Route
           element={<SearchResultsMenu />}
+          errorElement={<RouteErrorFallback />}
           id={"search"}
           loader={searchLoader}
           path={"search/:searchTerm/:viewState?"}
@@ -65,6 +67,7 @@ export const router = createBrowserRouter(
           path={"favorites/:viewState?"}
         ></Route>
         <Route
+          errorElement={<RouteErrorFallback />}
           id={"stop"}
           loader={stopLoader}
           path={"stop/:stopId/:viewState?"}
@@ -76,12 +79,14 @@ export const router = createBrowserRouter(
           ></Route>
           <Route
             element={<TripMenu />}
+            errorElement={<RouteErrorFallback />}
             loader={tripLoader}
             path={"trip/:tripId/:viewState?"}
           ></Route>
         </Route>
         <Route
           element={<RouteMenu />}
+          errorElement={<RouteErrorFallback />}
           id={"route"}
           loader={routeLoader}
           path={"route/:routeId/direction/:directionId/:viewState?"}
