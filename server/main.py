@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.fastapi import BaseContext, GraphQLRouter
 
+from server import logging_config  # noqa: F401 - Configure logging on import
 from server.config import db_url
 from server import database
+
+logger = logging.getLogger(__name__)
 from server.database import (
     database_sanity_check,
     get_db,
