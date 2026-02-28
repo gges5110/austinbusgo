@@ -1,3 +1,5 @@
+import { useTheme } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -9,6 +11,7 @@ import {
 } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
+import { StopPeekSheet } from "./StopPeekSheet";
 import { StopPopupContent } from "./StopPopupContent";
 
 // mapboxgl.MapLayerMouseEvent is deprecated in mapbox-gl v3; use this alias
@@ -73,6 +76,8 @@ export const StopLayer: FC<StopLayerProps> = ({
   disableLod = false,
 }) => {
   const { mapId: map } = useMap();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [hoveringStop, setHoveringStop] = useAtom(hoveringStopAtom);
   const setHoveringVehicle = useSetAtom(hoveringVehiclePositionAtom);
   const setPinnedVehicle = useSetAtom(pinnedVehiclePositionAtom);
@@ -187,8 +192,26 @@ export const StopLayer: FC<StopLayerProps> = ({
     scheduleHoverClose();
   }, [scheduleHoverClose]);
 
+  const handleStopClick = useCallback(
+    (e: LayerMouseEvent) => {
+      const stopId = e.features?.[0]?.properties?.stopId as string | undefined;
+      if (stopId && stopsById.has(stopId)) {
+        setHoveringStop(stopsById.get(stopId));
+      }
+    },
+    [stopsById, setHoveringStop]
+  );
+
   useEffect(() => {
     if (!map) return;
+    if (isMobile) {
+      map.on("click", STOP_CIRCLES_LAYER_ID, handleStopClick);
+      map.on("click", STOP_LABELS_LAYER_ID, handleStopClick);
+      return () => {
+        map.off("click", STOP_CIRCLES_LAYER_ID, handleStopClick);
+        map.off("click", STOP_LABELS_LAYER_ID, handleStopClick);
+      };
+    }
     map.on("mouseenter", STOP_CIRCLES_LAYER_ID, handleStopMouseEnter);
     map.on("mouseleave", STOP_CIRCLES_LAYER_ID, handleStopMouseLeave);
     map.on("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
@@ -199,7 +222,13 @@ export const StopLayer: FC<StopLayerProps> = ({
       map.off("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
       map.off("mouseleave", STOP_LABELS_LAYER_ID, handleStopMouseLeave);
     };
-  }, [map, handleStopMouseEnter, handleStopMouseLeave]);
+  }, [
+    map,
+    isMobile,
+    handleStopClick,
+    handleStopMouseEnter,
+    handleStopMouseLeave,
+  ]);
 
   const popupCoords = hoveringStop?.stopLoc?.coordinates;
 
@@ -308,8 +337,16 @@ export const StopLayer: FC<StopLayerProps> = ({
         }}
         type={"symbol"}
       />
-      {/* Popup: shown on hover; mouse can pan into popup to keep it open */}
-      {hoveringStop && popupCoords && (
+      {/* Mobile: peek sheet on tap */}
+      {isMobile && hoveringStop && (
+        <StopPeekSheet
+          onClose={() => setHoveringStop(undefined)}
+          open={true}
+          stop={hoveringStop}
+        />
+      )}
+      {/* Desktop: hover popup anchored to the map */}
+      {!isMobile && hoveringStop && popupCoords && (
         <Popup
           closeButton={false}
           closeOnClick={false}

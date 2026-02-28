@@ -1,4 +1,5 @@
 import { useTheme } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useAllVehiclePositions } from "features/map/hooks/useAllVehiclePositions";
 import { useMapMotion } from "features/map/hooks/UseMapMotion";
 import { useRouteShape } from "features/map/hooks/UseRouteShape";
@@ -88,8 +89,12 @@ export const Map: React.FunctionComponent = () => {
 
   const isRoutesPage = !!route;
   const darkMode = theme.palette.mode === "dark";
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const onStopLayerClick = (event: MapLayerMouseEvent) => {
+    // On mobile, StopLayer handles the click to show the peek sheet;
+    // skip navigation here to avoid opening the stop page simultaneously.
+    if (isMobile) return;
     const feature = event.features?.[0];
     if (!feature) return;
     const stopId = feature.properties?.stopId as string | undefined;

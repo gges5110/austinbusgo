@@ -1,3 +1,5 @@
+import { useTheme } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { FC, useCallback, useEffect, useMemo, useRef } from "react";
@@ -11,6 +13,7 @@ import {
 } from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 
+import { VehiclePeekSheet } from "./VehiclePeekSheet";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
 
 export const VEHICLE_CIRCLES_LAYER_ID = "vehicle-circles";
@@ -71,6 +74,8 @@ interface VehicleLayerProps {
 
 export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   const { mapId: map } = useMap();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
   const [hoveringVehicle, setHoveringVehicle] = useAtom(
@@ -191,12 +196,14 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
       vehicleJustClickedRef.current = true;
       setHoveringStop(undefined);
       setPinnedVehicle(vp);
-      const routeId = vp.trip?.routeId;
-      if (routeId) {
-        navigate(`/route/${routeId}/direction/0${viewStatePathname}`);
+      if (!isMobile) {
+        const routeId = vp.trip?.routeId;
+        if (routeId) {
+          navigate(`/route/${routeId}/direction/0${viewStatePathname}`);
+        }
       }
     },
-    [navigate, setHoveringStop, vehiclesById, viewStatePathname]
+    [isMobile, navigate, setHoveringStop, vehiclesById, viewStatePathname]
   );
 
   // Map background click: dismiss the pinned popup when clicking outside a vehicle
@@ -211,18 +218,31 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   // Register layer event handlers
   useEffect(() => {
     if (!map) return;
-    map.on("mouseenter", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseEnter);
-    map.on("mouseleave", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseLeave);
+    if (!isMobile) {
+      map.on("mouseenter", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseEnter);
+      map.on("mouseleave", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseLeave);
+    }
     map.on("click", VEHICLE_CIRCLES_LAYER_ID, handleVehicleClick);
     map.on("click", handleMapClick);
     return () => {
-      map.off("mouseenter", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseEnter);
-      map.off("mouseleave", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseLeave);
+      if (!isMobile) {
+        map.off(
+          "mouseenter",
+          VEHICLE_CIRCLES_LAYER_ID,
+          handleVehicleMouseEnter
+        );
+        map.off(
+          "mouseleave",
+          VEHICLE_CIRCLES_LAYER_ID,
+          handleVehicleMouseLeave
+        );
+      }
       map.off("click", VEHICLE_CIRCLES_LAYER_ID, handleVehicleClick);
       map.off("click", handleMapClick);
     };
   }, [
     map,
+    isMobile,
     handleVehicleMouseEnter,
     handleVehicleMouseLeave,
     handleVehicleClick,
@@ -331,8 +351,19 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         type={"symbol"}
       />
 
-      {/* Popup: shown on hover OR pinned after click; click map background to dismiss */}
-      {popupVehicle && popupPosition && (
+      {/* Mobile: peek sheet on tap */}
+      {isMobile && popupVehicle && (
+        <VehiclePeekSheet
+          onClose={() => {
+            setPinnedVehicle(undefined);
+            setHoveringVehicle(undefined);
+          }}
+          open={true}
+          vehiclePosition={popupVehicle}
+        />
+      )}
+      {/* Desktop: hover/pinned popup anchored to the map */}
+      {!isMobile && popupVehicle && popupPosition && (
         <Popup
           closeButton={false}
           closeOnClick={false}
