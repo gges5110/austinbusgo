@@ -1,4 +1,9 @@
-import { Autocomplete, createFilterOptions } from "@mui/material";
+import {
+  Autocomplete,
+  createFilterOptions,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import * as React from "react";
 import { useRef, useState } from "react";
 import { useLocation, useNavigation, useParams } from "react-router-dom";
@@ -30,6 +35,8 @@ const filterOptions = createFilterOptions<SearchOption>({
 export const SearchAutocomplete: React.FunctionComponent<
   SearchAutocompleteProps
 > = ({ open, onOpenChange }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState<SearchOption | null>(null);
   const { currentRoute } = useCurrentRoute();
@@ -151,8 +158,10 @@ export const SearchAutocomplete: React.FunctionComponent<
         },
         popper: {
           sx: {
-            width: `${SEARCH_PANEL_WIDTH} !important`,
-            marginLeft: `-24px !important`,
+            width: isMobile
+              ? "calc(100vw - 16px) !important"
+              : `${SEARCH_PANEL_WIDTH} !important`,
+            marginLeft: isMobile ? `-8px !important` : `-24px !important`,
             zIndex: 1,
           },
         },
