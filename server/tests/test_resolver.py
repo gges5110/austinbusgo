@@ -1,7 +1,9 @@
 import pytest
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
+from pytz import timezone
 
 from server.gql.resolver import Resolver
 from server.services.gtfs_service import GTFSService
@@ -460,19 +462,63 @@ def test_get_updated_arrival_time_skipped_stop():
 
 def test_get_earliest_updated_arrival_time(mocker):
     resolver, _, _ = make_resolver()
-    mock_get = mocker.patch.object(resolver.arrivals, "_get_updated_arrival_time")
-    mock_get.side_effect = ["10:30:00", "10:15:00", "10:45:00"]
+    now_ts = 1000000.0
+    mocker.patch("server.gql.resolvers.base.time", return_value=now_ts)
+    ts1 = now_ts + 3600  # 1 hour from now
+    ts2 = now_ts + 900  # 15 min from now (earliest)
+    ts3 = now_ts + 2700  # 45 min from now
+    mock_raw = mocker.patch.object(resolver.arrivals, "_get_raw_arrival_timestamp")
+    mock_raw.side_effect = [ts1, ts2, ts3]
 
     result = resolver.arrivals._get_earliest_updated_arrival_time(
         "stop_1", [[], [], []]
     )
-    assert result == "10:15:00"
+
+    tz = timezone("US/Central")
+    expected = datetime.fromtimestamp(ts2).astimezone(tz).strftime("%H:%M:%S")
+    assert result == expected
 
 
 def test_get_earliest_updated_arrival_time_all_none(mocker):
     resolver, _, _ = make_resolver()
-    mock_get = mocker.patch.object(resolver.arrivals, "_get_updated_arrival_time")
-    mock_get.return_value = None
+    now_ts = 1000000.0
+    mocker.patch("server.gql.resolvers.base.time", return_value=now_ts)
+    mock_raw = mocker.patch.object(resolver.arrivals, "_get_raw_arrival_timestamp")
+    mock_raw.return_value = None
 
     result = resolver.arrivals._get_earliest_updated_arrival_time("stop_1", [[]])
     assert result is None
+
+
+def test_get_earliest_updated_arrival_time_filters_past(mocker):
+    resolver, _, _ = make_resolver()
+    now_ts = 1000000.0
+    mocker.patch("server.gql.resolvers.base.time", return_value=now_ts)
+    past_ts = now_ts - 300  # 5 min ago
+    future_ts = now_ts + 600  # 10 min from now
+    mock_raw = mocker.patch.object(resolver.arrivals, "_get_raw_arrival_timestamp")
+    mock_raw.side_effect = [past_ts, future_ts]
+
+    result = resolver.arrivals._get_earliest_updated_arrival_time("stop_1", [[], []])
+
+    tz = timezone("US/Central")
+    expected = datetime.fromtimestamp(future_ts).astimezone(tz).strftime("%H:%M:%S")
+    assert result == expected
+
+
+def test_get_earliest_updated_arrival_time_midnight_crossing(mocker):
+    """23:32 should beat 00:02 even though '00:02' < '23:32' as a string."""
+    resolver, _, _ = make_resolver()
+    tz = timezone("US/Central")
+    base = tz.localize(datetime(2026, 3, 3, 23, 0, 0))
+    now_ts = base.timestamp()
+    mocker.patch("server.gql.resolvers.base.time", return_value=now_ts)
+
+    ts_2332 = tz.localize(datetime(2026, 3, 3, 23, 32, 0)).timestamp()
+    ts_0002 = tz.localize(datetime(2026, 3, 4, 0, 2, 0)).timestamp()
+    mock_raw = mocker.patch.object(resolver.arrivals, "_get_raw_arrival_timestamp")
+    mock_raw.side_effect = [ts_0002, ts_2332]  # 00:02 offered first
+
+    result = resolver.arrivals._get_earliest_updated_arrival_time("stop_1", [[], []])
+
+    assert result == "23:32:00"
