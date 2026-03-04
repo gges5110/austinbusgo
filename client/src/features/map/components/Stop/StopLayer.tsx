@@ -26,12 +26,12 @@ export const STOP_LABELS_LAYER_ID = "stop-labels";
  * Returns the cell size in degrees for the label grid at a given zoom level.
  * Halves with each zoom step so the number of visible grid cells stays roughly
  * constant as the user zooms in. Clamped to [0.005°, 1°].
- *   zoom 6  → ~1°    (~110 km)
- *   zoom 10 → ~0.06° (~7 km)
- *   zoom 14 → ~0.004° → clamped to 0.005° (~0.5 km)
+ *   zoom 6  → ~0.25° (~28 km)
+ *   zoom 10 → ~0.015° (~1.7 km)
+ *   zoom 14 → ~0.001° → clamped to 0.005° (~0.5 km)
  */
 function labelGridCellDeg(zoom: number): number {
-  return Math.min(1, Math.max(0.005, Math.pow(2, 6 - zoom)));
+  return Math.min(1, Math.max(0.005, Math.pow(2, 4 - zoom)));
 }
 
 /**
@@ -243,8 +243,8 @@ export const StopLayer: FC<StopLayerProps> = ({
       type={"geojson"}
     >
       {/* Circle layer for stop pin dots — WebGL rendered, no DOM overhead.
-          Below zoom 16 only the label-grid winner per ~11 km cell is shown,
-          ensuring geographic spread. At zoom 16+ all stops appear. */}
+          Below zoom 13 only the label-grid winner per cell is shown,
+          ensuring geographic spread. At zoom 13+ all stops appear. */}
       <Layer
         id={STOP_CIRCLES_LAYER_ID}
         paint={{
@@ -262,7 +262,7 @@ export const StopLayer: FC<StopLayerProps> = ({
                 "step",
                 ["zoom"],
                 ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-                16,
+                13,
                 1,
               ],
           "circle-radius": [
@@ -285,7 +285,7 @@ export const StopLayer: FC<StopLayerProps> = ({
                 "step",
                 ["zoom"],
                 ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-                16,
+                13,
                 1,
               ],
           "circle-stroke-width": [
@@ -305,7 +305,7 @@ export const StopLayer: FC<StopLayerProps> = ({
           importance ranking via symbol-sort-key */}
       <Layer
         {...(!disableLod && {
-          filter: ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true],
+          filter: ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 13, true],
         })}
         id={STOP_LABELS_LAYER_ID}
         layout={{
