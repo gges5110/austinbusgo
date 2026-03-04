@@ -139,6 +139,9 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   }}
                 >
                   <IconButton
+                    component={
+                      vehiclePosition.trip?.tripId ? RouterLink : "button"
+                    }
                     onClick={() => {
                       if (
                         vehiclePosition.position?.latitude &&
@@ -156,6 +159,11 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                     onMouseLeave={() => {
                       setHoveringVehiclePosition(undefined);
                     }}
+                    to={
+                      vehiclePosition.trip?.tripId
+                        ? `/stop/${stop.stopId}/trip/${vehiclePosition.trip.tripId}${viewStatePathname}${withPreservedSearch({ directionId: directionId!, routeId: route.routeId })}`
+                        : undefined
+                    }
                   >
                     <DirectionsBusIcon />
                   </IconButton>
@@ -174,7 +182,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                   pl: 6,
                   py: 2.5,
                 }}
-                to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch({ routeId: route.routeId, directionId })}`}
+                to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch({ directionId: directionId!, routeId: route.routeId })}`}
               >
                 <Box
                   display={"flex"}

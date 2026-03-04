@@ -304,11 +304,9 @@ export const StopLayer: FC<StopLayerProps> = ({
       {/* Symbol layer for stop name labels — native collision detection and
           importance ranking via symbol-sort-key */}
       <Layer
-        filter={
-          disableLod
-            ? undefined
-            : ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true]
-        }
+        {...(!disableLod && {
+          filter: ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 16, true],
+        })}
         id={STOP_LABELS_LAYER_ID}
         layout={{
           "symbol-sort-key": ["get", "priority"],
