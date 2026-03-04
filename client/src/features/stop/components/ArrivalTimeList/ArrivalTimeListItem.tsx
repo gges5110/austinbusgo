@@ -47,7 +47,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<
     const duration = scheduledArrivalTime.from(updatedArrivalTime, true);
     timeDiffString = `${early ? "Early" : "Delayed"} ${duration}`;
     if (early) {
-      textColor = "#f57c00";
+      textColor = theme.palette.warning.main;
     } else {
       textColor = theme.palette.error.light;
     }
@@ -73,7 +73,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<
       <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
         <Box display={"flex"} flexDirection={"column"} gap={1}>
           <Box alignItems={"center"} display={"flex"} gap={1}>
-            <DirectionsBusIcon fontSize={"small"} />
+            <DirectionsBusIcon aria-hidden={true} fontSize={"small"} />
             <RouteIdDisplay
               routeColor={arrivalTime.trip.route.routeColor}
               routeId={arrivalTime.trip.routeId}
@@ -114,10 +114,18 @@ export const ArrivalTimeListItem: React.FunctionComponent<
               ) : null}
             </Typography>
             {arrivalTime.trip.wheelchairAccessible && (
-              <AccessibleIcon sx={{ fontSize: 16 }} />
+              <AccessibleIcon
+                aria-label={"Wheelchair accessible"}
+                sx={{ fontSize: 16 }}
+                titleAccess={"Wheelchair accessible"}
+              />
             )}
             {arrivalTime.trip.bikesAllowed && (
-              <DirectionsBikeIcon sx={{ fontSize: 16 }} />
+              <DirectionsBikeIcon
+                aria-label={"Bikes allowed"}
+                sx={{ fontSize: 16 }}
+                titleAccess={"Bikes allowed"}
+              />
             )}
           </Box>
         </Box>

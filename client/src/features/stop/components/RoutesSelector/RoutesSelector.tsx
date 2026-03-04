@@ -39,6 +39,8 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
           // TODO: fix hover styles
           return (
             <Button
+              aria-label={`Filter by route ${uniqueRouteId}`}
+              aria-pressed={isSelected}
               key={uniqueRouteId}
               onClick={() => {
                 setSelectedRouteIds((prevState) => {
@@ -83,6 +85,7 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
       </Box>
       {uniqueRouteIds.length !== selectedRouteIds.length && (
         <IconButton
+          aria-label={"Clear route filter"}
           onClick={() => {
             clearSelection();
           }}

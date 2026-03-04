@@ -161,7 +161,7 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
                 <Switch
                   checked={autoPolling}
                   edge={"end"}
-                  inputProps={{ "aria-label": "secondary checkbox" }}
+                  inputProps={{ "aria-label": "enable auto polling" }}
                   onChange={handleAutoPollingChange}
                   value={"autoPolling"}
                 />

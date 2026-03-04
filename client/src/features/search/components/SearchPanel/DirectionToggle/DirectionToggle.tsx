@@ -39,7 +39,7 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
 
   return (
     <FormControl>
-      <FormLabel>Direction</FormLabel>
+      <FormLabel id={"direction-radio-buttons-group"}>Direction</FormLabel>
       <RadioGroup
         aria-labelledby={"direction-radio-buttons-group"}
         name={"direction-radio-buttons-group"}

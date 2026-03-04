@@ -17,9 +17,11 @@ export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
   return (
     <Box
       onClick={onClick}
+      role={onClick ? "button" : undefined}
       sx={{
         backgroundColor: `#${routeColor}`,
         color: "white",
+        cursor: onClick ? "pointer" : undefined,
         width: "fit-content",
         minWidth: 44,
         height: "fit-content",
@@ -27,6 +29,17 @@ export const RouteIdDisplay: React.FC<RouteIdDisplayProps> = ({
         borderRadius: "7px",
         textAlign: "center",
       }}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+              }
+            }
+          : undefined
+      }
     >
       <Typography sx={{ fontWeight: "bold" }}>{routeId}</Typography>
     </Box>

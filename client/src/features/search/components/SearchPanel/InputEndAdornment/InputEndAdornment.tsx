@@ -20,9 +20,10 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
       {inputString === "" ? (
         <Tooltip placement={"bottom-end"} title={"Search"}>
           <IconButton
+            aria-label={"Search"}
             sx={{
               "&:hover": {
-                color: "#2196f3",
+                color: "primary.main",
                 backgroundColor: "unset",
               },
               padding: "12px 15px",
@@ -33,15 +34,16 @@ export const InputEndAdornment: React.FC<InputEndAdornmentProps> = ({
         </Tooltip>
       ) : loading ? (
         <Box sx={{ padding: "9px 15px" }}>
-          <CircularProgress size={24} />
+          <CircularProgress aria-label={"Loading"} size={24} />
         </Box>
       ) : (
         <Tooltip placement={"bottom-end"} title={"Clear search"}>
           <IconButton
+            aria-label={"Clear search"}
             onClick={clearSelection}
             sx={{
               "&:hover": {
-                color: "#2196f3",
+                color: "primary.main",
                 backgroundColor: "unset",
               },
               padding: "12px 15px",

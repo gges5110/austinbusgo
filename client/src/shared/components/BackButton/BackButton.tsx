@@ -11,7 +11,7 @@ export const BackButton = () => {
 
   return (
     <Tooltip sx={{ position: "absolute", left: "6px" }} title={"Back"}>
-      <IconButton onClick={onBack}>
+      <IconButton aria-label={"Back"} onClick={onBack}>
         <ArrowBackIcon />
       </IconButton>
     </Tooltip>

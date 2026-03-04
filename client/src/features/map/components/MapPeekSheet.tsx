@@ -42,6 +42,7 @@ export const MapPeekSheet: React.FC<MapPeekSheetProps> = ({
     />
     {/* Close button */}
     <IconButton
+      aria-label={"Close"}
       onClick={onClose}
       size={"small"}
       sx={{ position: "absolute", right: 8, top: 8 }}

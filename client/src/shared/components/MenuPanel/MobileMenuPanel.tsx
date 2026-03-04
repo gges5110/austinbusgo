@@ -69,6 +69,7 @@ export const MobileMenuPanel = ({
         }}
       >
         <IconButton
+          aria-expanded={isExpanded}
           aria-label={isExpanded ? "Collapse menu" : "Expand menu"}
           onClick={toggleExpanded}
           sx={{
