@@ -25,3 +25,14 @@ export const getTime = () => {
     "00",
   ].join(":");
 };
+
+// Parse an HH:mm:ss arrival time string into a Dayjs object.
+// Handles midnight-crossing: if the parsed time appears >12h in the past,
+// it is treated as belonging to the next day (e.g. "00:05:00" at 23:55).
+export const parseArrivalTime = (timeStr: string) => {
+  const t = dayjs(timeStr, "HH:mm:ss");
+  if (dayjs().diff(t, "hour") > 12) {
+    return t.add(1, "day");
+  }
+  return t;
+};

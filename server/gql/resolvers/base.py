@@ -1,6 +1,7 @@
 """Base resolver with common initialization and helper methods."""
 
 from datetime import datetime
+from time import time
 from typing import List, Optional
 
 from google.transit.gtfs_realtime_pb2 import TripUpdate
@@ -50,16 +51,42 @@ class BaseResolver:
             .strftime("%H:%M:%S")
         )
 
+    def _get_raw_arrival_timestamp(
+        self, stop_id: str, stop_time_updates: List[TripUpdate.StopTimeUpdate]
+    ) -> Optional[float]:
+        """Return the raw Unix timestamp for a stop's RT arrival, or None."""
+        stop_time_update = self.gtfs_rt_service.get_arrival_time_by_stop_id(
+            stop_time_updates, stop_id
+        )
+        if stop_time_update is None or stop_time_update.schedule_relationship == 1:
+            return None
+        return (
+            stop_time_update.arrival.time
+            if stop_time_update.HasField("arrival")
+            else stop_time_update.departure.time
+        )
+
     def _get_earliest_updated_arrival_time(
         self,
         stop_id: str,
         stop_time_updates_list: List[List[TripUpdate.StopTimeUpdate]],
     ):
-        """Get earliest updated arrival time from multiple stop time updates."""
-        earliest = None
+        """Get earliest future updated arrival time from multiple stop time updates.
+
+        Compares by Unix timestamp to correctly handle times that cross midnight.
+        """
+        now_ts = time()
+        earliest_ts = None
+        earliest_str = None
         for stop_time_updates in stop_time_updates_list:
-            t = self._get_updated_arrival_time(stop_id, stop_time_updates)
-            if t:
-                if earliest is None or t < earliest:
-                    earliest = t
-        return earliest
+            ts = self._get_raw_arrival_timestamp(stop_id, stop_time_updates)
+            if ts is None or ts < now_ts:
+                continue
+            if earliest_ts is None or ts < earliest_ts:
+                earliest_ts = ts
+                earliest_str = (
+                    datetime.fromtimestamp(ts)
+                    .astimezone(timezone("US/Central"))
+                    .strftime("%H:%M:%S")
+                )
+        return earliest_str

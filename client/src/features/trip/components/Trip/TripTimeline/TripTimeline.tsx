@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { useUpdateViewState } from "features/map/hooks/UseViewStateSync";
+import { parseArrivalTime } from "shared/utils/dateUtils";
 import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useEffect, useRef } from "react";
@@ -80,7 +81,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
             (stopTimeUpdate) =>
               stopTimeUpdate?.stopSequence === stopTime.stopSequence
           );
-          const scheduledArrivalTime = dayjs(stopTime.arrivalTime, "HH:mm:ss");
+          const scheduledArrivalTime = parseArrivalTime(stopTime.arrivalTime);
           let updatedArrivalTime;
           if (stopTimeUpdateIndex !== undefined && stopTimeUpdateIndex !== -1) {
             const time =

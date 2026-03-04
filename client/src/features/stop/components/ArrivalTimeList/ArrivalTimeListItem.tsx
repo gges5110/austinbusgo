@@ -9,6 +9,7 @@ import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
 import { StopQuery } from "shared/api/schemas/Stop.generated";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { parseArrivalTime } from "shared/utils/dateUtils";
 
 import { Bullet } from "./Bullet";
 
@@ -22,13 +23,12 @@ export const ArrivalTimeListItem: React.FunctionComponent<
 > = ({ arrivalTime, stop }) => {
   const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
 
-  const scheduledArrivalTime: Dayjs = dayjs(
-    arrivalTime.scheduledArrivalTime,
-    "HH:mm:ss"
+  const scheduledArrivalTime: Dayjs = parseArrivalTime(
+    arrivalTime.scheduledArrivalTime
   );
   let updatedArrivalTime;
   if (arrivalTime.updatedArrivalTime) {
-    updatedArrivalTime = dayjs(arrivalTime.updatedArrivalTime, "HH:mm:ss");
+    updatedArrivalTime = parseArrivalTime(arrivalTime.updatedArrivalTime);
   }
 
   const theme = useTheme();

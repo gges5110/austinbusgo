@@ -491,6 +491,7 @@ class GTFSService:
                   AND t2.direction_id = :direction_id
                 GROUP BY st2.stop_id, st2.stop_sequence
             ) sub ON st.stop_id = sub.stop_id
+                  AND st.stop_sequence = sub.stop_sequence
                   AND st.arrival_time = sub.min_arrival
             JOIN trips t ON t.trip_id = st.trip_id
             JOIN calendar_dates cd ON cd.service_id = t.service_id

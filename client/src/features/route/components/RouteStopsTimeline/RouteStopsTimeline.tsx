@@ -23,7 +23,7 @@ import {
   mapsFlyToCoordinateAtom,
 } from "shared/state/atoms";
 import { Route, Stop, VehicleStopStatus } from "shared/types/interface.d";
-import { getDate, getTime } from "shared/utils/dateUtils";
+import { getDate, getTime, parseArrivalTime } from "shared/utils/dateUtils";
 
 interface StopsTimelineProps {
   route: Route;
@@ -71,12 +71,9 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
             const scheduledArrivalTimeString = arrivalTime.scheduledArrivalTime;
             const updatedArrivalTimeString = arrivalTime.updatedArrivalTime;
 
-            scheduledArrivalTime = dayjs(
-              scheduledArrivalTimeString,
-              "HH:mm:ss"
-            );
+            scheduledArrivalTime = parseArrivalTime(scheduledArrivalTimeString);
             if (updatedArrivalTimeString) {
-              updatedArrivalTime = dayjs(updatedArrivalTimeString, "HH:mm:ss");
+              updatedArrivalTime = parseArrivalTime(updatedArrivalTimeString);
             }
           }
 
