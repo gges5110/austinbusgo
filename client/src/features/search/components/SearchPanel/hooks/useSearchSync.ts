@@ -1,12 +1,7 @@
 import { useEffect } from "react";
 import { Route, Stop } from "shared/types/interface.d";
 
-import {
-  getRouteOptionLabel,
-  getStopOptionLabel,
-  SearchOption,
-  SearchType,
-} from "./searchPanelUtils";
+import { SearchOption, toSearchOption } from "./searchPanelUtils";
 
 interface UseSearchSyncParams {
   route?: Route;
@@ -47,30 +42,19 @@ export const useSearchSync = ({
       onOpenChange(false);
     } else if (searchTerm) {
       setInputString(searchTerm);
-      setValue({
-        type: SearchType.recent,
-        optionValue: {
-          value: searchTerm,
-        },
-      });
+      setValue(toSearchOption({ value: searchTerm }, true));
       onOpenChange(false);
     } else if (stop) {
-      const input = getStopOptionLabel(stop);
-      setInputString(input);
-      setValue({
-        type: SearchType.recent,
-        optionValue: stop,
-      });
-      search(input);
+      const option = toSearchOption(stop, true);
+      setInputString(option.label);
+      setValue(option);
+      search(option.label);
       onOpenChange(false);
     } else if (route) {
-      const input = getRouteOptionLabel(route);
-      setInputString(input);
-      setValue({
-        type: SearchType.recent,
-        optionValue: route,
-      });
-      search(input);
+      const option = toSearchOption(route, true);
+      setInputString(option.label);
+      setValue(option);
+      search(option.label);
       onOpenChange(false);
     } else {
       setInputString("");

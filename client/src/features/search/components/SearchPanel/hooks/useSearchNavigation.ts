@@ -5,13 +5,7 @@ import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
-import {
-  isRoute,
-  isSearchTerm,
-  isStop,
-  isViewAllRecent,
-  SearchOption,
-} from "./searchPanelUtils";
+import { SearchOption } from "./searchPanelUtils";
 
 export const useSearchNavigation = () => {
   const navigate = useNavigate();
@@ -29,19 +23,23 @@ export const useSearchNavigation = () => {
 
   const handleSelect = useCallback(
     (option: SearchOption) => {
-      const { optionValue } = option;
-      if (isRoute(optionValue)) {
-        if (currentRoute?.routeId !== optionValue.routeId) {
-          setRoute(optionValue);
-          addToRecentSearches(optionValue);
-        }
-      } else if (isStop(optionValue)) {
-        setStop(optionValue);
-        addToRecentSearches(optionValue);
-      } else if (isSearchTerm(optionValue)) {
-        handleSearch(optionValue.value);
-      } else if (isViewAllRecent(optionValue)) {
-        navigate(`/recent-searches${viewStatePathname}`);
+      switch (option.kind) {
+        case "route":
+          if (currentRoute?.routeId !== option.route.routeId) {
+            setRoute(option.route);
+            addToRecentSearches(option.route);
+          }
+          break;
+        case "stop":
+          setStop(option.stop);
+          addToRecentSearches(option.stop);
+          break;
+        case "term":
+          handleSearch(option.term);
+          break;
+        case "viewAll":
+          navigate(`/recent-searches${viewStatePathname}`);
+          break;
       }
     },
     [

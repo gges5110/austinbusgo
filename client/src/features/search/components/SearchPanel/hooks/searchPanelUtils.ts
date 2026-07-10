@@ -1,12 +1,6 @@
 import { SearchQuery } from "shared/api/schemas/Search.generated";
 import { Route, Stop } from "shared/types/interface.d";
 
-export enum SearchType {
-  "recent",
-  "search",
-  "viewAll",
-}
-
 export interface SearchTerm {
   value: string;
 }
@@ -24,12 +18,7 @@ export type OptionValue =
   | SearchTerm
   | ViewAllRecent;
 
-export interface SearchOption {
-  type: SearchType;
-  optionValue: OptionValue;
-}
-
-// Type guards
+// Type guards — also used by UseRecentSearches, favorites, and menu pages
 export const isRoute = (option: OptionValue): option is Route => {
   return "routeLongName" in option;
 };
@@ -57,46 +46,72 @@ export const getStopOptionLabel = (stop: Stop): string => {
   return `${stop.stopId} ${stop.stopName}`;
 };
 
-export const getOptionLabel = (option: SearchOption): string => {
-  const { optionValue } = option;
-  if (isRoute(optionValue)) {
-    return getRouteOptionLabel(optionValue);
-  } else if (isStop(optionValue)) {
-    return getStopOptionLabel(optionValue);
-  } else if (isSearchTerm(optionValue)) {
-    return optionValue.value;
-  } else if (isViewAllRecent(optionValue)) {
-    return "View all recent searches";
-  }
+/**
+ * Autocomplete option with its variant resolved once at construction
+ * (via toSearchOption), so consumers read kind/label/key directly instead
+ * of re-running type guards everywhere.
+ */
+export type SearchOption = {
+  /** Original value, e.g. for recent-search removal */
+  optionValue: OptionValue;
+  /** Identity, used for option/value equality */
+  key: string;
+  label: string;
+  /** Rendered with the recent-search clock icon and remove button */
+  recent: boolean;
+} & (
+  | { kind: "route"; route: Route }
+  | { kind: "stop"; stop: Stop }
+  | { kind: "term"; term: string }
+  | { kind: "viewAll" }
+);
 
-  return "";
+export const toSearchOption = (
+  value: OptionValue,
+  recent = false
+): SearchOption => {
+  if (isRoute(value)) {
+    return {
+      kind: "route",
+      route: value,
+      optionValue: value,
+      key: `route-${value.routeId}`,
+      label: getRouteOptionLabel(value),
+      recent,
+    };
+  }
+  if (isStop(value)) {
+    return {
+      kind: "stop",
+      stop: value,
+      optionValue: value,
+      key: `stop-${value.stopId}`,
+      label: getStopOptionLabel(value),
+      recent,
+    };
+  }
+  if (isSearchTerm(value)) {
+    return {
+      kind: "term",
+      term: value.value,
+      optionValue: value,
+      key: `term-${value.value}`,
+      label: value.value,
+      recent,
+    };
+  }
+  return {
+    kind: "viewAll",
+    optionValue: value,
+    key: "view-all",
+    label: "View all recent searches",
+    recent,
+  };
 };
 
-// Equality checker for autocomplete options
+export const getOptionLabel = (option: SearchOption): string => option.label;
+
 export const isOptionEqualToValue = (
   option: SearchOption,
   value: SearchOption
-): boolean => {
-  const { optionValue } = option;
-
-  if (isRoute(optionValue)) {
-    return (
-      isRoute(value.optionValue) &&
-      optionValue.routeId === value.optionValue.routeId
-    );
-  } else if (isStop(optionValue)) {
-    return (
-      isStop(value.optionValue) &&
-      optionValue.stopId === value.optionValue.stopId
-    );
-  } else if (isSearchTerm(optionValue)) {
-    return (
-      isSearchTerm(value.optionValue) &&
-      optionValue.value === value.optionValue.value
-    );
-  } else if (isViewAllRecent(optionValue)) {
-    return isViewAllRecent(value.optionValue);
-  }
-
-  return false;
-};
+): boolean => option.key === value.key;

@@ -129,6 +129,57 @@ describe("useMapMotion", () => {
 
       expect(mockFitBounds).not.toHaveBeenCalled();
     });
+
+    it("skips stops without coordinates", () => {
+      const store = createStore();
+      const noCoords = { stopId: "s2" } as unknown as Stop;
+      const stops = [makeStop(-97.8, 30.2), noCoords, makeStop(-97.6, 30.4)];
+      renderHook(() => useMapMotion(stops, []), {
+        wrapper: makeWrapper(store),
+      });
+
+      expect(mockFitBounds).toHaveBeenCalledWith(
+        [
+          [-97.8, 30.2],
+          [-97.6, 30.4],
+        ],
+        expect.any(Object)
+      );
+    });
+
+    it("limits zoom when fitting to stops", () => {
+      const store = createStore();
+      renderHook(() => useMapMotion([makeStop(-97.8, 30.2)], []), {
+        wrapper: makeWrapper(store),
+      });
+
+      expect(mockFitBounds).toHaveBeenCalledWith(
+        expect.any(Array),
+        expect.objectContaining({ maxZoom: 16 })
+      );
+    });
+
+    it("prefers route shapes over stops when both are provided", () => {
+      const store = createStore();
+      const shapes = [
+        makeLineString([
+          [-97.9, 30.1],
+          [-97.5, 30.5],
+        ]),
+      ];
+      renderHook(() => useMapMotion([makeStop(-97.8, 30.2)], shapes), {
+        wrapper: makeWrapper(store),
+      });
+
+      expect(mockFitBounds).toHaveBeenCalledTimes(1);
+      expect(mockFitBounds).toHaveBeenCalledWith(
+        [
+          [-97.9, 30.1],
+          [-97.5, 30.5],
+        ],
+        expect.any(Object)
+      );
+    });
   });
 
   describe("when map is not ready", () => {

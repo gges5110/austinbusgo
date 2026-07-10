@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { SearchQuery } from "shared/api/schemas/Search.generated";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { Route } from "shared/types/interface.d";
 
-import { SearchOption, SearchType } from "./searchPanelUtils";
+import { SearchOption, toSearchOption } from "./searchPanelUtils";
+
+const MAX_RECENT_OPTIONS = 8;
 
 interface UseSearchOptionsParams {
   inputString: string;
@@ -18,52 +20,34 @@ export const useSearchOptions = ({
   routes,
   value,
 }: UseSearchOptionsParams) => {
-  const [options, setOptions] = useState<SearchOption[]>([]);
-  const { recentSearches, addToRecentSearches, removeFromRecentSearches } =
-    useRecentSearches();
+  const { recentSearches, removeFromRecentSearches } = useRecentSearches();
 
-  useEffect(() => {
-    let options: SearchOption[];
+  const options = useMemo<SearchOption[]>(() => {
     if (inputString === "") {
-      // Show first 7 recent searches when there are more than 8
-      const recentToShow =
-        recentSearches.length > 8 ? recentSearches.slice(0, 7) : recentSearches;
-
-      options = recentToShow.map((search) => ({
-        type: SearchType.recent,
-        optionValue: search.value,
-      }));
-
-      // Add "View all" option if there are more than 8 recent searches
-      if (recentSearches.length > 8) {
-        options.push({
-          type: SearchType.viewAll,
-          optionValue: { type: "viewAll" },
-        });
-      }
-    } else {
-      options = [
-        ...routes.map((route) => ({
-          type: SearchType.search,
-          optionValue: route,
-        })),
-        ...stops.map((stop) => ({
-          type: SearchType.search,
-          optionValue: stop,
-        })),
-      ];
-
-      if (value && options.length === 0) {
-        options.push(value);
-      }
+      // Show recent searches; when they overflow, show one fewer and append
+      // a "View all" option instead
+      const overflows = recentSearches.length > MAX_RECENT_OPTIONS;
+      const recentOptions = (
+        overflows
+          ? recentSearches.slice(0, MAX_RECENT_OPTIONS - 1)
+          : recentSearches
+      ).map((search) => toSearchOption(search.value, true));
+      return overflows
+        ? [...recentOptions, toSearchOption({ type: "viewAll" })]
+        : recentOptions;
     }
 
-    setOptions(options);
+    const results = [
+      ...routes.map((route) => toSearchOption(route)),
+      ...stops.map((stop) => toSearchOption(stop)),
+    ];
+    // Keep the current selection listed while results are empty so the
+    // Autocomplete value always matches an option
+    return results.length === 0 && value ? [value] : results;
   }, [inputString, stops, routes, value, recentSearches]);
 
   return {
     options,
-    addToRecentSearches,
     removeFromRecentSearches,
   };
 };

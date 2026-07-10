@@ -1,9 +1,18 @@
 import { useTheme } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { MapHoverPopup } from "features/map/components/MapHoverPopup";
+import { useFeatureHoverState } from "features/map/hooks/useFeatureHoverState";
+import { useHoverClose } from "features/map/hooks/useHoverClose";
+import {
+  LayerMouseEvent,
+  useLayerEvents,
+} from "features/map/hooks/useLayerEvents";
+import { toPointFeatureCollection } from "features/map/utils/geojson";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Layer, Popup, Source, useMap } from "react-map-gl/mapbox";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { Layer, Source, useMap } from "react-map-gl/mapbox";
+import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import {
   hoveringStopAtom,
   hoveringVehiclePositionAtom,
@@ -14,13 +23,10 @@ import { Stop } from "shared/types/interface.d";
 import { StopPeekSheet } from "./StopPeekSheet";
 import { StopPopupContent } from "./StopPopupContent";
 
-// mapboxgl.MapLayerMouseEvent is deprecated in mapbox-gl v3; use this alias
-type LayerMouseEvent = mapboxgl.MapMouseEvent & {
-  features?: mapboxgl.GeoJSONFeature[];
-};
-
 export const STOP_CIRCLES_LAYER_ID = "stop-circles";
 export const STOP_LABELS_LAYER_ID = "stop-labels";
+const STOP_LAYER_IDS = [STOP_CIRCLES_LAYER_ID, STOP_LABELS_LAYER_ID];
+const STOPS_SOURCE_ID = "stops-source";
 
 /**
  * Returns the cell size in degrees for the label grid at a given zoom level.
@@ -81,22 +87,14 @@ export const StopLayer: FC<StopLayerProps> = ({
   const [hoveringStop, setHoveringStop] = useAtom(hoveringStopAtom);
   const setHoveringVehicle = useSetAtom(hoveringVehiclePositionAtom);
   const setPinnedVehicle = useSetAtom(pinnedVehiclePositionAtom);
+  const { setStop: setSelectedStop } = useCurrentStop();
   const selectedStopId = selectedStop?.stopId ?? "";
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const scheduleHoverClose = useCallback(() => {
-    closeTimerRef.current = setTimeout(() => {
-      setHoveringStop(undefined);
-    }, 200);
-  }, [setHoveringStop]);
-
-  const cancelHoverClose = useCallback(() => {
-    if (closeTimerRef.current !== null) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  }, []);
+  const closeHoverPopup = useCallback(
+    () => setHoveringStop(undefined),
+    [setHoveringStop]
+  );
+  const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
   const stopsById = useMemo(() => {
     const m = new Map<string, Stop>();
@@ -119,59 +117,31 @@ export const StopLayer: FC<StopLayerProps> = ({
     };
   }, [map]);
 
-  const stopsGeoJSON = useMemo<GeoJSON.FeatureCollection>(() => {
+  const stopsGeoJSON = useMemo(() => {
     const gridWinners = buildLabelGridWinners(stops, zoom);
-    return {
-      type: "FeatureCollection",
-      features: stops
-        .filter((stop) => stop.stopLoc?.coordinates != null)
-        .map((stop) => ({
-          type: "Feature" as const,
-          geometry: {
-            type: "Point" as const,
-            coordinates: (stop.stopLoc?.coordinates ?? [0, 0]) as [
-              number,
-              number,
-            ],
-          },
-          properties: {
-            stopCode: stop.stopCode ?? "",
-            stopId: stop.stopId,
-            stopName: stop.stopName ?? "",
-            // More routes = lower sort key number = placed first = wins collision
-            priority: Math.max(1, 10 - (stop.routes?.length ?? 0)),
-            // 1 if this stop is the highest-priority in its label-grid cell;
-            // used to show one representative stop per region at all zoom levels.
-            gridRank: gridWinners.has(stop.stopId) ? 1 : 0,
-          },
-        })),
-    };
+    return toPointFeatureCollection(
+      stops,
+      (stop) => stop.stopLoc?.coordinates,
+      (stop) => ({
+        stopCode: stop.stopCode ?? "",
+        stopId: stop.stopId,
+        stopName: stop.stopName ?? "",
+        // More routes = lower sort key number = placed first = wins collision
+        priority: Math.max(1, 10 - (stop.routes?.length ?? 0)),
+        // 1 if this stop is the highest-priority in its label-grid cell;
+        // used to show one representative stop per region at all zoom levels.
+        gridRank: gridWinners.has(stop.stopId) ? 1 : 0,
+      })
+    );
   }, [stops, zoom]);
 
   // Sync hoveringStop atom with Mapbox feature state so sidebar hover
   // highlights the corresponding circle on the map.
-  useEffect(() => {
-    if (!map || !hoveringStop) return;
-    if (!map.getSource("stops-source")) return;
+  useFeatureHoverState(STOPS_SOURCE_ID, hoveringStop?.stopId);
 
-    map.setFeatureState(
-      { id: hoveringStop.stopId, source: "stops-source" },
-      { hovered: true }
-    );
-
-    return () => {
-      if (map.getSource("stops-source")) {
-        map.setFeatureState(
-          { id: hoveringStop.stopId, source: "stops-source" },
-          { hovered: false }
-        );
-      }
-    };
-  }, [map, hoveringStop]);
-
-  const handleStopMouseEnter = useCallback(
+  const handleMouseEnter = useCallback(
     (e: LayerMouseEvent) => {
-      cancelHoverClose();
+      cancelClose();
       setHoveringVehicle(undefined);
       setPinnedVehicle(undefined);
       const stopId = e.features?.[0]?.properties?.stopId as string | undefined;
@@ -180,7 +150,7 @@ export const StopLayer: FC<StopLayerProps> = ({
       }
     },
     [
-      cancelHoverClose,
+      cancelClose,
       setHoveringVehicle,
       setPinnedVehicle,
       stopsById,
@@ -188,47 +158,26 @@ export const StopLayer: FC<StopLayerProps> = ({
     ]
   );
 
-  const handleStopMouseLeave = useCallback(() => {
-    scheduleHoverClose();
-  }, [scheduleHoverClose]);
-
-  const handleStopClick = useCallback(
+  const handleClick = useCallback(
     (e: LayerMouseEvent) => {
       const stopId = e.features?.[0]?.properties?.stopId as string | undefined;
-      if (stopId && stopsById.has(stopId)) {
-        setHoveringStop(stopsById.get(stopId));
+      const stop = stopId ? stopsById.get(stopId) : undefined;
+      if (!stop) return;
+      if (isMobile) {
+        // Mobile: tap shows the peek sheet instead of navigating away
+        setHoveringStop(stop);
+      } else {
+        setSelectedStop(stop);
       }
     },
-    [stopsById, setHoveringStop]
+    [isMobile, stopsById, setHoveringStop, setSelectedStop]
   );
 
-  useEffect(() => {
-    if (!map) return;
-    if (isMobile) {
-      map.on("click", STOP_CIRCLES_LAYER_ID, handleStopClick);
-      map.on("click", STOP_LABELS_LAYER_ID, handleStopClick);
-      return () => {
-        map.off("click", STOP_CIRCLES_LAYER_ID, handleStopClick);
-        map.off("click", STOP_LABELS_LAYER_ID, handleStopClick);
-      };
-    }
-    map.on("mouseenter", STOP_CIRCLES_LAYER_ID, handleStopMouseEnter);
-    map.on("mouseleave", STOP_CIRCLES_LAYER_ID, handleStopMouseLeave);
-    map.on("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
-    map.on("mouseleave", STOP_LABELS_LAYER_ID, handleStopMouseLeave);
-    return () => {
-      map.off("mouseenter", STOP_CIRCLES_LAYER_ID, handleStopMouseEnter);
-      map.off("mouseleave", STOP_CIRCLES_LAYER_ID, handleStopMouseLeave);
-      map.off("mouseenter", STOP_LABELS_LAYER_ID, handleStopMouseEnter);
-      map.off("mouseleave", STOP_LABELS_LAYER_ID, handleStopMouseLeave);
-    };
-  }, [
-    map,
-    isMobile,
-    handleStopClick,
-    handleStopMouseEnter,
-    handleStopMouseLeave,
-  ]);
+  useLayerEvents(STOP_LAYER_IDS, {
+    onClick: handleClick,
+    onMouseEnter: isMobile ? undefined : handleMouseEnter,
+    onMouseLeave: isMobile ? undefined : scheduleClose,
+  });
 
   const popupCoords = hoveringStop?.stopLoc?.coordinates;
 
@@ -238,7 +187,7 @@ export const StopLayer: FC<StopLayerProps> = ({
   return (
     <Source
       data={stopsGeoJSON}
-      id={"stops-source"}
+      id={STOPS_SOURCE_ID}
       promoteId={"stopId"}
       type={"geojson"}
     >
@@ -338,28 +287,21 @@ export const StopLayer: FC<StopLayerProps> = ({
       {/* Mobile: peek sheet on tap */}
       {isMobile && hoveringStop && (
         <StopPeekSheet
-          onClose={() => setHoveringStop(undefined)}
+          onClose={closeHoverPopup}
           open={true}
           stop={hoveringStop}
         />
       )}
       {/* Desktop: hover popup anchored to the map */}
       {!isMobile && hoveringStop && popupCoords && (
-        <Popup
-          closeButton={false}
-          closeOnClick={false}
+        <MapHoverPopup
           latitude={popupCoords[1]}
           longitude={popupCoords[0]}
-          maxWidth={"none"}
-          offset={14}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
         >
-          <div
-            onMouseEnter={cancelHoverClose}
-            onMouseLeave={scheduleHoverClose}
-          >
-            <StopPopupContent stop={hoveringStop} />
-          </div>
-        </Popup>
+          <StopPopupContent stop={hoveringStop} />
+        </MapHoverPopup>
       )}
     </Source>
   );

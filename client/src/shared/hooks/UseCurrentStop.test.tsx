@@ -68,6 +68,10 @@ describe("useCurrentStop", () => {
     mocks.mockUseDataFromRouteLoader.mockReturnValue(undefined);
     mocks.mockUseViewStatePathname.mockReturnValue({
       viewStatePathname: "/@30.123,-97.456,13z",
+      withPreservedSearch: (extra?: Record<string, string>) => {
+        const s = new URLSearchParams(extra).toString();
+        return s ? `?${s}` : "";
+      },
     });
     mocks.mockUseAtom.mockReturnValue([undefined, mockSetCurrentStop]);
   });

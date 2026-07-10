@@ -1,14 +1,26 @@
 import { useDataFromRouteLoader } from "app/Router";
-import { ViewState } from "features/map/components/Map";
 import { useNearByStops } from "features/map/hooks/UseNearByStops";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
 import { isResponse } from "features/search/pages/search/SearchResultsMenu";
+import { useMemo } from "react";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { Stop } from "shared/types/interface.d";
 
-export const useStops = (viewState?: ViewState) => {
+// Stable empty array so the memos below don't recompute on every render
+const NO_STOPS: Stop[] = [];
+
+/** Deduplicates stops by stopId; on duplicates the later stop wins. */
+const uniqueById = (stops: Stop[]): Stop[] => {
+  const byId = new Map<string, Stop>();
+  for (const stop of stops) {
+    byId.set(stop.stopId, stop);
+  }
+  return [...byId.values()];
+};
+
+export const useStops = () => {
   const { currentStop } = useCurrentStop();
 
   const routeData = useDataFromRouteLoader("route", routeLoader);
@@ -19,37 +31,33 @@ export const useStops = (viewState?: ViewState) => {
   const searchData = useDataFromRouteLoader("search", searchLoader);
 
   // Aggregate stops from multiple sources
-  const routeStops = searchParamsData?.stops || routeData?.stops || [];
-  const searchStops =
+  const routeStops = (searchParamsData?.stops ||
+    routeData?.stops ||
+    NO_STOPS) as Stop[];
+  const searchStops = (
     searchData !== undefined && !isResponse(searchData)
-      ? searchData?.search.stops
-      : [];
-  const currentStopArray = currentStop !== undefined ? [currentStop] : [];
+      ? searchData.search.stops
+      : NO_STOPS
+  ) as Stop[];
 
-  // Only show nearby stops when no route or search context stops are present
-  const hasContextStops = routeStops.length > 0 || searchStops.length > 0;
-  const { nearByStops } = useNearByStops(
-    hasContextStops ? undefined : viewState
+  // Stops from the current route / search / selected stop context
+  const contextStops = useMemo(
+    () =>
+      uniqueById([
+        ...routeStops,
+        ...searchStops,
+        ...(currentStop !== undefined ? [currentStop] : []),
+      ]),
+    [routeStops, searchStops, currentStop]
   );
 
-  const stops = [
-    ...routeStops,
-    ...searchStops,
-    ...currentStopArray,
-    ...nearByStops,
-  ] as Stop[];
-  // Remove duplicate stops based on stopId
-  const uniqueStopsMap: Record<string, Stop> = {};
-  stops.forEach((stop) => {
-    uniqueStopsMap[stop.stopId] = stop;
-  });
-  const uniqueStops = Object.values(uniqueStopsMap);
+  // Only show nearby stops when no route or search context stops are present
+  const { nearByStops } = useNearByStops(contextStops.length === 0);
 
-  const contextStopsMap: Record<string, Stop> = {};
-  [...routeStops, ...searchStops, ...currentStopArray].forEach((stop) => {
-    contextStopsMap[stop.stopId] = stop as Stop;
-  });
-  const uniqueContextStops = Object.values(contextStopsMap);
+  const stops = useMemo(
+    () => uniqueById([...contextStops, ...nearByStops]),
+    [contextStops, nearByStops]
+  );
 
-  return { stops: uniqueStops, contextStops: uniqueContextStops };
+  return { stops, contextStops };
 };
