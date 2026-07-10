@@ -5,22 +5,16 @@ import {
   useTheme,
 } from "@mui/material";
 import * as React from "react";
-import { useRef, useState } from "react";
-import { useLocation, useNavigation, useParams } from "react-router-dom";
-import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
-import { useCurrentStop } from "shared/hooks/UseCurrentStop";
+import { useRef } from "react";
 
 import {
   getOptionLabel,
   isOptionEqualToValue,
   SearchOption,
 } from "./hooks/searchPanelUtils";
-import { useSearchInput } from "./hooks/useSearchInput";
-import { useSearchNavigation } from "./hooks/useSearchNavigation";
-import { useSearchOptions } from "./hooks/useSearchOptions";
-import { useSearchSync } from "./hooks/useSearchSync";
-import { renderOption } from "./RenderOption";
+import { useSearchBox } from "./hooks/useSearchBox";
 import { SearchInput } from "./SearchInput";
+import { SearchOptionRow } from "./SearchOptionRow";
 import { SEARCH_PANEL_WIDTH } from "./SearchPanel";
 
 interface SearchAutocompleteProps {
@@ -38,82 +32,18 @@ export const SearchAutocomplete: React.FunctionComponent<
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [value, setValue] = useState<SearchOption | null>(null);
-  const { currentRoute } = useCurrentRoute();
-  const { currentStop } = useCurrentStop();
-  const { searchTerm } = useParams();
-  const location = useLocation();
 
-  const navigation = useNavigation();
-  const externalLoading = navigation.location !== undefined;
-
-  // Check if we're on the favorites or recent searches page
-  const isOnFavoritesPage = location.pathname.startsWith("/favorites");
-  const isOnRecentSearchesPage =
-    location.pathname.startsWith("/recent-searches");
-
-  // Custom hooks for managing search state
   const {
-    inputString,
-    setInputString,
-    stops,
-    routes,
-    isLoading,
-    handleInputValueChange,
-    search,
-  } = useSearchInput();
-
-  const { options, removeFromRecentSearches } = useSearchOptions({
-    inputString,
-    stops,
-    routes,
     value,
-  });
-
-  const { handleSelect, handleClear, handleSearch } = useSearchNavigation();
-
-  // Sync input with URL parameters
-  useSearchSync({
-    route: currentRoute,
-    stop: currentStop,
-    searchTerm,
-    setInputString,
-    setValue,
-    onOpenChange,
-    search,
-    isOnFavoritesPage,
-    isOnRecentSearchesPage,
-  });
-
-  // Handle selection changes
-  const handleChange = (
-    _event: React.SyntheticEvent,
-    newValue: SearchOption | null
-  ) => {
-    setValue(newValue);
-    if (newValue) {
-      handleSelect(newValue);
-    }
-  };
-
-  // Clear selection and reset state
-  const handleClearSelection = () => {
-    // If on favorites or recent searches page, navigate to base path
-    if (isOnFavoritesPage || isOnRecentSearchesPage) {
-      handleClear();
-    } else {
-      handleClear();
-      setInputString("");
-      setValue(null);
-      onOpenChange(true);
-    }
-  };
-
-  // Handle search page navigation
-  const handleEnterPress = () => {
-    inputRef?.current?.blur?.();
-    handleSearch(inputString.trim());
-  };
+    inputString,
+    options,
+    loading,
+    handleInputValueChange,
+    handleChange,
+    handleClearSelection,
+    handleEnterPress,
+    removeFromRecentSearches,
+  } = useSearchBox(onOpenChange);
 
   return (
     <Autocomplete<SearchOption>
@@ -122,7 +52,7 @@ export const SearchAutocomplete: React.FunctionComponent<
       getOptionLabel={getOptionLabel}
       inputValue={inputString}
       isOptionEqualToValue={isOptionEqualToValue}
-      loading={isLoading || externalLoading}
+      loading={loading}
       onBlur={() => onOpenChange(false)}
       onChange={handleChange}
       onClose={(_event, reason) => {
@@ -140,15 +70,24 @@ export const SearchAutocomplete: React.FunctionComponent<
         <SearchInput
           inputRef={inputRef}
           inputString={inputString}
-          loading={isLoading || externalLoading}
+          loading={loading}
           onClearSelection={handleClearSelection}
-          onEnterPress={handleEnterPress}
+          onEnterPress={() => {
+            inputRef.current?.blur();
+            handleEnterPress();
+          }}
           params={params}
         />
       )}
-      renderOption={(props, option, state) =>
-        renderOption(props, option, state, removeFromRecentSearches)
-      }
+      renderOption={(props, option, { inputValue }) => (
+        <SearchOptionRow
+          inputValue={inputValue}
+          key={option.key}
+          liProps={props}
+          onRemove={removeFromRecentSearches}
+          option={option}
+        />
+      )}
       selectOnFocus={true}
       slotProps={{
         paper: {
