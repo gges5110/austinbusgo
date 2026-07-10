@@ -1,19 +1,20 @@
-import { ViewState } from "features/map/components/Map";
 import { useMap } from "react-map-gl/mapbox";
 import { useNearByStopsQuery } from "shared/api/schemas/NearByStops.generated";
 import { useDebounce } from "shared/hooks/useDebounce";
 import { Stop } from "shared/types/interface.d";
 
-export const useNearByStops = (viewState?: ViewState) => {
-  const { mapId: map } = useMap();
+const STOPS_LIMIT = 300;
 
-  const limit = viewState
-    ? viewState.zoom <= 11
-      ? 40
-      : viewState.zoom <= 14
-        ? 80
-        : 100
-    : 40;
+// Stable empty array so consumers' memos don't recompute on every render
+const NO_STOPS: Stop[] = [];
+
+/**
+ * Fetches stops within the current map bounds, debounced so panning doesn't
+ * fire a query per frame. Bounds are read from the map on each render (the
+ * parent re-renders on every map move, keeping them fresh).
+ */
+export const useNearByStops = (enabled: boolean) => {
+  const { mapId: map } = useMap();
 
   const bounds = map?.getBounds();
   const minLat = bounds?.getSouth();
@@ -26,7 +27,7 @@ export const useNearByStops = (viewState?: ViewState) => {
     minLon !== undefined &&
     maxLat !== undefined &&
     maxLon !== undefined;
-  const shouldFetch = viewState !== undefined && hasBounds;
+  const shouldFetch = enabled && hasBounds;
 
   const debouncedQueryParams = useDebounce(
     {
@@ -34,7 +35,7 @@ export const useNearByStops = (viewState?: ViewState) => {
       minLon: minLon ?? 0,
       maxLat: maxLat ?? 0,
       maxLon: maxLon ?? 0,
-      limit,
+      limit: STOPS_LIMIT,
     },
     500
   );
@@ -44,12 +45,11 @@ export const useNearByStops = (viewState?: ViewState) => {
     keepPreviousData: true,
   });
 
-  const isLoading = isFetching;
-
-  const nearByStops: Stop[] = shouldFetch ? (data?.nearByStops ?? []) : [];
+  const nearByStops: Stop[] =
+    shouldFetch && data?.nearByStops ? data.nearByStops : NO_STOPS;
 
   return {
-    isLoading,
+    isLoading: isFetching,
     nearByStops,
   };
 };

@@ -1,9 +1,18 @@
 import { useTheme } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { MapHoverPopup } from "features/map/components/MapHoverPopup";
+import { useFeatureHoverState } from "features/map/hooks/useFeatureHoverState";
+import { useHoverClose } from "features/map/hooks/useHoverClose";
+import {
+  LayerMouseEvent,
+  useLayerEvents,
+  useMapClick,
+} from "features/map/hooks/useLayerEvents";
+import { toPointFeatureCollection } from "features/map/utils/geojson";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { FC, useCallback, useEffect, useMemo, useRef } from "react";
-import { Layer, MapRef, Popup, Source, useMap } from "react-map-gl/mapbox";
+import { Layer, MapRef, Source, useMap } from "react-map-gl/mapbox";
 import { useNavigate } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
@@ -20,11 +29,8 @@ export const VEHICLE_CIRCLES_LAYER_ID = "vehicle-circles";
 const VEHICLE_ARROWS_LAYER_ID = "vehicle-arrows";
 const VEHICLE_LABELS_LAYER_ID = "vehicle-labels";
 const VEHICLE_ARROW_IMAGE_ID = "vehicle-arrow";
-
-// mapboxgl.MapLayerMouseEvent is deprecated in mapbox-gl v3; use this alias
-type LayerMouseEvent = mapboxgl.MapMouseEvent & {
-  features?: mapboxgl.GeoJSONFeature[];
-};
+const VEHICLE_LAYER_IDS = [VEHICLE_CIRCLES_LAYER_ID];
+const VEHICLES_SOURCE_ID = "vehicles-source";
 
 function addVehicleArrowImage(map: MapRef) {
   if (map.hasImage(VEHICLE_ARROW_IMAGE_ID)) return;
@@ -86,21 +92,12 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   const setHoveringStop = useSetAtom(hoveringStopAtom);
   // Ref flag so the map-level click handler can tell if a vehicle circle was just clicked
   const vehicleJustClickedRef = useRef(false);
-  // Delayed-close timer — cancelled when the mouse moves into the popup
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scheduleHoverClose = useCallback(() => {
-    closeTimerRef.current = setTimeout(() => {
-      setHoveringVehicle(undefined);
-    }, 200);
-  }, [setHoveringVehicle]);
-
-  const cancelHoverClose = useCallback(() => {
-    if (closeTimerRef.current !== null) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  }, []);
+  const closeHoverPopup = useCallback(
+    () => setHoveringVehicle(undefined),
+    [setHoveringVehicle]
+  );
+  const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
   // Add custom arrow image to map on load
   useEffect(() => {
@@ -121,53 +118,33 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
     return m;
   }, [vehiclePositions]);
 
-  // Build GeoJSON source
-  const vehiclesGeoJSON = useMemo<GeoJSON.FeatureCollection>(() => {
-    const featuresWithPosition = vehiclePositions.filter(
-      (vp) => vp.position != null
-    );
-    return {
-      type: "FeatureCollection",
-      features: featuresWithPosition.map((vp) => ({
-        type: "Feature" as const,
-        geometry: {
-          type: "Point" as const,
-          coordinates: [vp.position.longitude, vp.position.latitude],
-        },
-        properties: {
-          bearing: vp.position.bearing ?? 0,
+  const vehiclesGeoJSON = useMemo(
+    () =>
+      toPointFeatureCollection(
+        vehiclePositions,
+        (vp) =>
+          vp.position
+            ? [vp.position.longitude, vp.position.latitude]
+            : undefined,
+        (vp) => ({
+          bearing: vp.position?.bearing ?? 0,
           currentStatus: vp.currentStatus ?? "",
           routeId: vp.trip?.routeId ?? "",
           vehicleId: vp.vehicle?.id ?? "",
-        },
-      })),
-    };
-  }, [vehiclePositions]);
+        })
+      ),
+    [vehiclePositions]
+  );
 
   // Sync hoveringVehicle atom → Mapbox feature state for circle highlight
-  useEffect(() => {
-    if (!map) return;
-    const vehicleId =
-      hoveringVehicle?.vehicle?.id ?? pinnedVehicle?.vehicle?.id;
-    if (!vehicleId) return;
-    if (!map.getSource("vehicles-source")) return;
-    map.setFeatureState(
-      { id: vehicleId, source: "vehicles-source" },
-      { hovered: true }
-    );
-    return () => {
-      if (map.getSource("vehicles-source")) {
-        map.setFeatureState(
-          { id: vehicleId, source: "vehicles-source" },
-          { hovered: false }
-        );
-      }
-    };
-  }, [map, hoveringVehicle, pinnedVehicle]);
+  useFeatureHoverState(
+    VEHICLES_SOURCE_ID,
+    hoveringVehicle?.vehicle?.id ?? pinnedVehicle?.vehicle?.id
+  );
 
-  const handleVehicleMouseEnter = useCallback(
+  const handleMouseEnter = useCallback(
     (e: LayerMouseEvent) => {
-      cancelHoverClose();
+      cancelClose();
       setHoveringStop(undefined);
       const vehicleId = e.features?.[0]?.properties?.vehicleId as
         | string
@@ -176,20 +153,15 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         setHoveringVehicle(vehiclesById.get(vehicleId));
       }
     },
-    [cancelHoverClose, setHoveringStop, vehiclesById, setHoveringVehicle]
+    [cancelClose, setHoveringStop, vehiclesById, setHoveringVehicle]
   );
 
-  const handleVehicleMouseLeave = useCallback(() => {
-    scheduleHoverClose();
-  }, [scheduleHoverClose]);
-
-  const handleVehicleClick = useCallback(
+  const handleClick = useCallback(
     (e: LayerMouseEvent) => {
       const vehicleId = e.features?.[0]?.properties?.vehicleId as
         | string
         | undefined;
-      if (!vehicleId || !vehiclesById.has(vehicleId)) return;
-      const vp = vehiclesById.get(vehicleId);
+      const vp = vehicleId ? vehiclesById.get(vehicleId) : undefined;
       if (!vp) return;
       // Mark that this click was on a vehicle so the map background handler
       // does not immediately clear the pinned popup
@@ -203,7 +175,14 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         }
       }
     },
-    [isMobile, navigate, setHoveringStop, vehiclesById, viewStatePathname]
+    [
+      isMobile,
+      navigate,
+      setHoveringStop,
+      setPinnedVehicle,
+      vehiclesById,
+      viewStatePathname,
+    ]
   );
 
   // Map background click: dismiss the pinned popup when clicking outside a vehicle
@@ -213,49 +192,27 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
       setHoveringVehicle(undefined);
     }
     vehicleJustClickedRef.current = false;
-  }, [setHoveringVehicle]);
+  }, [setPinnedVehicle, setHoveringVehicle]);
 
-  // Register layer event handlers
-  useEffect(() => {
-    if (!map) return;
-    if (!isMobile) {
-      map.on("mouseenter", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseEnter);
-      map.on("mouseleave", VEHICLE_CIRCLES_LAYER_ID, handleVehicleMouseLeave);
-    }
-    map.on("click", VEHICLE_CIRCLES_LAYER_ID, handleVehicleClick);
-    map.on("click", handleMapClick);
-    return () => {
-      if (!isMobile) {
-        map.off(
-          "mouseenter",
-          VEHICLE_CIRCLES_LAYER_ID,
-          handleVehicleMouseEnter
-        );
-        map.off(
-          "mouseleave",
-          VEHICLE_CIRCLES_LAYER_ID,
-          handleVehicleMouseLeave
-        );
-      }
-      map.off("click", VEHICLE_CIRCLES_LAYER_ID, handleVehicleClick);
-      map.off("click", handleMapClick);
-    };
-  }, [
-    map,
-    isMobile,
-    handleVehicleMouseEnter,
-    handleVehicleMouseLeave,
-    handleVehicleClick,
-    handleMapClick,
-  ]);
+  useLayerEvents(VEHICLE_LAYER_IDS, {
+    onClick: handleClick,
+    onMouseEnter: isMobile ? undefined : handleMouseEnter,
+    onMouseLeave: isMobile ? undefined : scheduleClose,
+  });
+  useMapClick(handleMapClick);
 
   const popupVehicle = pinnedVehicle ?? hoveringVehicle;
   const popupPosition = popupVehicle?.position;
 
+  const closePopup = useCallback(() => {
+    setPinnedVehicle(undefined);
+    setHoveringVehicle(undefined);
+  }, [setPinnedVehicle, setHoveringVehicle]);
+
   return (
     <Source
       data={vehiclesGeoJSON}
-      id={"vehicles-source"}
+      id={VEHICLES_SOURCE_ID}
       promoteId={"vehicleId"}
       type={"geojson"}
     >
@@ -354,32 +311,22 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
       {/* Mobile: peek sheet on tap */}
       {isMobile && popupVehicle && (
         <VehiclePeekSheet
-          onClose={() => {
-            setPinnedVehicle(undefined);
-            setHoveringVehicle(undefined);
-          }}
+          onClose={closePopup}
           open={true}
           vehiclePosition={popupVehicle}
         />
       )}
       {/* Desktop: hover/pinned popup anchored to the map */}
       {!isMobile && popupVehicle && popupPosition && (
-        <Popup
-          closeButton={false}
-          closeOnClick={false}
+        <MapHoverPopup
           latitude={popupPosition.latitude}
           longitude={popupPosition.longitude}
-          maxWidth={"none"}
           offset={20}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
         >
-          {/* Keep popup visible when mouse moves from circle to popup */}
-          <div
-            onMouseEnter={cancelHoverClose}
-            onMouseLeave={scheduleHoverClose}
-          >
-            <VehiclePopupContainer vehiclePosition={popupVehicle} />
-          </div>
-        </Popup>
+          <VehiclePopupContainer vehiclePosition={popupVehicle} />
+        </MapHoverPopup>
       )}
     </Source>
   );

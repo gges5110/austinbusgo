@@ -56,8 +56,8 @@ describe("useNearByStops", () => {
     });
   });
 
-  test("returns empty nearByStops when no viewState provided", () => {
-    const { result } = renderHook(() => useNearByStops(), {
+  test("returns empty nearByStops and disables the query when not enabled", () => {
+    const { result } = renderHook(() => useNearByStops(false), {
       wrapper: createWrapper(),
     });
 
@@ -68,13 +68,13 @@ describe("useNearByStops", () => {
         minLon: -97.8,
         maxLat: 30.3,
         maxLon: -97.7,
-        limit: 40,
+        limit: 300,
       }),
       { enabled: false, keepPreviousData: true }
     );
   });
 
-  test("fetches and returns nearByStops when viewState is provided", () => {
+  test("fetches and returns nearByStops when enabled", () => {
     const mockStops = [
       {
         stopId: "1001",
@@ -88,13 +88,7 @@ describe("useNearByStops", () => {
       isFetching: false,
     });
 
-    const viewState = {
-      latitude: 30.2672,
-      longitude: -97.7431,
-      zoom: 10,
-    };
-
-    const { result } = renderHook(() => useNearByStops(viewState), {
+    const { result } = renderHook(() => useNearByStops(true), {
       wrapper: createWrapper(),
     });
 
@@ -105,20 +99,14 @@ describe("useNearByStops", () => {
         minLon: -97.8,
         maxLat: 30.3,
         maxLon: -97.7,
-        limit: 40,
+        limit: 300,
       }),
       expect.objectContaining({ enabled: true, keepPreviousData: true })
     );
   });
 
   test("uses bbox from map bounds as query params", () => {
-    const viewState = {
-      latitude: 30.26729999,
-      longitude: -97.74315555,
-      zoom: 10,
-    };
-
-    renderHook(() => useNearByStops(viewState), {
+    renderHook(() => useNearByStops(true), {
       wrapper: createWrapper(),
     });
 
@@ -139,13 +127,7 @@ describe("useNearByStops", () => {
       isFetching: true,
     });
 
-    const viewState = {
-      latitude: 30.2672,
-      longitude: -97.7431,
-      zoom: 10,
-    };
-
-    const { result } = renderHook(() => useNearByStops(viewState), {
+    const { result } = renderHook(() => useNearByStops(true), {
       wrapper: createWrapper(),
     });
 
@@ -158,13 +140,7 @@ describe("useNearByStops", () => {
       isFetching: false,
     });
 
-    const viewState = {
-      latitude: 30.2672,
-      longitude: -97.7431,
-      zoom: 10,
-    };
-
-    const { result } = renderHook(() => useNearByStops(viewState), {
+    const { result } = renderHook(() => useNearByStops(true), {
       wrapper: createWrapper(),
     });
 

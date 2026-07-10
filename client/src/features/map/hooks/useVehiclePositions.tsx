@@ -7,6 +7,9 @@ import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { isAutoPollingAtom } from "shared/state/atoms";
 import { VehiclePosition } from "shared/types/interface.d";
 
+// Stable empty array so consumers' memos don't recompute on every render
+const NO_VEHICLES: VehiclePosition[] = [];
+
 export const useVehiclePositions = () => {
   const autoPolling = useAtomValue(isAutoPollingAtom);
   const { currentRoute: route } = useCurrentRoute();
@@ -27,6 +30,8 @@ export const useVehiclePositions = () => {
 
   const { data: vehiclePositionsData } = useVehiclePositionsQuery(
     {
+      // Placeholder to satisfy the required variable; the query stays
+      // disabled until a route is selected.
       routeId: route?.routeId || "1",
       direction: Number(
         directionId !== undefined
@@ -40,16 +45,11 @@ export const useVehiclePositions = () => {
     }
   );
 
-  if (!shouldShowVehicles) {
-    return {
-      vehiclePositions: [],
-    };
-  }
-
-  const vehiclePositions: VehiclePosition[] =
-    searchParamsData?.vehiclePositions ||
-    vehiclePositionsData?.vehiclePositions ||
-    [];
+  const vehiclePositions: VehiclePosition[] = shouldShowVehicles
+    ? searchParamsData?.vehiclePositions ||
+      vehiclePositionsData?.vehiclePositions ||
+      NO_VEHICLES
+    : NO_VEHICLES;
 
   return { vehiclePositions };
 };
