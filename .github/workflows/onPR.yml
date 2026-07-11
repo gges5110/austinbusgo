@@ -129,6 +129,7 @@ jobs:
         env:
           VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
           VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+          VITE_GTFS_RT_PROXY_URL: ${{ secrets.VITE_GTFS_RT_PROXY_URL }}
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
