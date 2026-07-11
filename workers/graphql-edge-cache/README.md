@@ -14,8 +14,11 @@ TTL:
 GraphQL error responses (200 + `errors`) are never cached. Every response
 carries `X-Edge-Cache: HIT | MISS | BYPASS`.
 
-After a GTFS data reload, bump `CACHE_VERSION` in `src/index.ts` and
-redeploy to drop stale static entries before their TTL expires.
+`CACHE_VERSION` is part of every cache key. The `updateGTFS.yml` workflow
+redeploys this worker with a fresh value (`--var CACHE_VERSION:gtfs-<run id>`)
+after each nightly data load, so static entries never outlive the GTFS data
+they came from. To invalidate manually: `npx wrangler deploy --var
+CACHE_VERSION:<anything new>`.
 
 ## Develop
 
