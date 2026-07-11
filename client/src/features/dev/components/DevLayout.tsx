@@ -12,6 +12,8 @@ export const DevLayout: React.FC = () => {
     if (location.pathname.includes("/dev/trip-stop-times"))
       return "/dev/trip-stop-times";
     if (location.pathname.includes("/dev/vehicles")) return "/dev/vehicles";
+    if (location.pathname.includes("/dev/gtfs-rt-frontend"))
+      return "/dev/gtfs-rt-frontend";
     return false;
   }, [location.pathname]);
 
@@ -35,6 +37,10 @@ export const DevLayout: React.FC = () => {
             <Tab label={"Stops"} value={"/dev/stops"} />
             <Tab label={"Trip Stop Times"} value={"/dev/trip-stop-times"} />
             <Tab label={"Vehicle Positions"} value={"/dev/vehicles"} />
+            <Tab
+              label={"GTFS-RT Frontend POC"}
+              value={"/dev/gtfs-rt-frontend"}
+            />
           </Tabs>
         </Container>
       </Paper>

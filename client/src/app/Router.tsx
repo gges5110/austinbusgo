@@ -25,6 +25,14 @@ import {
 import { RouteErrorFallback } from "shared/components/RouteErrorFallback";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 
+// Lazy-loaded so gtfs-realtime-bindings (protobufjs) stays out of the main
+// bundle; the POC page is the only consumer.
+const GtfsRtFrontendDevPage = React.lazy(() =>
+  import("features/dev/pages/GtfsRtFrontendDevPage").then((m) => ({
+    default: m.GtfsRtFrontendDevPage,
+  }))
+);
+
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   loaderFn: LoaderFn
 ): Awaited<ReturnType<typeof loaderFn>> =>
@@ -44,6 +52,14 @@ export const router = createBrowserRouter(
         <Route element={<VehiclePositionsDevPage />} path={"vehicles"} />
         <Route element={<TripStopTimesDevPage />} path={"trip-stop-times"} />
         <Route element={<StopsDevPage />} path={"stops"} />
+        <Route
+          element={
+            <React.Suspense fallback={null}>
+              <GtfsRtFrontendDevPage />
+            </React.Suspense>
+          }
+          path={"gtfs-rt-frontend"}
+        />
       </Route>
       <Route
         element={<RootLayout />}
