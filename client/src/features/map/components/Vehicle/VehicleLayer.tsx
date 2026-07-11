@@ -8,11 +8,12 @@ import {
   useLayerEvents,
   useMapClick,
 } from "features/map/hooks/useLayerEvents";
+import { GeneratedImage, useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useCallback, useEffect, useMemo, useRef } from "react";
-import { Layer, MapRef, Source, useMap } from "react-map-gl/mapbox";
+import { FC, useCallback, useMemo, useRef } from "react";
+import { Layer, Source } from "react-map-gl/mapbox";
 import { useNavigate } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
@@ -32,14 +33,13 @@ const VEHICLE_ARROW_IMAGE_ID = "vehicle-arrow";
 const VEHICLE_LAYER_IDS = [VEHICLE_CIRCLES_LAYER_ID];
 const VEHICLES_SOURCE_ID = "vehicles-source";
 
-function addVehicleArrowImage(map: MapRef) {
-  if (map.hasImage(VEHICLE_ARROW_IMAGE_ID)) return;
+function createVehicleArrowImage(): GeneratedImage | null {
   const size = 32;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) return null;
 
   const cx = size / 2;
   // Navigation chevron: the same pattern used by Google Maps / Apple Maps / Waze
@@ -67,11 +67,7 @@ function addVehicleArrowImage(map: MapRef) {
   ctx.stroke();
 
   const imageData = ctx.getImageData(0, 0, size, size);
-  map.addImage(VEHICLE_ARROW_IMAGE_ID, {
-    width: size,
-    height: size,
-    data: imageData.data as unknown as Uint8Array,
-  });
+  return { width: size, height: size, data: imageData.data };
 }
 
 interface VehicleLayerProps {
@@ -79,7 +75,6 @@ interface VehicleLayerProps {
 }
 
 export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
-  const { mapId: map } = useMap();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
@@ -99,15 +94,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   );
   const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
-  // Add custom arrow image to map on load
-  useEffect(() => {
-    if (!map) return;
-    if (map.isStyleLoaded()) {
-      addVehicleArrowImage(map);
-    } else {
-      map.once("load", () => addVehicleArrowImage(map));
-    }
-  }, [map]);
+  useMapImage(VEHICLE_ARROW_IMAGE_ID, createVehicleArrowImage);
 
   // Lookup map for click/hover resolution
   const vehiclesById = useMemo(() => {
