@@ -1,0 +1,6 @@
+name = "graphql-edge-cache"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+[vars]
+UPSTREAM_GRAPHQL_URL = "https://austinbusgo-backend-761140212463.us-central1.run.app/graphql"
