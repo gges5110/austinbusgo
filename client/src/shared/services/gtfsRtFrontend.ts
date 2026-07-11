@@ -21,15 +21,15 @@ import {
   VehicleStopStatus,
 } from "shared/types/interface.d";
 
-const PROXY_BASE = import.meta.env.VITE_GTFS_RT_PROXY_URL as string | undefined;
+// Deployed worker; override with VITE_GTFS_RT_PROXY_URL (e.g. a local
+// `wrangler dev` instance on http://localhost:8787).
+const DEFAULT_PROXY_URL = "https://gtfs-rt-proxy.gges5110.workers.dev";
+
+const PROXY_BASE =
+  (import.meta.env.VITE_GTFS_RT_PROXY_URL as string | undefined) ||
+  DEFAULT_PROXY_URL;
 
 function feedUrl(path: "/vehicle-positions" | "/trip-updates"): string {
-  if (!PROXY_BASE) {
-    throw new Error(
-      "VITE_GTFS_RT_PROXY_URL is not set. The GTFS-RT feeds require the " +
-        "CORS proxy worker — see workers/gtfs-rt-proxy/README.md."
-    );
-  }
   return `${PROXY_BASE.replace(/\/$/, "")}${path}`;
 }
 

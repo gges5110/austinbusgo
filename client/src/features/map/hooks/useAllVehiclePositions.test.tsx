@@ -5,12 +5,12 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useAllVehiclePositions } from "./useAllVehiclePositions";
 
 const mocks = vi.hoisted(() => ({
-  useRealTimeVehiclePositionsQuery: vi.fn(),
+  useGtfsRtVehiclePositions: vi.fn(),
   useShowAllVehicles: vi.fn(),
 }));
 
-vi.mock("shared/api/schemas/RealTimeVehiclePositions.generated", () => ({
-  useRealTimeVehiclePositionsQuery: mocks.useRealTimeVehiclePositionsQuery,
+vi.mock("shared/hooks/useGtfsRtFrontend", () => ({
+  useGtfsRtVehiclePositions: mocks.useGtfsRtVehiclePositions,
 }));
 
 vi.mock("shared/hooks/UseShowAllVehicles", () => ({
@@ -23,15 +23,11 @@ describe("useAllVehiclePositions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.useShowAllVehicles.mockReturnValue([true]);
-    mocks.useRealTimeVehiclePositionsQuery.mockReturnValue({
-      data: undefined,
-    });
+    mocks.useGtfsRtVehiclePositions.mockReturnValue({ data: undefined });
   });
 
-  test("returns vehicles and filters out nulls", () => {
-    mocks.useRealTimeVehiclePositionsQuery.mockReturnValue({
-      data: { realTimeVehiclePositions: [vehicle, null] },
-    });
+  test("returns vehicles from the GTFS-RT feed", () => {
+    mocks.useGtfsRtVehiclePositions.mockReturnValue({ data: [vehicle] });
 
     const { result } = renderHook(() => useAllVehiclePositions());
 
@@ -40,15 +36,12 @@ describe("useAllVehiclePositions", () => {
 
   test("returns empty array and disables the query when toggled off", () => {
     mocks.useShowAllVehicles.mockReturnValue([false]);
-    mocks.useRealTimeVehiclePositionsQuery.mockReturnValue({
-      data: { realTimeVehiclePositions: [vehicle] },
-    });
+    mocks.useGtfsRtVehiclePositions.mockReturnValue({ data: [vehicle] });
 
     const { result } = renderHook(() => useAllVehiclePositions());
 
     expect(result.current.allVehiclePositions).toEqual([]);
-    expect(mocks.useRealTimeVehiclePositionsQuery).toHaveBeenCalledWith(
-      undefined,
+    expect(mocks.useGtfsRtVehiclePositions).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false })
     );
   });
