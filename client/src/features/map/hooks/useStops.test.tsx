@@ -7,7 +7,7 @@ import { useStops } from "./useStops";
 const mocks = vi.hoisted(() => ({
   useDataFromRouteLoader: vi.fn(),
   useCurrentStop: vi.fn(),
-  useNearByStops: vi.fn(),
+  useAllStops: vi.fn(),
 }));
 
 vi.mock("app/Router", () => ({
@@ -34,8 +34,8 @@ vi.mock("shared/hooks/UseCurrentStop", () => ({
   useCurrentStop: mocks.useCurrentStop,
 }));
 
-vi.mock("features/map/hooks/UseNearByStops", () => ({
-  useNearByStops: mocks.useNearByStops,
+vi.mock("features/map/hooks/useAllStops", () => ({
+  useAllStops: mocks.useAllStops,
 }));
 
 const makeStop = (stopId: string, stopName = `Stop ${stopId}`): Stop =>
@@ -56,27 +56,27 @@ describe("useStops", () => {
     vi.clearAllMocks();
     mockLoaderData({});
     mocks.useCurrentStop.mockReturnValue({ currentStop: undefined });
-    mocks.useNearByStops.mockReturnValue({ nearByStops: [] });
+    mocks.useAllStops.mockReturnValue({ allStops: [] });
   });
 
-  test("returns nearby stops when there is no route/search context", () => {
+  test("returns all stops when there is no route/search context", () => {
     const nearby = [makeStop("n1"), makeStop("n2")];
-    mocks.useNearByStops.mockReturnValue({ nearByStops: nearby });
+    mocks.useAllStops.mockReturnValue({ allStops: nearby });
 
     const { result } = renderHook(() => useStops());
 
     expect(result.current.stops).toEqual(nearby);
     expect(result.current.contextStops).toEqual([]);
-    expect(mocks.useNearByStops).toHaveBeenCalledWith(true);
+    expect(mocks.useAllStops).toHaveBeenCalledWith(true);
   });
 
-  test("disables nearby stops when route stops are present", () => {
+  test("disables the all-stops layer when route stops are present", () => {
     const routeStops = [makeStop("r1")];
     mockLoaderData({ route: { stops: routeStops } });
 
     const { result } = renderHook(() => useStops());
 
-    expect(mocks.useNearByStops).toHaveBeenCalledWith(false);
+    expect(mocks.useAllStops).toHaveBeenCalledWith(false);
     expect(result.current.contextStops).toEqual(routeStops);
     expect(result.current.stops).toEqual(routeStops);
   });
@@ -90,7 +90,7 @@ describe("useStops", () => {
     const { result } = renderHook(() => useStops());
 
     expect(result.current.contextStops).toEqual([...searchStops, currentStop]);
-    expect(mocks.useNearByStops).toHaveBeenCalledWith(false);
+    expect(mocks.useAllStops).toHaveBeenCalledWith(false);
   });
 
   test("deduplicates stops by stopId, later source wins", () => {
@@ -99,7 +99,7 @@ describe("useStops", () => {
     const currentStop = makeStop("dup", "Current");
     mockLoaderData({ route: { stops: [routeStop] } });
     mocks.useCurrentStop.mockReturnValue({ currentStop });
-    mocks.useNearByStops.mockReturnValue({ nearByStops: [nearbyDuplicate] });
+    mocks.useAllStops.mockReturnValue({ allStops: [nearbyDuplicate] });
 
     const { result } = renderHook(() => useStops());
 

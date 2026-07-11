@@ -14,7 +14,6 @@ import {
   SearchQueryVariables,
   useSearchQuery,
 } from "shared/api/schemas/Search.generated";
-import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
 const searchQuery = (id: SearchQueryVariables) => ({
   queryKey: useSearchQuery.getKey(id),
@@ -38,15 +37,24 @@ export const searchLoader = async ({ params }: LoaderFunctionArgs) => {
   } else if (
     searchTerm.toLocaleLowerCase() === "Nearby stops".toLocaleLowerCase()
   ) {
-    const { latitude, longitude } = useViewStatePathname();
+    // Parse the map center from the URL's view state segment
+    // (@lat,lon,zoomz) — hooks can't be called inside loaders
+    const viewStateMatch = /^@(-?[\d.]+),(-?[\d.]+),/.exec(
+      params["viewState"] ?? ""
+    );
+    const latitude = viewStateMatch ? parseFloat(viewStateMatch[1]) : 30.2672;
+    const longitude = viewStateMatch ? parseFloat(viewStateMatch[2]) : -97.7431;
+    // ~2 km box around the map center
     const variables = {
-      lat: latitude,
-      lon: longitude,
+      minLat: latitude - 0.02,
+      minLon: longitude - 0.02,
+      maxLat: latitude + 0.02,
+      maxLon: longitude + 0.02,
     };
 
     const nearbyStopsData = await queryClient.ensureQueryData<NearByStopsQuery>(
       {
-        queryKey: ["NearByStops"],
+        queryKey: ["NearByStops", variables],
         queryFn: useNearByStopsQuery.fetcher(variables),
       }
     );

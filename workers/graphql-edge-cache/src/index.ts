@@ -41,6 +41,7 @@ const TTL_SECONDS: Record<string, number> = {
   TripUpdate: 15,
   VehiclePositions: 15,
   // Static GTFS data
+  AllStops: 21600,
   DistinctTrips: 21600,
   FeedInfo: 21600,
   NearByStops: 21600,
@@ -60,6 +61,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "*",
+  // Let page JS read the cache status, not just DevTools
+  "Access-Control-Expose-Headers": "X-Edge-Cache",
 };
 
 async function sha256Hex(text: string): Promise<string> {
