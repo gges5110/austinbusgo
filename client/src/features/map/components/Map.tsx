@@ -17,11 +17,7 @@ import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
-import {
-  STOP_CIRCLES_LAYER_ID,
-  STOP_LABELS_LAYER_ID,
-  StopLayer,
-} from "./Stop/StopLayer";
+import { STOPS_LAYER_ID, StopLayer } from "./Stop/StopLayer";
 import { VEHICLE_CIRCLES_LAYER_ID, VehicleLayer } from "./Vehicle/VehicleLayer";
 
 export type ViewState = {
@@ -80,11 +76,7 @@ export const Map: React.FunctionComponent = () => {
       id={"mapId"}
       {...viewState}
       cursor={cursor}
-      interactiveLayerIds={[
-        STOP_CIRCLES_LAYER_ID,
-        STOP_LABELS_LAYER_ID,
-        VEHICLE_CIRCLES_LAYER_ID,
-      ]}
+      interactiveLayerIds={[STOPS_LAYER_ID, VEHICLE_CIRCLES_LAYER_ID]}
       mapStyle={
         darkMode
           ? "mapbox://styles/mapbox/dark-v11"

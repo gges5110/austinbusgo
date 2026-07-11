@@ -7,11 +7,12 @@ import {
   LayerMouseEvent,
   useLayerEvents,
 } from "features/map/hooks/useLayerEvents";
+import { GeneratedImage, useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { Layer, Source, useMap } from "react-map-gl/mapbox";
+import { FC, useCallback, useMemo } from "react";
+import { Layer, Source } from "react-map-gl/mapbox";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import {
   hoveringStopAtom,
@@ -23,49 +24,38 @@ import { Stop } from "shared/types/interface.d";
 import { StopPeekSheet } from "./StopPeekSheet";
 import { StopPopupContent } from "./StopPopupContent";
 
-export const STOP_CIRCLES_LAYER_ID = "stop-circles";
-export const STOP_LABELS_LAYER_ID = "stop-labels";
-const STOP_LAYER_IDS = [STOP_CIRCLES_LAYER_ID, STOP_LABELS_LAYER_ID];
+export const STOPS_LAYER_ID = "stops";
+const STOP_LAYER_IDS = [STOPS_LAYER_ID];
 const STOPS_SOURCE_ID = "stops-source";
+const STOP_DOT_IMAGE_ID = "stop-dot";
 
 /**
- * Returns the cell size in degrees for the label grid at a given zoom level.
- * Halves with each zoom step so the number of visible grid cells stays roughly
- * constant as the user zooms in. Clamped to [0.005°, 1°].
- *   zoom 6  → ~0.25° (~28 km)
- *   zoom 10 → ~0.015° (~1.7 km)
- *   zoom 14 → ~0.001° → clamped to 0.005° (~0.5 km)
+ * SDF sprite for the stop dot. Icons (unlike circle layers) participate in
+ * Mapbox's native collision engine, which is what declutters the ~2,300
+ * stops at low zoom. Encoding the circle as a signed distance field lets
+ * the style recolor it per-feature (icon-color supports feature-state,
+ * which layout-time icon switching does not) and draw the white ring via
+ * icon-halo-*.
  */
-function labelGridCellDeg(zoom: number): number {
-  return Math.min(1, Math.max(0.005, Math.pow(2, 4 - zoom)));
-}
+const DOT_SPRITE_SIZE = 64;
+const DOT_SPRITE_RADIUS = 20;
+const DOT_SDF_SPREAD = 8;
 
-/**
- * Returns the set of stopIds that are the highest-priority stop in their
- * grid cell. Priority is determined by route count (more routes = wins).
- * Ties are broken by stopId for stable output.
- */
-function buildLabelGridWinners(stops: Stop[], zoom: number): Set<string> {
-  const cellDeg = labelGridCellDeg(zoom);
-  const cellBest = new Map<string, { stopId: string; priority: number }>();
-
-  for (const stop of stops) {
-    const coords = stop.stopLoc?.coordinates;
-    if (!coords) continue;
-    const [lon, lat] = coords;
-    const cellKey = `${Math.floor(lat / cellDeg)},${Math.floor(lon / cellDeg)}`;
-    const priority = Math.max(1, 10 - (stop.routes?.length ?? 0));
-    const existing = cellBest.get(cellKey);
-    if (
-      !existing ||
-      priority < existing.priority ||
-      (priority === existing.priority && stop.stopId < existing.stopId)
-    ) {
-      cellBest.set(cellKey, { stopId: stop.stopId, priority });
+function createStopDotImage(): GeneratedImage {
+  const size = DOT_SPRITE_SIZE;
+  const data = new Uint8ClampedArray(size * size * 4);
+  const center = size / 2;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const distance =
+        Math.hypot(x - center + 0.5, y - center + 0.5) - DOT_SPRITE_RADIUS;
+      // Mapbox's SDF shader draws the shape where alpha ≈ 0.75+; the
+      // falloff below that leaves room for the halo ring
+      const alpha = Math.max(0, Math.min(1, 0.75 - distance / DOT_SDF_SPREAD));
+      data[(y * size + x) * 4 + 3] = Math.round(alpha * 255);
     }
   }
-
-  return new Set([...cellBest.values()].map((b) => b.stopId));
+  return { width: size, height: size, data };
 }
 
 interface StopLayerProps {
@@ -81,7 +71,6 @@ export const StopLayer: FC<StopLayerProps> = ({
   darkMode = false,
   disableLod = false,
 }) => {
-  const { mapId: map } = useMap();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [hoveringStop, setHoveringStop] = useAtom(hoveringStopAtom);
@@ -96,6 +85,8 @@ export const StopLayer: FC<StopLayerProps> = ({
   );
   const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
+  useMapImage(STOP_DOT_IMAGE_ID, createStopDotImage, true);
+
   const stopsById = useMemo(() => {
     const m = new Map<string, Stop>();
     for (const stop of stops) {
@@ -104,39 +95,25 @@ export const StopLayer: FC<StopLayerProps> = ({
     return m;
   }, [stops]);
 
-  // Track integer zoom so the grid only recomputes on whole-zoom-level changes.
-  const [zoom, setZoom] = useState<number>(() =>
-    Math.floor(map?.getZoom() ?? 10)
+  const stopsGeoJSON = useMemo(
+    () =>
+      toPointFeatureCollection(
+        stops,
+        (stop) => stop.stopLoc?.coordinates,
+        (stop) => ({
+          stopCode: stop.stopCode ?? "",
+          stopId: stop.stopId,
+          stopName: stop.stopName ?? "",
+          // More routes = lower sort key number = placed first = wins
+          // collision against less-connected stops
+          priority: Math.max(1, 10 - (stop.routes?.length ?? 0)),
+        })
+      ),
+    [stops]
   );
-  useEffect(() => {
-    if (!map) return;
-    const onZoom = () => setZoom(Math.floor(map.getZoom()));
-    map.on("zoom", onZoom);
-    return () => {
-      map.off("zoom", onZoom);
-    };
-  }, [map]);
-
-  const stopsGeoJSON = useMemo(() => {
-    const gridWinners = buildLabelGridWinners(stops, zoom);
-    return toPointFeatureCollection(
-      stops,
-      (stop) => stop.stopLoc?.coordinates,
-      (stop) => ({
-        stopCode: stop.stopCode ?? "",
-        stopId: stop.stopId,
-        stopName: stop.stopName ?? "",
-        // More routes = lower sort key number = placed first = wins collision
-        priority: Math.max(1, 10 - (stop.routes?.length ?? 0)),
-        // 1 if this stop is the highest-priority in its label-grid cell;
-        // used to show one representative stop per region at all zoom levels.
-        gridRank: gridWinners.has(stop.stopId) ? 1 : 0,
-      })
-    );
-  }, [stops, zoom]);
 
   // Sync hoveringStop atom with Mapbox feature state so sidebar hover
-  // highlights the corresponding circle on the map.
+  // highlights the corresponding dot on the map.
   useFeatureHoverState(STOPS_SOURCE_ID, hoveringStop?.stopId);
 
   const handleMouseEnter = useCallback(
@@ -191,13 +168,45 @@ export const StopLayer: FC<StopLayerProps> = ({
       promoteId={"stopId"}
       type={"geojson"}
     >
-      {/* Circle layer for stop pin dots — WebGL rendered, no DOM overhead.
-          Below zoom 13 only the label-grid winner per cell is shown,
-          ensuring geographic spread. At zoom 13+ all stops appear. */}
+      {/* Single symbol layer for dots + labels. The native collision engine
+          declutters both: dots thin out at low zoom (icon-padding widens the
+          collision box), and labels drop before dots do (text-optional).
+          On route pages (disableLod) every stop must stay visible, so icons
+          are allowed to overlap. */}
       <Layer
-        id={STOP_CIRCLES_LAYER_ID}
+        id={STOPS_LAYER_ID}
+        layout={{
+          "icon-allow-overlap": disableLod,
+          "icon-image": STOP_DOT_IMAGE_ID,
+          // Wider collision box at low zoom = fewer, better-spaced dots
+          "icon-padding": ["interpolate", ["linear"], ["zoom"], 8, 10, 13, 2],
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            6,
+            0.15,
+            11,
+            0.2,
+            14,
+            0.35,
+            18,
+            0.5,
+          ],
+          "symbol-sort-key": ["get", "priority"],
+          // Labels only at zoom 10+; collision then hides overlaps
+          "text-field": ["step", ["zoom"], "", 10, ["get", "stopName"]],
+          "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+          // Drop the label under collision pressure but keep the dot
+          "text-optional": true,
+          "text-radial-offset": 0.8,
+          "text-size": 12,
+          // Let labels slide to whichever side fits — places more labels
+          // in dense areas than a fixed anchor
+          "text-variable-anchor": ["right", "left", "top", "bottom"],
+        }}
         paint={{
-          "circle-color": [
+          "icon-color": [
             "case",
             ["==", ["get", "stopId"], selectedStopId],
             "#EA4335",
@@ -205,71 +214,16 @@ export const StopLayer: FC<StopLayerProps> = ({
             "#EA4335",
             "#1A73E8",
           ],
-          "circle-opacity": disableLod
-            ? 1
-            : [
-                "step",
-                ["zoom"],
-                ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-                13,
-                1,
-              ],
-          "circle-radius": [
+          "icon-halo-color": "#ffffff",
+          "icon-halo-width": [
             "interpolate",
             ["linear"],
             ["zoom"],
             6,
-            3,
+            0.5,
             11,
-            4,
-            14,
-            7,
-            18,
-            10,
-          ],
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-opacity": disableLod
-            ? 1
-            : [
-                "step",
-                ["zoom"],
-                ["case", ["==", ["get", "gridRank"], 1], 1, 0],
-                13,
-                1,
-              ],
-          "circle-stroke-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            6,
             1,
-            11,
-            2,
           ],
-        }}
-        type={"circle"}
-      />
-
-      {/* Symbol layer for stop name labels — native collision detection and
-          importance ranking via symbol-sort-key */}
-      <Layer
-        {...(!disableLod && {
-          filter: ["step", ["zoom"], ["==", ["get", "gridRank"], 1], 13, true],
-        })}
-        id={STOP_LABELS_LAYER_ID}
-        layout={{
-          "symbol-sort-key": ["get", "priority"],
-          "text-allow-overlap": false,
-          "text-anchor": "right",
-          // Only show labels at zoom 14+; collision detection hides overlaps
-          "text-field": ["step", ["zoom"], "", 10, ["get", "stopName"]],
-          "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-          "text-offset": [-1, 0],
-          // Show the circle pin even when the label text collides
-          "text-optional": true,
-          "text-size": 12,
-        }}
-        paint={{
           "text-color": textColor,
           "text-halo-color": textHaloColor,
           "text-halo-width": 1,

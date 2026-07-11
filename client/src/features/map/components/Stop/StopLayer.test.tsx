@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => {
   const map = {
     on: vi.fn(),
     off: vi.fn(),
-    getZoom: vi.fn(() => 12),
+    once: vi.fn(),
+    isStyleLoaded: vi.fn(() => true),
+    hasImage: vi.fn(() => true),
+    addImage: vi.fn(),
     getSource: vi.fn(() => ({})),
     setFeatureState: vi.fn(),
   };
@@ -80,21 +83,19 @@ describe("StopLayer", () => {
     mocks.isMobile.mockReturnValue(false);
   });
 
-  test("registers click and hover handlers on both stop layers (desktop)", () => {
+  test("registers click and hover handlers on the stops layer (desktop)", () => {
     renderStopLayer();
 
-    for (const layerId of ["stop-circles", "stop-labels"]) {
-      expect(getLayerHandler("click", layerId)).toBeDefined();
-      expect(getLayerHandler("mouseenter", layerId)).toBeDefined();
-      expect(getLayerHandler("mouseleave", layerId)).toBeDefined();
-    }
+    expect(getLayerHandler("click", "stops")).toBeDefined();
+    expect(getLayerHandler("mouseenter", "stops")).toBeDefined();
+    expect(getLayerHandler("mouseleave", "stops")).toBeDefined();
   });
 
   test("desktop click selects the stop", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stop-circles")(featureEvent("s1"));
+      getLayerHandler("click", "stops")(featureEvent("s1"));
     });
 
     expect(mocks.setStop).toHaveBeenCalledWith(stop);
@@ -104,7 +105,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("mouseenter", "stop-circles")(featureEvent("s1"));
+      getLayerHandler("mouseenter", "stops")(featureEvent("s1"));
     });
 
     expect(screen.getByTestId("stop-popup-content")).toHaveTextContent(
@@ -116,7 +117,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stop-circles")(featureEvent("unknown"));
+      getLayerHandler("click", "stops")(featureEvent("unknown"));
     });
 
     expect(mocks.setStop).not.toHaveBeenCalled();
@@ -127,7 +128,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stop-circles")(featureEvent("s1"));
+      getLayerHandler("click", "stops")(featureEvent("s1"));
     });
 
     expect(mocks.setStop).not.toHaveBeenCalled();
@@ -140,7 +141,7 @@ describe("StopLayer", () => {
     mocks.isMobile.mockReturnValue(true);
     renderStopLayer();
 
-    expect(getLayerHandler("mouseenter", "stop-circles")).toBeUndefined();
-    expect(getLayerHandler("click", "stop-circles")).toBeDefined();
+    expect(getLayerHandler("mouseenter", "stops")).toBeUndefined();
+    expect(getLayerHandler("click", "stops")).toBeDefined();
   });
 });

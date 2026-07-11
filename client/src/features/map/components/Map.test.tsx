@@ -39,8 +39,7 @@ vi.mock("react-map-gl/mapbox", () => ({
 }));
 
 vi.mock("./Stop/StopLayer", () => ({
-  STOP_CIRCLES_LAYER_ID: "stop-circles",
-  STOP_LABELS_LAYER_ID: "stop-labels",
+  STOPS_LAYER_ID: "stops",
   StopLayer: (props: Record<string, unknown>) => {
     mocks.stopLayerProps(props);
     return <div data-testid={"stop-layer"} />;
@@ -127,7 +126,7 @@ describe("Map", () => {
 
     expect(mocks.mapProps).toHaveBeenCalledWith(
       expect.objectContaining({
-        interactiveLayerIds: ["stop-circles", "stop-labels", "vehicle-circles"],
+        interactiveLayerIds: ["stops", "vehicle-circles"],
       })
     );
   });
