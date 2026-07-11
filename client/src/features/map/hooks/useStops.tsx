@@ -1,5 +1,5 @@
 import { useDataFromRouteLoader } from "app/Router";
-import { useNearByStops } from "features/map/hooks/UseNearByStops";
+import { useAllStops } from "features/map/hooks/useAllStops";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
 import { isResponse } from "features/search/pages/search/SearchResultsMenu";
@@ -51,12 +51,13 @@ export const useStops = () => {
     [routeStops, searchStops, currentStop]
   );
 
-  // Only show nearby stops when no route or search context stops are present
-  const { nearByStops } = useNearByStops(contextStops.length === 0);
+  // Only show the full stops layer when no route or search context stops
+  // are present
+  const { allStops } = useAllStops(contextStops.length === 0);
 
   const stops = useMemo(
-    () => uniqueById([...contextStops, ...nearByStops]),
-    [contextStops, nearByStops]
+    () => uniqueById([...contextStops, ...allStops]),
+    [contextStops, allStops]
   );
 
   return { stops, contextStops };
