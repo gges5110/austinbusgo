@@ -18,15 +18,20 @@
 
 interface Env {
   UPSTREAM_GRAPHQL_URL: string;
+  /**
+   * Part of every cache key; changing it orphans all cached entries.
+   * The updateGTFS workflow redeploys with a fresh value after each data
+   * load so static entries don't outlive the GTFS data they came from.
+   */
+  CACHE_VERSION?: string;
 }
 
 /**
  * Per-operation TTLs in seconds.
  *
  * 15s tier: resolvers that read the GTFS-RT feed (matches its cadence).
- * 6h tier: static GTFS data that only changes when the feed is reloaded.
- *
- * Bump CACHE_VERSION after a GTFS reload to drop all static entries early.
+ * 6h tier: static GTFS data that only changes when the feed is reloaded
+ * (the updateGTFS workflow rotates CACHE_VERSION after each load).
  */
 const TTL_SECONDS: Record<string, number> = {
   // Real-time (GTFS-RT backed)
@@ -50,8 +55,6 @@ const TTL_SECONDS: Record<string, number> = {
   Trip: 21600,
   TripIdsForRoute: 21600,
 };
-
-const CACHE_VERSION = "v1";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -136,7 +139,7 @@ export default {
     // identity (covers variables and the query text itself)
     const cacheKey = new Request(
       new URL(
-        `/__gql-cache/${CACHE_VERSION}/${name}/${await sha256Hex(bodyText)}`,
+        `/__gql-cache/${env.CACHE_VERSION ?? "v1"}/${name}/${await sha256Hex(bodyText)}`,
         request.url
       ).toString()
     );

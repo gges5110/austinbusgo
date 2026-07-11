@@ -4,3 +4,5 @@ compatibility_date = "2026-07-01"
 
 [vars]
 UPSTREAM_GRAPHQL_URL = "https://austinbusgo-backend-761140212463.us-central1.run.app/graphql"
+# Rotated by the updateGTFS workflow (deploy --var) after each data load
+CACHE_VERSION = "v1"

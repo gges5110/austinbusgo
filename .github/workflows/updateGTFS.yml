@@ -40,3 +40,23 @@ jobs:
         run: python main.py
         env:
           DATABASE_URL: ${{ secrets.DBURI }}
+
+  invalidate-edge-cache:
+    needs: [upload]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Redeploy graphql-edge-cache with a fresh cache version
+        working-directory: workers/graphql-edge-cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        # Rotating CACHE_VERSION orphans all cached GraphQL responses so
+        # static entries never outlive the GTFS data they were built from
+        run: |
+          npm ci
+          npx wrangler deploy --var CACHE_VERSION:gtfs-${{ github.run_id }}
