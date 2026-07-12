@@ -47,7 +47,7 @@ vi.mock("./Stop/StopLayer", () => ({
 }));
 
 vi.mock("./Vehicle/VehicleLayer", () => ({
-  VEHICLE_CIRCLES_LAYER_ID: "vehicle-circles",
+  VEHICLES_LAYER_ID: "vehicle-markers",
   VehicleLayer: (props: Record<string, unknown>) => {
     mocks.vehicleLayerProps(props);
     return <div data-testid={"vehicle-layer"} />;
@@ -126,7 +126,7 @@ describe("Map", () => {
 
     expect(mocks.mapProps).toHaveBeenCalledWith(
       expect.objectContaining({
-        interactiveLayerIds: ["stops", "vehicle-circles"],
+        interactiveLayerIds: ["stops", "vehicle-markers"],
       })
     );
   });

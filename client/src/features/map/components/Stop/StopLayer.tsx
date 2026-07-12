@@ -7,8 +7,15 @@ import {
   LayerMouseEvent,
   useLayerEvents,
 } from "features/map/hooks/useLayerEvents";
-import { GeneratedImage, useMapImage } from "features/map/hooks/useMapImage";
+import { useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
+import {
+  createStopFlagFar,
+  createStopFlagFarSelected,
+  createStopFlagNear,
+  createStopFlagNearSelected,
+  SELECTED_RED,
+} from "features/map/utils/mapSprites";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { FC, useCallback, useMemo } from "react";
@@ -25,38 +32,19 @@ import { StopPeekSheet } from "./StopPeekSheet";
 import { StopPopupContent } from "./StopPopupContent";
 
 export const STOPS_LAYER_ID = "stops";
+const STOPS_HOVER_LAYER_ID = "stops-hover";
 const STOP_LAYER_IDS = [STOPS_LAYER_ID];
 const STOPS_SOURCE_ID = "stops-source";
-const STOP_DOT_IMAGE_ID = "stop-dot";
 
-/**
- * SDF sprite for the stop dot. Icons (unlike circle layers) participate in
- * Mapbox's native collision engine, which is what declutters the ~2,300
- * stops at low zoom. Encoding the circle as a signed distance field lets
- * the style recolor it per-feature (icon-color supports feature-state,
- * which layout-time icon switching does not) and draw the white ring via
- * icon-halo-*.
- */
-const DOT_SPRITE_SIZE = 64;
-const DOT_SPRITE_RADIUS = 20;
-const DOT_SDF_SPREAD = 8;
+// Baked two-color "bus stop flag" sprites (see mapSprites.ts). The far
+// variant is a plain rounded square — the glyph is unreadable below ~14px.
+const FLAG_FAR_IMAGE_ID = "stop-flag-far";
+const FLAG_FAR_SELECTED_IMAGE_ID = "stop-flag-far-selected";
+const FLAG_NEAR_IMAGE_ID = "stop-flag";
+const FLAG_NEAR_SELECTED_IMAGE_ID = "stop-flag-selected";
 
-function createStopDotImage(): GeneratedImage {
-  const size = DOT_SPRITE_SIZE;
-  const data = new Uint8ClampedArray(size * size * 4);
-  const center = size / 2;
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const distance =
-        Math.hypot(x - center + 0.5, y - center + 0.5) - DOT_SPRITE_RADIUS;
-      // Mapbox's SDF shader draws the shape where alpha ≈ 0.75+; the
-      // falloff below that leaves room for the halo ring
-      const alpha = Math.max(0, Math.min(1, 0.75 - distance / DOT_SDF_SPREAD));
-      data[(y * size + x) * 4 + 3] = Math.round(alpha * 255);
-    }
-  }
-  return { width: size, height: size, data };
-}
+/** Zoom at which the flag gains its bus glyph. */
+const GLYPH_ZOOM = 13;
 
 interface StopLayerProps {
   readonly darkMode?: boolean;
@@ -85,7 +73,10 @@ export const StopLayer: FC<StopLayerProps> = ({
   );
   const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
-  useMapImage(STOP_DOT_IMAGE_ID, createStopDotImage, true);
+  useMapImage(FLAG_FAR_IMAGE_ID, createStopFlagFar);
+  useMapImage(FLAG_FAR_SELECTED_IMAGE_ID, createStopFlagFarSelected);
+  useMapImage(FLAG_NEAR_IMAGE_ID, createStopFlagNear);
+  useMapImage(FLAG_NEAR_SELECTED_IMAGE_ID, createStopFlagNearSelected);
 
   const stopsById = useMemo(() => {
     const m = new Map<string, Stop>();
@@ -168,28 +159,84 @@ export const StopLayer: FC<StopLayerProps> = ({
       promoteId={"stopId"}
       type={"geojson"}
     >
-      {/* Single symbol layer for dots + labels. The native collision engine
-          declutters both: dots thin out at low zoom (icon-padding widens the
-          collision box), and labels drop before dots do (text-optional).
+      {/* Hover ring under the flag. Flag sprites are baked (two-color, so
+          not SDF-recolorable) and layout properties can't read
+          feature-state, so hover feedback lives in this underlay. */}
+      <Layer
+        id={STOPS_HOVER_LAYER_ID}
+        paint={{
+          "circle-color": SELECTED_RED,
+          "circle-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hovered"], false],
+            0.25,
+            0,
+          ],
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            6,
+            7,
+            11,
+            9,
+            14,
+            15,
+            18,
+            21,
+          ],
+          "circle-stroke-color": SELECTED_RED,
+          "circle-stroke-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hovered"], false],
+            0.9,
+            0,
+          ],
+          "circle-stroke-width": 2,
+        }}
+        type={"circle"}
+      />
+      {/* Single symbol layer for flags + labels. The native collision engine
+          declutters both: flags thin out at low zoom (icon-padding widens the
+          collision box), and labels drop before flags do (text-optional).
           On route pages (disableLod) every stop must stay visible, so icons
           are allowed to overlap. */}
       <Layer
         id={STOPS_LAYER_ID}
         layout={{
           "icon-allow-overlap": disableLod,
-          "icon-image": STOP_DOT_IMAGE_ID,
-          // Wider collision box at low zoom = fewer, better-spaced dots
+          // Plain square when far; bus-glyph flag when near. Selected stop
+          // gets the red variant (data expressions work in layout,
+          // feature-state does not).
+          "icon-image": [
+            "step",
+            ["zoom"],
+            [
+              "case",
+              ["==", ["get", "stopId"], selectedStopId],
+              FLAG_FAR_SELECTED_IMAGE_ID,
+              FLAG_FAR_IMAGE_ID,
+            ],
+            GLYPH_ZOOM,
+            [
+              "case",
+              ["==", ["get", "stopId"], selectedStopId],
+              FLAG_NEAR_SELECTED_IMAGE_ID,
+              FLAG_NEAR_IMAGE_ID,
+            ],
+          ],
+          // Wider collision box at low zoom = fewer, better-spaced flags
           "icon-padding": ["interpolate", ["linear"], ["zoom"], 8, 10, 13, 2],
           "icon-size": [
             "interpolate",
             ["linear"],
             ["zoom"],
             6,
-            0.15,
+            0.125,
             11,
-            0.2,
+            0.19,
             14,
-            0.35,
+            0.33,
             18,
             0.5,
           ],
@@ -197,7 +244,7 @@ export const StopLayer: FC<StopLayerProps> = ({
           // Labels only at zoom 10+; collision then hides overlaps
           "text-field": ["step", ["zoom"], "", 10, ["get", "stopName"]],
           "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-          // Drop the label under collision pressure but keep the dot
+          // Drop the label under collision pressure but keep the flag
           "text-optional": true,
           "text-radial-offset": 0.8,
           "text-size": 12,
@@ -206,24 +253,6 @@ export const StopLayer: FC<StopLayerProps> = ({
           "text-variable-anchor": ["right", "left", "top", "bottom"],
         }}
         paint={{
-          "icon-color": [
-            "case",
-            ["==", ["get", "stopId"], selectedStopId],
-            "#EA4335",
-            ["boolean", ["feature-state", "hovered"], false],
-            "#EA4335",
-            "#1A73E8",
-          ],
-          "icon-halo-color": "#ffffff",
-          "icon-halo-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            6,
-            0.5,
-            11,
-            1,
-          ],
           "text-color": textColor,
           "text-halo-color": textHaloColor,
           "text-halo-width": 1,

@@ -8,8 +8,18 @@ import {
   useLayerEvents,
   useMapClick,
 } from "features/map/hooks/useLayerEvents";
-import { GeneratedImage, useMapImage } from "features/map/hooks/useMapImage";
+import { useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
+import {
+  createBusGlyph,
+  createTeardropIncoming,
+  createTeardropStopped,
+  createTeardropTransit,
+  SELECTED_RED,
+  VEHICLE_INCOMING_ORANGE,
+  VEHICLE_STOPPED_RED,
+  VEHICLE_TRANSIT_BLUE,
+} from "features/map/utils/mapSprites";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { FC, useCallback, useMemo, useRef } from "react";
@@ -26,49 +36,17 @@ import { VehiclePosition } from "shared/types/interface.d";
 import { VehiclePeekSheet } from "./VehiclePeekSheet";
 import { VehiclePopupContainer } from "./VehiclePopupContainer";
 
-export const VEHICLE_CIRCLES_LAYER_ID = "vehicle-circles";
-const VEHICLE_ARROWS_LAYER_ID = "vehicle-arrows";
+export const VEHICLES_LAYER_ID = "vehicle-markers";
+const VEHICLES_HOVER_LAYER_ID = "vehicle-markers-hover";
+const VEHICLE_GLYPHS_LAYER_ID = "vehicle-glyphs";
 const VEHICLE_LABELS_LAYER_ID = "vehicle-labels";
-const VEHICLE_ARROW_IMAGE_ID = "vehicle-arrow";
-const VEHICLE_LAYER_IDS = [VEHICLE_CIRCLES_LAYER_ID];
+const VEHICLE_LAYER_IDS = [VEHICLES_LAYER_ID];
 const VEHICLES_SOURCE_ID = "vehicles-source";
 
-function createVehicleArrowImage(): GeneratedImage | null {
-  const size = 32;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  const cx = size / 2;
-  // Navigation chevron: the same pattern used by Google Maps / Apple Maps / Waze
-  // for live vehicle direction — a solid arrowhead with a notched tail so it
-  // reads as motion rather than a static triangle.
-  //
-  //       ^   ← tip (north / direction of travel)
-  //      / \
-  //     /   \
-  //    / · · \
-  //   /___^___\  ← notched rear
-  //
-  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-  ctx.beginPath();
-  ctx.moveTo(cx, 2); // tip
-  ctx.lineTo(cx + 11, size - 4); // bottom-right
-  ctx.lineTo(cx, size - 10); // rear notch (inner)
-  ctx.lineTo(cx - 11, size - 4); // bottom-left
-  ctx.closePath();
-  ctx.fill();
-
-  // Thin dark stroke so the white arrow is visible on light-coloured circles
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-  ctx.lineWidth = 0.75;
-  ctx.stroke();
-
-  const imageData = ctx.getImageData(0, 0, size, size);
-  return { width: size, height: size, data: imageData.data };
-}
+const TEARDROP_TRANSIT_IMAGE_ID = "vehicle-teardrop-transit";
+const TEARDROP_INCOMING_IMAGE_ID = "vehicle-teardrop-incoming";
+const TEARDROP_STOPPED_IMAGE_ID = "vehicle-teardrop-stopped";
+const BUS_GLYPH_IMAGE_ID = "vehicle-bus-glyph";
 
 interface VehicleLayerProps {
   readonly vehiclePositions: VehiclePosition[];
@@ -94,7 +72,10 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   );
   const { scheduleClose, cancelClose } = useHoverClose(closeHoverPopup);
 
-  useMapImage(VEHICLE_ARROW_IMAGE_ID, createVehicleArrowImage);
+  useMapImage(TEARDROP_TRANSIT_IMAGE_ID, createTeardropTransit);
+  useMapImage(TEARDROP_INCOMING_IMAGE_ID, createTeardropIncoming);
+  useMapImage(TEARDROP_STOPPED_IMAGE_ID, createTeardropStopped);
+  useMapImage(BUS_GLYPH_IMAGE_ID, createBusGlyph);
 
   // Lookup map for click/hover resolution
   const vehiclesById = useMemo(() => {
@@ -203,67 +184,91 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
       promoteId={"vehicleId"}
       type={"geojson"}
     >
-      {/* Circle layer: orange dot at each vehicle position */}
+      {/* Hover ring under the teardrop (baked sprites can't recolor on
+          feature-state, so hover feedback lives in this underlay) */}
       <Layer
-        id={VEHICLE_CIRCLES_LAYER_ID}
+        id={VEHICLES_HOVER_LAYER_ID}
         paint={{
-          "circle-color": [
+          "circle-color": SELECTED_RED,
+          "circle-opacity": [
             "case",
             ["boolean", ["feature-state", "hovered"], false],
-            // Hovered: darken each state color
-            [
-              "match",
-              ["get", "currentStatus"],
-              "STOPPED_AT",
-              "#B71C1C",
-              "INCOMING_AT",
-              "#E65100",
-              /* IN_TRANSIT_TO + default */ "#1565C0",
-            ],
-            // Normal
-            [
-              "match",
-              ["get", "currentStatus"],
-              "STOPPED_AT",
-              "#F44336",
-              "INCOMING_AT",
-              "#FF9800",
-              /* IN_TRANSIT_TO + default */ "#1E88E5",
-            ],
+            0.25,
+            0,
           ],
           "circle-radius": [
             "interpolate",
             ["linear"],
             ["zoom"],
             10,
-            6,
+            11,
             14,
-            9,
+            15,
             18,
-            13,
+            20,
           ],
-          "circle-stroke-color": "#ffffff",
+          "circle-stroke-color": SELECTED_RED,
+          "circle-stroke-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hovered"], false],
+            0.9,
+            0,
+          ],
           "circle-stroke-width": 2,
         }}
         type={"circle"}
       />
 
-      {/* Arrow layer: directional indicator rotated by bearing */}
+      {/* Teardrop marker: bulb centered on the vehicle position, tip
+          rotated to the heading — replaces the old circle + chevron */}
       <Layer
-        id={VEHICLE_ARROWS_LAYER_ID}
+        id={VEHICLES_LAYER_ID}
         layout={{
           "icon-allow-overlap": true,
-          "icon-image": VEHICLE_ARROW_IMAGE_ID,
+          "icon-image": [
+            "match",
+            ["get", "currentStatus"],
+            "STOPPED_AT",
+            TEARDROP_STOPPED_IMAGE_ID,
+            "INCOMING_AT",
+            TEARDROP_INCOMING_IMAGE_ID,
+            /* IN_TRANSIT_TO + default */ TEARDROP_TRANSIT_IMAGE_ID,
+          ],
           "icon-rotate": ["get", "bearing"],
           "icon-rotation-alignment": "map",
-          "icon-size": 0.85,
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10,
+            0.35,
+            14,
+            0.5,
+            18,
+            0.68,
+          ],
         }}
-        paint={{
-          "icon-opacity": [
-            "case",
-            ["boolean", ["feature-state", "hovered"], false],
-            1,
-            0.8,
+        type={"symbol"}
+      />
+
+      {/* Bus glyph: separate viewport-aligned layer so the bus stays
+          upright while the teardrop under it rotates with the bearing */}
+      <Layer
+        id={VEHICLE_GLYPHS_LAYER_ID}
+        layout={{
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+          "icon-image": BUS_GLYPH_IMAGE_ID,
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10,
+            0.26,
+            14,
+            0.36,
+            18,
+            0.5,
           ],
         }}
         type={"symbol"}
@@ -285,10 +290,10 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             "match",
             ["get", "currentStatus"],
             "STOPPED_AT",
-            "#F44336",
+            VEHICLE_STOPPED_RED,
             "INCOMING_AT",
-            "#FF9800",
-            "#1E88E5",
+            VEHICLE_INCOMING_ORANGE,
+            VEHICLE_TRANSIT_BLUE,
           ],
           "text-halo-width": 1.5,
         }}

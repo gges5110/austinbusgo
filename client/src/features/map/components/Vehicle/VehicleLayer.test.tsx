@@ -106,7 +106,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-circles")(featureEvent("v1"));
+      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
     });
 
     expect(mocks.navigate).toHaveBeenCalledWith(
@@ -119,7 +119,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("mouseenter", "vehicle-circles")(featureEvent("v1"));
+      getLayerHandler("mouseenter", "vehicle-markers")(featureEvent("v1"));
     });
 
     expect(screen.getByTestId("vehicle-popup-content")).toHaveTextContent("v1");
@@ -132,7 +132,7 @@ describe("VehicleLayer", () => {
     // Vehicle click and background click fire on the same click; the ref
     // guard keeps the popup open the first time.
     act(() => {
-      getLayerHandler("click", "vehicle-circles")(featureEvent("v1"));
+      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
       getMapClickHandler()();
     });
     expect(screen.getByTestId("vehicle-popup-content")).toBeInTheDocument();
@@ -151,7 +151,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-circles")(featureEvent("v1"));
+      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
     });
 
     expect(mocks.navigate).not.toHaveBeenCalled();
@@ -162,15 +162,15 @@ describe("VehicleLayer", () => {
     mocks.isMobile.mockReturnValue(true);
     renderVehicleLayer();
 
-    expect(getLayerHandler("mouseenter", "vehicle-circles")).toBeUndefined();
-    expect(getLayerHandler("click", "vehicle-circles")).toBeDefined();
+    expect(getLayerHandler("mouseenter", "vehicle-markers")).toBeUndefined();
+    expect(getLayerHandler("click", "vehicle-markers")).toBeDefined();
   });
 
   test("ignores clicks on unknown vehicles", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-circles")(featureEvent("unknown"));
+      getLayerHandler("click", "vehicle-markers")(featureEvent("unknown"));
     });
 
     expect(mocks.navigate).not.toHaveBeenCalled();
