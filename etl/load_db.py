@@ -89,6 +89,12 @@ def load_database(database_url):
     if not database_url:
         raise ValueError("DATABASE_URL environment variable not set")
 
+    # Ensure required extensions exist even when the reload below is
+    # skipped — a newly required extension must not wait for CapMetro to
+    # publish a new feed.
+    print("Ensuring database extensions...")
+    run_sql_file(database_url, SQL_DIR / "extensions.sql")
+
     # Get feed dates
     new_feed, feed_end = get_feed_dates()
     if not new_feed:
