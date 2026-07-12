@@ -73,3 +73,8 @@ jobs:
         run: |
           npm ci
           npx wrangler deploy --var CACHE_VERSION:gtfs-${{ github.run_id }}
+      # Rotating the version orphans all cached entries; replay the
+      # expensive queries once so the first visitor doesn't pay the cold
+      # upstream cost (AllStops alone is ~10s uncached).
+      - name: Warm edge cache
+        run: node workers/graphql-edge-cache/scripts/warm-cache.mjs

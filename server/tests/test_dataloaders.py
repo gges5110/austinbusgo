@@ -23,11 +23,11 @@ async def test_batch_load_routes_by_stop_id():
     route2 = SimpleNamespace(route_id="2", route_long_name="Route 2")
     route3 = SimpleNamespace(route_id="3", route_long_name="Route 3")
 
-    gtfs_service.get_routes_at_stop.side_effect = [
-        [route1, route2],  # Routes for stop_1
-        [route2, route3],  # Routes for stop_2
-        [],  # Routes for stop_3
-    ]
+    gtfs_service.get_routes_at_stops.return_value = {
+        "stop_1": [route1, route2],
+        "stop_2": [route2, route3],
+        "stop_3": [],
+    }
 
     result = await batch_load_routes_by_stop_id(
         ["stop_1", "stop_2", "stop_3"], gtfs_service
@@ -39,8 +39,10 @@ async def test_batch_load_routes_by_stop_id():
     assert result[1] == [route2, route3]
     assert result[2] == []
 
-    # Verify service was called for each stop
-    assert gtfs_service.get_routes_at_stop.call_count == 3
+    # Verify the whole batch went to the database as one call
+    gtfs_service.get_routes_at_stops.assert_called_once_with(
+        ["stop_1", "stop_2", "stop_3"]
+    )
 
 
 @pytest.mark.asyncio
@@ -88,7 +90,10 @@ async def test_routes_by_stop_dataloader_batching():
     gtfs_service = AsyncMock(spec=GTFSService)
     route1 = SimpleNamespace(route_id="1", route_long_name="Route 1")
 
-    gtfs_service.get_routes_at_stop.side_effect = [[route1], [route1]]
+    gtfs_service.get_routes_at_stops.return_value = {
+        "stop_1": [route1],
+        "stop_2": [route1],
+    }
 
     dataloaders = create_dataloaders(gtfs_service)
     routes_loader = dataloaders["routes_by_stop"]
@@ -101,8 +106,8 @@ async def test_routes_by_stop_dataloader_batching():
     # Both should be loaded in single batch
     assert result1 == [route1]
     assert result2 == [route1]
-    # Called twice in side_effect setup means both stops were batched and loaded
-    assert gtfs_service.get_routes_at_stop.call_count == 2
+    # Both stops batched into a single database round trip
+    gtfs_service.get_routes_at_stops.assert_called_once()
 
 
 @pytest.mark.asyncio

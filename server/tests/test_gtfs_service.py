@@ -87,6 +87,28 @@ async def test_get_routes_at_stop():
     assert len(result) == 1
 
 
+@pytest.mark.asyncio
+async def test_get_routes_at_stops():
+    svc, session = make_service()
+    route1 = SimpleNamespace(route_id="1")
+    route2 = SimpleNamespace(route_id="2")
+    exec_result = MagicMock()
+    exec_result.all.return_value = [
+        ("stop_1", route1),
+        ("stop_1", route2),
+        ("stop_2", route2),
+    ]
+    session.execute.return_value = exec_result
+
+    result = await svc.get_routes_at_stops(["stop_1", "stop_2", "stop_3"])
+
+    session.execute.assert_called_once()
+    assert result["stop_1"] == [route1, route2]
+    assert result["stop_2"] == [route2]
+    # Stops with no routes still get an entry so the dataloader keeps order
+    assert result["stop_3"] == []
+
+
 # Stop Tests
 @pytest.mark.asyncio
 async def test_get_stop():
