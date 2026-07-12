@@ -1,4 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
+-- Trigram similarity for typo-tolerant search (see GTFSService search queries)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE agency
 (

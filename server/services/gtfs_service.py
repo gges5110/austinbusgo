@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
 
-from sqlalchemy import Integer, case, cast, func, select, text
+from sqlalchemy import Integer, case, cast, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.models.gtfs_models import (
@@ -17,6 +17,12 @@ from server.models.gtfs_models import (
     StopTimes,
     Trips,
 )
+
+
+# Minimum pg_trgm word_similarity for a search hit. Low enough to absorb
+# typos ("guadelupe" ~ "Guadalupe" scores well above this); ranking and the
+# result limit keep noise out of the top results.
+SEARCH_SIMILARITY_THRESHOLD = 0.3
 
 
 class GTFSService:
@@ -37,22 +43,28 @@ class GTFSService:
         return result.scalars().all()
 
     async def get_routes_by_name(
-        self, search_terms: List[str], limit: Optional[int] = None
+        self, search_term: str, limit: Optional[int] = None
     ) -> List[Routes]:
-        term = "|".join(search_terms)
-        exact_term = search_terms[0] if len(search_terms) == 1 else None
-        exact_match = (
-            case((Routes.route_id.op("~")(f"^{exact_term}$"), 0), else_=1)
-            if exact_term
-            else None
+        """Typo-tolerant route search using pg_trgm word similarity.
+
+        The whole search term is matched as a phrase (not OR-ed words), an
+        exact route id sorts first, and everything else ranks by similarity.
+        """
+        score = func.greatest(
+            func.word_similarity(search_term, Routes.route_long_name),
+            func.word_similarity(search_term, Routes.route_id),
         )
-        query = select(Routes).where(
-            Routes.route_id.op("~*")(term) | Routes.route_long_name.op("~*")(term)
+        exact_id_first = case((Routes.route_id == search_term, 0), else_=1)
+        query = (
+            select(Routes)
+            .where(
+                or_(
+                    score >= SEARCH_SIMILARITY_THRESHOLD,
+                    Routes.route_id.startswith(search_term, autoescape=True),
+                )
+            )
+            .order_by(exact_id_first, score.desc(), cast(Routes.route_id, Integer))
         )
-        if exact_match is not None:
-            query = query.order_by(exact_match, cast(Routes.route_id, Integer))
-        else:
-            query = query.order_by(cast(Routes.route_id, Integer))
         if limit is not None:
             query = query.limit(limit)
         result = await self.session.execute(query)
@@ -103,19 +115,34 @@ class GTFSService:
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_stops_by_name(
-        self, search_terms: List[str], limit: Optional[int] = None
+        self, search_term: str, limit: Optional[int] = None
     ) -> List[Stops]:
-        term = "|".join(search_terms)
-        query = select(
-            Stops.stop_id,
-            Stops.stop_code,
-            Stops.stop_name,
-            func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
-        ).where(
-            Stops.at_street.op("~*")(term)
-            | Stops.on_street.op("~*")(term)
-            | Stops.stop_name.op("~*")(term)
-            | Stops.stop_code.op("~*")(term)
+        """Typo-tolerant stop search using pg_trgm word similarity.
+
+        Matches the whole term against stop/street names, plus a prefix
+        match on the rider-facing stop code. An exact stop code sorts
+        first, then results rank by best similarity across the columns.
+        """
+        score = func.greatest(
+            func.word_similarity(search_term, Stops.stop_name),
+            func.word_similarity(search_term, func.coalesce(Stops.on_street, "")),
+            func.word_similarity(search_term, func.coalesce(Stops.at_street, "")),
+        )
+        exact_code_first = case((Stops.stop_code == search_term, 0), else_=1)
+        query = (
+            select(
+                Stops.stop_id,
+                Stops.stop_code,
+                Stops.stop_name,
+                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+            )
+            .where(
+                or_(
+                    score >= SEARCH_SIMILARITY_THRESHOLD,
+                    Stops.stop_code.startswith(search_term, autoescape=True),
+                )
+            )
+            .order_by(exact_code_first, score.desc(), Stops.stop_name)
         )
         if limit is not None:
             query = query.limit(limit)

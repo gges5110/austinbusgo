@@ -26,7 +26,8 @@ export const useSearchInput = () => {
     setInternalSearchTerm(value);
   }, []);
 
-  const delayedSearch = useMemo(() => debounce(search, 500), [search]);
+  // Short debounce: repeated terms are edge-cached, so re-queries are cheap
+  const delayedSearch = useMemo(() => debounce(search, 300), [search]);
 
   const handleInputValueChange = useCallback(
     (event: React.SyntheticEvent, value: string) => {

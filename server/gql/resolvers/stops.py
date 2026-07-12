@@ -18,9 +18,7 @@ class StopsResolver(BaseResolver):
         return list(await self.gtfs_service.get_stops())
 
     async def resolve_stops_by_name(self, stop_name: str) -> List[Stop]:
-        return list(
-            await self.gtfs_service.get_stops_by_name(stop_name.split(" ")) or []
-        )
+        return list(await self.gtfs_service.get_stops_by_name(stop_name) or [])
 
     async def resolve_stops_and_shapes(
         self, route_id: str, direction_id: int, date: str

@@ -40,7 +40,7 @@ describe("useSearchInput", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(300);
     });
 
     expect(mocks.useSearchQuery).toHaveBeenLastCalledWith(
