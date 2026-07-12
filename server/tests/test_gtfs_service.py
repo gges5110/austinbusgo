@@ -57,19 +57,19 @@ async def test_get_routes_by_name():
     routes = [SimpleNamespace(route_id="1")]
     session.execute.return_value = make_exec_result(routes)
 
-    result = await svc.get_routes_by_name(["Airport"])
+    result = await svc.get_routes_by_name("Airport")
 
     session.execute.assert_called_once()
     assert len(result) == 1
 
 
 @pytest.mark.asyncio
-async def test_get_routes_by_name_multiple_terms():
+async def test_get_routes_by_name_multi_word_phrase():
     svc, session = make_service()
     routes = [SimpleNamespace(route_id="1"), SimpleNamespace(route_id="2")]
     session.execute.return_value = make_exec_result(routes)
 
-    result = await svc.get_routes_by_name(["Martin", "Luther"])
+    result = await svc.get_routes_by_name("Martin Luther")
 
     session.execute.assert_called_once()
     assert len(result) == 2
@@ -133,7 +133,7 @@ async def test_get_stops_by_name():
     result_mock.__iter__ = MagicMock(return_value=iter([row]))
     session.execute.return_value = result_mock
 
-    result = await svc.get_stops_by_name(["Airport"])
+    result = await svc.get_stops_by_name("Airport")
 
     assert len(result) == 1
     assert result[0].stop_id == "stop_1"

@@ -1,9 +1,4 @@
-import {
-  Autocomplete,
-  createFilterOptions,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Autocomplete, useMediaQuery, useTheme } from "@mui/material";
 import * as React from "react";
 import { useRef } from "react";
 
@@ -22,9 +17,12 @@ interface SearchAutocompleteProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const filterOptions = createFilterOptions<SearchOption>({
-  limit: 8,
-});
+// Search results are matched and ranked server-side (fuzzy pg_trgm), so
+// client-side substring re-filtering must not run — it would hide typo
+// matches whose labels don't contain the typed text. Just cap the count.
+const MAX_OPTIONS = 8;
+const filterOptions = (options: SearchOption[]) =>
+  options.slice(0, MAX_OPTIONS);
 
 export const SearchAutocomplete: React.FunctionComponent<
   SearchAutocompleteProps

@@ -3,7 +3,7 @@ Shared fixtures for integration tests.
 
 Spins up a real PostGIS container (postgis/postgis:14-3.3, matching the
 docker-compose setup) and initialises it with the GTFS schema from
-etl/schema.sql so tests exercise the full database stack.
+etl/sql/schema.sql so tests exercise the full database stack.
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ from testcontainers.postgres import PostgresContainer
 import server.database as db_module
 import server.main as main_module
 
-_SCHEMA_SQL = (Path(__file__).parent.parent / "etl" / "schema.sql").read_text()
+_SCHEMA_SQL = (Path(__file__).parent.parent / "etl" / "sql" / "schema.sql").read_text()
 
 
 # ---------------------------------------------------------------------------

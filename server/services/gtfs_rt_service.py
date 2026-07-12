@@ -1,6 +1,7 @@
 from typing import List
 
 from google.transit.gtfs_realtime_pb2 import TripUpdate, VehiclePosition
+from sqlalchemy.exc import NoResultFound
 
 from server.config import (
     capital_metro_trip_updates_pb_file_url,
@@ -72,7 +73,13 @@ class GTFSRTService:
         for tu in trip_updates:
             if tu.trip.route_id != route_id:
                 continue
-            trip = await self.gtfs_service.get_trip_by_id(tu.trip.trip_id)
+            try:
+                trip = await self.gtfs_service.get_trip_by_id(tu.trip.trip_id)
+            except NoResultFound:
+                # The live feed can reference trips missing from the loaded
+                # static GTFS (e.g. during a data transition) — skip them
+                # instead of failing the whole query.
+                continue
             if trip.direction_id == direction_id:
                 result.append(tu)
         return result
