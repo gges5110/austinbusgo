@@ -78,6 +78,18 @@ class GTFSService:
         )
         return result.scalars().all()
 
+    async def get_routes_at_stops(self, stop_ids: List[str]) -> dict:
+        """Routes for many stops in one query, keyed by stop_id."""
+        result = await self.session.execute(
+            select(RoutesAtStop.stop_id, Routes)
+            .join(Routes, RoutesAtStop.route_id == Routes.route_id)
+            .where(RoutesAtStop.stop_id.in_(stop_ids))
+        )
+        routes_by_stop: dict = {stop_id: [] for stop_id in stop_ids}
+        for stop_id, route in result.all():
+            routes_by_stop[stop_id].append(route)
+        return routes_by_stop
+
     # Stops
     async def get_stop(self, stop_id: str) -> Stops:
         result = await self.session.execute(

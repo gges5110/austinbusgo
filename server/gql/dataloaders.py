@@ -12,13 +12,7 @@ async def batch_load_routes_by_stop_id(
     stop_ids: List[str], gtfs_service: GTFSService
 ) -> List[List]:
     """Load routes for multiple stops in a single query."""
-    # Create a dict to hold routes for each stop
-    routes_by_stop = {stop_id: [] for stop_id in stop_ids}
-
-    # Get all routes for all stops efficiently
-    for stop_id in stop_ids:
-        routes = await gtfs_service.get_routes_at_stop(stop_id)
-        routes_by_stop[stop_id] = routes
+    routes_by_stop = await gtfs_service.get_routes_at_stops(stop_ids)
 
     # Return in the same order as input
     return [routes_by_stop[stop_id] for stop_id in stop_ids]

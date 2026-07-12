@@ -81,6 +81,35 @@ interface GraphQLRequestBody {
   variables?: unknown;
 }
 
+/**
+ * JSON.stringify with object keys sorted at every level, so two variables
+ * objects with the same content always serialize identically.
+ */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+/**
+ * Canonical cache-key material for a GraphQL request: whitespace in the
+ * query is collapsed and variables are stably serialized, so semantically
+ * identical requests share a cache entry regardless of client formatting.
+ * This is what lets the updateGTFS workflow pre-warm entries that the app
+ * (with its own gql-template whitespace) will later read.
+ */
+function canonicalKeyMaterial(name: string, body: GraphQLRequestBody): string {
+  const query = (body.query ?? "").replace(/\s+/g, " ").trim();
+  return `${name}\n${query}\n${stableStringify(body.variables ?? {})}`;
+}
+
 function extractOperation(body: GraphQLRequestBody): {
   name: string | undefined;
   isMutation: boolean;
@@ -134,15 +163,15 @@ export default {
 
     const { name, isMutation } = extractOperation(body);
     const ttl = name !== undefined ? TTL_SECONDS[name] : undefined;
-    if (isMutation || ttl === undefined) {
+    if (isMutation || name === undefined || ttl === undefined) {
       return withEdgeCacheHeaders(await forward(bodyText), "BYPASS");
     }
 
-    // Synthetic GET key: operation name for observability, body hash for
-    // identity (covers variables and the query text itself)
+    // Synthetic GET key: operation name for observability, canonical hash
+    // for identity (covers variables and the query text itself)
     const cacheKey = new Request(
       new URL(
-        `/__gql-cache/${env.CACHE_VERSION ?? "v1"}/${name}/${await sha256Hex(bodyText)}`,
+        `/__gql-cache/${env.CACHE_VERSION ?? "v1"}/${name}/${await sha256Hex(canonicalKeyMaterial(name, body))}`,
         request.url
       ).toString()
     );
