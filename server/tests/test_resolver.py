@@ -360,9 +360,9 @@ async def test_resolve_arrival_times(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
-        mock_dt
-    )
+    mocker.patch(
+        "server.gql.resolvers.base.datetime"
+    ).fromtimestamp.return_value = mock_dt
     mocker.patch("server.gql.resolvers.base.timezone")
 
     result = await resolver.arrivals.resolve_arrival_times("stop_1", "2025-01-01")
@@ -385,9 +385,9 @@ async def test_resolve_earliest_arrival_times_on_route(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
-        mock_dt
-    )
+    mocker.patch(
+        "server.gql.resolvers.base.datetime"
+    ).fromtimestamp.return_value = mock_dt
     mocker.patch("server.gql.resolvers.base.timezone")
 
     result = await resolver.arrivals.resolve_earliest_arrival_times_on_route(
@@ -428,9 +428,9 @@ def test_get_updated_arrival_time_with_arrival_field(mocker):
 
     mock_dt = mocker.Mock()
     mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch("server.gql.resolvers.base.datetime").fromtimestamp.return_value = (
-        mock_dt
-    )
+    mocker.patch(
+        "server.gql.resolvers.base.datetime"
+    ).fromtimestamp.return_value = mock_dt
     mocker.patch("server.gql.resolvers.base.timezone")
 
     result = resolver.arrivals._get_updated_arrival_time("stop_1", [])

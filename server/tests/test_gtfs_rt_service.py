@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import NoResultFound
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
@@ -114,6 +115,24 @@ async def test_get_real_time_trip_updates_on_route():
     result = await svc.get_real_time_trip_updates_on_route("route_1", 0)
 
     assert len(result) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_real_time_trip_updates_on_route_skips_unknown_trips():
+    """Live-feed trips missing from the static GTFS are skipped, not fatal."""
+    svc, mock_gtfs, mock_client = make_service()
+    known = create_trip_update("trip_known", "route_1")
+    unknown = create_trip_update("trip_unknown", "route_1")
+    mock_client.load_trip_updates.return_value = [unknown, known]
+    mock_gtfs.get_trip_by_id.side_effect = [
+        NoResultFound(),
+        SimpleNamespace(direction_id=0),
+    ]
+
+    result = await svc.get_real_time_trip_updates_on_route("route_1", 0)
+
+    assert len(result) == 1
+    assert result[0].trip.trip_id == "trip_known"
 
 
 @pytest.mark.asyncio
