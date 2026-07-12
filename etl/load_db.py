@@ -105,6 +105,11 @@ def load_database(database_url):
 
     if current_feed and current_feed == new_feed:
         print(f"Feed start date unchanged ({current_feed}), skipping database reload.")
+        # Still apply indexes (idempotent) so newly added ones reach the
+        # database without waiting for a feed change — same reasoning as
+        # extensions.sql above.
+        print("Ensuring indexes...")
+        run_sql_file(database_url, SQL_DIR / "indexes.sql")
         generate_summary(current_feed, new_feed, feed_end)
         return
 
