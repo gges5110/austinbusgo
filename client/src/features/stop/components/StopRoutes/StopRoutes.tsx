@@ -1,12 +1,12 @@
 import { Box, Tooltip, Typography } from "@mui/material";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { Stop } from "shared/api/generated/model";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
 interface StopRoutesProps {
-  routes: StopQuery["stop"]["routes"];
+  routes: Stop["routes"];
 }
 
 export const StopRoutes: React.FC<StopRoutesProps> = ({ routes }) => {

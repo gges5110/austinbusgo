@@ -27,7 +27,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { useSnackbar } from "notistack";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { useFeedInfoQuery } from "shared/api/schemas/FeedInfo.generated";
+import { useFeedInfo } from "shared/api/generated/api";
 import { ColorModeToggle } from "shared/components/AppDrawer/ColorModeToggle/ColorModeToggle";
 import { useShowAllVehicles } from "shared/hooks/UseShowAllVehicles";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
@@ -48,7 +48,7 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
   onClose,
 }) => {
   const { reloadVehiclePositions } = useReloadVehiclePositions();
-  const { data } = useFeedInfoQuery();
+  const { data } = useFeedInfo();
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const { viewStatePathname } = useViewStatePathname();
@@ -236,19 +236,14 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
                   <Box display={"flex"} flexDirection={"column"} gap={"4px"}>
                     <span>
                       Start Date:{" "}
-                      {data?.feedInfo.feedStartDate
-                        ? dayjs(
-                            data?.feedInfo.feedStartDate,
-                            "YYYYMMDD"
-                          ).format("ll")
+                      {data?.feedStartDate
+                        ? dayjs(data?.feedStartDate, "YYYYMMDD").format("ll")
                         : null}
                     </span>
                     <span>
                       End Date:{" "}
-                      {data?.feedInfo.feedEndDate
-                        ? dayjs(data?.feedInfo.feedEndDate, "YYYYMMDD").format(
-                            "ll"
-                          )
+                      {data?.feedEndDate
+                        ? dayjs(data?.feedEndDate, "YYYYMMDD").format("ll")
                         : null}
                     </span>
                   </Box>

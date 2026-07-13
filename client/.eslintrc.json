@@ -70,6 +70,15 @@
       }
     ]
   },
+  "overrides": [
+    {
+      "files": ["src/shared/api/generated/**"],
+      "rules": {
+        "import/no-relative-parent-imports": "off",
+        "import/order": "off"
+      }
+    }
+  ],
   "settings": {
     "react": {
       "pragma": "React",

@@ -1,15 +1,14 @@
 import { Divider, List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import * as React from "react";
-import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
-import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { ArrivalTime, Stop } from "shared/api/generated/model";
 
 import { ArrivalTimeListItem } from "./ArrivalTimeListItem";
 
 export interface ArrivalTimeListProps {
-  arrivalTimes?: ArrivalTimesQuery["arrivalTimes"];
+  arrivalTimes?: ArrivalTime[];
   loading: boolean;
   selectedRouteIds: string[];
-  stop: StopQuery["stop"];
+  stop: Stop;
 }
 
 export const ArrivalTimeList: React.FunctionComponent<ArrivalTimeListProps> = ({

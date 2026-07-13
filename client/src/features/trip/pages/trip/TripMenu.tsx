@@ -6,7 +6,7 @@ import { TripTimeline } from "features/trip/components/Trip/TripTimeline/TripTim
 import * as React from "react";
 import { useRef } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { useTripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
+import { useTripUpdate } from "shared/api/generated/api";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
@@ -19,20 +19,16 @@ import { tripLoader } from "./TripLoader";
 
 export const TripMenu = () => {
   const { trip, stopTimes, tripUpdate } = useDataFromLoader(tripLoader);
-  const stopData = useDataFromRouteLoader("stop", stopLoader);
-  const stop = stopData?.stop;
+  const stop = useDataFromRouteLoader("stop", stopLoader);
 
   const params = useParams();
   const tripId = params["tripId"];
 
-  useTripUpdateQuery(
-    {
-      tripId: tripId || "",
-    },
-    {
+  useTripUpdate(tripId || "", {
+    query: {
       refetchInterval: 15000,
-    }
-  );
+    },
+  });
 
   const searchParamsData = useDataFromRouteLoader(
     "searchParams",

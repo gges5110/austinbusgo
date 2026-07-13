@@ -17,8 +17,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
-import { useStopQuery } from "shared/api/schemas/Stop.generated";
-import { useStopsByNameQuery } from "shared/api/schemas/StopsByName.generated";
+import { useStop, useStopsByName } from "shared/api/generated/api";
 import { Stop } from "shared/types/interface.d";
 
 const StopRow: React.FC<{ stop: Stop; onSelect: (stop: Stop) => void }> = ({
@@ -73,22 +72,18 @@ export const StopsDevPage: React.FC = () => {
     }
   }, [searchParams, selectedStopId, searchTerm]);
 
-  const { data: searchResultsData } = useStopsByNameQuery(
-    { stopName: searchTerm },
+  const { data: searchResultsData } = useStopsByName(
+    { name: searchTerm },
     {
-      enabled: searchTerm.length >= 2,
+      query: { enabled: searchTerm.length >= 2 },
     }
   );
 
-  const { data: selectedStopData } = useStopQuery(
-    { stopId: selectedStopId || "" },
-    {
-      enabled: !!selectedStopId,
-    }
-  );
+  const { data: selectedStop } = useStop(selectedStopId || "", {
+    query: { enabled: !!selectedStopId },
+  });
 
-  const searchResults = searchResultsData?.stopsByName || [];
-  const selectedStop = selectedStopData?.stop;
+  const searchResults = searchResultsData || [];
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);

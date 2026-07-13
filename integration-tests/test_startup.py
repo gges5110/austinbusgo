@@ -18,7 +18,7 @@ from server.database import init_database
 
 def test_app_starts_with_valid_db(app_client):
     """Lifespan completes without errors when DATABASE_URL points to a valid DB."""
-    response = app_client.post("/graphql", json={"query": "{ __typename }"})
+    response = app_client.get("/openapi.json")
     assert response.status_code == 200
 
 

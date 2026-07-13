@@ -5,8 +5,7 @@ import { Box, ListItemButton, Typography, useTheme } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import * as React from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
-import { StopQuery } from "shared/api/schemas/Stop.generated";
+import { ArrivalTime, Stop } from "shared/api/generated/model";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { parseArrivalTime } from "shared/utils/dateUtils";
@@ -14,8 +13,8 @@ import { parseArrivalTime } from "shared/utils/dateUtils";
 import { Bullet } from "./Bullet";
 
 export interface ArrivalTimeListItemProps {
-  arrivalTime: ArrivalTimesQuery["arrivalTimes"][number];
-  stop: StopQuery["stop"];
+  arrivalTime: ArrivalTime;
+  stop: Stop;
 }
 
 export const ArrivalTimeListItem: React.FunctionComponent<

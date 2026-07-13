@@ -10,7 +10,6 @@ dependencies = [
     # Web framework
     "fastapi==0.115.6",
     "uvicorn[standard]==0.32.1",
-    "strawberry-graphql[fastapi]==0.283.3",
     "httpx==0.28.1",
     # Database / ORM
     "sqlalchemy[asyncio]==2.0.36",

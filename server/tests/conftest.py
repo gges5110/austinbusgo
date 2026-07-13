@@ -41,15 +41,6 @@ def mock_gtfs_rt_service():
 
 
 @pytest.fixture
-def resolver(mock_session, mock_gtfs_service, mock_gtfs_rt_service):
-    from server.gql.resolver import Resolver
-
-    res = Resolver(session=mock_session, gtfs_service=mock_gtfs_service)
-    res.gtfs_rt_service = mock_gtfs_rt_service
-    return res
-
-
-@pytest.fixture
 def mock_route():
     def _create(route_id="1", short_name="1"):
         r = MagicMock()

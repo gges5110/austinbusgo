@@ -1,4 +1,4 @@
-import { SearchQuery } from "shared/api/schemas/Search.generated";
+import { Stop as ApiStop } from "shared/api/generated/model";
 import { Route, Stop } from "shared/types/interface.d";
 
 export interface SearchTerm {
@@ -9,14 +9,7 @@ export interface ViewAllRecent {
   type: "viewAll";
 }
 
-type ArrayElement<ArrayType extends readonly unknown[]> =
-  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
-
-export type OptionValue =
-  | ArrayElement<SearchQuery["search"]["stops"]>
-  | Route
-  | SearchTerm
-  | ViewAllRecent;
+export type OptionValue = ApiStop | Route | SearchTerm | ViewAllRecent;
 
 // Type guards — also used by UseRecentSearches, favorites, and menu pages
 export const isRoute = (option: OptionValue): option is Route => {

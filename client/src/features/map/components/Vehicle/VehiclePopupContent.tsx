@@ -6,8 +6,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { StopQuery } from "shared/api/schemas/Stop.generated";
-import { TripQuery } from "shared/api/schemas/Trip.generated";
+import { Stop, Trip } from "shared/api/generated/model";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
@@ -31,9 +30,9 @@ const getFormattedVehicleStopStatus = (
 
 export interface VehiclePopupContentProps {
   readonly vehiclePosition: VehiclePosition;
-  readonly stop?: StopQuery;
+  readonly stop?: Stop;
   readonly stopLoading: boolean;
-  readonly trip?: TripQuery;
+  readonly trip?: Trip;
   readonly tripLoading: boolean;
 }
 
@@ -45,28 +44,28 @@ export const VehiclePopupContent: React.FunctionComponent<
     <Box display={"flex"} flexDirection={"column"} gap={1} minWidth={275}>
       <Box
         alignItems={"center"}
-        component={trip?.trip.routeId ? Link : "div"}
+        component={trip?.routeId ? Link : "div"}
         display={"flex"}
         gap={1}
         sx={{ color: "inherit", textDecoration: "none" }}
-        to={`/route/${trip?.trip.routeId}/direction/0${viewStatePathname}${withPreservedSearch()}`}
+        to={`/route/${trip?.routeId}/direction/0${viewStatePathname}${withPreservedSearch()}`}
       >
         <RouteIcon />
         <RouteIdDisplay
-          routeColor={trip?.trip.route.routeColor}
-          routeId={trip?.trip.routeId || ""}
+          routeColor={trip?.route?.routeColor}
+          routeId={trip?.routeId || ""}
         />
         <Typography
           component={"p"}
           fontSize={14}
           sx={
-            trip?.trip.routeId
+            trip?.routeId
               ? { "&:hover": { textDecoration: "underline" } }
               : undefined
           }
           variant={"body2"}
         >
-          {tripLoading ? <Skeleton /> : trip?.trip.route.routeLongName}
+          {tripLoading ? <Skeleton /> : trip?.route?.routeLongName}
         </Typography>
       </Box>
       <Typography display={"block"} variant={"body2"}>
@@ -92,7 +91,7 @@ export const VehiclePopupContent: React.FunctionComponent<
           }
           variant={"body2"}
         >
-          {stopLoading ? <Skeleton width={300} /> : stop?.stop.stopName}
+          {stopLoading ? <Skeleton width={300} /> : stop?.stopName}
         </Typography>
       </Box>
       <Typography alignSelf={"flex-end"} color={"textSecondary"} fontSize={14}>

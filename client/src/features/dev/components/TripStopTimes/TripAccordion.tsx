@@ -14,8 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useStopTimesQuery } from "shared/api/schemas/StopTimes.generated";
-import { useTripQuery } from "shared/api/schemas/Trip.generated";
+import { useStopTimes, useTrip } from "shared/api/generated/api";
 
 import { StopTimeRow } from "./StopTimeRow";
 
@@ -28,22 +27,14 @@ export const TripAccordion: React.FC<TripAccordionProps> = ({
   tripId,
   routeColor,
 }) => {
-  const { data: tripData } = useTripQuery(
-    { tripId },
-    {
-      enabled: !!tripId,
-    }
-  );
+  const { data: trip } = useTrip(tripId, {
+    query: { enabled: !!tripId },
+  });
 
-  const { data: stopTimesData } = useStopTimesQuery(
-    { tripId },
-    {
-      enabled: !!tripId,
-    }
-  );
-
-  const trip = tripData?.trip;
-  const stopTimes = stopTimesData?.stopTimes || [];
+  const { data: stopTimesData } = useStopTimes(tripId, {
+    query: { enabled: !!tripId },
+  });
+  const stopTimes = stopTimesData || [];
 
   if (!trip) {
     return null;

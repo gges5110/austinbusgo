@@ -1,26 +1,28 @@
 import { debounce } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useSearchQuery } from "shared/api/schemas/Search.generated";
+import { useSearch } from "shared/api/generated/api";
 import { Route } from "shared/types/interface.d";
 
 export const useSearchInput = () => {
   const [inputString, setInputString] = useState<string>("");
   const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
 
-  const { data, isLoading } = useSearchQuery(
+  const { data, isLoading } = useSearch(
     {
-      searchTerm: internalSearchTerm,
+      q: internalSearchTerm,
     },
     {
-      enabled: internalSearchTerm !== "",
-      // Show the previous results while the next search loads instead of
-      // flashing an empty option list on every keystroke
-      keepPreviousData: true,
+      query: {
+        enabled: internalSearchTerm !== "",
+        // Show the previous results while the next search loads instead of
+        // flashing an empty option list on every keystroke
+        keepPreviousData: true,
+      },
     }
   );
 
-  const stops = data?.search.stops ?? [];
-  const routes: Route[] = data?.search.routes ?? [];
+  const stops = data?.stops ?? [];
+  const routes: Route[] = (data?.routes as Route[]) ?? [];
 
   const search = useCallback((value: string): void => {
     setInternalSearchTerm(value);

@@ -1,7 +1,7 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import * as React from "react";
-import { ArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
+import { ArrivalTime } from "shared/api/generated/model";
 
 interface RoutesSelectorProps {
   selectedRouteIds: Array<string>;
@@ -10,7 +10,7 @@ interface RoutesSelectorProps {
     arg1: ((prevState: string[]) => string[]) | string[]
   ) => void;
 
-  arrivalTimes: ArrivalTimesQuery["arrivalTimes"];
+  arrivalTimes: ArrivalTime[];
 }
 
 export const RoutesSelector: React.FC<RoutesSelectorProps> = ({

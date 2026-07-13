@@ -10,7 +10,7 @@ import { useAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useArrivalTimesQuery } from "shared/api/schemas/ArrivalTimes.generated";
+import { useArrivalTimes } from "shared/api/generated/api";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
@@ -48,35 +48,33 @@ const WheelchairBoardingIcon: React.FC<{
 export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const [searchParams] = useSearchParams();
   const routeId = searchParams.get("routeId") || "";
-  const stopData = useDataFromLoader(stopLoader);
-  const stop = stopData.stop;
+  const stop = useDataFromLoader(stopLoader);
   useTitle(`${stop.stopName} - Austin Bus Go`);
 
-  const { data: arrivalTimesData, isLoading } = useArrivalTimesQuery(
+  const { data: arrivalTimesData, isLoading } = useArrivalTimes(
+    String(stop.stopId),
     {
-      stopId: String(stop.stopId),
       date: getDate(),
     },
     {
-      onSuccess: (data) => {
-        const routeIds =
-          data.arrivalTimes?.map((arrivalTime) => arrivalTime.trip.routeId) ||
-          [];
-        setSelectedRouteInitialValues(routeIds);
+      query: {
+        onSuccess: (data) => {
+          const routeIds =
+            data?.map((arrivalTime) => arrivalTime.trip.routeId) || [];
+          setSelectedRouteInitialValues(routeIds);
+        },
       },
     }
   );
 
-  const arrivalTimes = arrivalTimesData?.arrivalTimes || [];
+  const arrivalTimes = arrivalTimesData || [];
 
   const [selectedRouteIds, setSelectedRouteIds] = useAtom(
     selectedRouteIdsAtStopAtom
   );
 
   const routeIds =
-    arrivalTimesData?.arrivalTimes?.map(
-      (arrivalTime) => arrivalTime.trip.routeId
-    ) || [];
+    arrivalTimesData?.map((arrivalTime) => arrivalTime.trip.routeId) || [];
   const uniqueRouteIds =
     routeIds
       ?.filter((item, pos, arr) => arr.indexOf(item) == pos)

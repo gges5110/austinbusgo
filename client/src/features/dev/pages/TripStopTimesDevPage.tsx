@@ -16,8 +16,7 @@ import dayjs from "dayjs";
 import { TripAccordionWithFilter } from "features/dev/components/TripStopTimes/TripAccordionWithFilter";
 import React from "react";
 import { useSearchParams } from "react-router-dom";
-import { useRoutesQuery } from "shared/api/schemas/Routes.generated";
-import { useTripIdsForRouteQuery } from "shared/api/schemas/TripIdsForRoute.generated";
+import { useRoutes, useTripIdsForRoute } from "shared/api/generated/api";
 import { Route } from "shared/types/interface.d";
 
 export const TripStopTimesDevPage: React.FC = () => {
@@ -27,8 +26,8 @@ export const TripStopTimesDevPage: React.FC = () => {
     ""
   );
 
-  const { data: routesData } = useRoutesQuery();
-  const routes = routesData?.routes || [];
+  const { data: routesData } = useRoutes();
+  const routes = routesData || [];
 
   // Initialize state from URL params
   React.useEffect(() => {
@@ -54,18 +53,16 @@ export const TripStopTimesDevPage: React.FC = () => {
 
   const today = dayjs().format("YYYYMMDD");
 
-  const { data: tripIdsData } = useTripIdsForRouteQuery(
+  const { data: tripIdsData } = useTripIdsForRoute(
+    selectedRoute?.routeId || "",
+    { date: today },
     {
-      routeId: selectedRoute?.routeId || "",
-      date: today,
-    },
-    {
-      enabled: !!selectedRoute?.routeId,
+      query: { enabled: !!selectedRoute?.routeId },
     }
   );
 
   // Get all trip IDs for the selected route
-  const tripIds = tripIdsData?.tripIdsForRoute.tripIds || [];
+  const tripIds = tripIdsData?.tripIds || [];
 
   // GTFS only uses Direction 0 and Direction 1
   const availableDirections = [0, 1];

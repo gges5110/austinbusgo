@@ -11,28 +11,25 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { useUpdateViewState } from "features/map/hooks/UseViewStateSync";
-import { parseArrivalTime } from "shared/utils/dateUtils";
 import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useEffect, useRef } from "react";
 import { Link as RouterLink, useSearchParams } from "react-router-dom";
-import { StopQuery } from "shared/api/schemas/Stop.generated";
-import { StopTimesQuery } from "shared/api/schemas/StopTimes.generated";
-import { TripQuery } from "shared/api/schemas/Trip.generated";
-import { TripUpdateQuery } from "shared/api/schemas/TripUpdate.generated";
+import { Stop, StopTime, Trip, TripUpdate } from "shared/api/generated/model";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   hoveringVehiclePositionAtom,
   mapsFlyToCoordinateAtom,
 } from "shared/state/atoms";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
+import { parseArrivalTime } from "shared/utils/dateUtils";
 
 interface TripTimelineProps {
-  stopTimes: StopTimesQuery["stopTimes"];
-  stop?: StopQuery["stop"];
-  trip: TripQuery["trip"];
+  stopTimes: StopTime[];
+  stop?: Stop;
+  trip: Trip;
   vehiclePosition: VehiclePosition | undefined;
-  tripUpdate: TripUpdateQuery["tripUpdate"];
+  tripUpdate: TripUpdate | null;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 

@@ -14,7 +14,6 @@ import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useEffect } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { SearchQuery } from "shared/api/schemas/Search.generated";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
@@ -23,9 +22,11 @@ import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
-import { searchLoader } from "./SearchLoader";
+import { searchLoader, SearchLoaderData } from "./SearchLoader";
 
-export const isResponse = (data: Response | SearchQuery): data is Response => {
+export const isResponse = (
+  data: Response | SearchLoaderData
+): data is Response => {
   return data !== undefined && "ok" in data;
 };
 

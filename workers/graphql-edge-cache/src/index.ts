@@ -1,23 +1,24 @@
 /**
- * GraphQL edge cache
+ * Edge cache for the REST API
  *
- * Sits in front of the Cloud Run GraphQL backend and caches read-query
- * responses at the Cloudflare edge. CDNs don't cache POSTs (the request
- * body — where a GraphQL query's identity lives — is not part of the
- * default cache key), so this worker builds its own key from the operation
- * name + a hash of the request body, and applies a per-operation TTL.
+ * Sits in front of the Cloud Run backend and caches GET responses at the
+ * Cloudflare edge with a per-path TTL. The cache key includes CACHE_VERSION
+ * (rotated by the updateGTFS workflow after each data load) and the request
+ * URL with its query parameters sorted, so parameter order never splits the
+ * cache.
  *
- * - Operations not in the TTL table (and anything that fails to parse, or
- *   any mutation) are forwarded to the backend uncached.
- * - GraphQL error responses (200 with an `errors` array) are never cached.
  * - `X-Edge-Cache: HIT | MISS | BYPASS` reports what happened.
+ * - Non-200 responses are never cached.
+ * - A legacy POST /graphql passthrough remains (BYPASS, no caching) so this
+ *   worker can deploy before or after the backend/frontend during the
+ *   GraphQL-to-REST rollout; it will be removed in a follow-up.
  *
  * All data served by the backend is public and identical for every user,
  * which is what makes shared caching safe here.
  */
 
 interface Env {
-  UPSTREAM_GRAPHQL_URL: string;
+  UPSTREAM_ORIGIN: string;
   /**
    * Part of every cache key; changing it orphans all cached entries.
    * The updateGTFS workflow redeploys with a fresh value after each data
@@ -27,35 +28,28 @@ interface Env {
 }
 
 /**
- * Per-operation TTLs in seconds.
+ * Per-path TTLs in seconds.
  *
- * 15s tier: resolvers that read the GTFS-RT feed (matches its cadence).
+ * 15s tier: endpoints that read the GTFS-RT feed (matches its cadence).
  * 6h tier: static GTFS data that only changes when the feed is reloaded
  * (the updateGTFS workflow rotates CACHE_VERSION after each load).
  */
-const TTL_SECONDS: Record<string, number> = {
-  // Real-time (GTFS-RT backed)
-  ArrivalTimes: 15,
-  EarliestArrivalTimesOnRoute: 15,
-  RealTimeVehiclePositions: 15,
-  TripUpdate: 15,
-  VehiclePositions: 15,
-  // Static GTFS data
-  AllStops: 21600,
-  DistinctTrips: 21600,
-  FeedInfo: 21600,
-  NearByStops: 21600,
-  Route: 21600,
-  Routes: 21600,
-  Search: 21600,
-  Stop: 21600,
-  Stops: 21600,
-  StopsAndShapes: 21600,
-  StopsByName: 21600,
-  StopTimes: 21600,
-  Trip: 21600,
-  TripIdsForRoute: 21600,
-};
+const RT_TTL = 15;
+const STATIC_TTL = 21600;
+
+function ttlForPath(pathname: string): number | undefined {
+  if (!pathname.startsWith("/api/")) {
+    return undefined;
+  }
+  if (
+    pathname.startsWith("/api/rt/") ||
+    pathname.endsWith("/arrival-times") ||
+    pathname.endsWith("/earliest-arrival-times")
+  ) {
+    return RT_TTL;
+  }
+  return STATIC_TTL;
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -64,65 +58,6 @@ const CORS_HEADERS = {
   // Let page JS read the cache status, not just DevTools
   "Access-Control-Expose-Headers": "X-Edge-Cache",
 };
-
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(text)
-  );
-  return [...new Uint8Array(digest)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-interface GraphQLRequestBody {
-  query?: string;
-  operationName?: string;
-  variables?: unknown;
-}
-
-/**
- * JSON.stringify with object keys sorted at every level, so two variables
- * objects with the same content always serialize identically.
- */
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`);
-    return `{${entries.join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "null";
-}
-
-/**
- * Canonical cache-key material for a GraphQL request: whitespace in the
- * query is collapsed and variables are stably serialized, so semantically
- * identical requests share a cache entry regardless of client formatting.
- * This is what lets the updateGTFS workflow pre-warm entries that the app
- * (with its own gql-template whitespace) will later read.
- */
-function canonicalKeyMaterial(name: string, body: GraphQLRequestBody): string {
-  const query = (body.query ?? "").replace(/\s+/g, " ").trim();
-  return `${name}\n${query}\n${stableStringify(body.variables ?? {})}`;
-}
-
-function extractOperation(body: GraphQLRequestBody): {
-  name: string | undefined;
-  isMutation: boolean;
-} {
-  const query = body.query ?? "";
-  const keywordMatch = /^\s*(query|mutation|subscription)\b/.exec(query);
-  const isMutation =
-    keywordMatch !== null && keywordMatch[1] !== "query";
-  const name =
-    body.operationName ??
-    /(?:query|mutation|subscription)\s+([A-Za-z0-9_]+)/.exec(query)?.[1];
-  return { name, isMutation };
-}
 
 function withEdgeCacheHeaders(
   response: Response,
@@ -142,36 +77,29 @@ export default {
       return new Response(null, { headers: CORS_HEADERS });
     }
 
-    const forward = (body?: string) =>
-      fetch(env.UPSTREAM_GRAPHQL_URL, {
+    const url = new URL(request.url);
+    const upstreamUrl = new URL(url.pathname + url.search, env.UPSTREAM_ORIGIN);
+
+    // Legacy GraphQL passthrough during the REST rollout (no caching)
+    if (request.method !== "GET") {
+      const upstream = await fetch(upstreamUrl.toString(), {
         method: request.method,
         headers: { "Content-Type": "application/json" },
-        body: body ?? null,
+        body: await request.text(),
       });
-
-    if (request.method !== "POST") {
-      return withEdgeCacheHeaders(await forward(), "BYPASS");
+      return withEdgeCacheHeaders(upstream, "BYPASS");
     }
 
-    const bodyText = await request.text();
-    let body: GraphQLRequestBody;
-    try {
-      body = JSON.parse(bodyText);
-    } catch {
-      return withEdgeCacheHeaders(await forward(bodyText), "BYPASS");
+    const ttl = ttlForPath(url.pathname);
+    if (ttl === undefined) {
+      return withEdgeCacheHeaders(await fetch(upstreamUrl.toString()), "BYPASS");
     }
 
-    const { name, isMutation } = extractOperation(body);
-    const ttl = name !== undefined ? TTL_SECONDS[name] : undefined;
-    if (isMutation || name === undefined || ttl === undefined) {
-      return withEdgeCacheHeaders(await forward(bodyText), "BYPASS");
-    }
-
-    // Synthetic GET key: operation name for observability, canonical hash
-    // for identity (covers variables and the query text itself)
+    // Sort query params so parameter order never splits the cache
+    url.searchParams.sort();
     const cacheKey = new Request(
       new URL(
-        `/__gql-cache/${env.CACHE_VERSION ?? "v1"}/${name}/${await sha256Hex(canonicalKeyMaterial(name, body))}`,
+        `/__edge-cache/${env.CACHE_VERSION ?? "v1"}${url.pathname}?${url.searchParams}`,
         request.url
       ).toString()
     );
@@ -182,21 +110,12 @@ export default {
       return withEdgeCacheHeaders(cached, "HIT");
     }
 
-    const upstream = await forward(bodyText);
-    if (!upstream.ok) {
+    const upstream = await fetch(upstreamUrl.toString());
+    if (upstream.status !== 200) {
       return withEdgeCacheHeaders(upstream, "MISS");
     }
 
     const responseText = await upstream.text();
-
-    // Never cache GraphQL errors (they arrive as 200s with an errors array)
-    let cacheable = false;
-    try {
-      cacheable = !("errors" in JSON.parse(responseText));
-    } catch {
-      cacheable = false;
-    }
-
     const response = new Response(responseText, {
       status: 200,
       headers: {
@@ -206,9 +125,7 @@ export default {
         "X-Edge-Cache": "MISS",
       },
     });
-    if (cacheable) {
-      ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    }
+    ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
   },
 };
