@@ -36,7 +36,7 @@ jobs:
       - uses: psf/black@stable
         with:
           options: "--check --verbose"
-          version: "23.3.0"
+          version: "26.3.1"
 
   backend-unit-tests:
     needs: [detect-changes]
@@ -73,6 +73,25 @@ jobs:
       - name: Run integration tests
         run: |
           python -m pytest integration-tests -v
+
+  frontend-typecheck:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+      - name: Type check
+        working-directory: client
+        run: npm run typecheck
 
   frontend-unit-tests:
     needs: [detect-changes]

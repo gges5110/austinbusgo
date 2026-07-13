@@ -34,7 +34,7 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
         {uniqueRouteIds.map((uniqueRouteId) => {
           const routeColor = arrivalTimes?.find(
             (arrivalTime) => arrivalTime.trip.routeId === uniqueRouteId
-          )?.trip.route.routeColor;
+          )?.trip.route?.routeColor;
           const isSelected = selectedRouteIds.includes(uniqueRouteId);
           // TODO: fix hover styles
           return (

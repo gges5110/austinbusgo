@@ -131,7 +131,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 [`&.selected::before`]: {
                   content: "''",
                   width: "18px",
-                  backgroundColor: `#${trip?.route.routeColor}`,
+                  backgroundColor: `#${trip?.route?.routeColor}`,
                   position: "absolute",
                   top: "calc(50% - 10px)",
                   bottom: 0,
@@ -218,7 +218,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 }}
                 to={
                   routeId
-                    ? `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch({ routeId, directionId })}`
+                    ? `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch(directionId ? { routeId, directionId } : { routeId })}`
                     : `/stop/${stopTime.stopId}${viewStatePathname}${withPreservedSearch()}`
                 }
               >
@@ -238,7 +238,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   >
                     <Box display={"flex"} flexDirection={"column"}>
                       <Typography fontWeight={isSelectedStop ? 600 : 400}>
-                        {stopTime.stop.stopName}
+                        {stopTime.stop?.stopName}
                       </Typography>
                       <Typography
                         color={textColor}
@@ -293,7 +293,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   [`&::before`]: {
                     content: "''",
                     width: "18px",
-                    backgroundColor: `#${trip?.route.routeColor}`,
+                    backgroundColor: `#${trip?.route?.routeColor}`,
                     position: "absolute",
                     top: 0,
                     bottom: 0,
@@ -306,7 +306,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   [`&.first::before`]: {
                     content: "''",
                     width: "18px",
-                    backgroundColor: `#${trip?.route.routeColor}`,
+                    backgroundColor: `#${trip?.route?.routeColor}`,
                     position: "absolute",
                     top: "calc(50% - 10px)",
                     bottom: 0,
@@ -321,7 +321,7 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                   [`&.last::before`]: {
                     content: "''",
                     width: "18px",
-                    backgroundColor: `#${trip?.route.routeColor}`,
+                    backgroundColor: `#${trip?.route?.routeColor}`,
                     position: "absolute",
                     top: 0,
                     bottom: "calc(50% - 10px)",

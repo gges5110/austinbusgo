@@ -13,9 +13,7 @@ import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 dayjs.extend(relativeTime);
 
-const getFormattedVehicleStopStatus = (
-  vehicleStopStatus: VehicleStopStatus
-): string => {
+const getFormattedVehicleStopStatus = (vehicleStopStatus: string): string => {
   switch (vehicleStopStatus) {
     case VehicleStopStatus.IncomingAt:
       return "Incoming At";

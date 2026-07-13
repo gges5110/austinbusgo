@@ -45,7 +45,6 @@ describe("useCurrentRoute", () => {
     routeLongName: "Test Route",
     routeShortName: "TR",
     routeColor: "#0000FF",
-    routeTextColor: "#FFFFFF",
   };
 
   const mockSetCurrentRoute = vi.fn();

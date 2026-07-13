@@ -43,7 +43,7 @@ dayjs.extend(relativeTime);
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function statusLabel(status?: VehicleStopStatus | null): string {
+function statusLabel(status?: string | null): string {
   switch (status) {
     case VehicleStopStatus.IncomingAt:
       return "Incoming";
@@ -57,7 +57,7 @@ function statusLabel(status?: VehicleStopStatus | null): string {
 }
 
 function statusColor(
-  status?: VehicleStopStatus | null
+  status?: string | null
 ): "warning" | "error" | "success" | "default" {
   switch (status) {
     case VehicleStopStatus.IncomingAt:

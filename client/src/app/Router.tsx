@@ -34,15 +34,15 @@ const GtfsRtFrontendDevPage = React.lazy(() =>
 );
 
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
-  loaderFn: LoaderFn
-): Awaited<ReturnType<typeof loaderFn>> =>
-  useLoaderData() as Awaited<ReturnType<typeof loaderFn>>;
+  _loaderFn: LoaderFn
+): Awaited<ReturnType<LoaderFn>> =>
+  useLoaderData() as Awaited<ReturnType<LoaderFn>>;
 
 export const useDataFromRouteLoader = <LoaderFn extends LoaderFunction>(
   routeId: string,
-  loaderFn: LoaderFn
-): Awaited<ReturnType<typeof loaderFn>> | undefined => {
-  return useRouteLoaderData(routeId) as Awaited<ReturnType<typeof loaderFn>>;
+  _loaderFn: LoaderFn
+): Awaited<ReturnType<LoaderFn>> | undefined => {
+  return useRouteLoaderData(routeId) as Awaited<ReturnType<LoaderFn>>;
 };
 
 export const router = createBrowserRouter(

@@ -8,8 +8,8 @@ import { useAtomValue } from "jotai";
 import { SnackbarProvider } from "notistack";
 import * as React from "react";
 import { RouterProvider } from "react-router-dom";
-import { showReactQueryDevtoolsAtom } from "shared/state/atoms";
 import { ErrorBoundary } from "shared/components/ErrorBoundary";
+import { showReactQueryDevtoolsAtom } from "shared/state/atoms";
 
 export const App: React.FunctionComponent = () => {
   const appTheme = useAppTheme();

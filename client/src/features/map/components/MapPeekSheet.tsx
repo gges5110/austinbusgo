@@ -14,11 +14,6 @@ export const MapPeekSheet: React.FC<MapPeekSheetProps> = ({
   open,
 }) => (
   <SwipeableDrawer
-    anchor={"bottom"}
-    disableSwipeToOpen={true}
-    onClose={onClose}
-    onOpen={() => {}}
-    open={open}
     PaperProps={{
       sx: {
         borderRadius: "12px 12px 0 0",
@@ -27,6 +22,11 @@ export const MapPeekSheet: React.FC<MapPeekSheetProps> = ({
         px: 2,
       },
     }}
+    anchor={"bottom"}
+    disableSwipeToOpen={true}
+    onClose={onClose}
+    onOpen={() => {}}
+    open={open}
   >
     {/* Drag handle pill */}
     <Box

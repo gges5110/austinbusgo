@@ -20,7 +20,7 @@ export const StopTimeRow: React.FC<StopTimeRowProps> = ({ stopTime }) => {
           style={{ textDecoration: "none", color: "inherit" }}
           to={`/stop/${stopTime.stopId}`}
         >
-          {stopTime.stop.stopName}
+          {stopTime.stop?.stopName}
         </RouterLink>
       </TableCell>
       <TableCell>{stopTime.stopId}</TableCell>
