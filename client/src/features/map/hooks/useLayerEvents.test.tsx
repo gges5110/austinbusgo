@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useLayerEvents, useMapClick } from "./useLayerEvents";
 
 const mocks = vi.hoisted(() => {
-  const map = {
-    on: vi.fn(),
-    off: vi.fn(),
+  const rawMap = {
+    addInteraction: vi.fn(),
+    removeInteraction: vi.fn(),
   };
+  const map = { getMap: () => rawMap };
   return {
+    rawMap,
     map,
     useMap: vi.fn(() => ({ mapId: map as typeof map | undefined })),
   };
@@ -20,13 +22,21 @@ vi.mock("react-map-gl/mapbox", () => ({
 
 const LAYER_IDS = ["layer-a", "layer-b"];
 
+const interactionFor = (id: string) => {
+  const call = [...mocks.rawMap.addInteraction.mock.calls]
+    .reverse()
+    .find(([interactionId]) => interactionId === id);
+  expect(call).toBeDefined();
+  return call![1];
+};
+
 describe("useLayerEvents", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.useMap.mockReturnValue({ mapId: mocks.map });
   });
 
-  test("registers provided handlers on every layer", () => {
+  test("registers an interaction per layer and event type", () => {
     const onClick = vi.fn();
     const onMouseEnter = vi.fn();
     const onMouseLeave = vi.fn();
@@ -36,18 +46,31 @@ describe("useLayerEvents", () => {
     );
 
     for (const layerId of LAYER_IDS) {
-      expect(mocks.map.on).toHaveBeenCalledWith("click", layerId, onClick);
-      expect(mocks.map.on).toHaveBeenCalledWith(
-        "mouseenter",
-        layerId,
-        onMouseEnter
-      );
-      expect(mocks.map.on).toHaveBeenCalledWith(
-        "mouseleave",
-        layerId,
-        onMouseLeave
-      );
+      for (const type of ["click", "mouseenter", "mouseleave"]) {
+        const interaction = interactionFor(`${layerId}-${type}`);
+        expect(interaction.type).toBe(type);
+        expect(interaction.target).toEqual({ layerId });
+      }
     }
+  });
+
+  test("handler receives the feature as features[0] and consumes the event", () => {
+    const onClick = vi.fn();
+    renderHook(() => useLayerEvents(LAYER_IDS, { onClick }));
+
+    const interaction = interactionFor("layer-a-click");
+    const feature = { properties: { stopId: "s1" } };
+    const consumed = interaction.handler({
+      feature,
+      point: { x: 1, y: 2 },
+      lngLat: { lng: -97, lat: 30 },
+      originalEvent: {},
+    });
+
+    expect(consumed).toBe(true);
+    expect(onClick).toHaveBeenCalledWith(
+      expect.objectContaining({ features: [feature] })
+    );
   });
 
   test("skips undefined handlers", () => {
@@ -55,11 +78,11 @@ describe("useLayerEvents", () => {
 
     renderHook(() => useLayerEvents(LAYER_IDS, { onClick }));
 
-    expect(mocks.map.on).toHaveBeenCalledTimes(LAYER_IDS.length);
-    expect(mocks.map.on).toHaveBeenCalledWith("click", "layer-a", onClick);
+    expect(mocks.rawMap.addInteraction).toHaveBeenCalledTimes(LAYER_IDS.length);
+    expect(interactionFor("layer-a-click")).toBeDefined();
   });
 
-  test("removes handlers on unmount", () => {
+  test("removes interactions on unmount", () => {
     const onClick = vi.fn();
     const { unmount } = renderHook(() =>
       useLayerEvents(LAYER_IDS, { onClick })
@@ -68,7 +91,9 @@ describe("useLayerEvents", () => {
     unmount();
 
     for (const layerId of LAYER_IDS) {
-      expect(mocks.map.off).toHaveBeenCalledWith("click", layerId, onClick);
+      expect(mocks.rawMap.removeInteraction).toHaveBeenCalledWith(
+        `${layerId}-click`
+      );
     }
   });
 
@@ -83,8 +108,17 @@ describe("useLayerEvents", () => {
 
     rerender({ onClick: second });
 
-    expect(mocks.map.off).toHaveBeenCalledWith("click", "layer-a", first);
-    expect(mocks.map.on).toHaveBeenCalledWith("click", "layer-a", second);
+    expect(mocks.rawMap.removeInteraction).toHaveBeenCalledWith(
+      "layer-a-click"
+    );
+    interactionFor("layer-a-click").handler({
+      feature: undefined,
+      point: {},
+      lngLat: {},
+      originalEvent: {},
+    });
+    expect(second).toHaveBeenCalled();
+    expect(first).not.toHaveBeenCalled();
   });
 
   test("does nothing when the map is not ready", () => {
@@ -93,7 +127,7 @@ describe("useLayerEvents", () => {
     expect(() =>
       renderHook(() => useLayerEvents(LAYER_IDS, { onClick: vi.fn() }))
     ).not.toThrow();
-    expect(mocks.map.on).not.toHaveBeenCalled();
+    expect(mocks.rawMap.addInteraction).not.toHaveBeenCalled();
   });
 });
 
@@ -103,13 +137,20 @@ describe("useMapClick", () => {
     mocks.useMap.mockReturnValue({ mapId: mocks.map });
   });
 
-  test("registers a map-level click handler and cleans up", () => {
+  test("registers a background click interaction and cleans up", () => {
     const onClick = vi.fn();
     const { unmount } = renderHook(() => useMapClick(onClick));
 
-    expect(mocks.map.on).toHaveBeenCalledWith("click", onClick);
+    const interaction = interactionFor("map-background-click");
+    expect(interaction.type).toBe("click");
+    expect(interaction.target).toBeUndefined();
+
+    interaction.handler({ point: {}, lngLat: {}, originalEvent: {} });
+    expect(onClick).toHaveBeenCalled();
 
     unmount();
-    expect(mocks.map.off).toHaveBeenCalledWith("click", onClick);
+    expect(mocks.rawMap.removeInteraction).toHaveBeenCalledWith(
+      "map-background-click"
+    );
   });
 });
