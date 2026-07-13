@@ -48,7 +48,6 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 - **Framework**: FastAPI 0.115 with Uvicorn
 - **API**: REST with FastAPI routers + Pydantic v2 response models (camelCase aliases)
 - **Database**: PostgreSQL with SQLAlchemy 2.0 (async) + asyncpg driver
-- **Migrations**: Alembic
 - **Real-time Data**: gtfs-realtime-bindings
 - **Production Server**: Gunicorn with UvicornWorker
 - **Testing**: pytest with testcontainers
@@ -181,7 +180,6 @@ Run `make help` to see all available targets organized by category.
    - Models use `DeclarativeBase` pattern
    - Async sessions via `async_sessionmaker`
    - asyncpg driver for async PostgreSQL connections
-   - Migrations managed with Alembic
    - Environment variable: `DATABASE_URL`
 
 4. **REST API**:
