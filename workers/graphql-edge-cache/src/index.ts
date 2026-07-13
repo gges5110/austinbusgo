@@ -9,9 +9,6 @@
  *
  * - `X-Edge-Cache: HIT | MISS | BYPASS` reports what happened.
  * - Non-200 responses are never cached.
- * - A legacy POST /graphql passthrough remains (BYPASS, no caching) so this
- *   worker can deploy before or after the backend/frontend during the
- *   GraphQL-to-REST rollout; it will be removed in a follow-up.
  *
  * All data served by the backend is public and identical for every user,
  * which is what makes shared caching safe here.
@@ -80,14 +77,11 @@ export default {
     const url = new URL(request.url);
     const upstreamUrl = new URL(url.pathname + url.search, env.UPSTREAM_ORIGIN);
 
-    // Legacy GraphQL passthrough during the REST rollout (no caching)
     if (request.method !== "GET") {
-      const upstream = await fetch(upstreamUrl.toString(), {
-        method: request.method,
-        headers: { "Content-Type": "application/json" },
-        body: await request.text(),
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: CORS_HEADERS,
       });
-      return withEdgeCacheHeaders(upstream, "BYPASS");
     }
 
     const ttl = ttlForPath(url.pathname);
