@@ -131,6 +131,10 @@ export const StopLayer: FC<StopLayerProps> = ({
       const stopId = e.features?.[0]?.properties?.stopId as string | undefined;
       const stop = stopId ? stopsById.get(stopId) : undefined;
       if (!stop) return;
+      // Stop clicks are consumed before the background handler, so clear
+      // any pinned vehicle popup here explicitly
+      setPinnedVehicle(undefined);
+      setHoveringVehicle(undefined);
       if (isMobile) {
         // Mobile: tap shows the peek sheet instead of navigating away
         setHoveringStop(stop);
@@ -138,7 +142,14 @@ export const StopLayer: FC<StopLayerProps> = ({
         setSelectedStop(stop);
       }
     },
-    [isMobile, stopsById, setHoveringStop, setSelectedStop]
+    [
+      isMobile,
+      stopsById,
+      setHoveringStop,
+      setHoveringVehicle,
+      setPinnedVehicle,
+      setSelectedStop,
+    ]
   );
 
   useLayerEvents(STOP_LAYER_IDS, {
@@ -194,6 +205,7 @@ export const StopLayer: FC<StopLayerProps> = ({
           ],
           "circle-stroke-width": 2,
         }}
+        slot={"top"}
         type={"circle"}
       />
       {/* Single symbol layer for flags + labels. The native collision engine
@@ -265,6 +277,7 @@ export const StopLayer: FC<StopLayerProps> = ({
             1,
           ],
         }}
+        slot={"top"}
         type={"symbol"}
       />
       {/* Mobile: peek sheet on tap */}

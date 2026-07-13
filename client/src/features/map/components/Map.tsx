@@ -1,4 +1,5 @@
 import { useTheme } from "@mui/material";
+import { useLightPreset } from "features/map/hooks/useLightPreset";
 import { useMapMotion } from "features/map/hooks/UseMapMotion";
 import { useMergedVehiclePositions } from "features/map/hooks/useMergedVehiclePositions";
 import { useRouteShapes } from "features/map/hooks/useRouteShapes";
@@ -60,7 +61,35 @@ export const Map: React.FunctionComponent = () => {
     [routeShapes]
   );
 
+  const isRoutesPage = !!route;
+  const darkMode = theme.palette.mode === "dark";
+  const routeColorHex = route?.routeColor || "a5a5a5";
+  // The gradient validator only accepts rgb()/rgba()/named colors here,
+  // not 8-digit hex, so build rgba strings from the GTFS hex color
+  const [r, g, b] = [0, 2, 4].map((i) =>
+    parseInt(routeColorHex.slice(i, i + 2), 16)
+  );
+
+  // Fade the first stretch of the line so riders can read the direction of
+  // travel at a glance (line-progress runs start -> end of each shape)
+  const routeLineGradient = useMemo(
+    () =>
+      [
+        "interpolate",
+        ["linear"],
+        ["line-progress"],
+        0,
+        `rgba(${r}, ${g}, ${b}, 0.35)`,
+        0.25,
+        `rgb(${r}, ${g}, ${b})`,
+        1,
+        `rgb(${r}, ${g}, ${b})`,
+      ] as unknown as mapboxgl.Expression,
+    [r, g, b]
+  );
+
   useMapMotion(contextStops, routeShapes);
+  useLightPreset(darkMode);
   const { setViewStateInUrl } = useViewStateSync(viewState);
 
   const onMoveEnd = (event: ViewStateChangeEvent) => {
@@ -68,20 +97,13 @@ export const Map: React.FunctionComponent = () => {
     setViewStateInUrl(event.viewState);
   };
 
-  const isRoutesPage = !!route;
-  const darkMode = theme.palette.mode === "dark";
-
   return (
     <ReactMapGL
       id={"mapId"}
       {...viewState}
       cursor={cursor}
       interactiveLayerIds={[STOPS_LAYER_ID, VEHICLES_LAYER_ID]}
-      mapStyle={
-        darkMode
-          ? "mapbox://styles/mapbox/dark-v11"
-          : "mapbox://styles/mapbox/streets-v12"
-      }
+      mapStyle={"mapbox://styles/mapbox/standard"}
       mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
       onMouseEnter={() => setCursor("pointer")}
       onMouseLeave={() => setCursor("auto")}
@@ -96,13 +118,23 @@ export const Map: React.FunctionComponent = () => {
         trackUserLocation={true}
       />
 
-      <Source data={routeShapeGeoJSON} id={"route-shapes"} type={"geojson"}>
+      <Source
+        data={routeShapeGeoJSON}
+        id={"route-shapes"}
+        lineMetrics={true}
+        type={"geojson"}
+      >
         <Layer
           id={"point"}
+          layout={{
+            "line-cap": "round",
+            "line-join": "round",
+          }}
           paint={{
-            "line-color": `#${route?.routeColor || "a5a5a5"}`,
+            "line-gradient": routeLineGradient,
             "line-width": 5,
           }}
+          slot={"middle"}
           type={"line"}
         />
       </Source>

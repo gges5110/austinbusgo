@@ -65,7 +65,9 @@ describe("useMapMotion", () => {
       });
       rerender();
 
-      expect(mockFlyTo).toHaveBeenCalledWith({ center: [-97.7, 30.3] });
+      expect(mockFlyTo).toHaveBeenCalledWith(
+        expect.objectContaining({ center: [-97.7, 30.3] })
+      );
     });
 
     it("does not call flyTo when mapsFlyToCoordinate is undefined", () => {

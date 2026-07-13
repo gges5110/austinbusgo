@@ -16,7 +16,11 @@ const mocks = vi.hoisted(() => {
     addImage: vi.fn(),
     getSource: vi.fn(() => ({})),
     setFeatureState: vi.fn(),
+    addInteraction: vi.fn(),
+    removeInteraction: vi.fn(),
+    getMap: vi.fn(),
   };
+  map.getMap.mockReturnValue(map);
   return {
     map,
     isMobile: vi.fn(() => false),
@@ -63,8 +67,21 @@ const stop: Stop = {
   routes: [],
 } as unknown as Stop;
 
-const getLayerHandler = (event: string, layerId: string) =>
-  mocks.map.on.mock.calls.find((c) => c[0] === event && c[1] === layerId)?.[2];
+const getLayerHandler = (event: string, layerId: string) => {
+  const call = mocks.map.addInteraction.mock.calls.find(
+    (c) => c[0] === `${layerId}-${event}`
+  );
+  if (!call) return undefined;
+  const interactionHandler = call[1].handler;
+  // Adapt the test's {features: [...]} shape to an interaction event
+  return (e: { features?: unknown[] }) =>
+    interactionHandler({
+      feature: e.features?.[0],
+      point: {},
+      lngLat: {},
+      originalEvent: {},
+    });
+};
 
 const featureEvent = (stopId: string) => ({
   features: [{ properties: { stopId } }],
@@ -95,7 +112,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stops")(featureEvent("s1"));
+      getLayerHandler("click", "stops")!(featureEvent("s1"));
     });
 
     expect(mocks.setStop).toHaveBeenCalledWith(stop);
@@ -105,7 +122,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("mouseenter", "stops")(featureEvent("s1"));
+      getLayerHandler("mouseenter", "stops")!(featureEvent("s1"));
     });
 
     expect(screen.getByTestId("stop-popup-content")).toHaveTextContent(
@@ -117,7 +134,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stops")(featureEvent("unknown"));
+      getLayerHandler("click", "stops")!(featureEvent("unknown"));
     });
 
     expect(mocks.setStop).not.toHaveBeenCalled();
@@ -128,7 +145,7 @@ describe("StopLayer", () => {
     renderStopLayer();
 
     act(() => {
-      getLayerHandler("click", "stops")(featureEvent("s1"));
+      getLayerHandler("click", "stops")!(featureEvent("s1"));
     });
 
     expect(mocks.setStop).not.toHaveBeenCalled();

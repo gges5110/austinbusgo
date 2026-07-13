@@ -16,7 +16,11 @@ const mocks = vi.hoisted(() => {
     addImage: vi.fn(),
     getSource: vi.fn(() => ({})),
     setFeatureState: vi.fn(),
+    addInteraction: vi.fn(),
+    removeInteraction: vi.fn(),
+    getMap: vi.fn(),
   };
+  map.getMap.mockReturnValue(map);
   return {
     map,
     isMobile: vi.fn(() => false),
@@ -76,14 +80,29 @@ const vehicle: VehiclePosition = {
   currentStatus: "IN_TRANSIT_TO",
 } as unknown as VehiclePosition;
 
-const getLayerHandler = (event: string, layerId: string) =>
-  mocks.map.on.mock.calls.find((c) => c[0] === event && c[1] === layerId)?.[2];
+const getLayerHandler = (event: string, layerId: string) => {
+  const call = mocks.map.addInteraction.mock.calls.find(
+    (c) => c[0] === `${layerId}-${event}`
+  );
+  if (!call) return undefined;
+  const interactionHandler = call[1].handler;
+  // Adapt the test's {features: [...]} shape to an interaction event
+  return (e: { features?: unknown[] }) =>
+    interactionHandler({
+      feature: e.features?.[0],
+      point: {},
+      lngLat: {},
+      originalEvent: {},
+    });
+};
 
-// Map-level (background) click handler is registered without a layer id
-const getMapClickHandler = () =>
-  mocks.map.on.mock.calls.find(
-    (c) => c[0] === "click" && typeof c[1] === "function"
-  )?.[1];
+// Map-level (background) click interaction has no layer target
+const getMapClickHandler = () => {
+  const call = mocks.map.addInteraction.mock.calls.find(
+    (c) => c[0] === "map-background-click"
+  );
+  return () => call?.[1].handler({ point: {}, lngLat: {}, originalEvent: {} });
+};
 
 const featureEvent = (vehicleId: string) => ({
   features: [{ properties: { vehicleId } }],
@@ -106,7 +125,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
+      getLayerHandler("click", "vehicle-markers")!(featureEvent("v1"));
     });
 
     expect(mocks.navigate).toHaveBeenCalledWith(
@@ -119,25 +138,24 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("mouseenter", "vehicle-markers")(featureEvent("v1"));
+      getLayerHandler("mouseenter", "vehicle-markers")!(featureEvent("v1"));
     });
 
     expect(screen.getByTestId("vehicle-popup-content")).toHaveTextContent("v1");
     expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
-  test("map background click dismisses the pinned popup, but not the click that pinned it", () => {
+  test("map background click dismisses the pinned popup", () => {
     renderVehicleLayer();
 
-    // Vehicle click and background click fire on the same click; the ref
-    // guard keeps the popup open the first time.
+    // Vehicle clicks are consumed by the layer interaction, so the
+    // background interaction never fires for the pinning click
     act(() => {
-      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
-      getMapClickHandler()();
+      getLayerHandler("click", "vehicle-markers")!(featureEvent("v1"));
     });
     expect(screen.getByTestId("vehicle-popup-content")).toBeInTheDocument();
 
-    // A later background click (no vehicle under the cursor) dismisses it
+    // A background click (no vehicle under the cursor) dismisses it
     act(() => {
       getMapClickHandler()();
     });
@@ -151,7 +169,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-markers")(featureEvent("v1"));
+      getLayerHandler("click", "vehicle-markers")!(featureEvent("v1"));
     });
 
     expect(mocks.navigate).not.toHaveBeenCalled();
@@ -170,7 +188,7 @@ describe("VehicleLayer", () => {
     renderVehicleLayer();
 
     act(() => {
-      getLayerHandler("click", "vehicle-markers")(featureEvent("unknown"));
+      getLayerHandler("click", "vehicle-markers")!(featureEvent("unknown"));
     });
 
     expect(mocks.navigate).not.toHaveBeenCalled();

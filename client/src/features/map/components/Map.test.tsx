@@ -58,6 +58,10 @@ vi.mock("features/map/hooks/UseMapMotion", () => ({
   useMapMotion: mocks.useMapMotion,
 }));
 
+vi.mock("features/map/hooks/useLightPreset", () => ({
+  useLightPreset: vi.fn(),
+}));
+
 vi.mock("features/map/hooks/useStops", () => ({
   useStops: mocks.useStops,
 }));

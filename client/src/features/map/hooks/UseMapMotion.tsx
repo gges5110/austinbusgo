@@ -1,3 +1,4 @@
+import { uiMapPadding } from "features/map/utils/mapPadding";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { MapRef, useMap } from "react-map-gl/mapbox";
@@ -6,7 +7,8 @@ import { LineString, Stop } from "shared/types/interface.d";
 
 /**
  * Fits the map view to a set of [lon, lat] coordinates, leaving room for the
- * sidebar on desktop. No-op when the list is empty.
+ * UI overlays (desktop menu panel, mobile bottom sheet). No-op when the list
+ * is empty.
  */
 const fitToCoordinates = (
   map: MapRef,
@@ -26,7 +28,6 @@ const fitToCoordinates = (
     maxLat = Math.max(maxLat, lat);
   }
 
-  const isMobile = window.innerWidth < 768;
   map.fitBounds(
     [
       [minLon, minLat],
@@ -34,12 +35,7 @@ const fitToCoordinates = (
     ],
     {
       ...options,
-      padding: {
-        top: 10,
-        left: isMobile ? 0 : 420,
-        right: 10,
-        bottom: 10,
-      },
+      padding: uiMapPadding(),
     }
   );
 };
@@ -54,6 +50,8 @@ export const useMapMotion = (stops: Stop[], routeShapes: LineString[]) => {
     if (map && mapsFlyToCoordinate) {
       map.flyTo({
         center: mapsFlyToCoordinate,
+        // Center within the visible area, not under the menu panel/sheet
+        padding: uiMapPadding(),
       });
     }
   }, [map, mapsFlyToCoordinate]);

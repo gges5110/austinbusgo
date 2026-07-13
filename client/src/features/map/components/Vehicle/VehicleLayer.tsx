@@ -1,6 +1,7 @@
 import { useTheme } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { MapHoverPopup } from "features/map/components/MapHoverPopup";
+import { useAnimatedVehicleSource } from "features/map/hooks/useAnimatedVehicleSource";
 import { useFeatureHoverState } from "features/map/hooks/useFeatureHoverState";
 import { useHoverClose } from "features/map/hooks/useHoverClose";
 import {
@@ -22,7 +23,7 @@ import {
 } from "features/map/utils/mapSprites";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
-import { FC, useCallback, useMemo, useRef } from "react";
+import { FC, useCallback, useMemo } from "react";
 import { Layer, Source } from "react-map-gl/mapbox";
 import { useNavigate } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
@@ -48,6 +49,13 @@ const TEARDROP_INCOMING_IMAGE_ID = "vehicle-teardrop-incoming";
 const TEARDROP_STOPPED_IMAGE_ID = "vehicle-teardrop-stopped";
 const BUS_GLYPH_IMAGE_ID = "vehicle-bus-glyph";
 
+// Stable empty collection: the source data is driven imperatively by
+// useAnimatedVehicleSource; react-map-gl must never reset it on re-render
+const EMPTY_VEHICLES: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
+
 interface VehicleLayerProps {
   readonly vehiclePositions: VehiclePosition[];
 }
@@ -63,8 +71,6 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
   // Separate "pinned" state — set on click, cleared by clicking the map background
   const [pinnedVehicle, setPinnedVehicle] = useAtom(pinnedVehiclePositionAtom);
   const setHoveringStop = useSetAtom(hoveringStopAtom);
-  // Ref flag so the map-level click handler can tell if a vehicle circle was just clicked
-  const vehicleJustClickedRef = useRef(false);
 
   const closeHoverPopup = useCallback(
     () => setHoveringVehicle(undefined),
@@ -104,6 +110,12 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
     [vehiclePositions]
   );
 
+  // Glide markers between polls instead of teleporting them
+  useAnimatedVehicleSource(
+    VEHICLES_SOURCE_ID,
+    vehiclesGeoJSON as GeoJSON.FeatureCollection<GeoJSON.Point>
+  );
+
   // Sync hoveringVehicle atom → Mapbox feature state for circle highlight
   useFeatureHoverState(
     VEHICLES_SOURCE_ID,
@@ -131,9 +143,6 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         | undefined;
       const vp = vehicleId ? vehiclesById.get(vehicleId) : undefined;
       if (!vp) return;
-      // Mark that this click was on a vehicle so the map background handler
-      // does not immediately clear the pinned popup
-      vehicleJustClickedRef.current = true;
       setHoveringStop(undefined);
       setPinnedVehicle(vp);
       if (!isMobile) {
@@ -153,13 +162,11 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
     ]
   );
 
-  // Map background click: dismiss the pinned popup when clicking outside a vehicle
+  // Background click (vehicle/stop clicks are consumed by their own
+  // interactions and never reach this): dismiss the pinned popup
   const handleMapClick = useCallback(() => {
-    if (!vehicleJustClickedRef.current) {
-      setPinnedVehicle(undefined);
-      setHoveringVehicle(undefined);
-    }
-    vehicleJustClickedRef.current = false;
+    setPinnedVehicle(undefined);
+    setHoveringVehicle(undefined);
   }, [setPinnedVehicle, setHoveringVehicle]);
 
   useLayerEvents(VEHICLE_LAYER_IDS, {
@@ -179,7 +186,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
 
   return (
     <Source
-      data={vehiclesGeoJSON}
+      data={EMPTY_VEHICLES}
       id={VEHICLES_SOURCE_ID}
       promoteId={"vehicleId"}
       type={"geojson"}
@@ -216,6 +223,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
           ],
           "circle-stroke-width": 2,
         }}
+        slot={"top"}
         type={"circle"}
       />
 
@@ -248,6 +256,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             0.68,
           ],
         }}
+        slot={"top"}
         type={"symbol"}
       />
 
@@ -271,6 +280,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             0.5,
           ],
         }}
+        slot={"top"}
         type={"symbol"}
       />
 
@@ -297,6 +307,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
           ],
           "text-halo-width": 1.5,
         }}
+        slot={"top"}
         type={"symbol"}
       />
 
