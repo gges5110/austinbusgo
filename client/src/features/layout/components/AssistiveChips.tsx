@@ -15,9 +15,7 @@ import { MENU_PANEL_WIDTH } from "shared/components/MenuPanel/MenuPanel";
 import { useShowAllVehicles } from "shared/hooks/UseShowAllVehicles";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 
-interface AssistiveChipsProps {}
-
-export const AssistiveChips: React.FC<AssistiveChipsProps> = () => {
+export const AssistiveChips: React.FC = () => {
   const { viewStatePathname } = useViewStatePathname();
   const theme = useTheme();
   const [showAllVehicles, setShowAllVehicles] = useShowAllVehicles();

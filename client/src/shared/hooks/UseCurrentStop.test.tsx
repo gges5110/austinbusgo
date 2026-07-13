@@ -87,7 +87,7 @@ describe("useCurrentStop", () => {
   });
 
   test("should sync stop from loader with atom", () => {
-    mocks.mockUseDataFromRouteLoader.mockReturnValue({ stop: mockStop });
+    mocks.mockUseDataFromRouteLoader.mockReturnValue(mockStop);
 
     renderHook(() => useCurrentStop(), {
       wrapper: ({ children }) => <BrowserRouter>{children}</BrowserRouter>,

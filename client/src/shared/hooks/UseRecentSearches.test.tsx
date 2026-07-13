@@ -24,7 +24,6 @@ describe("useRecentSearches", () => {
     routeLongName: "Test Route",
     routeShortName: "TR",
     routeColor: "#0000FF",
-    routeTextColor: "#FFFFFF",
   };
 
   const mockStop: Stop = {
@@ -42,8 +41,9 @@ describe("useRecentSearches", () => {
 
   let mockRecentSearches: RecentSearch[] = [];
   let mockSetRecentSearches: Mock<
-    [updater: RecentSearch[] | ((prev: RecentSearch[]) => RecentSearch[])],
-    void
+    (
+      updater: RecentSearch[] | ((prev: RecentSearch[]) => RecentSearch[])
+    ) => void
   >;
 
   beforeEach(() => {

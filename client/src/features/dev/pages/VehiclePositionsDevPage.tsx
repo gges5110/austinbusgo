@@ -30,7 +30,7 @@ const VehiclePositionRow: React.FC<{
   routeColor: string;
   routeId: string;
 }> = ({ vehiclePosition, routeColor, routeId }) => {
-  const getStatusLabel = (status?: VehicleStopStatus | null) => {
+  const getStatusLabel = (status?: string | null) => {
     switch (status) {
       case VehicleStopStatus.IncomingAt:
         return "Incoming";
@@ -43,7 +43,7 @@ const VehiclePositionRow: React.FC<{
     }
   };
 
-  const getStatusColor = (status?: VehicleStopStatus | null) => {
+  const getStatusColor = (status?: string | null) => {
     switch (status) {
       case VehicleStopStatus.IncomingAt:
         return "warning";

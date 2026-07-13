@@ -67,7 +67,7 @@ export const TripMenu = () => {
           <BackButton />
           <Box sx={{ flex: 1 }}>
             <RouteDisplayBanner
-              routeColor={trip.route.routeColor}
+              routeColor={trip.route?.routeColor}
               routeId={trip.routeId}
               routeName={tripName}
               useBusIcon={true}
@@ -96,7 +96,7 @@ export const TripMenu = () => {
               </Typography>
             </Box>
           </Button>
-          <AddToFavorites value={trip.route} />
+          {trip.route && <AddToFavorites value={trip.route} />}
         </Box>
         <Divider />
         <TripTimeline

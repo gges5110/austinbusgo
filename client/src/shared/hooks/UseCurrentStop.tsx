@@ -17,8 +17,7 @@ export const useCurrentStop = () => {
   const { routeId, directionId } = useParams();
 
   // Derive stop from loaders
-  const stopData = useDataFromRouteLoader("stop", stopLoader);
-  const stop = stopData?.stop;
+  const stop = useDataFromRouteLoader("stop", stopLoader);
 
   // Sync derived stop with atom
   useEffect(() => {

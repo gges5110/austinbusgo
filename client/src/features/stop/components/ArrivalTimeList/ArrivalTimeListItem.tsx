@@ -74,7 +74,7 @@ export const ArrivalTimeListItem: React.FunctionComponent<
           <Box alignItems={"center"} display={"flex"} gap={1}>
             <DirectionsBusIcon aria-hidden={true} fontSize={"small"} />
             <RouteIdDisplay
-              routeColor={arrivalTime.trip.route.routeColor}
+              routeColor={arrivalTime.trip.route?.routeColor}
               routeId={arrivalTime.trip.routeId}
             />
             <Typography display={"inline"} variant={"body2"}>

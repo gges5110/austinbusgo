@@ -47,7 +47,7 @@ export const TripAccordion: React.FC<TripAccordionProps> = ({
           sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%" }}
         >
           <Chip
-            label={trip.route.routeId}
+            label={trip.route?.routeId}
             size={"small"}
             sx={{
               backgroundColor: `#${routeColor}`,
