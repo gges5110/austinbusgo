@@ -60,18 +60,17 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 # Install git hooks (Python linting on commit)
 ./setup-hooks.sh
 
-# Setup PostgreSQL database and load GTFS data
+# First-time backend setup: venv + deps + PostgreSQL + GTFS data
+# (creates the venv, installs server[dev], starts the DB, downloads and loads the feed)
 make setup
-
-# Setup Python environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -e "server[dev]"
 
 # Setup client
 cd client
 npm ci
 ```
+
+> `make setup` requires Docker (for PostgreSQL) and a `psql` client on your PATH.
+> To later refresh the GTFS data on its own, run `make update-db`.
 
 ### Running the Application
 
@@ -93,10 +92,11 @@ Run `make help` to see all available targets organized by category.
 **Setup & Environment:**
 - `make setup-env` - Create Python virtual environment
 - `make install-deps` - Install Python dependencies from server[dev]
-- `make setup` - Complete local setup (database + GTFS data)
+- `make setup` - First-time setup: venv + deps + database + GTFS data
 
-**Database:**
+**Database & Data:**
 - `make start-db` - Start PostgreSQL database with Docker (port 5438)
+- `make update-db` - Download the latest GTFS feed and (re)load the local DB (idempotent; skips the reload when the feed is unchanged)
 
 **Development:**
 - `make start-be` - Start FastAPI backend server (port 5001, hot reload)
@@ -205,9 +205,9 @@ Run `make help` to see all available targets organized by category.
 ### Database
 - PostgreSQL runs on port 5438 (to avoid conflicts with default 5432)
 - Default credentials: `local-user:local-password@localhost:5438/local-db`
-- Requires GTFS CSV files processed with `preprocessGTFS.py`
-- Docker Compose split into `docker/compose.db.yml` (database) and `docker/compose.etl.yml` (GTFS prep job)
-- `make db-up` — start PostgreSQL only; `make setup-local` — start DB + run GTFS prep
+- Requires GTFS CSV files downloaded and preprocessed by the `etl/` pipeline (`etl/main.py`: download → prepare → load)
+- `docker/compose.db.yml` runs PostgreSQL; the ETL itself is pure-stdlib Python (no Docker)
+- `make start-db` — start PostgreSQL only; `make update-db` — start DB + download/prepare/load the latest GTFS feed
 
 ### GTFS Data
 - Static GTFS data: routes, stops, schedules
@@ -244,7 +244,7 @@ Run `make help` to see all available targets organized by category.
 
 ### Debugging
 - Frontend: Browser DevTools, React DevTools, React Query DevTools
-- Backend: Uvicorn hot reload enabled with `make run`, SQLAlchemy query logging available via config
+- Backend: Uvicorn hot reload enabled with `make start-be`, SQLAlchemy query logging available via config
 - FastAPI auto-generated docs at `http://localhost:5001/docs`
 
 ## Testing

@@ -2,7 +2,6 @@ import csv
 import copy
 import os
 import shutil
-import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -111,11 +110,8 @@ def check_feed_dates():
 
 
 def prepare():
-    if shutil.which("curl") is None:
-        subprocess.call(["sh", str(SCRIPT_DIR / "getCurl.sh")])
-
-    subprocess.call(["sh", str(SCRIPT_DIR / "download.sh")])
-
+    # Downloading is download.py's job (see main.py); prepare only
+    # normalizes the already-downloaded CSV files.
     check_feed_dates()
 
     print("Start preprocessing GTFS files...")
