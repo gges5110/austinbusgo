@@ -27,17 +27,20 @@ def test_create_app_returns_fastapi(mocker):
     assert isinstance(app, FastAPI)
 
 
-def test_graphql_route_registered(mocker):
+def test_api_routes_registered(mocker):
     app = make_app(mocker)
     routes = [r.path for r in app.routes]
-    assert any("/graphql" in r for r in routes)
+    assert "/api/stops" in routes
+    assert "/api/rt/vehicle-positions" in routes
+    assert not any("/graphql" in r for r in routes)
 
 
-def test_graphql_endpoint_responds(mocker):
+def test_openapi_docs_respond(mocker):
     app = make_app(mocker)
     with TestClient(app) as client:
-        response = client.get("/graphql")
+        response = client.get("/openapi.json")
         assert response.status_code == 200
+        assert "/api/stops" in response.json()["paths"]
 
 
 def test_create_app_no_db_url(mocker):

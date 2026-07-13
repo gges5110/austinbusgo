@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { StopsAndShapesQuery } from "shared/api/schemas/StopsAndRouteShapes.generated";
+import { StopsAndShapes } from "shared/api/generated/model";
 import { Trip } from "shared/types/interface.d";
 
 interface DirectionToggleProps {
@@ -15,7 +15,7 @@ interface DirectionToggleProps {
 
   setDirection(directionId: Trip["directionId"]): void;
 
-  distinctTrips: StopsAndShapesQuery["distinctTrips"];
+  distinctTrips: StopsAndShapes["distinctTrips"];
 }
 
 export const DirectionToggle: React.FC<DirectionToggleProps> = ({

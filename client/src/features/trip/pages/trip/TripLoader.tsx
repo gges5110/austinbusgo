@@ -1,55 +1,26 @@
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "app/QueryClient";
 import {
-  StopTimesQuery,
-  StopTimesQueryVariables,
-  useStopTimesQuery,
-} from "shared/api/schemas/StopTimes.generated";
-import {
-  TripQuery,
-  TripQueryVariables,
-  useTripQuery,
-} from "shared/api/schemas/Trip.generated";
-import {
-  TripUpdateQuery,
-  TripUpdateQueryVariables,
-  useTripUpdateQuery,
-} from "shared/api/schemas/TripUpdate.generated";
-
-const tripQuery = (id: TripQueryVariables) => ({
-  queryKey: useTripQuery.getKey(id),
-  queryFn: useTripQuery.fetcher(id),
-});
-const stopTimesQuery = (id: StopTimesQueryVariables) => ({
-  queryKey: useStopTimesQuery.getKey(id),
-  queryFn: useStopTimesQuery.fetcher(id),
-});
-
-const tripUpdateQuery = (id: TripUpdateQueryVariables) => ({
-  queryKey: useTripUpdateQuery.getKey(id),
-  queryFn: useTripUpdateQuery.fetcher(id),
-});
+  getStopTimesQueryOptions,
+  getTripQueryOptions,
+  getTripUpdateQueryOptions,
+} from "shared/api/generated/api";
 
 export const tripLoader = async ({ params }: LoaderFunctionArgs) => {
-  const tripId = params["tripId"];
-  const id = {
-    tripId: tripId || "",
-  };
-  const tripDataQuery = queryClient.ensureQueryData<TripQuery>(tripQuery(id));
-  const tripUpdateDataQuery = queryClient.ensureQueryData<TripUpdateQuery>(
-    tripUpdateQuery(id)
+  const tripId = params["tripId"] || "";
+  const tripDataQuery = queryClient.ensureQueryData(
+    getTripQueryOptions(tripId)
   );
-  const stopTimesDataQuery = queryClient.ensureQueryData<StopTimesQuery>(
-    stopTimesQuery(id)
+  const tripUpdateDataQuery = queryClient.ensureQueryData(
+    getTripUpdateQueryOptions(tripId)
   );
-
-  const tripData = await tripDataQuery;
-  const tripUpdateData = await tripUpdateDataQuery;
-  const stopTimesData = await stopTimesDataQuery;
+  const stopTimesDataQuery = queryClient.ensureQueryData(
+    getStopTimesQueryOptions(tripId)
+  );
 
   return {
-    trip: tripData.trip,
-    stopTimes: stopTimesData.stopTimes,
-    tripUpdate: tripUpdateData.tripUpdate,
+    trip: await tripDataQuery,
+    stopTimes: await stopTimesDataQuery,
+    tripUpdate: await tripUpdateDataQuery,
   };
 };

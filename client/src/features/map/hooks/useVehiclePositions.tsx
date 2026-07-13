@@ -1,7 +1,7 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { useAtomValue } from "jotai";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
+import { useVehiclePositions as useVehiclePositionsApi } from "shared/api/generated/api";
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
 import { isAutoPollingAtom } from "shared/state/atoms";
@@ -28,11 +28,11 @@ export const useVehiclePositions = () => {
   const isOnStopPage = location.pathname.startsWith("/stop/");
   const shouldShowVehicles = isOnRoutePage || isOnStopPage;
 
-  const { data: vehiclePositionsData } = useVehiclePositionsQuery(
+  const { data: vehiclePositionsData } = useVehiclePositionsApi(
     {
-      // Placeholder to satisfy the required variable; the query stays
+      // Placeholder to satisfy the required param; the query stays
       // disabled until a route is selected.
-      routeId: route?.routeId || "1",
+      route_id: route?.routeId || "1",
       direction: Number(
         directionId !== undefined
           ? directionId
@@ -40,14 +40,16 @@ export const useVehiclePositions = () => {
       ),
     },
     {
-      enabled: route !== undefined && shouldShowVehicles,
-      refetchInterval: autoPolling ? 15000 : false,
+      query: {
+        enabled: route !== undefined && shouldShowVehicles,
+        refetchInterval: autoPolling ? 15000 : false,
+      },
     }
   );
 
   const vehiclePositions: VehiclePosition[] = shouldShowVehicles
     ? searchParamsData?.vehiclePositions ||
-      vehiclePositionsData?.vehiclePositions ||
+      (vehiclePositionsData as VehiclePosition[] | undefined) ||
       NO_VEHICLES
     : NO_VEHICLES;
 

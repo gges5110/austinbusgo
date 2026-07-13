@@ -20,8 +20,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { useRealTimeVehiclePositionsQuery } from "shared/api/schemas/RealTimeVehiclePositions.generated";
-import { useRoutesQuery } from "shared/api/schemas/Routes.generated";
+import { useRoutes, useVehiclePositions } from "shared/api/generated/api";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
 
 dayjs.extend(relativeTime);
@@ -121,21 +120,21 @@ export const VehiclePositionsDevPage: React.FC = () => {
   const [order, setOrder] = React.useState<Order>("asc");
   const [orderBy, setOrderBy] = React.useState<OrderBy>("route");
 
-  const { data: routesData } = useRoutesQuery(undefined, {
-    refetchInterval: 30000,
+  const { data: routesData } = useRoutes({
+    query: { refetchInterval: 30000 },
   });
 
-  const { data: vehiclePositionsData, refetch } =
-    useRealTimeVehiclePositionsQuery(undefined, {
-      refetchInterval: 15000,
-    });
+  const { data: vehiclePositionsData, refetch } = useVehiclePositions(
+    undefined,
+    {
+      query: { refetchInterval: 15000 },
+    }
+  );
 
-  const routes = routesData?.routes || [];
+  const routes = routesData || [];
   const routeMap = new Map(routes.map((r) => [r.routeId, r]));
 
-  const allVehicles = (
-    vehiclePositionsData?.realTimeVehiclePositions || []
-  ).map((vp) => ({
+  const allVehicles = (vehiclePositionsData || []).map((vp) => ({
     ...vp,
     route: routeMap.get(vp?.trip?.routeId || ""),
   }));

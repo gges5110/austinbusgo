@@ -1,13 +1,13 @@
 # Austin Bus Location
 
-This project provides real-time bus location tracking for Austin, Texas using CapMetro GTFS data. It consists of a React TypeScript frontend and a Python FastAPI backend with GraphQL API.
+This project provides real-time bus location tracking for Austin, Texas using CapMetro GTFS data. It consists of a React TypeScript frontend and a Python FastAPI backend with a REST (OpenAPI) API.
 
 ## Project Overview
 
 - **Purpose**: Real-time bus tracking application for Austin's CapMetro transit system
 - **Architecture**:
   - Frontend: React 18 with TypeScript, Material-UI, Mapbox GL
-  - Backend: FastAPI with GraphQL (Strawberry), PostgreSQL database
+  - Backend: FastAPI REST API (OpenAPI), PostgreSQL database
   - Data: GTFS (General Transit Feed Specification) static and real-time feeds
 
 ## Directory Structure
@@ -22,7 +22,7 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 ├── server/              # Python FastAPI backend
 │   ├── main.py         # FastAPI app entry point
 │   ├── database.py     # SQLAlchemy async database setup
-│   ├── gql/            # GraphQL schema, resolvers, types, inputs
+│   ├── api/            # REST routers and Pydantic response schemas
 │   ├── models/         # SQLAlchemy ORM models
 │   ├── services/       # Business logic (GTFS service, RT client)
 │   └── tests/          # Unit tests
@@ -40,13 +40,13 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 - **State Management**: Jotai for global state, React Query (TanStack Query) for server state
 - **Routing**: React Router v6
 - **Map**: Mapbox GL with react-map-gl
-- **GraphQL**: graphql-request with code generation (@graphql-codegen)
+- **API client**: orval-generated react-query hooks from the OpenAPI spec
 - **Testing**: Vitest with @testing-library/react
 - **Styling**: Emotion (CSS-in-JS)
 
 ### Backend
 - **Framework**: FastAPI 0.115 with Uvicorn
-- **API**: GraphQL with Strawberry (strawberry-graphql[fastapi])
+- **API**: REST with FastAPI routers + Pydantic v2 response models (camelCase aliases)
 - **Database**: PostgreSQL with SQLAlchemy 2.0 (async) + asyncpg driver
 - **Migrations**: Alembic
 - **Real-time Data**: gtfs-realtime-bindings
@@ -107,7 +107,7 @@ Run `make help` to see all available targets organized by category.
 - `make start-fe` - Start Vite dev server (port 5173)
 - `make build-fe` - Build frontend for production
 - `make test-fe` - Run frontend tests with Vitest
-- `make generate` - Generate GraphQL TypeScript types
+- `make generate` - Regenerate typed API hooks from the OpenAPI spec
 
 **Testing:**
 - `make test` - Run Python unit tests with pytest
@@ -167,14 +167,12 @@ Run `make help` to see all available targets organized by category.
 1. **Code Style**:
    - Black formatter (line length: default 88)
    - Python 3.11+ features
-   - Type hints required (used by FastAPI and Strawberry)
+   - Type hints required (used by FastAPI and Pydantic)
 
 2. **Project Structure**:
    - FastAPI app entry point in `server/main.py`
-   - GraphQL schema in `server/gql/schema.py`
-   - GraphQL types in `server/gql/types/`
-   - GraphQL inputs in `server/gql/inputs/`
-   - Resolvers in `server/gql/resolver.py`
+   - REST routers in `server/api/routers/`
+   - Response schemas in `server/api/schemas.py`
    - SQLAlchemy models in `server/models/`
    - Business logic in `server/services/`
 
@@ -186,13 +184,11 @@ Run `make help` to see all available targets organized by category.
    - Migrations managed with Alembic
    - Environment variable: `DATABASE_URL`
 
-4. **GraphQL API**:
-   - Schema defined with Strawberry (`@strawberry.type` decorators)
-   - Types in `gql/types/gtfs_types.py`, `gql/types/gtfs_rt_types.py`, `gql/types/geometry_types.py`
-   - Inputs in `gql/inputs/gtfs_inputs.py`
-   - Resolvers in `gql/resolver.py`
-   - Mounted via `strawberry.fastapi.GraphQLRouter`
-   - GraphiQL enabled at `/graphql`
+4. **REST API**:
+   - Routers per domain in `server/api/routers/`, mounted under `/api`
+   - Pydantic v2 response models in `server/api/schemas.py` (camelCase serialization via alias generator)
+   - Explicit `operation_id` on each route drives generated client hook names
+   - Interactive docs at `/docs`, spec at `/openapi.json`
 
 5. **Testing**:
    - pytest framework
@@ -236,13 +232,13 @@ Run `make help` to see all available targets organized by category.
 2. Use absolute imports from `src/`
 3. Extract shared logic to `shared/hooks/` or `shared/components/`
 4. Follow ESLint rules (no relative parent imports, sorted props, etc.)
-5. Generate GraphQL types if adding queries: `npm run generate`
+5. Regenerate API hooks if adding endpoints: `npm run generate`
 
-### Adding a New GraphQL Query/Mutation
-1. Update schema in `server/gql/schema.py`
-2. Add resolver logic in `server/gql/resolver.py`
-3. Add types if needed in `server/gql/*_types.py`
-4. Run code generation in client: `npm run generate`
+### Adding a New API Endpoint
+1. Add the route in the matching router under `server/api/routers/`
+2. Add/extend Pydantic response models in `server/api/schemas.py`
+3. Reuse or extend business logic in `server/services/`
+4. Run code generation in client: `npm run generate` (exports OpenAPI spec + runs orval)
 
 ### Updating Dependencies
 - Frontend: `cd client && npm update`
@@ -251,7 +247,6 @@ Run `make help` to see all available targets organized by category.
 ### Debugging
 - Frontend: Browser DevTools, React DevTools, React Query DevTools
 - Backend: Uvicorn hot reload enabled with `make run`, SQLAlchemy query logging available via config
-- GraphiQL available at `http://localhost:5001/graphql`
 - FastAPI auto-generated docs at `http://localhost:5001/docs`
 
 ## Testing
@@ -273,9 +268,9 @@ make integration-tests  # Run integration tests
 ## Key Files to Reference
 
 - [client/src/app/Router.tsx](client/src/app/Router.tsx) - Frontend routing
-- [client/src/shared/api/graphqlClient.ts](client/src/shared/api/graphqlClient.ts) - GraphQL client setup
+- [client/src/shared/api/fetcher.ts](client/src/shared/api/fetcher.ts) - API fetch helper used by generated hooks
 - [server/main.py](server/main.py) - FastAPI app entry point
-- [server/gql/schema.py](server/gql/schema.py) - GraphQL schema
+- [server/api/routers/__init__.py](server/api/routers/__init__.py) - REST API routers
 - [server/database.py](server/database.py) - Database connection
 - [client/.eslintrc.json](client/.eslintrc.json) - ESLint configuration
 - [client/tsconfig.json](client/tsconfig.json) - TypeScript configuration
@@ -287,7 +282,7 @@ make integration-tests  # Run integration tests
 - Sort JSX props alphabetically
 - Use double quotes in TypeScript/React code
 - Format Python code with Black before committing
-- Generate GraphQL types after schema changes: `npm run generate`
+- Regenerate API hooks after endpoint changes: `npm run generate`
 - Prefer Material-UI components over custom implementations
 - Use React Query for server state, Jotai for UI state
 - Follow feature-based folder structure for new components

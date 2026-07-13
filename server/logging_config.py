@@ -10,8 +10,6 @@ logging.basicConfig(
 
 # Set specific loggers
 logger = logging.getLogger(__name__)
-gql_logger = logging.getLogger("server.gql.logging")
-gql_logger.setLevel(logging.DEBUG)
 
 # Reduce noise from other libraries
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)

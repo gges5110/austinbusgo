@@ -6,7 +6,7 @@ import { useVehiclePositions } from "./useVehiclePositions";
 
 const mocks = vi.hoisted(() => ({
   useDataFromRouteLoader: vi.fn(),
-  useVehiclePositionsQuery: vi.fn(),
+  useVehiclePositions: vi.fn(),
   useCurrentRoute: vi.fn(),
   useLocation: vi.fn(),
 }));
@@ -19,8 +19,8 @@ vi.mock("shared/loaders/searchParamsDataLoader", () => ({
   searchParamsDataLoader: vi.fn(),
 }));
 
-vi.mock("shared/api/schemas/VehiclePositions.generated", () => ({
-  useVehiclePositionsQuery: mocks.useVehiclePositionsQuery,
+vi.mock("shared/api/generated/api", () => ({
+  useVehiclePositions: mocks.useVehiclePositions,
 }));
 
 vi.mock("shared/hooks/UseCurrentRoute", () => ({
@@ -40,7 +40,7 @@ describe("useVehiclePositions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.useDataFromRouteLoader.mockReturnValue(undefined);
-    mocks.useVehiclePositionsQuery.mockReturnValue({ data: undefined });
+    mocks.useVehiclePositions.mockReturnValue({ data: undefined });
     mocks.useCurrentRoute.mockReturnValue({ currentRoute: undefined });
     mocks.useLocation.mockReturnValue({ pathname: "/route/10/direction/0" });
   });
@@ -52,32 +52,38 @@ describe("useVehiclePositions", () => {
     const { result } = renderHook(() => useVehiclePositions());
 
     expect(result.current.vehiclePositions).toEqual([]);
-    expect(mocks.useVehiclePositionsQuery).toHaveBeenCalledWith(
+    expect(mocks.useVehiclePositions).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ enabled: false })
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: false }),
+      })
     );
   });
 
   test("keeps the query disabled without a current route", () => {
     renderHook(() => useVehiclePositions());
 
-    expect(mocks.useVehiclePositionsQuery).toHaveBeenCalledWith(
+    expect(mocks.useVehiclePositions).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ enabled: false })
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: false }),
+      })
     );
   });
 
   test("enables the query on a route page with a current route", () => {
     mocks.useCurrentRoute.mockReturnValue({ currentRoute: route });
-    mocks.useVehiclePositionsQuery.mockReturnValue({
-      data: { vehiclePositions: [vehicle] },
+    mocks.useVehiclePositions.mockReturnValue({
+      data: [vehicle],
     });
 
     const { result } = renderHook(() => useVehiclePositions());
 
-    expect(mocks.useVehiclePositionsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ routeId: "10", direction: 0 }),
-      expect.objectContaining({ enabled: true })
+    expect(mocks.useVehiclePositions).toHaveBeenCalledWith(
+      expect.objectContaining({ route_id: "10", direction: 0 }),
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: true }),
+      })
     );
     expect(result.current.vehiclePositions).toEqual([vehicle]);
   });
@@ -90,8 +96,8 @@ describe("useVehiclePositions", () => {
         ? { vehiclePositions: [loaderVehicle] }
         : undefined
     );
-    mocks.useVehiclePositionsQuery.mockReturnValue({
-      data: { vehiclePositions: [vehicle] },
+    mocks.useVehiclePositions.mockReturnValue({
+      data: [vehicle],
     });
 
     const { result } = renderHook(() => useVehiclePositions());

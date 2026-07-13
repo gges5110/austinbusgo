@@ -102,7 +102,7 @@ build-fe:
 test-fe:
 	cd client && npm test
 
-## generate: Generate GraphQL TypeScript types
+## generate: Export OpenAPI spec and generate typed API hooks (orval)
 generate:
 	cd client && npm run generate
 

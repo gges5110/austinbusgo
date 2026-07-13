@@ -1,21 +1,9 @@
 import { LoaderFunctionArgs } from "@remix-run/router/utils";
 import { queryClient } from "app/QueryClient";
-import {
-  StopQuery,
-  StopQueryVariables,
-  useStopQuery,
-} from "shared/api/schemas/Stop.generated";
+import { getStopQueryOptions } from "shared/api/generated/api";
 
-const stopQuery = (id: StopQueryVariables) => ({
-  queryKey: useStopQuery.getKey(id),
-  queryFn: useStopQuery.fetcher(id),
-});
 export const stopLoader = async ({ params }: LoaderFunctionArgs) => {
   const stopId = params["stopId"];
 
-  return queryClient.ensureQueryData<StopQuery>(
-    stopQuery({
-      stopId: stopId || "0",
-    })
-  );
+  return queryClient.ensureQueryData(getStopQueryOptions(stopId || "0"));
 };

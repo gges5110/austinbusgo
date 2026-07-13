@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { SearchQuery } from "shared/api/schemas/Search.generated";
+import { Stop as ApiStop } from "shared/api/generated/model";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { Route } from "shared/types/interface.d";
 
@@ -9,7 +9,7 @@ const MAX_RECENT_OPTIONS = 8;
 
 interface UseSearchOptionsParams {
   inputString: string;
-  stops: SearchQuery["search"]["stops"];
+  stops: ApiStop[];
   routes: Route[];
   value: SearchOption | null;
 }

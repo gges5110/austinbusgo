@@ -11,8 +11,6 @@
     "@tanstack/react-query": "^4.29.5",
     "autosuggest-highlight": "^3.3.4",
     "dayjs": "1.9.4",
-    "graphql": "^16.11.0",
-    "graphql-request": "^6.0.0",
     "gtfs-realtime-bindings": "^1.1.1",
     "jotai": "^2.0.4",
     "mapbox-gl": "^3.5.0",
@@ -34,7 +32,7 @@
     "lint:fix": "eslint -c .eslintrc.json 'src/**/*.{tsx,ts,js}' --fix",
     "format": "prettier --write 'src/**/*.{tsx,ts,js,json,css,md}'",
     "format:check": "prettier --check 'src/**/*.{tsx,ts,js,json,css,md}'",
-    "generate": "graphql-codegen",
+    "generate": "cd .. && venv/bin/python -m server.export_openapi > client/openapi.json && cd client && orval --config orval.config.ts",
     "analyze_bundle": "npx source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
@@ -58,12 +56,6 @@
     ]
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^6.0.1",
-    "@graphql-codegen/client-preset": "^5.1.0",
-    "@graphql-codegen/near-operation-file-preset": "^3.1.0",
-    "@graphql-codegen/typescript": "^5.0.2",
-    "@graphql-codegen/typescript-operations": "^5.0.2",
-    "@graphql-codegen/typescript-react-query": "^6.1.1",
     "@tanstack/react-query-devtools": "^4.29.6",
     "@testing-library/jest-dom": "5.11.4",
     "@testing-library/react": "^14.0.0",
@@ -87,6 +79,7 @@
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^22.0.0",
     "lint-staged": "10.4.2",
+    "orval": "^8.21.0",
     "pascal-case": "^3.1.2",
     "prettier": "3.6.2",
     "rollup-plugin-copy": "^3.5.0",

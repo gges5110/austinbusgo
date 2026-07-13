@@ -1,5 +1,5 @@
-import * as React from "react";
 import { MapPeekSheet } from "features/map/components/MapPeekSheet";
+import * as React from "react";
 import { VehiclePosition } from "shared/types/interface.d";
 
 import { VehiclePopupContainer } from "./VehiclePopupContainer";

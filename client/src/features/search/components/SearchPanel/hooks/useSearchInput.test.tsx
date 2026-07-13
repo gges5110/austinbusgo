@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useSearchInput } from "./useSearchInput";
 
 const mocks = vi.hoisted(() => ({
-  useSearchQuery: vi.fn(),
+  useSearch: vi.fn(),
 }));
 
-vi.mock("shared/api/schemas/Search.generated", () => ({
-  useSearchQuery: mocks.useSearchQuery,
+vi.mock("shared/api/generated/api", () => ({
+  useSearch: mocks.useSearch,
 }));
 
 const changeEvent = { type: "change" } as React.SyntheticEvent;
@@ -19,7 +19,7 @@ describe("useSearchInput", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    mocks.useSearchQuery.mockReturnValue({ data: undefined, isLoading: true });
+    mocks.useSearch.mockReturnValue({ data: undefined, isLoading: true });
   });
 
   afterEach(() => {
@@ -34,18 +34,25 @@ describe("useSearchInput", () => {
     });
 
     expect(result.current.inputString).toBe("lam");
-    expect(mocks.useSearchQuery).toHaveBeenLastCalledWith(
-      { searchTerm: "" },
-      expect.objectContaining({ enabled: false })
+    expect(mocks.useSearch).toHaveBeenLastCalledWith(
+      { q: "" },
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: false }),
+      })
     );
 
     act(() => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(mocks.useSearchQuery).toHaveBeenLastCalledWith(
-      { searchTerm: "lam" },
-      expect.objectContaining({ enabled: true, keepPreviousData: true })
+    expect(mocks.useSearch).toHaveBeenLastCalledWith(
+      { q: "lam" },
+      expect.objectContaining({
+        query: expect.objectContaining({
+          enabled: true,
+          keepPreviousData: true,
+        }),
+      })
     );
   });
 
@@ -62,8 +69,8 @@ describe("useSearchInput", () => {
   test("derives stops and routes from query data", () => {
     const stops = [{ stopId: "1001" }];
     const routes = [{ routeId: "10" }];
-    mocks.useSearchQuery.mockReturnValue({
-      data: { search: { stops, routes } },
+    mocks.useSearch.mockReturnValue({
+      data: { stops, routes },
       isLoading: false,
     });
 
@@ -80,9 +87,11 @@ describe("useSearchInput", () => {
       result.current.search("guadalupe");
     });
 
-    expect(mocks.useSearchQuery).toHaveBeenLastCalledWith(
-      { searchTerm: "guadalupe" },
-      expect.objectContaining({ enabled: true })
+    expect(mocks.useSearch).toHaveBeenLastCalledWith(
+      { q: "guadalupe" },
+      expect.objectContaining({
+        query: expect.objectContaining({ enabled: true }),
+      })
     );
   });
 

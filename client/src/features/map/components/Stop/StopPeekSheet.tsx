@@ -1,8 +1,8 @@
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Button } from "@mui/material";
+import { MapPeekSheet } from "features/map/components/MapPeekSheet";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPeekSheet } from "features/map/components/MapPeekSheet";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { Stop } from "shared/types/interface.d";
 

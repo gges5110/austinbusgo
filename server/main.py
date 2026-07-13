@@ -3,53 +3,20 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import logging
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
-from strawberry.fastapi import BaseContext, GraphQLRouter
 
 from server import logging_config  # noqa: F401 - Configure logging on import
 from server.config import db_url
 from server import database
 
 logger = logging.getLogger(__name__)
+from server.api.routers import api_router
 from server.database import (
     database_sanity_check,
-    get_db,
     init_database,
 )
-from server.gql.dataloaders import create_dataloaders
-from server.gql.resolver import Resolver
-from server.gql.schema import schema
 from server.services.gtfs_service import GTFSService
-
-
-class GraphQLContext(BaseContext):
-    def __init__(
-        self,
-        session: AsyncSession,
-        stop_routes_cache: dict | None = None,
-        dataloaders: dict | None = None,
-    ):
-        self.session = session
-        self.resolver = Resolver(session)
-        self.stop_routes_cache = stop_routes_cache
-        self.dataloaders = dataloaders or {}
-        # Pre-derive route counts for use in get_near_by_stops ranking
-        self.stop_route_counts = (
-            {stop_id: len(routes) for stop_id, routes in stop_routes_cache.items()}
-            if stop_routes_cache is not None
-            else None
-        )
-
-
-async def get_context(
-    request: Request, session: AsyncSession = Depends(get_db)
-) -> GraphQLContext:
-    cache = getattr(request.app.state, "stop_routes_cache", None)
-    gtfs_service = GTFSService(session)
-    dataloaders = create_dataloaders(gtfs_service)
-    return GraphQLContext(session, cache, dataloaders)
 
 
 @asynccontextmanager
@@ -59,6 +26,7 @@ async def lifespan(app: FastAPI):
     init_database(db_url)
     async with database.AsyncSessionLocal() as session:
         await database_sanity_check(session)
+        # Used by the nearby-stops ranking to weight stops by route count
         app.state.stop_routes_cache = await GTFSService(
             session
         ).get_all_routes_at_stops()
@@ -75,10 +43,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    graphql_app = GraphQLRouter(
-        schema, context_getter=get_context, graphql_ide="graphiql"
-    )
-    app.include_router(graphql_app, prefix="/graphql")
+    app.include_router(api_router)
 
     return app
 

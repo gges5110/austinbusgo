@@ -13,9 +13,11 @@ import dayjs from "dayjs";
 import { useSetAtom } from "jotai";
 import * as React from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { useEarliestArrivalTimesOnRouteQuery } from "shared/api/schemas/EarliestArrivalTimesOnRoute.generated";
-import { StopsAndShapesQuery } from "shared/api/schemas/StopsAndRouteShapes.generated";
-import { useVehiclePositionsQuery } from "shared/api/schemas/VehiclePositions.generated";
+import {
+  useEarliestArrivalTimesOnRoute,
+  useVehiclePositions,
+} from "shared/api/generated/api";
+import { StopsAndShapes } from "shared/api/generated/model";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import {
   hoveringStopAtom,
@@ -27,7 +29,7 @@ import { getDate, getTime, parseArrivalTime } from "shared/utils/dateUtils";
 
 interface StopsTimelineProps {
   route: Route;
-  stops: StopsAndShapesQuery["stopsAndShapes"]["stops"];
+  stops: StopsAndShapes["stops"];
 }
 
 export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
@@ -39,34 +41,34 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
   const setHoveringStop = useSetAtom(hoveringStopAtom);
   const setHoveringVehiclePosition = useSetAtom(hoveringVehiclePositionAtom);
   const setMapsFlyToCoordinate = useSetAtom(mapsFlyToCoordinateAtom);
-  const { data: vehiclePositionsData } = useVehiclePositionsQuery(
+  const { data: vehiclePositionsData } = useVehiclePositions(
     {
-      routeId: route.routeId,
+      route_id: route.routeId,
       direction: Number(directionId),
     },
     {
-      refetchInterval: 15000,
+      query: {
+        refetchInterval: 15000,
+      },
     }
   );
-  const { data } = useEarliestArrivalTimesOnRouteQuery(
+  const { data } = useEarliestArrivalTimesOnRoute(
+    route.routeId,
     {
-      routeId: route.routeId,
-      directionId: Number(directionId),
+      direction_id: Number(directionId),
       date: getDate(),
       time: getTime(),
     },
-    { keepPreviousData: true }
+    { query: { keepPreviousData: true } }
   );
   const theme = useTheme();
-  const vehiclePositions = vehiclePositionsData?.vehiclePositions || [];
+  const vehiclePositions = vehiclePositionsData || [];
   return (
     <Box component={"div"}>
       <List>
         {stops?.map((stop, index) => {
           let updatedArrivalTime, scheduledArrivalTime;
-          const arrivalTime = data?.earliestArrivalTimesOnRoute.find(
-            (t) => t.stopId === stop.stopId
-          );
+          const arrivalTime = data?.find((t) => t.stopId === stop.stopId);
           if (arrivalTime) {
             const scheduledArrivalTimeString = arrivalTime.scheduledArrivalTime;
             const updatedArrivalTimeString = arrivalTime.updatedArrivalTime;

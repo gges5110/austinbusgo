@@ -1,4 +1,4 @@
-import { useAllStopsQuery } from "shared/api/schemas/AllStops.generated";
+import { useAllStops as useAllStopsApi } from "shared/api/generated/api";
 import { Stop } from "shared/types/interface.d";
 
 // Matches the edge cache TTL for static GTFS data; within a session the
@@ -15,12 +15,11 @@ const NO_STOPS: Stop[] = [];
  * culls offscreen points and StopLayer's LOD handles density.
  */
 export const useAllStops = (enabled: boolean) => {
-  const { data, isFetching } = useAllStopsQuery(undefined, {
-    enabled,
-    staleTime: STALE_TIME_MS,
+  const { data, isFetching } = useAllStopsApi({
+    query: { enabled, staleTime: STALE_TIME_MS },
   });
 
-  const allStops: Stop[] = enabled && data ? (data.stops as Stop[]) : NO_STOPS;
+  const allStops: Stop[] = enabled && data ? (data as Stop[]) : NO_STOPS;
 
   return {
     isLoading: isFetching,
