@@ -39,22 +39,31 @@ export const FavoritesMenu = () => {
   return (
     <MenuPanel>
       <Container sx={{ p: 2 }}>
-        <Box alignItems={"center"} display={"flex"} gap={1}>
+        <Box
+          sx={{
+            alignItems: "center",
+            display: "flex",
+            gap: 1,
+          }}
+        >
           <BookmarkIcon />
           <Typography variant={"h6"}>Favorites</Typography>
         </Box>
       </Container>
-
       {!hasFavorites && (
         <Container sx={{ p: 2 }}>
           <Typography>Start adding favorites!</Typography>
-          <Typography color={"gray"} fontSize={14}>
+          <Typography
+            color={"gray"}
+            sx={{
+              fontSize: 14,
+            }}
+          >
             You can add routes or stops to favorites by clicking the bookmark
             button on their detail pages.
           </Typography>
         </Container>
       )}
-
       {hasFavorites && (
         <List>
           {favoriteStops.map((stop) => (
@@ -71,20 +80,46 @@ export const FavoritesMenu = () => {
                   sx={{ py: 2 }}
                   to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch()}`}
                 >
-                  <Box display={"flex"} flexDirection={"column"} gap={1}>
-                    <Box display={"flex"} gap={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                      }}
+                    >
                       <PlaceOutlinedIcon />
-                      <Typography fontWeight={"bold"}>
+                      <Typography
+                        sx={{
+                          fontWeight: "bold",
+                        }}
+                      >
                         {stop.stopName}
                       </Typography>
                     </Box>
 
-                    <Typography color={"gray"} fontSize={14}>
+                    <Typography
+                      color={"gray"}
+                      sx={{
+                        fontSize: 14,
+                      }}
+                    >
                       {"Stop Code: "}
                       {stop.stopId}
                     </Typography>
 
-                    <Box display={"flex"} flexWrap={"wrap"} gap={1}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 1,
+                      }}
+                    >
                       {stop?.routes?.map((route) => (
                         <RouteIdDisplay
                           key={route.routeId}
@@ -106,7 +141,12 @@ export const FavoritesMenu = () => {
                   component={RouterLink}
                   to={`/route/${route.routeId}/direction/0${viewStatePathname}`}
                 >
-                  <Box display={"flex"} gap={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                    }}
+                  >
                     <RouteIcon />
                     <RouteIdDisplay
                       routeColor={route.routeColor}

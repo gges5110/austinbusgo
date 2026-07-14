@@ -12,7 +12,13 @@ export const ShareButton = () => {
   };
   return (
     <Button onClick={copy} sx={{ textTransform: "none" }}>
-      <Box alignItems={"center"} display={"flex"} flexDirection={"column"}>
+      <Box
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <ShareOutlinedIcon />
         <Typography sx={{ textAlign: "center", fontSize: "14px" }}>
           Share

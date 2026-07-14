@@ -223,9 +223,11 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                 }
               >
                 <Box
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  width={"100%"}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
                 >
                   <Box
                     sx={{
@@ -236,14 +238,25 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                       width: "100%",
                     }}
                   >
-                    <Box display={"flex"} flexDirection={"column"}>
-                      <Typography fontWeight={isSelectedStop ? 600 : 400}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontWeight: isSelectedStop ? 600 : 400,
+                        }}
+                      >
                         {stopTime.stop?.stopName}
                       </Typography>
                       <Typography
                         color={textColor}
-                        fontSize={14}
-                        fontWeight={updatedArrivalTime ? 600 : undefined}
+                        sx={{
+                          fontSize: 14,
+                          fontWeight: updatedArrivalTime ? 600 : undefined,
+                        }}
                       >
                         {timeDiffString}
                       </Typography>
@@ -257,21 +270,39 @@ export const TripTimeline: React.FC<TripTimelineProps> = ({
                           flexDirection: "column",
                         }}
                       >
-                        <Typography fontSize={24} lineHeight={1}>
+                        <Typography
+                          sx={{
+                            fontSize: 24,
+                            lineHeight: 1,
+                          }}
+                        >
                           {scheduledArrivalTime.format("h:mm")}
                         </Typography>
-                        <Typography color={"gray"} fontSize={14}>
+                        <Typography
+                          color={"gray"}
+                          sx={{
+                            fontSize: 14,
+                          }}
+                        >
                           {scheduledArrivalTime.format("A")}
                         </Typography>
                       </Box>
                     ) : (
                       <>
                         {updatedArrivalTime !== undefined ? (
-                          <Typography whiteSpace={"nowrap"}>
+                          <Typography
+                            sx={{
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {updatedArrivalTime.format("LT")}
                           </Typography>
                         ) : (
-                          <Typography whiteSpace={"nowrap"}>
+                          <Typography
+                            sx={{
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {scheduledArrivalTime.format("LT")}
                           </Typography>
                         )}

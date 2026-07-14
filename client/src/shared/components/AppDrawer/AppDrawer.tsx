@@ -146,8 +146,8 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
                 <Switch
                   checked={showAllVehicles}
                   edge={"end"}
-                  inputProps={{ "aria-label": "show all vehicles" }}
                   onChange={(e) => setShowAllVehicles(e.target.checked)}
+                  slotProps={{ input: { "aria-label": "show all vehicles" } }}
                   value={"showAllVehicles"}
                 />
               </ListItemSecondaryAction>
@@ -161,8 +161,8 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
                 <Switch
                   checked={autoPolling}
                   edge={"end"}
-                  inputProps={{ "aria-label": "enable auto polling" }}
                   onChange={handleAutoPollingChange}
+                  slotProps={{ input: { "aria-label": "enable auto polling" } }}
                   value={"autoPolling"}
                 />
               </ListItemSecondaryAction>
@@ -203,10 +203,10 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
                 <Switch
                   checked={showReactQueryDevtools}
                   edge={"end"}
-                  inputProps={{ "aria-label": "toggle devtools" }}
                   onChange={(event) =>
                     setShowReactQueryDevtools(event.target.checked)
                   }
+                  slotProps={{ input: { "aria-label": "toggle devtools" } }}
                   value={"showReactQueryDevtools"}
                 />
               </ListItemSecondaryAction>
@@ -233,7 +233,13 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
               <ListItemText
                 primary={"Feed Info"}
                 secondary={
-                  <Box display={"flex"} flexDirection={"column"} gap={"4px"}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "4px",
+                    }}
+                  >
                     <span>
                       Start Date:{" "}
                       {data?.feedStartDate

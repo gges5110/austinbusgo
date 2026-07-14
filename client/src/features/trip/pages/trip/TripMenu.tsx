@@ -72,23 +72,36 @@ export const TripMenu = () => {
               routeName={tripName}
               useBusIcon={true}
             />
-            <Typography textAlign={"center"} variant={"subtitle2"}>
+            <Typography
+              sx={{
+                textAlign: "center",
+              }}
+              variant={"subtitle2"}
+            >
               from {stop?.stopName}
             </Typography>
           </Box>
         </Box>
 
         <Divider />
-        <Box display={"flex"} px={"22px"} py={"10px"}>
+        <Box
+          sx={{
+            display: "flex",
+            px: "22px",
+            py: "10px",
+          }}
+        >
           <Button
             component={RouterLink}
             sx={{ textTransform: "none" }}
             to={`/route/${trip.routeId}/direction/${trip.directionId}${viewStatePathname}`}
           >
             <Box
-              alignItems={"center"}
-              display={"flex"}
-              flexDirection={"column"}
+              sx={{
+                alignItems: "center",
+                display: "flex",
+                flexDirection: "column",
+              }}
             >
               <RouteOutlined />
               <Typography sx={{ textAlign: "center", fontSize: "14px" }}>

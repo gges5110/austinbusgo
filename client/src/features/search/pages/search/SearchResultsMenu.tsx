@@ -59,18 +59,39 @@ export const SearchResultsMenu = () => {
         <Container
           sx={{ p: 2, display: "flex", gap: 1, flexDirection: "column" }}
         >
-          <Box component={"span"} display={"inherit"}>
-            <Typography mr={"4px"}>Austin Bus Go can&apos;t find</Typography>
-            <Typography fontStyle={"italic"}>{searchTerm}</Typography>
+          <Box
+            component={"span"}
+            sx={{
+              display: "inherit",
+            }}
+          >
+            <Typography
+              sx={{
+                mr: "4px",
+              }}
+            >
+              Austin Bus Go can&apos;t find
+            </Typography>
+            <Typography
+              sx={{
+                fontStyle: "italic",
+              }}
+            >
+              {searchTerm}
+            </Typography>
           </Box>
 
-          <Typography color={"gray"} fontSize={14}>
+          <Typography
+            color={"gray"}
+            sx={{
+              fontSize: 14,
+            }}
+          >
             Make sure your search is spelled correctly. Try adding a route
             number, street name, or stop code.
           </Typography>
         </Container>
       )}
-
       {!noResults && (
         <List>
           {searchData.search.stops.map((stop) => {
@@ -91,20 +112,46 @@ export const SearchResultsMenu = () => {
                     sx={{ py: 2 }}
                     to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch()}`}
                   >
-                    <Box display={"flex"} flexDirection={"column"} gap={1}>
-                      <Box display={"flex"} gap={1}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                        }}
+                      >
                         <PlaceOutlinedIcon />
-                        <Typography fontWeight={"bold"}>
+                        <Typography
+                          sx={{
+                            fontWeight: "bold",
+                          }}
+                        >
                           {stop.stopName}
                         </Typography>
                       </Box>
 
-                      <Typography color={"gray"} fontSize={14}>
+                      <Typography
+                        color={"gray"}
+                        sx={{
+                          fontSize: 14,
+                        }}
+                      >
                         {"Stop Code: "}
                         {stop.stopId}
                       </Typography>
 
-                      <Box display={"flex"} flexWrap={"wrap"} gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 1,
+                        }}
+                      >
                         {stop?.routes?.map((route) => (
                           <RouteIdDisplay
                             key={route.routeId}
@@ -131,7 +178,12 @@ export const SearchResultsMenu = () => {
                     }}
                     to={`/route/${route.routeId}/direction/0${viewStatePathname}`}
                   >
-                    <Box display={"flex"} gap={1}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                      }}
+                    >
                       <RouteIcon />
                       <RouteIdDisplay
                         routeColor={route.routeColor}

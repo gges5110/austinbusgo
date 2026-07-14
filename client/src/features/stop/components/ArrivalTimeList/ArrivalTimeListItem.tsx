@@ -69,24 +69,55 @@ export const ArrivalTimeListItem: React.FunctionComponent<
       sx={{ py: 1.5 }}
       to={`/stop/${stop.stopId}/trip/${arrivalTime.trip.tripId}${viewStatePathname}${withPreservedSearch({ routeId: arrivalTime.trip.routeId, directionId: String(arrivalTime.trip.directionId) })}`}
     >
-      <Box display={"flex"} justifyContent={"space-between"} width={"100%"}>
-        <Box display={"flex"} flexDirection={"column"} gap={1}>
-          <Box alignItems={"center"} display={"flex"} gap={1}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          <Box
+            sx={{
+              alignItems: "center",
+              display: "flex",
+              gap: 1,
+            }}
+          >
             <DirectionsBusIcon aria-hidden={true} fontSize={"small"} />
             <RouteIdDisplay
               routeColor={arrivalTime.trip.route?.routeColor}
               routeId={arrivalTime.trip.routeId}
             />
-            <Typography display={"inline"} variant={"body2"}>
+            <Typography
+              sx={{
+                display: "inline",
+              }}
+              variant={"body2"}
+            >
               {tripName}
             </Typography>
           </Box>
-          <Box alignItems={"center"} color={"gray"} display={"flex"}>
+          <Box
+            sx={{
+              alignItems: "center",
+              color: "gray",
+              display: "flex",
+            }}
+          >
             <Typography
               color={textColor}
               component={"span"}
-              display={"inline"}
-              fontWeight={updatedArrivalTime ? 600 : undefined}
+              sx={{
+                display: "inline",
+                fontWeight: updatedArrivalTime ? 600 : undefined,
+              }}
               variant={"body2"}
             >
               {timeDiffString}
@@ -94,8 +125,9 @@ export const ArrivalTimeListItem: React.FunctionComponent<
             <Bullet />
             <Typography
               component={"span"}
-              display={"inline"}
               sx={{
+                display: "inline",
+
                 textDecoration:
                   updatedArrivalTime && timeDiffString !== "On time"
                     ? "line-through"
@@ -139,10 +171,20 @@ export const ArrivalTimeListItem: React.FunctionComponent<
                 color: "gray",
               }}
             >
-              <Typography fontSize={24} lineHeight={1}>
+              <Typography
+                sx={{
+                  fontSize: 24,
+                  lineHeight: 1,
+                }}
+              >
                 {Math.abs(timeDiff)}
               </Typography>
-              <Typography color={"gray"} fontSize={14}>
+              <Typography
+                color={"gray"}
+                sx={{
+                  fontSize: 14,
+                }}
+              >
                 min ago
               </Typography>
             </Box>
@@ -154,10 +196,20 @@ export const ArrivalTimeListItem: React.FunctionComponent<
                 flexDirection: "column",
               }}
             >
-              <Typography fontSize={24} lineHeight={1}>
+              <Typography
+                sx={{
+                  fontSize: 24,
+                  lineHeight: 1,
+                }}
+              >
                 {scheduledArrivalTime.format("h:mm")}
               </Typography>
-              <Typography color={"gray"} fontSize={14}>
+              <Typography
+                color={"gray"}
+                sx={{
+                  fontSize: 14,
+                }}
+              >
                 {scheduledArrivalTime.format("A")}
               </Typography>
             </Box>
@@ -169,7 +221,13 @@ export const ArrivalTimeListItem: React.FunctionComponent<
                 height: "100%",
               }}
             >
-              <Typography fontSize={20}>Now</Typography>
+              <Typography
+                sx={{
+                  fontSize: 20,
+                }}
+              >
+                Now
+              </Typography>
             </Box>
           ) : (
             <Box
@@ -179,10 +237,20 @@ export const ArrivalTimeListItem: React.FunctionComponent<
                 flexDirection: "column",
               }}
             >
-              <Typography fontSize={24} lineHeight={1}>
+              <Typography
+                sx={{
+                  fontSize: 24,
+                  lineHeight: 1,
+                }}
+              >
                 {timeDiff}
               </Typography>
-              <Typography color={"gray"} fontSize={14}>
+              <Typography
+                color={"gray"}
+                sx={{
+                  fontSize: 14,
+                }}
+              >
                 min
               </Typography>
             </Box>

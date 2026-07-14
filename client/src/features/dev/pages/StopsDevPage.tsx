@@ -111,8 +111,10 @@ export const StopsDevPage: React.FC = () => {
             Stops Lookup
           </Typography>
           <Typography
-            color={"text.secondary"}
             gutterBottom={true}
+            sx={{
+              color: "text.secondary",
+            }}
             variant={"body2"}
           >
             Search for stops by name or ID to view details
@@ -120,24 +122,25 @@ export const StopsDevPage: React.FC = () => {
 
           <Box sx={{ mt: 3 }}>
             <TextField
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position={"start"}>
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
               fullWidth={true}
               label={"Search Stops"}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder={"Enter stop name (e.g., Airport, Lamar)"}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position={"start"}>
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                },
+              }}
               value={searchTerm}
               variant={"outlined"}
             />
           </Box>
         </CardContent>
       </Card>
-
       {searchTerm.length >= 2 && searchResults.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
@@ -168,15 +171,18 @@ export const StopsDevPage: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
       {searchTerm.length >= 2 && searchResults.length === 0 && (
         <Paper sx={{ p: 3 }}>
-          <Typography align={"center"} color={"text.secondary"}>
+          <Typography
+            align={"center"}
+            sx={{
+              color: "text.secondary",
+            }}
+          >
             No stops found matching your search
           </Typography>
         </Paper>
       )}
-
       {selectedStop && (
         <Card>
           <CardContent>
@@ -185,7 +191,12 @@ export const StopsDevPage: React.FC = () => {
             </Typography>
             <Box sx={{ mt: 2 }}>
               <Box sx={{ mb: 2 }}>
-                <Typography color={"text.secondary"} variant={"caption"}>
+                <Typography
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                  variant={"caption"}
+                >
                   STOP NAME
                 </Typography>
                 <Typography variant={"body1"}>
@@ -193,14 +204,24 @@ export const StopsDevPage: React.FC = () => {
                 </Typography>
               </Box>
               <Box sx={{ mb: 2 }}>
-                <Typography color={"text.secondary"} variant={"caption"}>
+                <Typography
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                  variant={"caption"}
+                >
                   STOP ID
                 </Typography>
                 <Typography variant={"body1"}>{selectedStop.stopId}</Typography>
               </Box>
               {selectedStop.stopCode && (
                 <Box sx={{ mb: 2 }}>
-                  <Typography color={"text.secondary"} variant={"caption"}>
+                  <Typography
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                    variant={"caption"}
+                  >
                     STOP CODE
                   </Typography>
                   <Typography variant={"body1"}>
@@ -210,7 +231,12 @@ export const StopsDevPage: React.FC = () => {
               )}
               {selectedStop.stopLoc?.coordinates && (
                 <Box sx={{ mb: 2 }}>
-                  <Typography color={"text.secondary"} variant={"caption"}>
+                  <Typography
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                    variant={"caption"}
+                  >
                     LOCATION
                   </Typography>
                   <Typography variant={"body1"}>

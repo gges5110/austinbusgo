@@ -39,13 +39,23 @@ export const VehiclePopupContent: React.FunctionComponent<
 > = ({ vehiclePosition, stop, stopLoading, trip, tripLoading }) => {
   const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
   return (
-    <Box display={"flex"} flexDirection={"column"} gap={1} minWidth={275}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        minWidth: 275,
+      }}
+    >
       <Box
-        alignItems={"center"}
         component={trip?.routeId ? Link : "div"}
-        display={"flex"}
-        gap={1}
-        sx={{ color: "inherit", textDecoration: "none" }}
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          gap: 1,
+          color: "inherit",
+          textDecoration: "none",
+        }}
         to={`/route/${trip?.routeId}/direction/0${viewStatePathname}${withPreservedSearch()}`}
       >
         <RouteIcon />
@@ -55,44 +65,62 @@ export const VehiclePopupContent: React.FunctionComponent<
         />
         <Typography
           component={"p"}
-          fontSize={14}
-          sx={
+          sx={[
+            {
+              fontSize: 14,
+            },
             trip?.routeId
               ? { "&:hover": { textDecoration: "underline" } }
-              : undefined
-          }
+              : false,
+          ]}
           variant={"body2"}
         >
           {tripLoading ? <Skeleton /> : trip?.route?.routeLongName}
         </Typography>
       </Box>
-      <Typography display={"block"} variant={"body2"}>
+      <Typography
+        sx={{
+          display: "block",
+        }}
+        variant={"body2"}
+      >
         {vehiclePosition.currentStatus &&
           getFormattedVehicleStopStatus(vehiclePosition.currentStatus)}
       </Typography>
       <Box
-        alignItems={"center"}
         component={vehiclePosition.stopId ? Link : "div"}
-        display={"flex"}
-        gap={1}
-        sx={{ color: "inherit", textDecoration: "none" }}
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          gap: 1,
+          color: "inherit",
+          textDecoration: "none",
+        }}
         to={`/stop/${vehiclePosition.stopId}${viewStatePathname}${withPreservedSearch()}`}
       >
         <PlaceOutlinedIcon color={"neutral"} sx={{ fontSize: 20 }} />
         <Typography
-          fontSize={16}
-          fontWeight={600}
-          sx={
+          sx={[
+            {
+              fontSize: 16,
+              fontWeight: 600,
+            },
             vehiclePosition.stopId
               ? { "&:hover": { textDecoration: "underline" } }
-              : undefined
-          }
+              : false,
+          ]}
           variant={"body2"}
         >
           {stopLoading ? <Skeleton width={300} /> : stop?.stopName}
         </Typography>
       </Box>
-      <Typography alignSelf={"flex-end"} color={"textSecondary"} fontSize={14}>
+      <Typography
+        color={"textSecondary"}
+        sx={{
+          alignSelf: "flex-end",
+          fontSize: 14,
+        }}
+      >
         {"Updated "}
         {dayjs.unix(vehiclePosition.timestamp || 0).fromNow()}
       </Typography>

@@ -30,7 +30,7 @@ export const SearchInput: React.FunctionComponent<SearchInputProps> = ({
           loading={loading}
         />
       }
-      inputProps={params.inputProps}
+      inputProps={params.slotProps.htmlInput}
       inputRef={inputRef}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -41,7 +41,7 @@ export const SearchInput: React.FunctionComponent<SearchInputProps> = ({
         }
       }}
       placeholder={"Search Routes or Stops"}
-      ref={params.InputProps.ref}
+      ref={params.slotProps.input.ref}
       sx={{
         paddingLeft: 2.5,
         flex: 1,

@@ -26,7 +26,12 @@ export const RouteErrorFallback: React.FC = () => {
       }}
     >
       <Typography variant={"h5"}>Failed to load page</Typography>
-      <Typography color={"text.secondary"} variant={"body2"}>
+      <Typography
+        sx={{
+          color: "text.secondary",
+        }}
+        variant={"body2"}
+      >
         {errorMessage}
       </Typography>
       <Box sx={{ display: "flex", gap: 1 }}>

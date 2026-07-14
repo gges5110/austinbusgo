@@ -27,7 +27,11 @@ const OptionLabel: React.FC<{ inputValue: string; option: SearchOption }> = ({
       return (
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Highlight query={inputValue} text={option.stop.stopName ?? ""} />
-          <Box color={"gray"}>
+          <Box
+            sx={{
+              color: "gray",
+            }}
+          >
             <Highlight query={inputValue} text={String(option.stop.stopId)} />
           </Box>
         </Box>

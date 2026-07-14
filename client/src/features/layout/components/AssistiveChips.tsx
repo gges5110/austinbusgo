@@ -30,9 +30,9 @@ export const AssistiveChips: React.FC = () => {
 
   return (
     <Box
-      display={"flex"}
-      gap={1}
       sx={{
+        display: "flex",
+        gap: 1,
         position: "absolute",
         left: MENU_PANEL_WIDTH,
         ml: 2,
@@ -56,7 +56,12 @@ export const AssistiveChips: React.FC = () => {
           to={`/search/All%20routes${viewStatePathname}`}
         >
           <RouteIcon sx={{ fontSize: 18, mr: "4px" }} />
-          <Typography fontSize={14} fontWeight={500}>
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
             Search all routes
           </Typography>
         </Button>
@@ -78,7 +83,12 @@ export const AssistiveChips: React.FC = () => {
           to={`/favorites${viewStatePathname}`}
         >
           <BookmarkIcon sx={{ fontSize: 18, mr: "4px" }} />
-          <Typography fontSize={14} fontWeight={500}>
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
             Show favorites
           </Typography>
         </Button>
@@ -101,7 +111,12 @@ export const AssistiveChips: React.FC = () => {
           }}
         >
           <DirectionsBusIcon sx={{ fontSize: 18, mr: "4px" }} />
-          <Typography fontSize={14} fontWeight={500}>
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
             Show all buses
           </Typography>
         </Button>
