@@ -224,11 +224,21 @@ export const VehiclePositionsDevPage: React.FC = () => {
               <Typography gutterBottom={true} variant={"h4"}>
                 Real-time Vehicle Positions
               </Typography>
-              <Typography color={"text.secondary"} variant={"body2"}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+                variant={"body2"}
+              >
                 Showing {sortedVehicles.length} active vehicles across{" "}
                 {routes.length} routes
               </Typography>
-              <Typography color={"text.secondary"} variant={"caption"}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+                variant={"caption"}
+              >
                 Last updated: {lastUpdate.format("h:mm:ss A")} • Auto-refresh:
                 15s
               </Typography>
@@ -243,7 +253,6 @@ export const VehiclePositionsDevPage: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
-
       <TableContainer component={Paper}>
         <Table size={"small"}>
           <TableHead>
@@ -327,7 +336,12 @@ export const VehiclePositionsDevPage: React.FC = () => {
             {sortedVehicles.length === 0 ? (
               <TableRow>
                 <TableCell align={"center"} colSpan={9}>
-                  <Typography color={"text.secondary"} sx={{ py: 3 }}>
+                  <Typography
+                    sx={{
+                      color: "text.secondary",
+                      py: 3,
+                    }}
+                  >
                     No active vehicles found
                   </Typography>
                 </TableCell>

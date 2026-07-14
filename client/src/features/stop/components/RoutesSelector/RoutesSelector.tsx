@@ -29,7 +29,13 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
     setSelectedRouteIds(uniqueRouteIds);
   };
   return (
-    <Box alignItems={"center"} display={"flex"} justifyContent={"flex-start"}>
+    <Box
+      sx={{
+        alignItems: "center",
+        display: "flex",
+        justifyContent: "flex-start",
+      }}
+    >
       <Box sx={{ display: "flex", gap: 1 }}>
         {uniqueRouteIds.map((uniqueRouteId) => {
           const routeColor = arrivalTimes?.find(

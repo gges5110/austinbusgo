@@ -81,8 +81,10 @@ export const TripStopTimesDevPage: React.FC = () => {
             Trip Stop Times Lookup
           </Typography>
           <Typography
-            color={"text.secondary"}
             gutterBottom={true}
+            sx={{
+              color: "text.secondary",
+            }}
             variant={"body2"}
           >
             Select a route and direction to view all trip stop times
@@ -159,14 +161,18 @@ export const TripStopTimesDevPage: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
-
       {selectedRoute && selectedDirection !== "" && (
         <Card>
           <CardContent>
             <Typography gutterBottom={true} variant={"h6"}>
               {`Trips for ${selectedRoute.routeId} - Direction ${selectedDirection}`}
             </Typography>
-            <Typography color={"text.secondary"} variant={"body2"}>
+            <Typography
+              sx={{
+                color: "text.secondary",
+              }}
+              variant={"body2"}
+            >
               {"Date: "}
               {dayjs().format("MMMM D, YYYY")}
               {" • "}
@@ -176,7 +182,6 @@ export const TripStopTimesDevPage: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
       {selectedRoute &&
         selectedDirection !== "" &&
         filteredTripIds.length > 0 && (
@@ -191,12 +196,16 @@ export const TripStopTimesDevPage: React.FC = () => {
             ))}
           </Box>
         )}
-
       {selectedRoute &&
         selectedDirection !== "" &&
         filteredTripIds.length === 0 && (
           <Paper sx={{ p: 3, mt: 2 }}>
-            <Typography align={"center"} color={"text.secondary"}>
+            <Typography
+              align={"center"}
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               No trips found for this route and direction
             </Typography>
           </Paper>

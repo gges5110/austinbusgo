@@ -48,15 +48,25 @@ export const RecentSearchesMenu = () => {
   return (
     <MenuPanel>
       <Container sx={{ p: 2 }}>
-        <Box alignItems={"center"} display={"flex"} gap={1}>
+        <Box
+          sx={{
+            alignItems: "center",
+            display: "flex",
+            gap: 1,
+          }}
+        >
           <AccessTimeIcon />
           <Typography variant={"h6"}>Recent Searches</Typography>
         </Box>
       </Container>
-
       {recentSearches.length === 0 ? (
         <Container sx={{ p: 2 }}>
-          <Typography color={"gray"} fontSize={14}>
+          <Typography
+            color={"gray"}
+            sx={{
+              fontSize: 14,
+            }}
+          >
             No recent searches yet. Start searching for routes, stops, or
             locations!
           </Typography>
@@ -92,20 +102,46 @@ export const RecentSearchesMenu = () => {
                       sx={{ py: 2 }}
                       to={`/stop/${value.stopId}${viewStatePathname}${withPreservedSearch()}`}
                     >
-                      <Box display={"flex"} flexDirection={"column"} gap={1}>
-                        <Box display={"flex"} gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                          }}
+                        >
                           <PlaceOutlinedIcon />
-                          <Typography fontWeight={"bold"}>
+                          <Typography
+                            sx={{
+                              fontWeight: "bold",
+                            }}
+                          >
                             {value.stopName}
                           </Typography>
                         </Box>
 
-                        <Typography color={"gray"} fontSize={14}>
+                        <Typography
+                          color={"gray"}
+                          sx={{
+                            fontSize: 14,
+                          }}
+                        >
                           {"Stop Code: "}
                           {value.stopId}
                         </Typography>
 
-                        <Box display={"flex"} flexWrap={"wrap"} gap={1}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1,
+                          }}
+                        >
                           {value?.routes?.map((route) => (
                             <RouteIdDisplay
                               key={route.routeId}
@@ -139,7 +175,12 @@ export const RecentSearchesMenu = () => {
                       component={RouterLink}
                       to={`/route/${value.routeId}/direction/0${viewStatePathname}`}
                     >
-                      <Box display={"flex"} gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                        }}
+                      >
                         <RouteIcon />
                         <RouteIdDisplay
                           routeColor={value.routeColor}
@@ -173,7 +214,13 @@ export const RecentSearchesMenu = () => {
                         value.value
                       )}${viewStatePathname}`}
                     >
-                      <Box alignItems={"center"} display={"flex"} gap={1}>
+                      <Box
+                        sx={{
+                          alignItems: "center",
+                          display: "flex",
+                          gap: 1,
+                        }}
+                      >
                         <SearchIcon />
                         <Typography>{value.value}</Typography>
                       </Box>

@@ -36,7 +36,13 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
         <Typography gutterBottom={true} variant={"h4"}>
           Something went wrong
         </Typography>
-        <Typography color={"text.secondary"} sx={{ mb: 3 }} variant={"body1"}>
+        <Typography
+          sx={{
+            color: "text.secondary",
+            mb: 3,
+          }}
+          variant={"body1"}
+        >
           {error?.message || "An unexpected error occurred"}
         </Typography>
         <Button onClick={resetErrorBoundary} variant={"contained"}>

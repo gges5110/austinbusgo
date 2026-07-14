@@ -17,11 +17,28 @@ export const StopRoutes: React.FC<StopRoutesProps> = ({ routes }) => {
   }
 
   return (
-    <Box px={2} py={1}>
-      <Typography color={"text.secondary"} mb={0.5} variant={"caption"}>
+    <Box
+      sx={{
+        px: 2,
+        py: 1,
+      }}
+    >
+      <Typography
+        sx={{
+          color: "text.secondary",
+          mb: 0.5,
+        }}
+        variant={"caption"}
+      >
         Routes at this stop
       </Typography>
-      <Box display={"flex"} flexWrap={"wrap"} gap={1}>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1,
+        }}
+      >
         {routes.map((route) => (
           <Tooltip key={route.routeId} title={route.routeLongName}>
             <RouterLink

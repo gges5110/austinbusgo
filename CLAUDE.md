@@ -36,7 +36,7 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 ### Frontend
 - **Framework**: React 18.2 with TypeScript 4.5
 - **Build Tool**: Vite 6
-- **UI Library**: Material-UI v6 (MUI)
+- **UI Library**: Material-UI v9 (MUI)
 - **State Management**: Jotai for global state, React Query (TanStack Query) for server state
 - **Routing**: React Router v6
 - **Map**: Mapbox GL with react-map-gl

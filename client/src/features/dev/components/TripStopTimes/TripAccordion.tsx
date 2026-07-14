@@ -57,7 +57,12 @@ export const TripAccordion: React.FC<TripAccordionProps> = ({
           />
           <Box sx={{ flex: 1 }}>
             <Typography variant={"body1"}>{trip.tripHeadsign}</Typography>
-            <Typography color={"text.secondary"} variant={"caption"}>
+            <Typography
+              sx={{
+                color: "text.secondary",
+              }}
+              variant={"caption"}
+            >
               {"Trip ID: "}
               {trip.tripId}
               {" • Direction: "}

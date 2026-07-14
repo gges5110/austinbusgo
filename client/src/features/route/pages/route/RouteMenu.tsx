@@ -42,7 +42,11 @@ export const RouteMenu = () => {
           width: "100%",
         }}
       >
-        <Box py={1}>
+        <Box
+          sx={{
+            py: 1,
+          }}
+        >
           <RouteDisplayBanner
             routeColor={route.routeColor}
             routeId={route.routeId}
@@ -57,12 +61,17 @@ export const RouteMenu = () => {
           />
         </Box>
       </Box>
-      <Box display={"flex"} px={"22px"} py={"10px"}>
+      <Box
+        sx={{
+          display: "flex",
+          px: "22px",
+          py: "10px",
+        }}
+      >
         <AddToFavorites value={route} />
         <ShareButton />
       </Box>
       <Divider />
-
       <RouteStopsTimeline route={route} stops={stops} />
     </MenuPanel>
   );

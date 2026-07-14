@@ -125,10 +125,12 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
 
           <Box sx={{ flex: 1 }}>
             <Box
-              alignItems={"center"}
-              display={"flex"}
-              gap={1}
-              justifyContent={"center"}
+              sx={{
+                alignItems: "center",
+                display: "flex",
+                gap: 1,
+                justifyContent: "center",
+              }}
             >
               <PlaceOutlinedIcon />
               <Typography variant={"subtitle1"}>{stop.stopName}</Typography>
@@ -137,13 +139,24 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               />
             </Box>
 
-            <Typography textAlign={"center"} variant={"subtitle2"}>
+            <Typography
+              sx={{
+                textAlign: "center",
+              }}
+              variant={"subtitle2"}
+            >
               Stop ID: {stop.stopId}
             </Typography>
           </Box>
         </Box>
         <Divider />
-        <Box display={"flex"} px={"22px"} py={"10px"}>
+        <Box
+          sx={{
+            display: "flex",
+            px: "22px",
+            py: "10px",
+          }}
+        >
           <AddToFavorites value={stop} />
           <ShareButton />
         </Box>
@@ -160,7 +173,13 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               pr: 1,
             }}
           >
-            <Typography color={"text.secondary"} mb={0.5} variant={"caption"}>
+            <Typography
+              sx={{
+                color: "text.secondary",
+                mb: 0.5,
+              }}
+              variant={"caption"}
+            >
               Filter by route
             </Typography>
             <RoutesSelector
@@ -171,8 +190,18 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
           </Box>
         )}
       </Box>
-      <Box pt={1} px={2}>
-        <Typography color={"text.secondary"} variant={"caption"}>
+      <Box
+        sx={{
+          pt: 1,
+          px: 2,
+        }}
+      >
+        <Typography
+          sx={{
+            color: "text.secondary",
+          }}
+          variant={"caption"}
+        >
           Upcoming arrivals
         </Typography>
       </Box>

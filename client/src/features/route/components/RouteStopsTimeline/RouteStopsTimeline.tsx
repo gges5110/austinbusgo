@@ -187,9 +187,11 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                 to={`/stop/${stop.stopId}${viewStatePathname}${withPreservedSearch({ directionId: directionId!, routeId: route.routeId })}`}
               >
                 <Box
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  width={"100%"}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
                 >
                   <Box
                     sx={{
@@ -200,8 +202,19 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                       width: "100%",
                     }}
                   >
-                    <Box display={"flex"} flexDirection={"column"}>
-                      <Typography fontWeight={600}>{stop.stopName}</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontWeight: 600,
+                        }}
+                      >
+                        {stop.stopName}
+                      </Typography>
                       {at && (
                         <Typography
                           color={
@@ -209,8 +222,10 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                               ? theme.palette.success.light
                               : theme.palette.grey["500"]
                           }
-                          fontSize={14}
-                          fontWeight={updatedArrivalTime ? 600 : undefined}
+                          sx={{
+                            fontSize: 14,
+                            fontWeight: updatedArrivalTime ? 600 : undefined,
+                          }}
                         >
                           {updatedArrivalTime ? "Live" : "Scheduled"}
                         </Typography>
@@ -228,10 +243,20 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                               color: "gray",
                             }}
                           >
-                            <Typography fontSize={24} lineHeight={1}>
+                            <Typography
+                              sx={{
+                                fontSize: 24,
+                                lineHeight: 1,
+                              }}
+                            >
                               {Math.abs(timeDiff)}
                             </Typography>
-                            <Typography color={"gray"} fontSize={14}>
+                            <Typography
+                              color={"gray"}
+                              sx={{
+                                fontSize: 14,
+                              }}
+                            >
                               min ago
                             </Typography>
                           </Box>
@@ -243,10 +268,20 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                               flexDirection: "column",
                             }}
                           >
-                            <Typography fontSize={24} lineHeight={1}>
+                            <Typography
+                              sx={{
+                                fontSize: 24,
+                                lineHeight: 1,
+                              }}
+                            >
                               {at.format("h:mm")}
                             </Typography>
-                            <Typography color={"gray"} fontSize={14}>
+                            <Typography
+                              color={"gray"}
+                              sx={{
+                                fontSize: 14,
+                              }}
+                            >
                               {at.format("A")}
                             </Typography>
                           </Box>
@@ -258,7 +293,13 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                               height: "100%",
                             }}
                           >
-                            <Typography fontSize={20}>Now</Typography>
+                            <Typography
+                              sx={{
+                                fontSize: 20,
+                              }}
+                            >
+                              Now
+                            </Typography>
                           </Box>
                         ) : (
                           <Box
@@ -268,10 +309,20 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
                               flexDirection: "column",
                             }}
                           >
-                            <Typography fontSize={24} lineHeight={1}>
+                            <Typography
+                              sx={{
+                                fontSize: 24,
+                                lineHeight: 1,
+                              }}
+                            >
                               {timeDiff}
                             </Typography>
-                            <Typography color={"gray"} fontSize={14}>
+                            <Typography
+                              color={"gray"}
+                              sx={{
+                                fontSize: 14,
+                              }}
+                            >
                               min
                             </Typography>
                           </Box>

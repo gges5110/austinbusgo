@@ -14,20 +14,50 @@ export const StopPopupContent: React.FC<StopPopupContentProps> = ({ stop }) => {
   const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
 
   return (
-    <Box display={"flex"} flexDirection={"column"} gap={1} minWidth={200}>
-      <Box alignItems={"center"} display={"flex"} gap={1}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        minWidth: 200,
+      }}
+    >
+      <Box
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          gap: 1,
+        }}
+      >
         <PlaceOutlinedIcon sx={{ fontSize: 20 }} />
-        <Typography fontWeight={600} variant={"body2"}>
+        <Typography
+          sx={{
+            fontWeight: 600,
+          }}
+          variant={"body2"}
+        >
           {stop.stopName}
         </Typography>
       </Box>
       {stop.stopCode && (
-        <Typography color={"textSecondary"} fontSize={12} variant={"body2"}>
+        <Typography
+          color={"textSecondary"}
+          sx={{
+            fontSize: 12,
+          }}
+          variant={"body2"}
+        >
           Stop #{stop.stopCode}
         </Typography>
       )}
       {stop.routes && stop.routes.length > 0 && (
-        <Box display={"flex"} flexWrap={"wrap"} gap={0.5}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.5,
+          }}
+        >
           {stop.routes.map((route) => (
             <Link
               key={route.routeId}

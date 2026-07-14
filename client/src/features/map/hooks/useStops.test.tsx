@@ -39,7 +39,10 @@ vi.mock("features/map/hooks/useAllStops", () => ({
 }));
 
 const makeStop = (stopId: string, stopName = `Stop ${stopId}`): Stop =>
-  ({ stopId, stopName }) as Stop;
+  ({
+    stopId,
+    stopName,
+  }) as Stop;
 
 const mockLoaderData = (data: {
   route?: { stops: Stop[] };

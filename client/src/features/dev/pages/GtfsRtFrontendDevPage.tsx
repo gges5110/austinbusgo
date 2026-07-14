@@ -179,12 +179,17 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
       <Typography gutterBottom={true} variant={"h4"}>
         GTFS-RT Frontend POC
       </Typography>
-      <Typography color={"text.secondary"} sx={{ mb: 2 }} variant={"body2"}>
+      <Typography
+        sx={{
+          color: "text.secondary",
+          mb: 2,
+        }}
+        variant={"body2"}
+      >
         Vehicle positions and trip updates fetched and decoded entirely in the
         browser using <strong>gtfs-realtime-bindings</strong> — no backend
         server involved. Data auto-refreshes every 15 s.
       </Typography>
-
       <Alert severity={"info"} sx={{ mb: 3 }}>
         <AlertTitle>How it works</AlertTitle>
         The browser fetches the raw protobuf binary from{" "}
@@ -194,7 +199,6 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
         existing GraphQL-backed components, so the data can be dropped in as a
         direct replacement.
       </Alert>
-
       {/* ── route filter ── */}
       <TextField
         label={"Filter by Route ID"}
@@ -204,7 +208,6 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
         sx={{ mb: 3, width: 220 }}
         value={routeFilter}
       />
-
       {/* ── vehicle positions ── */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
@@ -217,7 +220,12 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
           >
             <Box>
               <Typography variant={"h6"}>Vehicle Positions</Typography>
-              <Typography color={"text.secondary"} variant={"caption"}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+                variant={"caption"}
+              >
                 {vehiclesFetching
                   ? "Fetching…"
                   : `${filteredVehicles.length} vehicle${filteredVehicles.length !== 1 ? "s" : ""}${routeFilter ? ` on route ${routeFilter}` : ""} · updated ${vehiclesUpdatedAt ? dayjs(vehiclesUpdatedAt).fromNow() : "—"}`}
@@ -260,7 +268,12 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
                   {filteredVehicles.length === 0 ? (
                     <TableRow>
                       <TableCell align={"center"} colSpan={8}>
-                        <Typography color={"text.secondary"} sx={{ py: 2 }}>
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            py: 2,
+                          }}
+                        >
                           {vehiclesFetching ? "Loading…" : "No vehicles found"}
                         </Typography>
                       </TableCell>
@@ -279,9 +292,7 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
       <Divider sx={{ mb: 4 }} />
-
       {/* ── trip updates ── */}
       <Card>
         <CardContent>
@@ -294,7 +305,12 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
           >
             <Box>
               <Typography variant={"h6"}>Trip Updates</Typography>
-              <Typography color={"text.secondary"} variant={"caption"}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+                variant={"caption"}
+              >
                 {tripUpdatesFetching
                   ? "Fetching…"
                   : `${filteredTripUpdates.length} trip update${filteredTripUpdates.length !== 1 ? "s" : ""}${routeFilter ? ` for route ${routeFilter}` : ""} · updated ${tripUpdatesUpdatedAt ? dayjs(tripUpdatesUpdatedAt).fromNow() : "—"}`}
@@ -331,7 +347,12 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
                   {filteredTripUpdates.length === 0 ? (
                     <TableRow>
                       <TableCell align={"center"} colSpan={8}>
-                        <Typography color={"text.secondary"} sx={{ py: 2 }}>
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            py: 2,
+                          }}
+                        >
                           {tripUpdatesFetching
                             ? "Loading…"
                             : "No trip updates found"}
