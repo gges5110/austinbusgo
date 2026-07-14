@@ -1,7 +1,7 @@
 """
 Shared fixtures for integration tests.
 
-Spins up a real PostGIS container (postgis/postgis:14-3.3, matching the
+Spins up a real PostGIS container (postgis/postgis:18-3.6, matching the
 docker-compose setup) and initialises it with the GTFS schema from
 etl/sql/schema.sql so tests exercise the full database stack.
 """
@@ -27,7 +27,7 @@ _SCHEMA_SQL = (Path(__file__).parent.parent / "etl" / "sql" / "schema.sql").read
 @pytest.fixture(scope="session")
 def postgres_container():
     """Start a PostGIS container and keep it running for the entire session."""
-    with PostgresContainer("postgis/postgis:14-3.3") as container:
+    with PostgresContainer("postgis/postgis:18-3.6") as container:
         yield container
 
 
