@@ -41,6 +41,7 @@ export const VEHICLES_LAYER_ID = "vehicle-markers";
 const VEHICLES_HOVER_LAYER_ID = "vehicle-markers-hover";
 const VEHICLE_GLYPHS_LAYER_ID = "vehicle-glyphs";
 const VEHICLE_LABELS_LAYER_ID = "vehicle-labels";
+const VEHICLE_STATUS_LAYER_ID = "vehicle-status-label";
 const VEHICLE_LAYER_IDS = [VEHICLES_LAYER_ID];
 const VEHICLES_SOURCE_ID = "vehicles-source";
 
@@ -306,6 +307,52 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             VEHICLE_TRANSIT_BLUE,
           ],
           "text-halo-width": 1.5,
+        }}
+        slot={"top"}
+        type={"symbol"}
+      />
+
+      {/* Status word under the teardrop (issue #77: read a vehicle's stop
+          status without opening the popup). Kept clutter-free by showing
+          only for the hovered/pinned vehicle — gated by the same
+          feature-state as the hover ring (synced by useFeatureHoverState). */}
+      <Layer
+        id={VEHICLE_STATUS_LAYER_ID}
+        layout={{
+          "text-allow-overlap": true,
+          "text-field": [
+            "match",
+            ["get", "currentStatus"],
+            "STOPPED_AT",
+            "STOPPED",
+            "INCOMING_AT",
+            "ARRIVING",
+            "IN_TRANSIT_TO",
+            "IN TRANSIT",
+            "",
+          ],
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-offset": [0, 1.6],
+          "text-size": 11,
+        }}
+        paint={{
+          "text-color": [
+            "match",
+            ["get", "currentStatus"],
+            "STOPPED_AT",
+            VEHICLE_STOPPED_RED,
+            "INCOMING_AT",
+            VEHICLE_INCOMING_ORANGE,
+            VEHICLE_TRANSIT_BLUE,
+          ],
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.5,
+          "text-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hovered"], false],
+            1,
+            0,
+          ],
         }}
         slot={"top"}
         type={"symbol"}
