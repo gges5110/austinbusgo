@@ -2,7 +2,17 @@ name: austinbusgo
 
 services:
   postgres:
-    image: postgis/postgis:14-3.3
+    image: postgis/postgis:18-3.6
+    # PostGIS publishes only amd64 for PG18; run under emulation on arm64
+    # (the previous 14-3.3 image was amd64-only too, so this is unchanged).
+    platform: linux/amd64
+    # Preload pg_stat_statements so it can track query stats (the extension
+    # is created in etl/sql/extensions.sql). Required in addition to
+    # CREATE EXTENSION — the library must be loaded at server start.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
     restart: always
     environment:
       - POSTGRES_USER=local-user
@@ -16,4 +26,3 @@ services:
       - '5438:5432'
     volumes:
       - ../etl/capmetro:/capmetro
-      - ../server/database/schema.sql:/docker-entrypoint-initdb.d/create_tables.sql

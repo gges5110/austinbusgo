@@ -8,3 +8,9 @@
 \copy calendar_dates from './capmetro/calendar_dates.txt' with csv header
 \copy transfers from './capmetro/transfers.txt' with csv header
 REFRESH MATERIALIZED VIEW routes_at_stop;
+
+-- Refresh planner statistics after the bulk load so query plans are accurate
+-- immediately (instead of waiting for autovacuum), and set the visibility map
+-- so the covering indexes can serve index-only scans. Must run outside a
+-- transaction block (load_db.py invokes psql without --single-transaction).
+VACUUM ANALYZE;
