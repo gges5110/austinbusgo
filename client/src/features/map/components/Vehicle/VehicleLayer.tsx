@@ -13,8 +13,8 @@ import { useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
 import {
   createBusGlyph,
+  createStoppedDot,
   createTeardropIncoming,
-  createTeardropStopped,
   createTeardropTransit,
   SELECTED_RED,
   VEHICLE_INCOMING_ORANGE,
@@ -47,7 +47,7 @@ const VEHICLES_SOURCE_ID = "vehicles-source";
 
 const TEARDROP_TRANSIT_IMAGE_ID = "vehicle-teardrop-transit";
 const TEARDROP_INCOMING_IMAGE_ID = "vehicle-teardrop-incoming";
-const TEARDROP_STOPPED_IMAGE_ID = "vehicle-teardrop-stopped";
+const STOPPED_DOT_IMAGE_ID = "vehicle-dot-stopped";
 const BUS_GLYPH_IMAGE_ID = "vehicle-bus-glyph";
 
 // Stable empty collection: the source data is driven imperatively by
@@ -81,7 +81,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
 
   useMapImage(TEARDROP_TRANSIT_IMAGE_ID, createTeardropTransit);
   useMapImage(TEARDROP_INCOMING_IMAGE_ID, createTeardropIncoming);
-  useMapImage(TEARDROP_STOPPED_IMAGE_ID, createTeardropStopped);
+  useMapImage(STOPPED_DOT_IMAGE_ID, createStoppedDot);
   useMapImage(BUS_GLYPH_IMAGE_ID, createBusGlyph);
 
   // Lookup map for click/hover resolution
@@ -228,8 +228,9 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         type={"circle"}
       />
 
-      {/* Teardrop marker: bulb centered on the vehicle position, tip
-          rotated to the heading — replaces the old circle + chevron */}
+      {/* Vehicle marker: a teardrop pointing along the heading for moving/
+          approaching vehicles, or a non-directional dot when stopped (a
+          stationary bus shouldn't imply a direction of travel). */}
       <Layer
         id={VEHICLES_LAYER_ID}
         layout={{
@@ -238,12 +239,19 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             "match",
             ["get", "currentStatus"],
             "STOPPED_AT",
-            TEARDROP_STOPPED_IMAGE_ID,
+            STOPPED_DOT_IMAGE_ID,
             "INCOMING_AT",
             TEARDROP_INCOMING_IMAGE_ID,
             /* IN_TRANSIT_TO + default */ TEARDROP_TRANSIT_IMAGE_ID,
           ],
-          "icon-rotate": ["get", "bearing"],
+          // Stopped vehicles use a symmetric dot, so keep it unrotated;
+          // everything else points along the reported bearing.
+          "icon-rotate": [
+            "case",
+            ["==", ["get", "currentStatus"], "STOPPED_AT"],
+            0,
+            ["get", "bearing"],
+          ],
           "icon-rotation-alignment": "map",
           "icon-size": [
             "interpolate",
