@@ -5,6 +5,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import DeveloperModeIcon from "@mui/icons-material/DeveloperMode";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import NearMeIcon from "@mui/icons-material/NearMe";
 import RouteIcon from "@mui/icons-material/Route";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import {
@@ -98,6 +99,21 @@ export const AppDrawer: React.FunctionComponent<AppDrawerProps> = ({
           <Divider />
           <List>
             <ListSubheader>Explore</ListSubheader>
+            {/* The only Nearby entry at tablet widths (600–899px), where
+                neither the phone tab bar nor the map chips are shown */}
+            <ListItem disablePadding={true}>
+              <ListItemButton
+                onClick={() => {
+                  navigate("/nearby");
+                  onClose();
+                }}
+              >
+                <ListItemIcon>
+                  <NearMeIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Buses near me"} />
+              </ListItemButton>
+            </ListItem>
             <ListItem disablePadding={true}>
               <ListItemButton
                 onClick={() => {
