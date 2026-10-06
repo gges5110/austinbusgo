@@ -33,7 +33,8 @@
     "format:check": "prettier --check 'src/**/*.{tsx,ts,js,json,css,md}'",
     "generate": "cd .. && venv/bin/python -m server.export_openapi > client/openapi.json && cd client && orval --config orval.config.ts",
     "analyze_bundle": "npx source-map-explorer 'build/static/js/*.js'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prerender": "node scripts/prerender/run.mjs"
   },
   "eslintConfig": {
     "extends": "react-app"

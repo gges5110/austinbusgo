@@ -101,6 +101,7 @@ Run `make help` to see all available targets organized by category.
 - `make build-fe` - Build frontend for production
 - `make test-fe` - Run frontend tests with Vitest
 - `make generate` - Regenerate typed API hooks from the OpenAPI spec
+- `cd client && npm run prerender` - After a build: write static SEO pages for every stop/route (`build/stop/<id>.html`, `build/route/<id>/direction/0.html`) and `build/sitemap.xml` from the live API (deploy workflows run it; see `client/scripts/prerender/`)
 
 **Testing:**
 - `make test` - Run Python unit tests with pytest
