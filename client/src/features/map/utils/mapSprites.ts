@@ -151,6 +151,23 @@ function drawTeardrop(ctx: CanvasRenderingContext2D, color: string) {
   ctx.stroke();
 }
 
+/**
+ * Non-directional round marker for stopped vehicles — same bulb (and white
+ * outline) as the teardrop but without the tip, so a stationary bus doesn't
+ * imply a heading the way a rotated teardrop would.
+ */
+function drawDot(ctx: CanvasRenderingContext2D, color: string) {
+  const c = TEARDROP_SPRITE_SIZE / 2;
+  ctx.beginPath();
+  ctx.arc(c, c, TEARDROP_BULB_RADIUS, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+}
+
 // Module-level factory instances so useMapImage effect deps stay stable
 
 export const createStopFlagFar = () =>
@@ -170,10 +187,8 @@ export const createTeardropIncoming = () =>
   withCanvas(TEARDROP_SPRITE_SIZE, (ctx) =>
     drawTeardrop(ctx, VEHICLE_INCOMING_ORANGE)
   );
-export const createTeardropStopped = () =>
-  withCanvas(TEARDROP_SPRITE_SIZE, (ctx) =>
-    drawTeardrop(ctx, VEHICLE_STOPPED_RED)
-  );
+export const createStoppedDot = () =>
+  withCanvas(TEARDROP_SPRITE_SIZE, (ctx) => drawDot(ctx, VEHICLE_STOPPED_RED));
 
 export const createBusGlyph = () =>
   withCanvas(GLYPH_SPRITE_SIZE, (ctx) =>
