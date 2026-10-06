@@ -5,9 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from "./arrivalTime";
 export * from "./arrivalTimeAtStop";
-export * from "./arrivalTimesParams";
 export * from "./earliestArrivalTimesOnRouteParams";
 export * from "./feedInfo";
 export * from "./hTTPValidationError";
@@ -25,11 +23,16 @@ export * from "./stopsByNameParams";
 export * from "./stopTime";
 export * from "./stopTimeEvent";
 export * from "./stopTimeUpdate";
+export * from "./stopUpcoming";
+export * from "./trackStop";
 export * from "./trip";
 export * from "./tripDescriptor";
 export * from "./tripIds";
 export * from "./tripIdsForRouteParams";
 export * from "./tripUpdate";
+export * from "./upcomingArrival";
+export * from "./upcomingArrivalStatus";
+export * from "./upcomingVehicle";
 export * from "./validationError";
 export * from "./vehicleDescriptor";
 export * from "./vehiclePosition";

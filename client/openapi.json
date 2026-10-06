@@ -193,11 +193,12 @@
         }
       }
     },
-    "/api/stops/{stop_id}/arrival-times": {
+    "/api/stops/{stop_id}/upcoming": {
       "get": {
         "tags": ["stops"],
-        "summary": "Arrival Times",
-        "operationId": "arrivalTimes",
+        "summary": "Upcoming At Stop",
+        "description": "Buses due at the stop in the next hour, with live predictions.",
+        "operationId": "upcomingAtStop",
         "parameters": [
           {
             "name": "stop_id",
@@ -207,15 +208,6 @@
               "type": "string",
               "title": "Stop Id"
             }
-          },
-          {
-            "name": "date",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Date"
-            }
           }
         ],
         "responses": {
@@ -224,11 +216,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArrivalTime"
-                  },
-                  "title": "Response Arrivaltimes"
+                  "$ref": "#/components/schemas/StopUpcoming"
                 }
               }
             }
@@ -759,31 +747,6 @@
   },
   "components": {
     "schemas": {
-      "ArrivalTime": {
-        "properties": {
-          "scheduledArrivalTime": {
-            "type": "string",
-            "title": "Scheduledarrivaltime"
-          },
-          "updatedArrivalTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updatedarrivaltime"
-          },
-          "trip": {
-            "$ref": "#/components/schemas/Trip"
-          }
-        },
-        "type": "object",
-        "required": ["scheduledArrivalTime", "trip"],
-        "title": "ArrivalTime"
-      },
       "ArrivalTimeAtStop": {
         "properties": {
           "stopId": {
@@ -1326,6 +1289,41 @@
         "type": "object",
         "title": "StopTimeUpdate"
       },
+      "StopUpcoming": {
+        "properties": {
+          "stop": {
+            "$ref": "#/components/schemas/Stop"
+          },
+          "generatedAt": {
+            "type": "integer",
+            "title": "Generatedat"
+          },
+          "realtimeAvailable": {
+            "type": "boolean",
+            "title": "Realtimeavailable"
+          },
+          "arrivals": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingArrival"
+            },
+            "type": "array",
+            "title": "Arrivals"
+          },
+          "nextScheduled": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpcomingArrival"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["stop", "generatedAt", "realtimeAvailable", "arrivals"],
+        "title": "StopUpcoming"
+      },
       "StopsAndShapes": {
         "properties": {
           "stops": {
@@ -1353,6 +1351,55 @@
         "type": "object",
         "required": ["stops", "shapes", "distinctTrips"],
         "title": "StopsAndShapes"
+      },
+      "TrackStop": {
+        "properties": {
+          "stopId": {
+            "type": "string",
+            "title": "Stopid"
+          },
+          "stopName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopname"
+          },
+          "stopSequence": {
+            "type": "integer",
+            "title": "Stopsequence"
+          },
+          "stopLoc": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Point"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "at": {
+            "type": "integer",
+            "title": "At"
+          },
+          "isVehicleHere": {
+            "type": "boolean",
+            "title": "Isvehiclehere"
+          },
+          "stopsHiddenBefore": {
+            "type": "integer",
+            "title": "Stopshiddenbefore",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": ["stopId", "stopSequence", "at", "isVehicleHere"],
+        "title": "TrackStop"
       },
       "Trip": {
         "properties": {
@@ -1569,6 +1616,144 @@
         "type": "object",
         "required": ["trip", "vehicle", "stopTimeUpdate", "timestamp"],
         "title": "TripUpdate"
+      },
+      "UpcomingArrival": {
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "title": "Tripid"
+          },
+          "routeId": {
+            "type": "string",
+            "title": "Routeid"
+          },
+          "routeColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routecolor"
+          },
+          "headsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headsign"
+          },
+          "directionId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Directionid"
+          },
+          "scheduledAt": {
+            "type": "integer",
+            "title": "Scheduledat"
+          },
+          "predictedAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predictedat"
+          },
+          "stopsAway": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopsaway"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["arriving", "en_route", "scheduled"],
+            "title": "Status"
+          },
+          "vehicle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpcomingVehicle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "track": {
+            "items": {
+              "$ref": "#/components/schemas/TrackStop"
+            },
+            "type": "array",
+            "title": "Track",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": ["tripId", "routeId", "scheduledAt", "status"],
+        "title": "UpcomingArrival"
+      },
+      "UpcomingVehicle": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "bearing": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bearing"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": ["id", "lat", "lon"],
+        "title": "UpcomingVehicle"
       },
       "ValidationError": {
         "properties": {

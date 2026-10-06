@@ -3,6 +3,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, IconButton, Paper, Slide } from "@mui/material";
 import * as React from "react";
 import { PropsWithChildren, useState } from "react";
+import { BOTTOM_TABS_HEIGHT } from "shared/components/BottomTabs/BottomTabs";
 
 const COLLAPSED_HEIGHT = "48px";
 const HEADER_HEIGHT = "64px";
@@ -25,12 +26,15 @@ export const MobileMenuPanel = ({
     <Paper
       ref={innerRef}
       sx={{
-        height: isExpanded ? "100vh" : COLLAPSED_HEIGHT,
+        height: isExpanded
+          ? `calc(100vh - ${BOTTOM_TABS_HEIGHT}px)`
+          : COLLAPSED_HEIGHT,
         width: "100vw",
         maxWidth: "100vw",
         overflowY: isExpanded ? "auto" : "hidden",
         position: "fixed",
-        bottom: 0,
+        // Sits above the phone tab bar
+        bottom: BOTTOM_TABS_HEIGHT,
         left: 0,
         display: "flex",
         flexDirection: "column",

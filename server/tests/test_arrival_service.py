@@ -2,7 +2,7 @@
 GraphQL resolver tests)."""
 
 import pytest
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from google.transit.gtfs_realtime_pb2 import TripUpdate
@@ -32,41 +32,6 @@ def make_service():
 
 
 @pytest.mark.asyncio
-async def test_get_arrival_times(mocker):
-    svc, gtfs_service, gtfs_rt_service = make_service()
-    trip = SimpleNamespace(trip_id="trip_1", route_id="1")
-    stop_times = [
-        SimpleNamespace(
-            trip_id="trip_1",
-            stop_id="stop_1",
-            arrival_time="10:00:00",
-            departure_time="10:01:00",
-            stop_sequence=1,
-            trip=trip,
-        ),
-    ]
-    gtfs_service.get_stop_times_by_stop_id.return_value = stop_times
-
-    tu = create_trip_update_with_stop("trip_1", "stop_1", 1234567890)
-    gtfs_rt_service.get_real_time_trip_updates.return_value = [tu]
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = tu.stop_time_update[0]
-
-    mock_dt = mocker.Mock()
-    mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch(
-        "server.services.arrival_service.datetime"
-    ).fromtimestamp.return_value = mock_dt
-    mocker.patch("server.services.arrival_service.timezone")
-
-    result = await svc.get_arrival_times("stop_1", "2025-01-01")
-
-    assert len(result) == 1
-    assert result[0].scheduled_arrival_time == "10:00:00"
-    assert result[0].updated_arrival_time == "10:05:00"
-    assert result[0].trip is trip
-
-
-@pytest.mark.asyncio
 async def test_get_earliest_arrival_times_on_route(mocker):
     svc, gtfs_service, gtfs_rt_service = make_service()
     arrival = SimpleNamespace(
@@ -92,43 +57,6 @@ async def test_get_earliest_arrival_times_on_route(mocker):
     assert len(result) == 1
     assert result[0].scheduled_arrival_time == "10:00:00"
     assert result[0].stop_id == "stop_1"
-
-
-def test_get_updated_arrival_time_with_arrival_field(mocker):
-    svc, _, gtfs_rt_service = make_service()
-    stu = TripUpdate.StopTimeUpdate()
-    stu.stop_id = "stop_1"
-    stu.arrival.time = 1234567890
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = stu
-
-    mock_dt = mocker.Mock()
-    mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch(
-        "server.services.arrival_service.datetime"
-    ).fromtimestamp.return_value = mock_dt
-    mocker.patch("server.services.arrival_service.timezone")
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result == "10:05:00"
-
-
-def test_get_updated_arrival_time_not_found():
-    svc, _, gtfs_rt_service = make_service()
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = None
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result is None
-
-
-def test_get_updated_arrival_time_skipped_stop():
-    svc, _, gtfs_rt_service = make_service()
-    stu = TripUpdate.StopTimeUpdate()
-    stu.stop_id = "stop_1"
-    stu.schedule_relationship = 1
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = stu
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result is None
 
 
 def test_get_earliest_updated_arrival_time(mocker):
@@ -191,3 +119,113 @@ def test_get_earliest_updated_arrival_time_midnight_crossing(mocker):
     result = svc._get_earliest_updated_arrival_time("stop_1", [[], []])
 
     assert result == "23:32:00"
+
+
+# get_upcoming
+
+
+def upcoming_row(trip_id, arrival_time, stop_sequence=3):
+    return SimpleNamespace(
+        trip_id=trip_id,
+        arrival_time=arrival_time,
+        departure_time=arrival_time,
+        stop_sequence=stop_sequence,
+        route_id="7",
+        trip_headsign="7 Duval",
+        direction_id=1,
+        route_color="2E7D32",
+    )
+
+
+def upcoming_trip_stop_times():
+    return [
+        SimpleNamespace(
+            stop_sequence=seq,
+            arrival_time=f"20:0{seq}:00",
+            stop=SimpleNamespace(stop_id=f"s{seq}", stop_name=f"S{seq}", stop_loc=None),
+        )
+        for seq in (1, 2, 3)
+    ]
+
+
+def make_upcoming_service(snapshot):
+    svc, gtfs_service, rt_service = make_service()
+    gtfs_service.get_stop.return_value = SimpleNamespace(stop_id="s3", stop_name="S3")
+    gtfs_service.get_routes_at_stop.return_value = []
+    gtfs_service.get_stop_times_by_trip_id.return_value = upcoming_trip_stop_times()
+    rt_service.get_snapshot = AsyncMock(return_value=snapshot)
+    return svc, gtfs_service
+
+
+@pytest.mark.asyncio
+async def test_get_upcoming_queries_today_and_yesterdays_late_service():
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot())
+    gtfs_service.get_stop_times_at_stop_in_window.return_value = []
+    today = date(2026, 10, 5)
+    now = to_epoch(today, "20:00:00")
+
+    await svc.get_upcoming("s3", now=now)
+
+    windows = [
+        c.args[1:4]
+        for c in gtfs_service.get_stop_times_at_stop_in_window.call_args_list
+    ]
+    assert windows[:2] == [
+        (date(2026, 10, 4), "43:30:00", "45:00:00"),
+        (today, "19:30:00", "21:00:00"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_get_upcoming_counts_stops_away_and_builds_track():
+    from google.transit.gtfs_realtime_pb2 import VehiclePosition
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    vp = VehiclePosition()
+    vp.trip.trip_id = "t1"
+    vp.vehicle.id = "bus-1"
+    vp.current_stop_sequence = 1
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(vehicles={"t1": vp}))
+    gtfs_service.get_stop_times_at_stop_in_window.side_effect = [
+        [],
+        [upcoming_row("t1", "20:03:00")],
+    ]
+    now = to_epoch(date(2026, 10, 5), "20:00:00")
+
+    result = await svc.get_upcoming("s3", now=now)
+
+    (arrival,) = result["arrivals"]
+    assert arrival["stops_away"] == 2
+    assert [s["stop_sequence"] for s in arrival["track"]] == [1, 2, 3]
+    assert result["realtime_available"] is True
+    assert result["next_scheduled"] is None
+    gtfs_service.get_stop_times_by_trip_id.assert_awaited_once_with("t1")
+
+
+@pytest.mark.asyncio
+async def test_get_upcoming_falls_back_to_next_scheduled_and_reports_rt_down():
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=False))
+    gtfs_service.get_stop_times_at_stop_in_window.side_effect = [
+        [],  # yesterday's late service
+        [],  # today's window
+        [],  # rest of today
+        [upcoming_row("t9", "05:42:00")],  # tomorrow
+    ]
+    today = date(2026, 10, 5)
+    now = to_epoch(today, "23:30:00")
+
+    result = await svc.get_upcoming("s3", now=now)
+
+    assert result["arrivals"] == []
+    assert result["realtime_available"] is False
+    assert result["next_scheduled"]["trip_id"] == "t9"
+    assert result["next_scheduled"]["scheduled_at"] == to_epoch(
+        today + timedelta(days=1), "05:42:00"
+    )

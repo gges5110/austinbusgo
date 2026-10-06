@@ -58,9 +58,26 @@ const EMPTY_VEHICLES: GeoJSON.FeatureCollection = {
 
 interface VehicleLayerProps {
   readonly vehiclePositions: VehiclePosition[];
+  /** When set, every other vehicle is drawn faded */
+  readonly emphasizedVehicleId?: string;
+  /** Replaces the default click behavior (popup / route navigation) */
+  readonly onVehicleSelect?: (vehicleId: string) => void;
 }
 
-export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
+// Opacity of vehicles that are not the emphasized one
+const DIMMED_OPACITY = 0.35;
+const opacityExpression = [
+  "case",
+  ["get", "dimmed"],
+  DIMMED_OPACITY,
+  1,
+] as unknown as mapboxgl.Expression;
+
+export const VehicleLayer: FC<VehicleLayerProps> = ({
+  vehiclePositions,
+  emphasizedVehicleId,
+  onVehicleSelect,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
@@ -105,9 +122,12 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
           currentStatus: vp.currentStatus ?? "",
           routeId: vp.trip?.routeId ?? "",
           vehicleId: vp.vehicle?.id ?? "",
+          dimmed:
+            emphasizedVehicleId !== undefined &&
+            vp.vehicle?.id !== emphasizedVehicleId,
         })
       ),
-    [vehiclePositions]
+    [vehiclePositions, emphasizedVehicleId]
   );
 
   // Glide markers between polls instead of teleporting them
@@ -143,6 +163,10 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
         | undefined;
       const vp = vehicleId ? vehiclesById.get(vehicleId) : undefined;
       if (!vp) return;
+      if (onVehicleSelect && vehicleId) {
+        onVehicleSelect(vehicleId);
+        return;
+      }
       setHoveringStop(undefined);
       setPinnedVehicle(vp);
       if (!isMobile) {
@@ -155,6 +179,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
     [
       isMobile,
       navigate,
+      onVehicleSelect,
       setHoveringStop,
       setPinnedVehicle,
       vehiclesById,
@@ -256,6 +281,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             0.68,
           ],
         }}
+        paint={{ "icon-opacity": opacityExpression }}
         slot={"top"}
         type={"symbol"}
       />
@@ -280,6 +306,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             0.5,
           ],
         }}
+        paint={{ "icon-opacity": opacityExpression }}
         slot={"top"}
         type={"symbol"}
       />
@@ -306,6 +333,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({ vehiclePositions }) => {
             VEHICLE_TRANSIT_BLUE,
           ],
           "text-halo-width": 1.5,
+          "text-opacity": opacityExpression,
         }}
         slot={"top"}
         type={"symbol"}

@@ -484,42 +484,6 @@ async def test_get_stop_times_by_trip_id():
 
 
 @pytest.mark.asyncio
-async def test_get_stop_times_by_stop_id():
-    svc, session = make_service()
-    row = MagicMock()
-    row.trip_id = "trip_1"
-    row.arrival_time = "10:00:00"
-    row.departure_time = "10:01:00"
-    row.stop_id = "stop_1"
-    row.stop_sequence = 1
-    row.t_trip_id = "trip_1"
-    row.route_id = "1"
-    row.service_id = "svc1"
-    row.trip_headsign = "Downtown"
-    row.direction_id = 0
-    row.block_id = None
-    row.shape_id = "shape_1"
-    row.scheduled_trip_id = None
-    row.trip_short_name = None
-    row.wheelchair_accessible = None
-    row.bikes_allowed = None
-    row.r_route_id = "1"
-    row.route_short_name = "1"
-    row.route_long_name = "Route 1"
-    row.agency_id = None
-    row.route_color = None
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter([row]))
-    session.execute.return_value = result_mock
-
-    result = await svc.get_stop_times_by_stop_id("stop_1", "20250101")
-
-    assert len(result) == 1
-    assert result[0].trip.trip_id == "trip_1"
-    assert result[0].trip.route.route_id == "1"
-
-
-@pytest.mark.asyncio
 async def test_get_earliest_arrival_times_on_route():
     svc, session = make_service()
     row = MagicMock()

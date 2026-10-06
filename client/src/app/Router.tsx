@@ -1,9 +1,11 @@
+import { homeLoader, shortLinkLoader } from "app/homeLoader";
 import { DevLayout } from "features/dev/components/DevLayout";
 import { StopsDevPage } from "features/dev/pages/StopsDevPage";
 import { TripStopTimesDevPage } from "features/dev/pages/TripStopTimesDevPage";
 import { VehiclePositionsDevPage } from "features/dev/pages/VehiclePositionsDevPage";
 import { FavoritesMenu } from "features/favorites/pages/FavoritesMenu";
 import { RootLayout } from "features/layout/RootLayout";
+import { NearbyPage } from "features/nearby/pages/NearbyPage";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { RouteMenu } from "features/route/pages/route/RouteMenu";
 import { RecentSearchesMenu } from "features/search/pages/recent/RecentSearchesMenu";
@@ -107,8 +109,16 @@ export const router = createBrowserRouter(
           loader={routeLoader}
           path={"route/:routeId/direction/:directionId/:viewState?"}
         ></Route>
+        <Route element={<NearbyPage />} path={"nearby/:viewState?"} />
+        <Route
+          element={<NearbyPage />}
+          path={"nearby/stop/:stopId/:viewState?"}
+        />
+        <Route index={true} loader={homeLoader} />
         <Route path={"/:viewState"} />
       </Route>
+      {/* Short link for stop signs / sharing: /s/1002 */}
+      <Route loader={shortLinkLoader} path={"/s/:stopId"} />
     </>
   )
 );

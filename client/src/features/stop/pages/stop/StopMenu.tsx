@@ -3,22 +3,19 @@ import NotAccessibleIcon from "@mui/icons-material/NotAccessible";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import { Box, Divider, Tooltip, Typography } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
-import { ArrivalTimeList } from "features/stop/components/ArrivalTimeList/ArrivalTimeList";
+import { UpcomingList } from "features/nearby/components/UpcomingList";
+import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
 import { RoutesSelector } from "features/stop/components/RoutesSelector/RoutesSelector";
 import { StopRoutes } from "features/stop/components/StopRoutes/StopRoutes";
-import { useAtom } from "jotai";
 import * as React from "react";
-import { useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useArrivalTimes } from "shared/api/generated/api";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
 import { ShareButton } from "shared/components/ShareButton/ShareButton";
 import { useTitle } from "shared/hooks/UseTitle";
 
-import { selectedRouteIdsAtStopAtom } from "shared/state/atoms";
-import { getDate } from "shared/utils/dateUtils";
 import { stopLoader } from "./StopLoader";
 
 interface StopMenuProps {
@@ -51,58 +48,32 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const stop = useDataFromLoader(stopLoader);
   useTitle(`${stop.stopName} - Austin Bus Go`);
 
-  const { data: arrivalTimesData, isLoading } = useArrivalTimes(
-    String(stop.stopId),
-    {
-      date: getDate(),
-    },
-    {
-      query: {
-        onSuccess: (data) => {
-          const routeIds =
-            data?.map((arrivalTime) => arrivalTime.trip.routeId) || [];
-          setSelectedRouteInitialValues(routeIds);
-        },
-      },
-    }
+  const upcoming = useUpcoming(String(stop.stopId));
+  const nowSeconds = useServerNow(upcoming.clockOffset);
+  const arrivals = upcoming.data?.arrivals ?? [];
+  const [expandedTripId, setExpandedTripId] = useState<string>();
+
+  // Route filter: undefined shows every route. Opening the stop from a
+  // route page starts filtered to that route.
+  const [routeFilter, setRouteFilter] = useState<string[] | undefined>(
+    routeId ? [routeId] : undefined
   );
-
-  const arrivalTimes = arrivalTimesData || [];
-
-  const [selectedRouteIds, setSelectedRouteIds] = useAtom(
-    selectedRouteIdsAtStopAtom
-  );
-
-  const routeIds =
-    arrivalTimesData?.map((arrivalTime) => arrivalTime.trip.routeId) || [];
-  const uniqueRouteIds =
-    routeIds
-      ?.filter((item, pos, arr) => arr.indexOf(item) == pos)
-      .sort((a, b) => {
-        return Number(a) - Number(b);
-      }) || [];
-
-  const setSelectedRouteInitialValues = (routeIds: string[]) => {
-    const uniqueRouteIds =
-      routeIds
-        ?.filter((item, pos, arr) => arr.indexOf(item) == pos)
-        .sort((a, b) => {
-          return Number(a) - Number(b);
-        }) || [];
-
-    if (routeId && uniqueRouteIds.includes(routeId)) {
-      setSelectedRouteIds([routeId]);
-    } else {
-      setSelectedRouteIds(uniqueRouteIds);
-    }
+  const routeOptions = arrivals.map(({ routeId, routeColor }) => ({
+    routeId,
+    routeColor,
+  }));
+  const routeIds = [...new Set(routeOptions.map((route) => route.routeId))];
+  const filteredRouteIds = routeFilter?.filter((id) => routeIds.includes(id));
+  const selectedRouteIds =
+    filteredRouteIds && filteredRouteIds.length > 0
+      ? filteredRouteIds
+      : routeIds;
+  const setSelectedRouteIds = (
+    next: string[] | ((previous: string[]) => string[])
+  ) => {
+    const value = typeof next === "function" ? next(selectedRouteIds) : next;
+    setRouteFilter(value.length >= routeIds.length ? undefined : value);
   };
-
-  useEffect(() => {
-    const routeIds = arrivalTimes.map(
-      (arrivalTime) => arrivalTime.trip.routeId
-    );
-    setSelectedRouteInitialValues(routeIds);
-  }, []);
 
   return (
     <MenuPanel>
@@ -164,7 +135,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
         <Divider />
         <StopRoutes routes={stop.routes} />
 
-        {!isLoading && arrivalTimes.length > 0 && uniqueRouteIds.length > 1 && (
+        {routeIds.length > 1 && (
           <Box
             sx={{
               overflowX: "auto",
@@ -183,7 +154,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               Filter by route
             </Typography>
             <RoutesSelector
-              arrivalTimes={arrivalTimes}
+              routes={routeOptions}
               selectedRouteIds={selectedRouteIds}
               setSelectedRouteIds={setSelectedRouteIds}
             />
@@ -202,14 +173,19 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
           }}
           variant={"caption"}
         >
-          Upcoming arrivals
+          Next hour
         </Typography>
       </Box>
-      <ArrivalTimeList
-        arrivalTimes={arrivalTimes}
-        loading={isLoading}
-        selectedRouteIds={selectedRouteIds}
-        stop={stop}
+      <UpcomingList
+        data={upcoming.data}
+        expandedTripId={expandedTripId}
+        nowSeconds={nowSeconds}
+        onToggle={(tripId) =>
+          setExpandedTripId((current) =>
+            current === tripId ? undefined : tripId
+          )
+        }
+        routeIds={routeFilter ? selectedRouteIds : undefined}
       />
     </MenuPanel>
   );

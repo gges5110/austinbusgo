@@ -17,7 +17,7 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 ├── client/              # React TypeScript frontend
 │   ├── src/
 │   │   ├── app/        # App setup, routing, theming
-│   │   ├── features/   # Feature-based modules (search, route, stop, favorites)
+│   │   ├── features/   # Feature-based modules (nearby, search, route, stop, favorites)
 │   │   └── shared/     # Shared utilities, hooks, components, API clients
 ├── server/              # Python FastAPI backend
 │   ├── main.py         # FastAPI app entry point

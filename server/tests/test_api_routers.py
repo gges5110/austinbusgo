@@ -115,29 +115,6 @@ def test_stop_not_found(client, services):
     assert response.status_code == 404
 
 
-def test_arrival_times(client, services):
-    _, _, arrivals = services
-    trip = SimpleNamespace(
-        trip_id="trip_1", route_id="1", service_id="svc", route=make_route()
-    )
-    arrivals.get_arrival_times.return_value = [
-        SimpleNamespace(
-            scheduled_arrival_time="10:00:00",
-            updated_arrival_time="10:05:00",
-            trip=trip,
-        )
-    ]
-
-    response = client.get("/api/stops/stop_1/arrival-times?date=20260101")
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body[0]["scheduledArrivalTime"] == "10:00:00"
-    assert body[0]["updatedArrivalTime"] == "10:05:00"
-    assert body[0]["trip"]["route"]["routeColor"] == "AA0000"
-    arrivals.get_arrival_times.assert_called_once_with("stop_1", "20260101")
-
-
 def test_routes(client, services):
     gtfs, _, _ = services
     gtfs.get_routes.return_value = [make_route("1"), make_route("2")]
@@ -345,3 +322,66 @@ def test_feed_info(client, services):
 
     assert response.status_code == 200
     assert response.json()["feedPublisherName"] == "Capital Metro"
+
+
+def test_upcoming_at_stop_serializes_camel_case(client, services):
+    _, _, arrivals = services
+    arrivals.get_upcoming.return_value = {
+        "stop": make_stop("s1"),
+        "generated_at": 1000,
+        "realtime_available": True,
+        "arrivals": [
+            {
+                "trip_id": "t1",
+                "route_id": "801",
+                "route_color": "E2231A",
+                "headsign": "801 Tech Ridge",
+                "direction_id": 0,
+                "scheduled_at": 1300,
+                "predicted_at": 1360,
+                "stops_away": 2,
+                "status": "en_route",
+                "vehicle": {
+                    "id": "bus-1",
+                    "lat": 30.2,
+                    "lon": -97.7,
+                    "bearing": 10.0,
+                    "updated_at": 990,
+                },
+                "track": [
+                    {
+                        "stop_id": "s0",
+                        "stop_name": "Prev",
+                        "stop_sequence": 1,
+                        "stop_loc": STOP_LOC,
+                        "at": 1200,
+                        "is_vehicle_here": True,
+                        "stops_hidden_before": 0,
+                    }
+                ],
+            }
+        ],
+        "next_scheduled": None,
+    }
+
+    response = client.get("/api/stops/s1/upcoming")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["generatedAt"] == 1000
+    assert body["realtimeAvailable"] is True
+    arrival = body["arrivals"][0]
+    assert arrival["predictedAt"] == 1360
+    assert arrival["stopsAway"] == 2
+    assert arrival["vehicle"]["updatedAt"] == 990
+    assert arrival["track"][0]["isVehicleHere"] is True
+    assert arrival["track"][0]["stopLoc"]["type"] == "Point"
+
+
+def test_upcoming_at_unknown_stop_is_404(client, services):
+    _, _, arrivals = services
+    arrivals.get_upcoming.side_effect = NoResultFound()
+
+    response = client.get("/api/stops/nope/upcoming")
+
+    assert response.status_code == 404

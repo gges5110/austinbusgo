@@ -12,11 +12,8 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import { apiFetch } from "../fetcher";
 import type {
-  ArrivalTime,
   ArrivalTimeAtStop,
-  ArrivalTimesParams,
   EarliestArrivalTimesOnRouteParams,
   FeedInfo,
   HTTPValidationError,
@@ -26,6 +23,7 @@ import type {
   SearchResult,
   Stop,
   StopTime,
+  StopUpcoming,
   StopsAndShapes,
   StopsAndShapesParams,
   StopsByNameParams,
@@ -36,6 +34,8 @@ import type {
   VehiclePosition,
   VehiclePositionsParams,
 } from "./model";
+
+import { apiFetch } from "../fetcher";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -385,58 +385,36 @@ export function useStop<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getArrivalTimesUrl = (
-  stopId: string,
-  params: ArrivalTimesParams
-) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/stops/${stopId}/arrival-times?${stringifiedParams}`
-    : `/api/stops/${stopId}/arrival-times`;
+export const getUpcomingAtStopUrl = (stopId: string) => {
+  return `/api/stops/${stopId}/upcoming`;
 };
 
 /**
- * @summary Arrival Times
+ * Buses due at the stop in the next hour, with live predictions.
+ * @summary Upcoming At Stop
  */
-export const arrivalTimes = async (
+export const upcomingAtStop = async (
   stopId: string,
-  params: ArrivalTimesParams,
   options?: RequestInit
-): Promise<ArrivalTime[]> => {
-  return apiFetch<ArrivalTime[]>(getArrivalTimesUrl(stopId, params), {
+): Promise<StopUpcoming> => {
+  return apiFetch<StopUpcoming>(getUpcomingAtStopUrl(stopId), {
     ...options,
     method: "GET",
   });
 };
 
-export const getArrivalTimesQueryKey = (
-  stopId: string,
-  params?: ArrivalTimesParams
-) => {
-  return [
-    `/api/stops/${stopId}/arrival-times`,
-    ...(params ? [params] : []),
-  ] as const;
+export const getUpcomingAtStopQueryKey = (stopId: string) => {
+  return [`/api/stops/${stopId}/upcoming`] as const;
 };
 
-export const getArrivalTimesQueryOptions = <
-  TData = Awaited<ReturnType<typeof arrivalTimes>>,
+export const getUpcomingAtStopQueryOptions = <
+  TData = Awaited<ReturnType<typeof upcomingAtStop>>,
   TError = HTTPValidationError,
 >(
   stopId: string,
-  params: ArrivalTimesParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof arrivalTimes>>,
+      Awaited<ReturnType<typeof upcomingAtStop>>,
       TError,
       TData
     >;
@@ -445,12 +423,11 @@ export const getArrivalTimesQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey =
-    queryOptions?.queryKey ?? getArrivalTimesQueryKey(stopId, params);
+  const queryKey = queryOptions?.queryKey ?? getUpcomingAtStopQueryKey(stopId);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof arrivalTimes>>> = ({
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof upcomingAtStop>>> = ({
     signal,
-  }) => arrivalTimes(stopId, params, { signal, ...requestOptions });
+  }) => upcomingAtStop(stopId, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -458,37 +435,36 @@ export const getArrivalTimesQueryOptions = <
     enabled: stopId !== null && stopId !== undefined,
     ...queryOptions,
   } as UseQueryOptions<
-    Awaited<ReturnType<typeof arrivalTimes>>,
+    Awaited<ReturnType<typeof upcomingAtStop>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type ArrivalTimesQueryResult = NonNullable<
-  Awaited<ReturnType<typeof arrivalTimes>>
+export type UpcomingAtStopQueryResult = NonNullable<
+  Awaited<ReturnType<typeof upcomingAtStop>>
 >;
-export type ArrivalTimesQueryError = HTTPValidationError;
+export type UpcomingAtStopQueryError = HTTPValidationError;
 
 /**
- * @summary Arrival Times
+ * @summary Upcoming At Stop
  */
 
-export function useArrivalTimes<
-  TData = Awaited<ReturnType<typeof arrivalTimes>>,
+export function useUpcomingAtStop<
+  TData = Awaited<ReturnType<typeof upcomingAtStop>>,
   TError = HTTPValidationError,
 >(
   stopId: string,
-  params: ArrivalTimesParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof arrivalTimes>>,
+      Awaited<ReturnType<typeof upcomingAtStop>>,
       TError,
       TData
     >;
     request?: SecondParameter<typeof apiFetch>;
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getArrivalTimesQueryOptions(stopId, params, options);
+  const queryOptions = getUpcomingAtStopQueryOptions(stopId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

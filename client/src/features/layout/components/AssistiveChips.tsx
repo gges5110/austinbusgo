@@ -1,5 +1,6 @@
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import NearMeIcon from "@mui/icons-material/NearMe";
 import RouteIcon from "@mui/icons-material/Route";
 import {
   Box,
@@ -39,6 +40,33 @@ export const AssistiveChips: React.FC = () => {
         mt: 2,
       }}
     >
+      <Paper
+        sx={{
+          backgroundColor: "background.default",
+          borderRadius: "32px",
+        }}
+      >
+        <Button
+          component={RouterLink}
+          sx={{
+            whiteSpace: "nowrap",
+            color: "text.primary",
+            textTransform: "none",
+            px: "12px",
+          }}
+          to={"/nearby"}
+        >
+          <NearMeIcon sx={{ fontSize: 18, mr: "4px" }} />
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            Buses near me
+          </Typography>
+        </Button>
+      </Paper>
       <Paper
         sx={{
           backgroundColor: "background.default",

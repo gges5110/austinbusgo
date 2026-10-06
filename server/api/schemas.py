@@ -4,7 +4,7 @@ Field names serialize as camelCase (matching the former GraphQL responses)
 so client components keep reading the same JSON shapes.
 """
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
@@ -84,18 +84,58 @@ class StopTime(ApiModel):
     stop: Optional[Stop] = None
 
 
-class ArrivalTime(ApiModel):
-    scheduled_arrival_time: str
-    updated_arrival_time: Optional[str] = None
-    trip: Trip
-
-
 class ArrivalTimeAtStop(ApiModel):
     stop_id: str
     stop_sequence: int
     scheduled_arrival_time: str
     trip_id: Optional[str] = None
     updated_arrival_time: Optional[str] = None
+
+
+class UpcomingVehicle(ApiModel):
+    id: str
+    lat: float
+    lon: float
+    bearing: Optional[float] = None
+    updated_at: Optional[int] = None
+
+
+class TrackStop(ApiModel):
+    stop_id: str
+    stop_name: Optional[str] = None
+    stop_sequence: int
+    stop_loc: Optional[Point] = None
+    at: int
+    is_vehicle_here: bool
+    # Stops omitted between the previous entry and this one (long tracks)
+    stops_hidden_before: int = 0
+
+    @field_validator("stop_loc", mode="before")
+    @classmethod
+    def _parse_geom(cls, value):
+        return geom_to_dict(value)
+
+
+class UpcomingArrival(ApiModel):
+    trip_id: str
+    route_id: str
+    route_color: Optional[str] = None
+    headsign: Optional[str] = None
+    direction_id: Optional[int] = None
+    scheduled_at: int
+    predicted_at: Optional[int] = None
+    stops_away: Optional[int] = None
+    status: Literal["arriving", "en_route", "scheduled"]
+    vehicle: Optional[UpcomingVehicle] = None
+    track: List[TrackStop] = []
+
+
+class StopUpcoming(ApiModel):
+    stop: Stop
+    generated_at: int
+    realtime_available: bool
+    arrivals: List[UpcomingArrival]
+    next_scheduled: Optional[UpcomingArrival] = None
 
 
 class StopsAndShapes(ApiModel):

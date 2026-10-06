@@ -1,6 +1,6 @@
 """Stop endpoints."""
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import NoResultFound
@@ -87,16 +87,17 @@ async def stop(stop_id: str, gtfs_service: GTFSService = Depends(get_gtfs_servic
 
 
 @router.get(
-    "/stops/{stop_id}/arrival-times",
-    operation_id="arrivalTimes",
-    response_model=List[schemas.ArrivalTime],
+    "/stops/{stop_id}/upcoming",
+    operation_id="upcomingAtStop",
+    response_model=schemas.StopUpcoming,
 )
-async def arrival_times(
+async def upcoming_at_stop(
     stop_id: str,
-    date: str,
     arrival_service: ArrivalService = Depends(get_arrival_service),
 ):
-    return [
-        schemas.ArrivalTime.model_validate(row)
-        for row in await arrival_service.get_arrival_times(stop_id, date)
-    ]
+    """Buses due at the stop in the next hour, with live predictions."""
+    try:
+        upcoming = await arrival_service.get_upcoming(stop_id)
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail=f"Stop {stop_id} not found")
+    return schemas.StopUpcoming.model_validate(upcoming)
