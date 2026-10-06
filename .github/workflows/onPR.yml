@@ -127,7 +127,9 @@ jobs:
       contents: read
       deployments: write
     outputs:
-      url: ${{ steps.deploy.outputs.url }}
+      # The per-branch alias (pr-<n>.<project>.pages.dev) stays the same
+      # across pushes; fall back to the unique deployment URL
+      url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -151,16 +153,16 @@ jobs:
           VITE_GTFS_RT_PROXY_URL: ${{ secrets.VITE_GTFS_RT_PROXY_URL }}
         run: npm run build
 
+      # cloudflare/pages-action was deprecated and removed from GitHub;
+      # wrangler-action runs the equivalent `wrangler pages deploy`
       - name: Deploy to Cloudflare Pages
         id: deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: abg
-          directory: client/build
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: pr-${{ github.event.number }}
+          command: pages deploy client/build --project-name=abg --branch=pr-${{ github.event.number }} --commit-dirty=true
 
   frontend-preview-comment:
     needs: [detect-changes, frontend-preview-deploy]
