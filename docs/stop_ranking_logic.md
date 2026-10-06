@@ -56,8 +56,8 @@ score = (route_count + 1.0) / (distance_meters * 10.0 + 1.0)
 ```
 `distance_meters` is the haversine distance from the bounding-box center; `route_count` comes from the `routes_at_stop` cache loaded at startup.
 
-### Frontend (React Hook)
-The `useNearByStops` hook in `UseNearByStops.tsx` calculates the required radius and limit based on the current `viewState` and passes them to the GraphQL API.
+### Frontend
+`/api/stops/nearby` is called by the "Nearby stops" search (`SearchLoader.tsx`, a ~2 km box around the map center) and by the Nearby screen (`useNearestStop.ts`), which re-sorts the results by plain distance to find the stop the rider is standing at.
 
 ---
 
