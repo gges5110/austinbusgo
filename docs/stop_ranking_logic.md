@@ -49,29 +49,18 @@ The number of stops displayed increases as you zoom in, allowing for a cleaner o
 
 ## 4. Implementation Details
 
-### Backend (SQL)
-The ranking is performed directly in the database using a PostGIS query:
+### Backend
+`GTFSService.get_near_by_stops` selects the stops inside the map's bounding box (a `stop_lat`/`stop_lon` range filter backed by an index) and ranks them in Python:
 ```python
-score = (peewee.fn.COUNT(RoutesAtStop.route_id) + 1.0) / (distance * 100.0 + 1.0)
-query = (Stops.select(...).order_by(score.desc()).limit(dynamic_limit))
+score = (route_count + 1.0) / (distance_meters * 10.0 + 1.0)
 ```
+`distance_meters` is the haversine distance from the bounding-box center; `route_count` comes from the `routes_at_stop` cache loaded at startup.
 
 ### Frontend (React Hook)
 The `useNearByStops` hook in `UseNearByStops.tsx` calculates the required radius and limit based on the current `viewState` and passes them to the GraphQL API.
 
 ---
 
-## 5. Performance Optimization
+## 5. Performance
 
-To achieve a **14x speedup** (800ms -> 60ms) for regional searches, we implemented several database-level optimizations:
-
-### Database Indexes
-- **Spatial Index (GIST)**: Added to `stops.stop_loc` to allow Postgres to perform high-speed geographic "Within Radius" filters.
-- **B-tree Index**: Added to `routes_at_stop.stop_id` to speed up the join between stops and their routes.
-
-### Optimized Query Strategy (Materialized CTE)
-The database query planner often misestimates the number of stops in large radii, leading to slow "Nested Loop Joins." To fix this, we use a **MATERIALIZED CTE** in the raw SQL:
-
-1.  **Isolate Search**: The query uses a map **Bounding Box** (`min_lat`, `min_lon`, `max_lat`, `max_lon`) and PostGIS `ST_MakeEnvelope` to precisely identify stops visible on the user's screen.
-2.  **Fast Join**: It then joins this small list with the `routes_at_stop` table.
-3.  **Result**: This ensures the database doesn't scan millions of rows unnecessarily, delivering consistent sub-100ms response times even for city-wide searches.
+Austin has about 2,300 stops, so even a city-wide bounding box returns a few thousand rows at most. The `stops(stop_lat, stop_lon)` index plus in-memory route counts keeps regional queries in the low tens of milliseconds without a spatial extension.

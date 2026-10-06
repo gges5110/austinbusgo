@@ -7,7 +7,7 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 - **Purpose**: Real-time bus tracking application for Austin's CapMetro transit system
 - **Architecture**:
   - Frontend: React 18 with TypeScript, Material-UI, Mapbox GL
-  - Backend: FastAPI REST API (OpenAPI), PostgreSQL database
+  - Backend: FastAPI REST API (OpenAPI), read-only SQLite GTFS database baked into the image
   - Data: GTFS (General Transit Feed Specification) static and real-time feeds
 
 ## Directory Structure
@@ -26,8 +26,7 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 │   ├── models/         # SQLAlchemy ORM models
 │   ├── services/       # Business logic (GTFS service, RT client)
 │   └── tests/          # Unit tests
-├── etl/                 # GTFS data download, prepare, and load scripts
-├── docker/              # Docker Compose files for PostgreSQL
+├── etl/                 # GTFS download/prepare + SQLite database build
 └── Makefile            # Development commands
 ```
 
@@ -47,10 +46,10 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 ### Backend
 - **Framework**: FastAPI 0.115 with Uvicorn
 - **API**: REST with FastAPI routers + Pydantic v2 response models (camelCase aliases)
-- **Database**: PostgreSQL with SQLAlchemy 2.0 (async) + asyncpg driver
+- **Database**: read-only SQLite file built by the ETL, via SQLAlchemy 2.0 (async) + aiosqlite
 - **Real-time Data**: gtfs-realtime-bindings
 - **Production Server**: Gunicorn with UvicornWorker
-- **Testing**: pytest with testcontainers
+- **Testing**: pytest (integration tests build SQLite fixtures with the real ETL loader)
 
 ## Development Workflow
 
@@ -60,8 +59,8 @@ This project provides real-time bus location tracking for Austin, Texas using Ca
 # Install git hooks (Python linting on commit)
 ./setup-hooks.sh
 
-# First-time backend setup: venv + deps + PostgreSQL + GTFS data
-# (creates the venv, installs server[dev], starts the DB, downloads and loads the feed)
+# First-time backend setup: venv + deps + GTFS database
+# (creates the venv, installs server[dev], downloads the feed and builds etl/gtfs.db)
 make setup
 
 # Setup client
@@ -69,19 +68,15 @@ cd client
 npm ci
 ```
 
-> `make setup` requires Docker (for PostgreSQL) and a `psql` client on your PATH.
 > To later refresh the GTFS data on its own, run `make update-db`.
 
 ### Running the Application
 
 ```bash
-# Terminal 1: Start PostgreSQL (if not already running)
-make start-db
-
-# Terminal 2: Start FastAPI backend (port 5001)
+# Terminal 1: Start FastAPI backend (port 5001; builds etl/gtfs.db first if missing)
 make start-be
 
-# Terminal 3: Start React frontend (Vite dev server)
+# Terminal 2: Start React frontend (Vite dev server)
 make start-fe
 ```
 
@@ -92,11 +87,10 @@ Run `make help` to see all available targets organized by category.
 **Setup & Environment:**
 - `make setup-env` - Create Python virtual environment
 - `make install-deps` - Install Python dependencies from server[dev]
-- `make setup` - First-time setup: venv + deps + database + GTFS data
+- `make setup` - First-time setup: venv + deps + GTFS database
 
 **Database & Data:**
-- `make start-db` - Start PostgreSQL database with Docker (port 5438)
-- `make update-db` - Download the latest GTFS feed and (re)load the local DB (idempotent; skips the reload when the feed is unchanged)
+- `make update-db` - Download the latest GTFS feed and rebuild the local SQLite DB (`etl/gtfs.db`)
 
 **Development:**
 - `make start-be` - Start FastAPI backend server (port 5001, hot reload)
@@ -176,11 +170,13 @@ Run `make help` to see all available targets organized by category.
    - Business logic in `server/services/`
 
 3. **Database**:
-   - SQLAlchemy 2.0 async ORM with PostgreSQL
+   - SQLAlchemy 2.0 async ORM over a read-only SQLite file (no database server)
    - Models use `DeclarativeBase` pattern
    - Async sessions via `async_sessionmaker`
-   - asyncpg driver for async PostgreSQL connections
-   - Environment variable: `DATABASE_URL`
+   - aiosqlite driver; opened with `mode=ro&immutable=1`
+   - Geometries are stored as GeoJSON text; no spatial extension
+   - Fuzzy search uses `word_similarity`, a Python port of pg_trgm registered as a SQLite function
+   - Environment variable: `GTFS_DB_PATH`
 
 4. **REST API**:
    - Routers per domain in `server/api/routers/`, mounted under `/api`
@@ -203,11 +199,9 @@ Run `make help` to see all available targets organized by category.
 ## Important Notes
 
 ### Database
-- PostgreSQL runs on port 5438 (to avoid conflicts with default 5432)
-- Default credentials: `local-user:local-password@localhost:5438/local-db`
-- Requires GTFS CSV files downloaded and preprocessed by the `etl/` pipeline (`etl/main.py`: download → prepare → load)
-- `docker/compose.db.yml` runs PostgreSQL; the ETL itself is pure-stdlib Python (no Docker)
-- `make start-db` — start PostgreSQL only; `make update-db` — start DB + download/prepare/load the latest GTFS feed
+- The ETL (`etl/main.py`: download → prepare → build) writes `etl/gtfs.db`, a read-only SQLite file; it is pure-stdlib Python
+- Production bakes the file into the backend image (`.github/workflows/deployBackend.yml`); a new feed ships as a redeploy, checked nightly by `updateGTFS.yml`
+- Schema changes go in `etl/sql/`; there are no migrations, every build is from scratch
 
 ### GTFS Data
 - Static GTFS data: routes, stops, schedules
@@ -220,7 +214,7 @@ Run `make help` to see all available targets organized by category.
 - Main branch: `main`
 
 ### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string (required)
+- `GTFS_DB_PATH`: path to the GTFS SQLite file (required; the Makefile and Dockerfile set it)
 - Set in Makefile for local development
 
 ## Common Tasks

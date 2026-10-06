@@ -7,7 +7,7 @@ from server.main import create_app
 
 
 def make_app(mocker):
-    mocker.patch("server.main.db_url", "postgresql://user:pass@localhost/db")
+    mocker.patch("server.main.db_path", "gtfs.db")
     mocker.patch("server.main.init_database")
     mocker.patch("server.main.database_sanity_check", new=AsyncMock())
     # Mock the session factory used both in lifespan and get_db
@@ -43,8 +43,8 @@ def test_openapi_docs_respond(mocker):
         assert "/api/stops" in response.json()["paths"]
 
 
-def test_create_app_no_db_url(mocker):
-    mocker.patch("server.main.db_url", None)
+def test_create_app_no_db_path(mocker):
+    mocker.patch("server.main.db_path", None)
     app = create_app()
     with pytest.raises(Exception):
         with TestClient(app):

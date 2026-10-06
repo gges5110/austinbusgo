@@ -1,6 +1,11 @@
-"""Main ETL orchestration script for GTFS data."""
+"""Main ETL orchestration script for GTFS data.
 
-import os
+Downloads the latest CapMetro feed and builds the SQLite database the
+backend serves from. Usage: python main.py [output.db]
+"""
+
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -8,20 +13,16 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
+from build_db import DEFAULT_DB_PATH, build_database, get_feed_info
 from download import download
 from prepare import prepare
-from load_db import load_database
 
 
 def check_dependencies():
     """Ensure required tools are available."""
-    import shutil
-
     if shutil.which("curl") is None:
         print("curl not found, attempting to install...")
         try:
-            import subprocess
-
             subprocess.run(
                 ["sh", str(SCRIPT_DIR / "docker" / "install-curl.sh")],
                 check=False,
@@ -29,15 +30,10 @@ def check_dependencies():
         except Exception as e:
             print(f"Warning: Could not install curl: {e}")
 
-    if shutil.which("psql") is None:
-        raise RuntimeError("psql not found. Please install PostgreSQL client tools.")
-
 
 def main():
     """Run the complete ETL pipeline."""
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise ValueError("DATABASE_URL environment variable not set")
+    db_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DB_PATH
 
     try:
         print("=" * 60)
@@ -52,11 +48,15 @@ def main():
         print("\n[2/3] Preparing GTFS files...")
         prepare()
 
-        print("\n[3/3] Loading data into database...")
-        load_database(database_url)
+        print("\n[3/3] Building SQLite database...")
+        build_database(db_path=db_path)
 
+        feed = get_feed_info(db_path)
         print("\n" + "=" * 60)
-        print("ETL Pipeline completed successfully!")
+        print(
+            f"ETL Pipeline completed successfully! Feed {feed['feed_version']}"
+            f" ({feed['feed_start_date']} to {feed['feed_end_date']})"
+        )
         print("=" * 60)
 
     except Exception as e:

@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server import logging_config  # noqa: F401 - Configure logging on import
-from server.config import db_url
+from server.config import db_path
 from server import database
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ from server.services.gtfs_service import GTFSService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if db_url is None:
-        raise RuntimeError("Environment variable $DATABASE_URL was not set")
-    init_database(db_url)
+    if db_path is None:
+        raise RuntimeError("Environment variable $GTFS_DB_PATH was not set")
+    init_database(db_path)
     async with database.AsyncSessionLocal() as session:
         await database_sanity_check(session)
         # Used by the nearby-stops ranking to weight stops by route count

@@ -15,9 +15,3 @@ variable "github_repo" {
   type        = string
   default     = "gges5110/austinbusgo"
 }
-
-variable "db_password" {
-  description = "Cloud SQL postgres user password"
-  type        = string
-  sensitive   = true
-}

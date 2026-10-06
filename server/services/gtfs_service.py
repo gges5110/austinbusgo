@@ -1,5 +1,6 @@
 """This file contains methods to retrieve data from database"""
 
+import math
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
@@ -18,7 +19,7 @@ from server.models.gtfs_models import (
     Trips,
 )
 
-# Minimum pg_trgm word_similarity for a search hit. Low enough to absorb
+# Minimum word_similarity for a search hit (see services/text_similarity). Low enough to absorb
 # typos ("guadelupe" ~ "Guadalupe" scores well above this); ranking and the
 # result limit keep noise out of the top results.
 SEARCH_SIMILARITY_THRESHOLD = 0.3
@@ -44,12 +45,12 @@ class GTFSService:
     async def get_routes_by_name(
         self, search_term: str, limit: Optional[int] = None
     ) -> List[Routes]:
-        """Typo-tolerant route search using pg_trgm word similarity.
+        """Typo-tolerant route search using trigram word similarity.
 
         The whole search term is matched as a phrase (not OR-ed words), an
         exact route id sorts first, and everything else ranks by similarity.
         """
-        score = func.greatest(
+        score = func.max(
             func.word_similarity(search_term, Routes.route_long_name),
             func.word_similarity(search_term, Routes.route_id),
         )
@@ -97,7 +98,7 @@ class GTFSService:
                 Stops.stop_code,
                 Stops.stop_name,
                 Stops.stop_desc,
-                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+                Stops.stop_loc,
                 Stops.zone_id,
                 Stops.stop_url,
                 Stops.location_type,
@@ -120,7 +121,7 @@ class GTFSService:
                 Stops.stop_id,
                 Stops.stop_code,
                 Stops.stop_name,
-                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+                Stops.stop_loc,
             )
         )
         return [SimpleNamespace(**row._mapping) for row in result]
@@ -128,13 +129,13 @@ class GTFSService:
     async def get_stops_by_name(
         self, search_term: str, limit: Optional[int] = None
     ) -> List[Stops]:
-        """Typo-tolerant stop search using pg_trgm word similarity.
+        """Typo-tolerant stop search using trigram word similarity.
 
         Matches the whole term against stop/street names, plus a prefix
         match on the rider-facing stop code. An exact stop code sorts
         first, then results rank by best similarity across the columns.
         """
-        score = func.greatest(
+        score = func.max(
             func.word_similarity(search_term, Stops.stop_name),
             func.word_similarity(search_term, func.coalesce(Stops.on_street, "")),
             func.word_similarity(search_term, func.coalesce(Stops.at_street, "")),
@@ -145,7 +146,7 @@ class GTFSService:
                 Stops.stop_id,
                 Stops.stop_code,
                 Stops.stop_name,
-                func.ST_AsGeoJSON(Stops.stop_loc).label("stop_loc"),
+                Stops.stop_loc,
             )
             .where(
                 or_(
@@ -193,110 +194,113 @@ class GTFSService:
         limit: int = 20,
         route_counts: Optional[dict] = None,
     ) -> List[SimpleNamespace]:
-        spatial_filter = (
-            "ST_Intersects(stop_loc,"
-            " ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)::geography)"
-        )
-        center_lon = (min_lon + max_lon) / 2
-        center_lat = (min_lat + max_lat) / 2
-        params = {
-            "min_lon": min_lon,
-            "min_lat": min_lat,
-            "max_lon": max_lon,
-            "max_lat": max_lat,
-            "center_lon": center_lon,
-            "center_lat": center_lat,
-            "limit": limit,
-        }
+        """Stops inside the bounding box, best first.
 
-        if route_counts is not None:
-            # Simplified query: skip the routes_at_stop JOIN and GROUP BY.
-            # Ranking is done in Python using the pre-loaded route_counts cache.
-            sql = f"""
-            SELECT stop_id, stop_code, stop_name,
-                   ST_AsGeoJSON(stop_loc) AS stop_loc,
-                   ST_Distance(
-                       stop_loc::geography,
-                       ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326)::geography
-                   ) AS distance
-            FROM stops
-            WHERE {spatial_filter};
-            """
-            result = await self.session.execute(text(sql), params)
-            scored = []
-            for row in result:
-                count = route_counts.get(row.stop_id, 0)
-                score = (count + 1.0) / (row.distance * 10.0 + 1.0)
-                scored.append(
-                    (
-                        score,
-                        SimpleNamespace(
-                            stop_id=row.stop_id,
-                            stop_code=row.stop_code,
-                            stop_name=row.stop_name,
-                            stop_loc=row.stop_loc,
-                            route_count=count,
-                        ),
-                    )
-                )
-            scored.sort(key=lambda x: x[0], reverse=True)
-            return [s for _, s in scored[:limit]]
-
-        sql = f"""
-        WITH stops_in_radius AS MATERIALIZED (
-            SELECT stop_id, stop_code, stop_name,
-                   ST_AsGeoJSON(stop_loc) AS stop_loc
-            FROM stops
-            WHERE {spatial_filter}
-        )
-        SELECT s.stop_id, s.stop_code, s.stop_name, s.stop_loc,
-               COUNT(r.route_id) as route_count
-        FROM stops_in_radius s
-        LEFT OUTER JOIN routes_at_stop r ON s.stop_id = r.stop_id
-        GROUP BY s.stop_id, s.stop_code, s.stop_name, s.stop_loc
-        ORDER BY (COUNT(r.route_id) + 1.0) /
-                 (ST_Distance(
-                     ST_SetSRID(ST_GeomFromGeoJSON(s.stop_loc), 4326),
-                     ST_SetSRID(ST_MakePoint(:center_lon, :center_lat), 4326)
-                 ) * 10.0 + 1.0) DESC
-        LIMIT :limit;
+        Ranks by (route count + 1) / (meters from the box center * 10 + 1),
+        favoring well-served stops near the center. `route_counts`
+        ({stop_id: count}) normally comes from the startup cache; without
+        it the counts are queried.
         """
-        result = await self.session.execute(text(sql), params)
-        return [SimpleNamespace(**row._mapping) for row in result]
+        result = await self.session.execute(
+            select(
+                Stops.stop_id,
+                Stops.stop_code,
+                Stops.stop_name,
+                Stops.stop_loc,
+                Stops.stop_lat,
+                Stops.stop_lon,
+            ).where(
+                Stops.stop_lat.between(min_lat, max_lat),
+                Stops.stop_lon.between(min_lon, max_lon),
+            )
+        )
+        rows = result.all()
+        if route_counts is None:
+            route_counts = await self._get_route_counts([row.stop_id for row in rows])
+
+        center_lat = (min_lat + max_lat) / 2
+        center_lon = (min_lon + max_lon) / 2
+        scored = []
+        for row in rows:
+            count = route_counts.get(row.stop_id, 0)
+            distance = _distance_meters(
+                row.stop_lat, row.stop_lon, center_lat, center_lon
+            )
+            score = (count + 1.0) / (distance * 10.0 + 1.0)
+            scored.append(
+                (
+                    score,
+                    SimpleNamespace(
+                        stop_id=row.stop_id,
+                        stop_code=row.stop_code,
+                        stop_name=row.stop_name,
+                        stop_loc=row.stop_loc,
+                        route_count=count,
+                    ),
+                )
+            )
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [s for _, s in scored[:limit]]
+
+    async def _get_route_counts(self, stop_ids: List[str]) -> dict:
+        result = await self.session.execute(
+            select(RoutesAtStop.stop_id, func.count(RoutesAtStop.route_id))
+            .where(RoutesAtStop.stop_id.in_(stop_ids))
+            .group_by(RoutesAtStop.stop_id)
+        )
+        return {stop_id: count for stop_id, count in result.all()}
 
     async def get_stops_by_route_id(
         self, route_id: str, direction_id: int
     ) -> List[SimpleNamespace]:
+        """Stops served by the route in one direction.
+
+        Each stop carries its lowest stop_sequence (for ordering) and the
+        shape most of its trips use. Taking the most common shape per stop
+        covers branches with as few distinct shapes as possible; feeds
+        often publish many near-identical per-trip shapes.
+        """
         sql = text("""
-            SELECT DISTINCT ON (stops.stop_id)
+            SELECT
                 stops.stop_id, stops.stop_code, stops.stop_name,
-                ST_AsGeoJSON(stops.stop_loc) AS stop_loc,
-                stop_times.stop_sequence AS st_stop_sequence,
-                trips.shape_id AS t_shape_id
+                stops.stop_loc, trips.shape_id,
+                MIN(stop_times.stop_sequence) AS stop_sequence,
+                COUNT(*) AS trip_count
             FROM stops
             JOIN stop_times ON stops.stop_id = stop_times.stop_id
             JOIN trips ON stop_times.trip_id = trips.trip_id
             WHERE trips.route_id = :route_id
               AND trips.direction_id = :direction_id
-            ORDER BY stops.stop_id, stop_times.stop_sequence
+            GROUP BY stops.stop_id, trips.shape_id
+            ORDER BY stops.stop_id, trips.shape_id
             """)
         result = await self.session.execute(
             sql, {"route_id": route_id, "direction_id": direction_id}
         )
-        stops = []
+        stops: dict = {}
         for row in result:
-            stop = SimpleNamespace(
-                stop_id=row.stop_id,
-                stop_code=row.stop_code,
-                stop_name=row.stop_name,
-                stop_loc=row.stop_loc,
-                stop_time=SimpleNamespace(
-                    stop_sequence=row.st_stop_sequence,
-                    trip=SimpleNamespace(shape_id=row.t_shape_id),
-                ),
+            stop = stops.get(row.stop_id)
+            if stop is None:
+                stops[row.stop_id] = SimpleNamespace(
+                    stop_id=row.stop_id,
+                    stop_code=row.stop_code,
+                    stop_name=row.stop_name,
+                    stop_loc=row.stop_loc,
+                    stop_time=SimpleNamespace(
+                        stop_sequence=row.stop_sequence,
+                        trip=SimpleNamespace(shape_id=row.shape_id),
+                    ),
+                    trip_count=row.trip_count,
+                )
+                continue
+            stop.stop_time.stop_sequence = min(
+                stop.stop_time.stop_sequence, row.stop_sequence
             )
-            stops.append(stop)
-        return stops
+            # Rows are ordered by shape_id, so ties keep the lowest shape_id
+            if row.trip_count > stop.trip_count:
+                stop.stop_time.trip.shape_id = row.shape_id
+                stop.trip_count = row.trip_count
+        return list(stops.values())
 
     # Trips
     async def get_trips_by_distinct_short_name(
@@ -304,8 +308,10 @@ class GTFSService:
     ) -> List[Trips]:
         parsed_date = datetime.strptime(date, "%Y%m%d").date()
         sql = text("""
-            SELECT DISTINCT ON (trips.direction_id)
-                trips.trip_id, trips.route_id, trips.service_id,
+            -- One trip per direction (the lowest trip_id): SQLite reads bare
+            -- columns from the row that produced the MIN().
+            SELECT
+                MIN(trips.trip_id) AS trip_id, trips.route_id, trips.service_id,
                 trips.trip_headsign, trips.direction_id, trips.block_id,
                 trips.shape_id, trips.scheduled_trip_id, trips.trip_short_name,
                 trips.wheelchair_accessible, trips.bikes_allowed
@@ -313,10 +319,11 @@ class GTFSService:
             JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
             WHERE trips.route_id = :route_id
               AND calendar_dates.date = :date
-            ORDER BY trips.direction_id, trips.trip_id
+            GROUP BY trips.direction_id
+            ORDER BY trips.direction_id
             """)
         result = await self.session.execute(
-            sql, {"route_id": route_id, "date": parsed_date}
+            sql, {"route_id": route_id, "date": parsed_date.isoformat()}
         )
         return [SimpleNamespace(**row._mapping) for row in result]
 
@@ -392,7 +399,7 @@ class GTFSService:
         result = await self.session.execute(
             select(
                 AggregatedShape.shape_id,
-                func.ST_AsGeoJSON(AggregatedShape.shape).label("shape"),
+                AggregatedShape.shape,
             ).where(AggregatedShape.shape_id == shape_id)
         )
         row = result.one()
@@ -406,7 +413,7 @@ class GTFSService:
                    st.drop_off_type, st.shape_dist_traveled, st.timepoint,
                    stops.stop_id AS s_stop_id,
                    stops.stop_code, stops.stop_name,
-                   ST_AsGeoJSON(stops.stop_loc) AS stop_loc
+                   stops.stop_loc
             FROM stop_times st
             JOIN stops ON stops.stop_id = st.stop_id
             WHERE st.trip_id = :trip_id
@@ -463,7 +470,7 @@ class GTFSService:
             ORDER BY st.arrival_time
             """)
         result = await self.session.execute(
-            sql, {"stop_id": stop_id, "date": parsed_date, "cutoff": cutoff}
+            sql, {"stop_id": stop_id, "date": parsed_date.isoformat(), "cutoff": cutoff}
         )
         stop_times = []
         for row in result:
@@ -530,7 +537,7 @@ class GTFSService:
             {
                 "route_id": route_id,
                 "direction_id": direction_id,
-                "date": parsed_date,
+                "date": parsed_date.isoformat(),
                 "time": time,
             },
         )
@@ -547,3 +554,15 @@ class GTFSService:
             feed_end_date=(str(row.feed_end_date) if row.feed_end_date else None),
             feed_version=row.feed_version,
         )
+
+
+def _distance_meters(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle (haversine) distance in meters."""
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    d_phi = phi2 - phi1
+    d_lambda = math.radians(lon2 - lon1)
+    a = (
+        math.sin(d_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    )
+    return 2 * 6371008.8 * math.asin(math.sqrt(a))

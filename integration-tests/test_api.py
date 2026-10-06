@@ -2,9 +2,9 @@
 REST API integration tests.
 
 Verifies that the /api endpoints are reachable and that representative
-requests execute against the real database without errors.  The container
-is seeded with the schema but no GTFS data, so list endpoints are expected
-to return empty lists rather than real records.
+requests execute against a real database without errors.  The database has
+the schema but no GTFS data, so list endpoints are expected to return empty
+lists rather than real records.
 """
 
 

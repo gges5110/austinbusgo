@@ -1,5 +1,6 @@
-from urllib.parse import parse_qs, urlencode, urlparse
+from pathlib import Path
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -7,15 +8,19 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
+from server.services.text_similarity import word_similarity
+
 ALL_TABLES_SET = {
     "trips",
     "routes",
-    "shapes",
+    "shapes_aggregated",
     "stop_times",
     "stops",
     "calendar_dates",
     "agency",
     "transfers",
+    "feed_info",
+    "routes_at_stop",
 }
 
 engine = None
@@ -26,22 +31,31 @@ class Base(DeclarativeBase):
     pass
 
 
-def init_database(db_url: str) -> None:
+def init_database(db_path: str) -> None:
+    """Open the GTFS SQLite file built by etl/build_db.py, read-only.
+
+    `immutable=1` tells SQLite the file never changes while open, which
+    skips file locking entirely; the database is rebuilt and redeployed as
+    a whole rather than written to.
+    """
     global engine, AsyncSessionLocal
-    parsed = urlparse(db_url.replace("postgresql://", "postgresql+asyncpg://", 1))
-    params = parse_qs(parsed.query)
-
-    connect_args = {}
-    if "sslmode" in params:
-        connect_args["ssl"] = True
-        params.pop("sslmode")
-
-    clean_url = parsed._replace(
-        query=urlencode({k: v[0] for k, v in params.items()})
-    ).geturl()
+    path = Path(db_path).resolve()
+    if not path.is_file():
+        raise RuntimeError(
+            f"GTFS database not found at {path}; build it with `make update-db`"
+        )
     engine = create_async_engine(
-        clean_url, pool_size=5, max_overflow=10, connect_args=connect_args
+        f"sqlite+aiosqlite:///file:{path}?mode=ro&immutable=1&uri=true"
     )
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _register_functions(dbapi_connection, _connection_record):
+        dbapi_connection.run_async(
+            lambda conn: conn.create_function(
+                "word_similarity", 2, word_similarity, deterministic=True
+            )
+        )
+
     AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
@@ -54,10 +68,7 @@ async def database_sanity_check(session: AsyncSession) -> None:
     from sqlalchemy import text
 
     result = await session.execute(
-        text(
-            "SELECT table_name FROM information_schema.tables"
-            " WHERE table_schema = 'public'"
-        )
+        text("SELECT name FROM sqlite_master WHERE type = 'table'")
     )
     tables_set = {row[0] for row in result}
     missing = ALL_TABLES_SET.difference(tables_set)

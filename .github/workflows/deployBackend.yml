@@ -1,0 +1,124 @@
+# Builds the GTFS SQLite database, bakes it into the backend image, and
+# deploys it to Cloud Run. The image is the unit of data deployment: there
+# is no external database, so a new GTFS feed ships as a new image.
+#
+# Called by main.yml (every push to main) and updateGTFS.yml (nightly, only
+# redeploying when CapMetro published a new feed).
+
+name: Deploy backend
+
+on:
+  workflow_call:
+    inputs:
+      only_if_feed_changed:
+        description: Skip the deploy when the live backend already serves this feed
+        type: boolean
+        default: false
+
+env:
+  GCP_PROJECT: austin-bus-go
+  GCP_REGION: us-central1
+  IMAGE: gcr.io/austin-bus-go/austinbusgo-backend
+  CLOUD_RUN_SERVICE: austinbusgo-backend
+  WORKLOAD_IDENTITY_PROVIDER: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-actions@austin-bus-go.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    # Never run two deploys at once (e.g. a merge landing at midnight)
+    concurrency:
+      group: deploy-backend
+      cancel-in-progress: false
+    outputs:
+      feed_changed: ${{ steps.feed.outputs.changed }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build GTFS database
+        run: python etl/main.py
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Compare with the live feed
+        id: feed
+        run: |
+          new=$(python -c "import sqlite3; print(sqlite3.connect('etl/gtfs.db').execute('SELECT feed_version FROM feed_info').fetchone()[0])")
+          url=$(gcloud run services describe "$CLOUD_RUN_SERVICE" --region "$GCP_REGION" --format='value(status.url)')
+          # An unreachable backend reads as a changed feed, so it gets redeployed
+          live=$(curl -sf "$url/api/feed-info" | python -c "import json, sys; print(json.load(sys.stdin).get('feedVersion') or '')" || true)
+          changed=$([ "$new" = "$live" ] && echo false || echo true)
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          {
+            echo "## GTFS feed"
+            echo "- Built: \`$new\`"
+            echo "- Live before deploy: \`${live:-unknown}\`"
+            echo "- Changed: $changed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Configure Docker for GCR
+        if: ${{ !inputs.only_if_feed_changed || steps.feed.outputs.changed == 'true' }}
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and Push Docker Image
+        if: ${{ !inputs.only_if_feed_changed || steps.feed.outputs.changed == 'true' }}
+        run: |
+          docker build --platform linux/amd64 \
+            -t ${{ env.IMAGE }}:${{ github.sha }}-${{ github.run_id }} \
+            -t ${{ env.IMAGE }}:latest \
+            -f server/Dockerfile .
+          docker push ${{ env.IMAGE }}:${{ github.sha }}-${{ github.run_id }}
+          docker push ${{ env.IMAGE }}:latest
+
+      - name: Deploy to Cloud Run
+        if: ${{ !inputs.only_if_feed_changed || steps.feed.outputs.changed == 'true' }}
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.CLOUD_RUN_SERVICE }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE }}:${{ github.sha }}-${{ github.run_id }}
+          # Detach the retired Cloud SQL instance (no-ops once detached)
+          flags: --clear-cloudsql-instances --remove-env-vars=DATABASE_URL
+
+  invalidate-edge-cache:
+    needs: [deploy]
+    if: needs.deploy.outputs.feed_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Redeploy graphql-edge-cache with a fresh cache version
+        working-directory: workers/graphql-edge-cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        # Rotating CACHE_VERSION orphans all cached API responses so
+        # static entries never outlive the GTFS data they were built from
+        run: |
+          npm ci
+          npx wrangler deploy --var CACHE_VERSION:gtfs-${{ github.run_id }}
+      # Rotating the version orphans all cached entries; replay the
+      # expensive queries once so the first visitor doesn't pay the cold
+      # upstream cost.
+      - name: Warm edge cache
+        run: node workers/graphql-edge-cache/scripts/warm-cache.mjs

@@ -1,4 +1,3 @@
 project_id  = "austin-bus-go"
 region      = "us-central1"
 github_repo = "gges5110/austinbusgo"
-db_password = "YOUR_DB_PASSWORD"

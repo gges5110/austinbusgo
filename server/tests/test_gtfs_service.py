@@ -161,113 +161,86 @@ async def test_get_stops_by_name():
     assert result[0].stop_id == "stop_1"
 
 
-@pytest.mark.asyncio
-async def test_get_near_by_stops():
-    svc, session = make_service()
-    row = MagicMock()
-    row._mapping = {
-        "stop_id": "stop_1",
-        "stop_code": None,
-        "stop_name": "Stop",
-        "stop_loc": None,
-        "route_count": 1,
-    }
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter([row]))
-    session.execute.return_value = result_mock
+# 1 degree of latitude in meters (haversine, mean Earth radius)
+METERS_PER_DEGREE_LAT = 111195.08
 
-    result = await svc.get_near_by_stops(
-        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
+
+def make_nearby_row(stop_id, meters_north_of_center):
+    """A stop row due north of the (30.5, -97.5) bounding-box center."""
+    return SimpleNamespace(
+        stop_id=stop_id,
+        stop_code=None,
+        stop_name=f"Stop {stop_id}",
+        stop_loc=None,
+        stop_lat=30.5 + meters_north_of_center / METERS_PER_DEGREE_LAT,
+        stop_lon=-97.5,
     )
 
-    session.execute.assert_called_once()
+
+def make_all_result(rows):
+    result = MagicMock()
+    result.all.return_value = rows
+    return result
+
+
+NEARBY_BOX = dict(min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0)
+
+
+@pytest.mark.asyncio
+async def test_get_near_by_stops_queries_route_counts_without_cache():
+    svc, session = make_service()
+    session.execute.side_effect = [
+        make_all_result([make_nearby_row("stop_1", 100)]),
+        make_all_result([("stop_1", 2)]),
+    ]
+
+    result = await svc.get_near_by_stops(**NEARBY_BOX)
+
+    assert session.execute.call_count == 2
     assert len(result) == 1
+    assert result[0].route_count == 2
 
 
 @pytest.mark.asyncio
 async def test_get_near_by_stops_empty():
     svc, session = make_service()
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter([]))
-    session.execute.return_value = result_mock
+    session.execute.side_effect = [make_all_result([]), make_all_result([])]
 
-    result = await svc.get_near_by_stops(
-        min_lat=30.0, min_lon=-98.0, max_lat=31.0, max_lon=-97.0
-    )
+    result = await svc.get_near_by_stops(**NEARBY_BOX)
 
-    session.execute.assert_called_once()
     assert result == []
 
 
 @pytest.mark.asyncio
 async def test_get_near_by_stops_with_route_counts_cache():
-    """When route_counts is provided, uses simplified SQL and ranks in Python."""
+    """Ranks by route count over distance from the box center."""
     svc, session = make_service()
+    # stop_1 has more routes but stop_2 is closer
+    session.execute.return_value = make_all_result(
+        [make_nearby_row("stop_1", 500), make_nearby_row("stop_2", 100)]
+    )
 
-    # Two stops: stop_1 has 3 routes and stop_2 has 1 route,
-    # but stop_2 is closer, so ranking depends on combined score.
-    row1 = MagicMock()
-    row1.stop_id = "stop_1"
-    row1.stop_code = None
-    row1.stop_name = "Major Stop"
-    row1.stop_loc = None
-    row1.distance = 500.0  # metres
-
-    row2 = MagicMock()
-    row2.stop_id = "stop_2"
-    row2.stop_code = None
-    row2.stop_name = "Minor Stop"
-    row2.stop_loc = None
-    row2.distance = 100.0  # metres
-
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter([row1, row2]))
-    session.execute.return_value = result_mock
-
-    route_counts = {"stop_1": 3, "stop_2": 1}
     result = await svc.get_near_by_stops(
-        min_lat=30.0,
-        min_lon=-98.0,
-        max_lat=31.0,
-        max_lon=-97.0,
-        route_counts=route_counts,
+        **NEARBY_BOX, route_counts={"stop_1": 3, "stop_2": 1}
     )
 
     session.execute.assert_called_once()
-    assert len(result) == 2
     # stop_1: score = (3+1)/(500*10+1) = 4/5001 ≈ 0.000799
     # stop_2: score = (1+1)/(100*10+1) = 2/1001 ≈ 0.001998  → stop_2 ranks first
-    assert result[0].stop_id == "stop_2"
-    assert result[1].stop_id == "stop_1"
+    assert [s.stop_id for s in result] == ["stop_2", "stop_1"]
+    assert [s.route_count for s in result] == [1, 3]
 
 
 @pytest.mark.asyncio
 async def test_get_near_by_stops_with_route_counts_cache_respects_limit():
     svc, session = make_service()
-    rows = []
-    for i in range(5):
-        row = MagicMock()
-        row.stop_id = f"stop_{i}"
-        row.stop_code = None
-        row.stop_name = f"Stop {i}"
-        row.stop_loc = None
-        row.distance = float(i + 1) * 100
-        rows.append(row)
-
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter(rows))
-    session.execute.return_value = result_mock
-
-    result = await svc.get_near_by_stops(
-        min_lat=30.0,
-        min_lon=-98.0,
-        max_lat=31.0,
-        max_lon=-97.0,
-        limit=3,
-        route_counts={},
+    session.execute.return_value = make_all_result(
+        [make_nearby_row(f"stop_{i}", (i + 1) * 100) for i in range(5)]
     )
 
-    assert len(result) == 3
+    result = await svc.get_near_by_stops(**NEARBY_BOX, limit=3, route_counts={})
+
+    assert [s.stop_id for s in result] == ["stop_0", "stop_1", "stop_2"]
 
 
 @pytest.mark.asyncio
@@ -312,19 +285,24 @@ async def test_get_all_routes_at_stops():
     assert cache["stop_2"][0].route_id == "1"
 
 
+def make_route_stop_row(stop_id, shape_id, stop_sequence, trip_count):
+    return SimpleNamespace(
+        stop_id=stop_id,
+        stop_code=None,
+        stop_name=f"Stop {stop_id}",
+        stop_loc=None,
+        shape_id=shape_id,
+        stop_sequence=stop_sequence,
+        trip_count=trip_count,
+    )
+
+
 @pytest.mark.asyncio
 async def test_get_stops_by_route_id():
     svc, session = make_service()
-    row = MagicMock()
-    row.stop_id = "stop_1"
-    row.stop_code = None
-    row.stop_name = "Stop"
-    row.stop_loc = None
-    row.st_stop_sequence = 1
-    row.t_shape_id = "shape_1"
-    result_mock = MagicMock()
-    result_mock.__iter__ = MagicMock(return_value=iter([row]))
-    session.execute.return_value = result_mock
+    session.execute.return_value = make_exec_result(
+        [make_route_stop_row("stop_1", "shape_1", 1, 10)]
+    )
 
     result = await svc.get_stops_by_route_id("1", 0)
 
@@ -332,6 +310,30 @@ async def test_get_stops_by_route_id():
     assert result[0].stop_id == "stop_1"
     assert result[0].stop_time.stop_sequence == 1
     assert result[0].stop_time.trip.shape_id == "shape_1"
+
+
+@pytest.mark.asyncio
+async def test_get_stops_by_route_id_picks_most_common_shape_per_stop():
+    svc, session = make_service()
+    # Rows arrive ordered by (stop_id, shape_id), one per pair
+    session.execute.return_value = make_exec_result(
+        [
+            make_route_stop_row("stop_1", "shape_a", 3, 2),
+            make_route_stop_row("stop_1", "shape_b", 2, 40),
+            make_route_stop_row("stop_1", "shape_c", 4, 40),
+            make_route_stop_row("stop_2", "shape_z", 7, 5),
+        ]
+    )
+
+    result = await svc.get_stops_by_route_id("1", 0)
+
+    by_id = {s.stop_id: s for s in result}
+    assert set(by_id) == {"stop_1", "stop_2"}
+    # Most trips; ties keep the lowest shape_id
+    assert by_id["stop_1"].stop_time.trip.shape_id == "shape_b"
+    # Lowest sequence across all shapes
+    assert by_id["stop_1"].stop_time.stop_sequence == 2
+    assert by_id["stop_2"].stop_time.trip.shape_id == "shape_z"
 
 
 # Trip Tests

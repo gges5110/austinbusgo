@@ -14,3 +14,4 @@ logger = logging.getLogger(__name__)
 # Reduce noise from other libraries
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("aiosqlite").setLevel(logging.WARNING)
