@@ -1,6 +1,7 @@
 import { Coordinate } from "features/map/components/Map";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { UpcomingArrival } from "shared/api/generated/model";
 import { RecentSearch } from "shared/hooks/UseRecentSearches";
 import { Route, Stop, VehiclePosition } from "shared/types/interface.d";
 
@@ -42,3 +43,16 @@ export const favoritesAtom = atomWithStorage<Array<FavoritesType>>(
 
 export const currentRouteAtom = atom<Route | undefined>(undefined);
 export const currentStopAtom = atom<Stop | undefined>(undefined);
+
+/**
+ * What the Nearby screen wants on the map: its stop's upcoming arrivals and
+ * the expanded one. While set, the map shows only these buses.
+ */
+export interface NearbyFocus {
+  stopId: string;
+  arrivals: UpcomingArrival[];
+  selectedTripId?: string;
+  /** The rider's position, framed together with the stop */
+  rider?: { latitude: number; longitude: number };
+}
+export const nearbyFocusAtom = atom<NearbyFocus | undefined>(undefined);
