@@ -100,3 +100,20 @@ async def arrival_times(
         schemas.ArrivalTime.model_validate(row)
         for row in await arrival_service.get_arrival_times(stop_id, date)
     ]
+
+
+@router.get(
+    "/stops/{stop_id}/upcoming",
+    operation_id="upcomingAtStop",
+    response_model=schemas.StopUpcoming,
+)
+async def upcoming_at_stop(
+    stop_id: str,
+    arrival_service: ArrivalService = Depends(get_arrival_service),
+):
+    """Buses due at the stop in the next hour, with live predictions."""
+    try:
+        upcoming = await arrival_service.get_upcoming(stop_id)
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail=f"Stop {stop_id} not found")
+    return schemas.StopUpcoming.model_validate(upcoming)

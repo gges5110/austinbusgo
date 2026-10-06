@@ -14,6 +14,8 @@
  * which is what makes shared caching safe here.
  */
 
+import { ttlForPath } from "./ttl";
+
 interface Env {
   UPSTREAM_ORIGIN: string;
   /**
@@ -22,30 +24,6 @@ interface Env {
    * load so static entries don't outlive the GTFS data they came from.
    */
   CACHE_VERSION?: string;
-}
-
-/**
- * Per-path TTLs in seconds.
- *
- * 15s tier: endpoints that read the GTFS-RT feed (matches its cadence).
- * 6h tier: static GTFS data that only changes when the feed is reloaded
- * (the updateGTFS workflow rotates CACHE_VERSION after each load).
- */
-const RT_TTL = 15;
-const STATIC_TTL = 21600;
-
-function ttlForPath(pathname: string): number | undefined {
-  if (!pathname.startsWith("/api/")) {
-    return undefined;
-  }
-  if (
-    pathname.startsWith("/api/rt/") ||
-    pathname.endsWith("/arrival-times") ||
-    pathname.endsWith("/earliest-arrival-times")
-  ) {
-    return RT_TTL;
-  }
-  return STATIC_TTL;
 }
 
 const CORS_HEADERS = {

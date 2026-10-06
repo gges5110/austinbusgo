@@ -12,7 +12,6 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import { apiFetch } from "../fetcher";
 import type {
   ArrivalTime,
   ArrivalTimeAtStop,
@@ -26,6 +25,7 @@ import type {
   SearchResult,
   Stop,
   StopTime,
+  StopUpcoming,
   StopsAndShapes,
   StopsAndShapesParams,
   StopsByNameParams,
@@ -36,6 +36,8 @@ import type {
   VehiclePosition,
   VehiclePositionsParams,
 } from "./model";
+
+import { apiFetch } from "../fetcher";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -489,6 +491,94 @@ export function useArrivalTimes<
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getArrivalTimesQueryOptions(stopId, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpcomingAtStopUrl = (stopId: string) => {
+  return `/api/stops/${stopId}/upcoming`;
+};
+
+/**
+ * Buses due at the stop in the next hour, with live predictions.
+ * @summary Upcoming At Stop
+ */
+export const upcomingAtStop = async (
+  stopId: string,
+  options?: RequestInit
+): Promise<StopUpcoming> => {
+  return apiFetch<StopUpcoming>(getUpcomingAtStopUrl(stopId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getUpcomingAtStopQueryKey = (stopId: string) => {
+  return [`/api/stops/${stopId}/upcoming`] as const;
+};
+
+export const getUpcomingAtStopQueryOptions = <
+  TData = Awaited<ReturnType<typeof upcomingAtStop>>,
+  TError = HTTPValidationError,
+>(
+  stopId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof upcomingAtStop>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getUpcomingAtStopQueryKey(stopId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof upcomingAtStop>>> = ({
+    signal,
+  }) => upcomingAtStop(stopId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: stopId !== null && stopId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof upcomingAtStop>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type UpcomingAtStopQueryResult = NonNullable<
+  Awaited<ReturnType<typeof upcomingAtStop>>
+>;
+export type UpcomingAtStopQueryError = HTTPValidationError;
+
+/**
+ * @summary Upcoming At Stop
+ */
+
+export function useUpcomingAtStop<
+  TData = Awaited<ReturnType<typeof upcomingAtStop>>,
+  TError = HTTPValidationError,
+>(
+  stopId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof upcomingAtStop>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUpcomingAtStopQueryOptions(stopId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

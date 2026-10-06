@@ -7,14 +7,19 @@ representative set of GTFS rows:
   - 1 route   : id="10", short_name="10", long_name="Congress Avenue"
   - 2 stops   : "stop-1" (Congress & 1st) and "stop-2" (Congress & 2nd)
   - 1 shape   : id="shp-1" (two-point LineString along Congress Ave)
-  - 1 trip    : id="trip-1", route="10", headsign="Downtown", direction=0
+  - 2 trips   : "trip-1" and "trip-2", route="10", headsign="Downtown", direction=0
   - 1 service : "svc-1" active on 2026-02-24
-  - 2 stop_times for trip-1: stop-1 @ 23:50, stop-2 @ 23:59
+  - stop_times: trip-1 at stop-1 @ 23:50, stop-2 @ 23:59;
+                trip-2 (past midnight) at stop-1 @ 24:10, stop-2 @ 24:12
   - 1 feed_info row
 
 Unlike test_api.py (which only verifies empty-DB behaviour) these tests
 assert that endpoints return correct records with the expected field values.
 """
+
+from datetime import date
+
+import pytest
 
 
 def _get(client, path: str):
@@ -224,3 +229,61 @@ def test_feed_info_returns_seeded_publisher(data_app_client):
     assert info["feedLang"] == "en"
     assert info["feedStartDate"] == "2026-01-01"
     assert info["feedEndDate"] == "2026-12-31"
+
+
+# ---------------------------------------------------------------------------
+# Upcoming arrivals (Nearby screen)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def frozen_without_realtime(mocker):
+    """Freeze the endpoint's clock and make both GTFS-RT feeds unreachable."""
+    from server.services.gtfs_rt_client import RealtimeFeedError
+    from server.services.upcoming import to_epoch
+
+    mocker.patch(
+        "server.services.gtfs_rt_client.GTFSRTClient._get_feed_message_entity_from_url",
+        new_callable=mocker.AsyncMock,
+        side_effect=RealtimeFeedError("offline"),
+    )
+    clock = mocker.patch("server.services.arrival_service.time")
+
+    def freeze(service_date, hhmmss):
+        clock.return_value = to_epoch(service_date, hhmmss)
+
+    return freeze
+
+
+def test_upcoming_lists_scheduled_buses_without_realtime(
+    data_app_client, frozen_without_realtime
+):
+    frozen_without_realtime(date(2026, 2, 24), "23:40:00")
+
+    body = _get(data_app_client, "/api/stops/stop-1/upcoming")
+
+    assert body["stop"]["stopId"] == "stop-1"
+    assert body["realtimeAvailable"] is False
+    assert [a["tripId"] for a in body["arrivals"]] == ["trip-1", "trip-2"]
+    assert all(a["status"] == "scheduled" for a in body["arrivals"])
+
+
+def test_upcoming_after_midnight_includes_previous_service_day(
+    data_app_client, frozen_without_realtime
+):
+    # 00:05 on the 25th: trip-2 (service day 24th, "24:10:00") is 5 min out
+    frozen_without_realtime(date(2026, 2, 25), "00:05:00")
+
+    body = _get(data_app_client, "/api/stops/stop-1/upcoming")
+
+    (arrival,) = body["arrivals"]
+    assert arrival["tripId"] == "trip-2"
+    assert arrival["scheduledAt"] - body["generatedAt"] == 5 * 60
+
+
+def test_upcoming_unknown_stop_is_404(data_app_client, frozen_without_realtime):
+    frozen_without_realtime(date(2026, 2, 24), "23:40:00")
+
+    response = data_app_client.get("/api/stops/nope/upcoming")
+
+    assert response.status_code == 404

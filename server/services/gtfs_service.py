@@ -1,7 +1,7 @@
 """This file contains methods to retrieve data from database"""
 
 import math
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from typing import List, Optional
 
@@ -505,6 +505,47 @@ class GTFSService:
             )
             stop_times.append(st)
         return stop_times
+
+    async def get_stop_times_at_stop_in_window(
+        self,
+        stop_id: str,
+        service_date: date,
+        start_time: str,
+        end_time: str,
+        limit: Optional[int] = None,
+    ) -> List[SimpleNamespace]:
+        """Scheduled stops at `stop_id` on one service day, in a time window.
+
+        Times are GTFS "HH:MM:SS" strings relative to the service day; they
+        can exceed 24:00:00 for trips running past midnight. Zero-padded
+        hours compare correctly as text, so the window is a string range.
+        """
+        sql = text(f"""
+            SELECT st.trip_id, st.arrival_time, st.departure_time,
+                   st.stop_sequence,
+                   trips.route_id, trips.trip_headsign, trips.direction_id,
+                   routes.route_color
+            FROM stop_times st
+            JOIN trips ON st.trip_id = trips.trip_id
+            JOIN routes ON routes.route_id = trips.route_id
+            JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
+            WHERE st.stop_id = :stop_id
+              AND calendar_dates.date = :date
+              AND st.arrival_time >= :start_time
+              AND st.arrival_time <= :end_time
+            ORDER BY st.arrival_time
+            {"LIMIT :limit" if limit is not None else ""}
+            """)
+        params = {
+            "stop_id": stop_id,
+            "date": service_date.isoformat(),
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+        if limit is not None:
+            params["limit"] = limit
+        result = await self.session.execute(sql, params)
+        return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str

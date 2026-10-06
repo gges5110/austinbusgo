@@ -23,7 +23,7 @@ async def vehicle_positions(
 ):
     """All vehicles when no filter is given, else vehicles on a route+direction."""
     if route_id is None:
-        protos = rt_service.get_real_time_vehicle_positions()
+        protos = await rt_service.get_real_time_vehicle_positions()
     else:
         if direction is None:
             raise HTTPException(
@@ -43,5 +43,5 @@ async def vehicle_positions(
 async def trip_update(
     trip_id: str, rt_service: GTFSRTService = Depends(get_rt_service)
 ):
-    trip_updates = rt_service.get_all_real_time_trip_updates(trip_id=trip_id)
+    trip_updates = await rt_service.get_all_real_time_trip_updates(trip_id=trip_id)
     return schemas.TripUpdate.from_proto(trip_updates[0]) if trip_updates else None

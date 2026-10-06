@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock, MagicMock
 from google.transit.gtfs_realtime_pb2 import VehiclePosition, TripUpdate
 from typing import List
 
+from server.services.gtfs_rt_client import GTFSRTClient, RealtimeFeedError
 from server.services.gtfs_rt_service import GTFSRTService
 from server.services.gtfs_service import GTFSService
 
 
 def make_service():
     mock_gtfs_service = AsyncMock(spec=GTFSService)
-    mock_gtfs_rt_client = MagicMock()
+    mock_gtfs_rt_client = MagicMock(spec=GTFSRTClient)
     svc = GTFSRTService(mock_gtfs_service, mock_gtfs_rt_client)
     return svc, mock_gtfs_service, mock_gtfs_rt_client
 
@@ -46,18 +47,20 @@ async def test_get_real_time_vehicle_positions_on_route():
     assert result[0].trip.trip_id == "trip_2"
 
 
-def test_get_real_time_vehicle_positions():
+@pytest.mark.asyncio
+async def test_get_real_time_vehicle_positions():
     svc, _, mock_client = make_service()
     vp = VehiclePosition()
     mock_client.load_vehicle_positions.return_value = [vp]
 
-    result = svc.get_real_time_vehicle_positions()
+    result = await svc.get_real_time_vehicle_positions()
 
     assert len(result) == 1
     mock_client.load_vehicle_positions.assert_called_with()
 
 
-def test_get_real_time_trip_updates():
+@pytest.mark.asyncio
+async def test_get_real_time_trip_updates():
     svc, _, mock_client = make_service()
     mock_client.load_trip_updates.return_value = [
         create_trip_update("trip_1"),
@@ -65,42 +68,45 @@ def test_get_real_time_trip_updates():
         create_trip_update("trip_3"),
     ]
 
-    result = svc.get_real_time_trip_updates(["trip_1", "trip_2"])
+    result = await svc.get_real_time_trip_updates(["trip_1", "trip_2"])
 
     assert len(result) == 2
 
 
-def test_get_all_real_time_trip_updates_by_trip_id():
+@pytest.mark.asyncio
+async def test_get_all_real_time_trip_updates_by_trip_id():
     svc, _, mock_client = make_service()
     mock_client.load_trip_updates.return_value = [
         create_trip_update("trip_1"),
         create_trip_update("trip_2"),
     ]
 
-    result = svc.get_all_real_time_trip_updates(trip_id="trip_1")
+    result = await svc.get_all_real_time_trip_updates(trip_id="trip_1")
 
     assert len(result) == 1
     assert result[0].trip.trip_id == "trip_1"
 
 
-def test_get_all_real_time_trip_updates_by_route_id():
+@pytest.mark.asyncio
+async def test_get_all_real_time_trip_updates_by_route_id():
     svc, _, mock_client = make_service()
     mock_client.load_trip_updates.return_value = [
         create_trip_update("trip_1", "route_1"),
         create_trip_update("trip_2", "route_2"),
     ]
 
-    result = svc.get_all_real_time_trip_updates(route_id="route_1")
+    result = await svc.get_all_real_time_trip_updates(route_id="route_1")
 
     assert len(result) == 1
     assert result[0].trip.route_id == "route_1"
 
 
-def test_get_all_real_time_trip_updates_none_filter():
+@pytest.mark.asyncio
+async def test_get_all_real_time_trip_updates_none_filter():
     svc, _, mock_client = make_service()
     mock_client.load_trip_updates.return_value = [create_trip_update("trip_1")]
 
-    result = svc.get_all_real_time_trip_updates()
+    result = await svc.get_all_real_time_trip_updates()
 
     assert len(result) == 1
 
@@ -169,7 +175,8 @@ def test_get_arrival_time_by_stop_id_not_found():
     assert result is None
 
 
-def test_get_real_time_trip_updates_no_match():
+@pytest.mark.asyncio
+async def test_get_real_time_trip_updates_no_match():
     svc, _, mock_client = make_service()
     mock_client.load_trip_updates.return_value = [
         create_trip_update("trip_1"),
@@ -177,6 +184,34 @@ def test_get_real_time_trip_updates_no_match():
         create_trip_update("trip_3"),
     ]
 
-    result = svc.get_real_time_trip_updates(["trip_1", "trip_2", "trip_3"])
+    result = await svc.get_real_time_trip_updates(["trip_1", "trip_2", "trip_3"])
 
     assert len(result) == 3
+
+
+@pytest.mark.asyncio
+async def test_get_snapshot_indexes_feeds_by_trip_id():
+    svc, _, mock_client = make_service()
+    tu = create_trip_update("trip_1")
+    vp = VehiclePosition()
+    vp.trip.trip_id = "trip_1"
+    mock_client.load_trip_updates.return_value = [tu]
+    mock_client.load_vehicle_positions.return_value = [vp]
+
+    snapshot = await svc.get_snapshot()
+
+    assert snapshot.available is True
+    assert snapshot.trip_updates == {"trip_1": tu}
+    assert snapshot.vehicles == {"trip_1": vp}
+
+
+@pytest.mark.asyncio
+async def test_get_snapshot_unavailable_when_feed_fails():
+    svc, _, mock_client = make_service()
+    mock_client.load_trip_updates.side_effect = RealtimeFeedError("timeout")
+
+    snapshot = await svc.get_snapshot()
+
+    assert snapshot.available is False
+    assert snapshot.trip_updates == {}
+    assert snapshot.vehicles == {}
