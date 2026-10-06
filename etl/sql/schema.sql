@@ -1,6 +1,11 @@
-CREATE EXTENSION IF NOT EXISTS postgis;
--- Trigram similarity for typo-tolerant search (see GTFSService search queries)
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- SQLite schema for the read-only GTFS database baked into the backend image.
+--
+-- Geometries are stored pre-serialized as GeoJSON text so the backend can
+-- return them as-is (no spatial extension needed). Stops also keep plain
+-- stop_lat/stop_lon columns for bounding-box filtering.
+--
+-- Dates are ISO-8601 text ('YYYY-MM-DD'), which is what SQLAlchemy's Date
+-- type reads and writes on SQLite.
 
 CREATE TABLE agency
 (
@@ -16,15 +21,15 @@ CREATE TABLE feed_info (
   feed_publisher_name   text NOT NULL,
   feed_publisher_url    text NOT NULL,
   feed_lang             text NOT NULL,
-  feed_start_date       DATE NULL,
-  feed_end_date         DATE NULL,
+  feed_start_date       text NULL,
+  feed_end_date         text NULL,
   feed_version          text NULL,
   feed_contact_url      text NULL
 );
 
 CREATE TABLE stops
 (
-  stop_id           text UNIQUE NOT NULL PRIMARY KEY,
+  stop_id           text NOT NULL PRIMARY KEY,
   at_street         text NULL,
   corner_placement  text NULL,
   heading           integer NULL,
@@ -33,7 +38,10 @@ CREATE TABLE stops
   parent_station    text NULL,
   stop_code         text NULL,
   stop_desc         text NULL,
-  stop_loc          geography(POINT) NOT NULL,
+  stop_lat          real NOT NULL,
+  stop_lon          real NOT NULL,
+  -- GeoJSON Point
+  stop_loc          text NOT NULL,
   stop_name         text NOT NULL,
   stop_position     text NULL,
   stop_timezone     text NULL,
@@ -44,7 +52,7 @@ CREATE TABLE stops
 
 CREATE TABLE routes
 (
-  route_id          text UNIQUE NOT NULL PRIMARY KEY,
+  route_id          text NOT NULL PRIMARY KEY,
   agency_id         text NULL,
   route_short_name  text UNIQUE NOT NULL,
   route_long_name   text NULL,
@@ -54,32 +62,19 @@ CREATE TABLE routes
   route_text_color  text NULL
 );
 
-CREATE TABLE shapes
+-- One row per shape: the ordered shape points as a GeoJSON LineString.
+-- Built from shapes.txt by the loader; the raw per-point rows are not kept.
+CREATE TABLE shapes_aggregated
 (
-  shape_id          text,
-  shape_pt_loc       geography(POINT) NOT NULL,
-  shape_pt_sequence integer NOT NULL,
-  shape_dist_traveled double precision NULL
+  shape_id          text NOT NULL PRIMARY KEY,
+  shape             text NOT NULL
 );
-
-CREATE OR REPLACE VIEW shapes_aggregated AS
-SELECT
-	shape_id,
-	ST_MakeLine(array_agg(shape_pt_loc)) AS shape
-FROM (
-	SELECT
-		shape_id,
-		ST_AsText(shape_pt_loc)::geometry AS shape_pt_loc
-	FROM shapes
-	ORDER by shape_id, shape_pt_sequence
-) shapes
-GROUP BY shape_id;
 
 CREATE TABLE trips
 (
-  route_id          text NOT NULL,
+  route_id          text NOT NULL REFERENCES routes(route_id),
   service_id        text NOT NULL,
-  trip_id           text UNIQUE NOT NULL PRIMARY KEY,
+  trip_id           text NOT NULL PRIMARY KEY,
   trip_headsign     text NULL,
   direction_id      integer NULL,
   block_id          text NULL,
@@ -87,35 +82,26 @@ CREATE TABLE trips
   scheduled_trip_id text NULL,
   trip_short_name   text NULL,
   wheelchair_accessible integer NULL,
-  bikes_allowed     integer NULL,
-  CONSTRAINT fk_route
-	FOREIGN KEY(route_id)
-      REFERENCES routes(route_id)
+  bikes_allowed     integer NULL
 );
 
 CREATE TABLE stop_times
 (
-  trip_id           text NOT NULL,
+  trip_id           text NOT NULL REFERENCES trips(trip_id),
   arrival_time      text NOT NULL,
   departure_time    text NOT NULL,
-  stop_id           text NOT NULL,
+  stop_id           text NOT NULL REFERENCES stops(stop_id),
   stop_sequence     integer NOT NULL,
   pickup_type       integer NULL CHECK(pickup_type >= 0 and pickup_type <=3),
   drop_off_type     integer NULL CHECK(drop_off_type >= 0 and drop_off_type <=3),
-  shape_dist_traveled double precision NULL,
-  timepoint         integer NULL,
-  CONSTRAINT fk_stop
-	FOREIGN KEY(stop_id)
-      REFERENCES stops(stop_id),
-  CONSTRAINT fk_trip
-	FOREIGN KEY(trip_id)
-      REFERENCES trips(trip_id)
+  shape_dist_traveled real NULL,
+  timepoint         integer NULL
 );
 
 CREATE TABLE calendar_dates
 (
   service_id        text NOT NULL,
-  date              DATE NOT NULL,
+  date              text NOT NULL,
   exception_type    integer NOT NULL
 );
 
@@ -127,10 +113,10 @@ CREATE TABLE transfers
     min_transfer_time   integer
 );
 
-CREATE MATERIALIZED VIEW routes_at_stop AS
-SELECT routes.route_id, stop_times.stop_id
-FROM stop_times
-JOIN trips ON trips.trip_id = stop_times.trip_id
-JOIN routes ON routes.route_id = trips.route_id
-GROUP BY routes.route_id, stop_times.stop_id;
-
+-- Filled by derived.sql after the base tables are loaded
+CREATE TABLE routes_at_stop
+(
+  route_id          text NOT NULL,
+  stop_id           text NOT NULL,
+  PRIMARY KEY (stop_id, route_id)
+);

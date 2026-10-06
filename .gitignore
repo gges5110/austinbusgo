@@ -13,6 +13,8 @@ htmlcov/*
 /venv
 
 **/capmetro/*
+# GTFS SQLite database built by etl/main.py (and its in-progress temp file)
+/etl/gtfs.db*
 /postgres-data
 client/.claude/settings.local.json
 

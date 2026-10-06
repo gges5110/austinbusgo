@@ -1,80 +1,22 @@
-name: Update GTFS database
+name: Update GTFS data
+
+# The GTFS data ships inside the backend image (see deployBackend.yml), so
+# picking up a new CapMetro feed means rebuilding and redeploying the
+# backend. Runs nightly and is a cheap no-op when the feed is unchanged.
+# ETL changes merged to main deploy through main.yml.
 
 on:
   schedule:
     # Runs "At 00:00." (see https://crontab.guru)
     - cron: "0 0 * * *"
   workflow_dispatch:
-  # Database-affecting changes (schema, extensions, indexes, loader) apply
-  # automatically on merge. When the feed is unchanged the run is cheap:
-  # extensions and indexes are ensured idempotently and the reload is
-  # skipped, so no manual workflow dispatch is needed after such merges.
-  push:
-    branches: [main]
-    paths:
-      - "etl/**"
-
-# Never run two database loads at once (e.g. a merge landing at midnight)
-concurrency:
-  group: update-gtfs
-  cancel-in-progress: false
 
 jobs:
-  upload:
-    runs-on: ubuntu-latest
+  deploy-backend:
     permissions:
       contents: read
       id-token: write
-    defaults:
-      run:
-        working-directory: etl
-    steps:
-      - uses: actions/checkout@v3
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-          service_account: github-actions@austin-bus-go.iam.gserviceaccount.com
-      - name: Set up Cloud SQL Auth Proxy
-        run: |
-          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
-          chmod +x cloud-sql-proxy
-          ./cloud-sql-proxy --port=5432 austin-bus-go:us-central1:austinbusgo-db &
-          sleep 3
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-      - name: Install PostgresClient
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
-      - name: Run GTFS ETL Pipeline
-        run: python main.py
-        env:
-          DATABASE_URL: ${{ secrets.DBURI }}
-
-  invalidate-edge-cache:
-    needs: [upload]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Redeploy graphql-edge-cache with a fresh cache version
-        working-directory: workers/graphql-edge-cache
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        # Rotating CACHE_VERSION orphans all cached API responses so
-        # static entries never outlive the GTFS data they were built from
-        run: |
-          npm ci
-          npx wrangler deploy --var CACHE_VERSION:gtfs-${{ github.run_id }}
-      # Rotating the version orphans all cached entries; replay the
-      # expensive queries once so the first visitor doesn't pay the cold
-      # upstream cost (AllStops alone is ~10s uncached).
-      - name: Warm edge cache
-        run: node workers/graphql-edge-cache/scripts/warm-cache.mjs
+    uses: ./.github/workflows/deployBackend.yml
+    with:
+      only_if_feed_changed: true
+    secrets: inherit

@@ -1,15 +1,16 @@
 """
 Database layer integration tests.
 
-Tests init_database() and database_sanity_check() against a real
-PostgreSQL/PostGIS container.
-
-Key regression covered:
-  init_database() with a ?sslmode=require URL must not raise
-  TypeError: connect() got an unexpected keyword argument 'sslmode'
+Tests init_database() and database_sanity_check() against real SQLite
+files built by the ETL loader.
 """
 
+import sqlite3
+from pathlib import Path
+
 import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 import server.database as db_module
 from server.database import (
@@ -18,31 +19,42 @@ from server.database import (
     init_database,
 )
 
+_SCHEMA_SQL = Path(__file__).parent.parent / "etl" / "sql" / "schema.sql"
+
 # ---------------------------------------------------------------------------
 # init_database
 # ---------------------------------------------------------------------------
 
 
-def test_init_database_creates_engine(plain_db_url):
+def test_init_database_creates_engine(seeded_db_path):
     """init_database sets the module-level engine and session factory."""
-    init_database(plain_db_url)
+    init_database(str(seeded_db_path))
     assert db_module.engine is not None
     assert db_module.AsyncSessionLocal is not None
 
 
-def test_init_database_strips_sslmode_regression():
-    """
-    Regression: ?sslmode=require must be removed from the URL before asyncpg
-    sees it, and ssl=True must be passed via connect_args instead.
+def test_init_database_missing_file_raises(tmp_path):
+    """A missing database file fails fast with a pointer to the build step."""
+    with pytest.raises(RuntimeError, match="not found"):
+        init_database(str(tmp_path / "missing.db"))
 
-    A real host is not required because create_async_engine is lazy –
-    the connection is only opened on first use.
-    """
-    init_database("postgresql://user:pass@localhost:9999/db?sslmode=require")
 
-    url_str = str(db_module.engine.url)
-    assert "sslmode" not in url_str
-    assert "sslmode" not in str(db_module.engine.url.query)
+async def test_database_is_read_only(seeded_db_path):
+    """The served database is opened read-only; writes are rejected."""
+    init_database(str(seeded_db_path))
+    async with db_module.AsyncSessionLocal() as session:
+        with pytest.raises(OperationalError, match="readonly"):
+            await session.execute(text("DELETE FROM routes"))
+
+
+async def test_word_similarity_function_is_registered(seeded_db_path):
+    """Search queries rely on the word_similarity SQL function."""
+    init_database(str(seeded_db_path))
+    async with db_module.AsyncSessionLocal() as session:
+        result = await session.execute(
+            text("SELECT word_similarity('word', 'two words')")
+        )
+        assert result.scalar_one() == pytest.approx(0.8)
 
 
 # ---------------------------------------------------------------------------
@@ -50,43 +62,35 @@ def test_init_database_strips_sslmode_regression():
 # ---------------------------------------------------------------------------
 
 
-async def test_database_sanity_check_passes(seeded_db_url):
+async def test_database_sanity_check_passes(seeded_db_path):
     """sanity_check succeeds when all required GTFS tables are present."""
-    init_database(seeded_db_url)
+    init_database(str(seeded_db_path))
     async with db_module.AsyncSessionLocal() as session:
         # Should complete without raising
         await database_sanity_check(session)
 
 
-async def test_database_sanity_check_fails_when_tables_missing(empty_db_url):
-    """
-    sanity_check raises RuntimeError when expected tables are absent.
-
-    Uses a fresh database (no schema applied) in the same container.
-    """
-    init_database(empty_db_url)
+async def test_database_sanity_check_fails_when_tables_missing(empty_db_path):
+    """sanity_check raises RuntimeError when expected tables are absent."""
+    init_database(str(empty_db_path))
     async with db_module.AsyncSessionLocal() as session:
         with pytest.raises(RuntimeError, match="missing"):
             await database_sanity_check(session)
 
 
-async def test_all_tables_set_matches_schema(seeded_db_url):
+def test_all_tables_set_matches_schema(tmp_path):
     """
-    Every table in ALL_TABLES_SET exists in the database after schema init.
+    Every table in ALL_TABLES_SET exists after applying etl/sql/schema.sql.
 
-    This catches drift between the Python constant and etl/schema.sql.
+    This catches drift between the Python constant and the schema.
     """
-    from sqlalchemy import text
-
-    init_database(seeded_db_url)
-    async with db_module.AsyncSessionLocal() as session:
-        result = await session.execute(
-            text(
-                "SELECT table_name FROM information_schema.tables"
-                " WHERE table_schema = 'public'"
-            )
-        )
-        existing = {row[0] for row in result}
+    conn = sqlite3.connect(tmp_path / "schema.db")
+    conn.executescript(_SCHEMA_SQL.read_text())
+    existing = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+    }
+    conn.close()
 
     missing = ALL_TABLES_SET - existing
     assert not missing, f"Tables in ALL_TABLES_SET not found in schema: {missing}"

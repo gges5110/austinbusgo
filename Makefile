@@ -6,7 +6,7 @@ VENV_PYTHON         = $(VENV)/bin/python
 SYSTEM_PYTHON       = $(or $(shell which python3), $(shell which python))
 PYTHON              = $(or $(wildcard $(VENV_PYTHON)), $(SYSTEM_PYTHON))
 VENV_ACTIVATE       = . $(VENV)/bin/activate;
-LOCAL_DATABASE_URL  = postgresql://local-user:local-password@localhost:5438/local-db
+GTFS_DB             = etl/gtfs.db
 
 # ============================================================================
 # Help
@@ -39,7 +39,7 @@ install-deps: $(VENV_PYTHON)  ## Install Python dependencies into the venv (serv
 	$(VENV_PYTHON) -m pip install --upgrade pip
 	$(VENV_PYTHON) -m pip install -e "server[dev]"
 
-setup: install-deps start-db update-db  ## First-time setup: venv + deps + database + GTFS data
+setup: install-deps update-db  ## First-time setup: venv + deps + GTFS database
 
 .PHONY: setup-env install-deps setup
 
@@ -49,19 +49,17 @@ setup: install-deps start-db update-db  ## First-time setup: venv + deps + datab
 
 ##@ Database & Data
 
-start-db:  ## Start the PostgreSQL database with Docker (port 5438)
-	docker compose -f docker/compose.db.yml up -d
+# Download the latest GTFS feed, preprocess it, and build the read-only
+# SQLite database the backend serves ($(GTFS_DB)). etl/main.py is
+# pure-stdlib, so the system Python is enough. Mirrors what
+# .github/workflows/deployBackend.yml bakes into the backend image.
+update-db:  ## Download the latest GTFS feed and rebuild the local SQLite DB
+	$(PYTHON) etl/main.py $(GTFS_DB)
 
-# Download the latest GTFS feed, preprocess it, and (re)load it into the local
-# database. Runs from etl/ so load.sql's `\copy ./capmetro/...` paths resolve.
-# etl/main.py is pure-stdlib, so the system Python is enough; abspath keeps the
-# interpreter valid after the cd. load_db.py skips the reload if the feed is
-# unchanged. Mirrors the CI pipeline in .github/workflows/updateGTFS.yml.
-update-db: export DATABASE_URL=$(LOCAL_DATABASE_URL)
-update-db: start-db  ## Download the latest GTFS feed and (re)load the local DB
-	cd etl && $(abspath $(PYTHON)) main.py
+$(GTFS_DB):
+	$(MAKE) update-db
 
-.PHONY: start-db update-db
+.PHONY: update-db
 
 # ============================================================================
 # Backend
@@ -69,12 +67,12 @@ update-db: start-db  ## Download the latest GTFS feed and (re)load the local DB
 
 ##@ Backend
 
-start-be: export DATABASE_URL=$(LOCAL_DATABASE_URL)
-start-be:  ## Start the FastAPI backend with auto-reload (port 5001)
+start-be: export GTFS_DB_PATH=$(GTFS_DB)
+start-be: $(GTFS_DB)  ## Start the FastAPI backend with auto-reload (port 5001)
 	$(VENV_ACTIVATE) uvicorn server.main:app --reload --port 5001
 
-start-prod: export DATABASE_URL=$(LOCAL_DATABASE_URL)
-start-prod:  ## Start the production server (Gunicorn + UvicornWorker, port 5001)
+start-prod: export GTFS_DB_PATH=$(GTFS_DB)
+start-prod: $(GTFS_DB)  ## Start the production server (Gunicorn + UvicornWorker, port 5001)
 	$(VENV_ACTIVATE) gunicorn --bind=127.0.0.1:5001 --workers 4 \
 	    --worker-class uvicorn.workers.UvicornWorker server.main:app
 

@@ -9,13 +9,8 @@ resource "google_cloud_run_v2_service" "backend" {
       max_instance_count = 1
     }
 
-    volumes {
-      name = "cloudsql"
-      cloud_sql_instance {
-        instances = [google_sql_database_instance.austinbusgo_db.connection_name]
-      }
-    }
-
+    # The GTFS data ships inside the image as a read-only SQLite file
+    # (GTFS_DB_PATH is set by server/Dockerfile), so there is no database.
     containers {
       image = "gcr.io/${var.project_id}/austinbusgo-backend:latest"
 
@@ -30,16 +25,6 @@ resource "google_cloud_run_v2_service" "backend" {
         }
         cpu_idle = true
         startup_cpu_boost = true
-      }
-
-      env {
-        name  = "DATABASE_URL"
-        value = "postgresql://postgres:${var.db_password}@/local-db?host=/cloudsql/${google_sql_database_instance.austinbusgo_db.connection_name}&sslmode=disable"
-      }
-
-      volume_mounts {
-        name       = "cloudsql"
-        mount_path = "/cloudsql"
       }
     }
   }

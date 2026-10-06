@@ -1,5 +1,4 @@
 # GTFS reference: https://developers.google.com/transit/gtfs/reference
-from geoalchemy2 import Geometry
 from sqlalchemy import Boolean, Column, Date, Float, Integer, Text
 
 from server.database import Base
@@ -29,20 +28,12 @@ class Routes(Base):
     route_text_color = Column(Text, nullable=True)
 
 
-class Shapes(Base):
-    __tablename__ = "shapes"
-
-    shape_id = Column(Text, primary_key=True)
-    shape_pt_sequence = Column(Integer, primary_key=True)
-    shape_pt_loc = Column(Geometry("POINT", srid=4326), nullable=True)
-    shape_dist_traveled = Column(Float, nullable=True)
-
-
 class AggregatedShape(Base):
     __tablename__ = "shapes_aggregated"
 
     shape_id = Column(Text, primary_key=True)
-    shape = Column(Geometry("LINESTRING", srid=4326), nullable=True)
+    # GeoJSON LineString
+    shape = Column(Text, nullable=True)
 
 
 class StopTimes(Base):
@@ -73,7 +64,10 @@ class Stops(Base):
     stop_code = Column(Text, nullable=True)
     stop_name = Column(Text, nullable=True)
     stop_desc = Column(Text, nullable=True)
-    stop_loc = Column(Geometry("POINT", srid=4326), nullable=True)
+    # GeoJSON Point; stop_lat/stop_lon back the nearby-stops bounding box
+    stop_loc = Column(Text, nullable=True)
+    stop_lat = Column(Float, nullable=True)
+    stop_lon = Column(Float, nullable=True)
     zone_id = Column(Text, nullable=True)
     stop_url = Column(Text, nullable=True)
     location_type = Column(Integer, nullable=True)

@@ -1,108 +1,63 @@
 # ETL Pipeline
 
-This document describes the ETL (Extract, Transform, Load) pipeline that populates the Austin Bus Go database with GTFS static data from CapMetro.
+This document describes the ETL (Extract, Transform, Load) pipeline that builds the Austin Bus Go GTFS database from CapMetro's static feed.
 
 ## Overview
 
-The `etl/` directory owns the full database lifecycle — schema creation, teardown, and data loading. The server is a read-only consumer of the database and has no schema responsibility.
+The `etl/` directory owns the database: schema, derived tables, indexes, and data loading. Its output is a single read-only **SQLite file** (`etl/gtfs.db`) that is baked into the backend's Docker image. The server opens it read-only and has no schema responsibility.
 
-The pipeline runs as a nightly GitHub Actions job and can also be triggered manually or run locally.
+There is no database server. A new feed (or a schema change) ships by rebuilding the file and redeploying the backend image.
 
 ## Pipeline Stages
 
-### 1. Extract — `download.sh`
+`etl/main.py` runs all three stages: `python etl/main.py [output.db]` (default `etl/gtfs.db`).
+
+### 1. Extract: `download.py`
 
 Downloads the GTFS static feed from the CapMetro dataset hosted on the Texas Open Data Portal and unzips it into `etl/capmetro/`.
 
-```
-etl/capmetro/
-├── agency.txt
-├── calendar_dates.txt
-├── feed_info.txt
-├── routes.txt
-├── shapes.txt
-├── stop_times.txt
-├── stops.txt
-├── transfers.txt
-└── trips.txt
-```
+### 2. Transform: `prepare.py`
 
-### 2. Transform — `prepare.py`
+Normalizes the raw GTFS files in place:
 
-Preprocesses the raw GTFS files before loading into PostgreSQL:
+- **`stop_times.txt`**: pads `arrival_time` and `departure_time` to 8 characters (`8:00:00` → `08:00:00`) so they sort and compare correctly as text.
+- **`stops.txt`** / **`shapes.txt`**: rewrites `*_lat`/`*_lon` columns into a WKT `POINT(lon lat)` `*_loc` column. The loader accepts either form.
 
-- **`stop_times.txt`** — Normalizes `arrival_time` and `departure_time` to 8-character format (e.g. `8:00:00` → `08:00:00`) since PostgreSQL rejects the short form.
-- **`stops.txt`** — If the feed provides `stop_lat`/`stop_lon` columns, converts them into a PostGIS `POINT` geometry in the `stop_loc` column. If the feed already provides `stop_loc`, no transformation is applied.
-- **`shapes.txt`** — Same as stops: converts `shape_pt_lat`/`shape_pt_lon` into `shape_pt_loc` if needed.
+### 3. Load: `build_db.py`
 
-> **Note:** CapMetro's feed format has changed over time. The preprocessing functions are written defensively to handle both old (lat/lon columns) and new (geometry column) formats.
+Builds a fresh SQLite database:
 
-### 3. Load — `load.sh`
+1. Creates the tables from `sql/schema.sql`.
+2. Loads every GTFS file. Empty CSV fields load as NULL, GTFS `YYYYMMDD` dates are stored as ISO `YYYY-MM-DD`, and stop locations are stored both as `stop_lat`/`stop_lon` (for bounding-box queries) and as GeoJSON text (`stop_loc`).
+3. Aggregates `shapes.txt` into one GeoJSON LineString per shape (`shapes_aggregated`). The per-point rows are not kept.
+4. Fills derived tables from `sql/derived.sql` (`routes_at_stop`).
+5. Creates the indexes in `sql/indexes.sql` after the bulk load, then runs `ANALYZE` and `VACUUM`.
 
-Runs three SQL files against the database in sequence:
-
-| File | Purpose |
-|------|---------|
-| `teardown.sql` | Drops all existing tables, views, and materialized views |
-| `schema.sql` | Recreates the schema — tables, views, indexes, PostGIS extension |
-| `load.sql` | Bulk loads the preprocessed CSV files via `\copy` |
-
-The load is a full replace — each run tears down and rebuilds the entire dataset.
-
-## SQL Files
-
-### `teardown.sql`
-
-Drops all objects in dependency order so foreign key constraints don't block the drops.
-
-### `schema.sql`
-
-Defines:
-- Tables: `agency`, `feed_info`, `stops`, `routes`, `shapes`, `trips`, `stop_times`, `calendar_dates`, `transfers`
-- Views: `shapes_aggregated` (aggregates shape points into linestrings)
-- Materialized view: `routes_at_stop` (precomputes which routes serve each stop)
-- Indexes on high-traffic foreign key and join columns
-
-### `load.sql`
-
-Bulk loads each table from the preprocessed CSV files using PostgreSQL's `\copy` command. The paths are relative to the `etl/` directory, which `load.sh` ensures by `cd`-ing there before invoking `psql`.
+The build writes to `<output>.tmp` and atomically renames it when complete, so a failed run never leaves a half-built database behind. A full build of the current feed takes a few seconds and produces about 180 MB.
 
 ## Running Locally
 
-Requires PostgreSQL client (`psql`) and the database to be running.
-
 ```bash
-# Full pipeline (download + prepare + load)
-make etl
-
-# Individual stages
-make etl-download
-make etl-prepare
-make etl-load
+make update-db     # download + prepare + build etl/gtfs.db
+make start-be      # serves etl/gtfs.db (builds it first if missing)
 ```
 
-`make etl-load` uses the local database URL:
-```
-postgresql://local-user:local-password@localhost:5438/local-db
-```
-
-Start the local database first if it isn't running:
-```bash
-make setup-local
-```
+The ETL is pure-stdlib Python; no database server or Docker is needed.
 
 ## GitHub Actions
 
-The pipeline runs automatically every night at midnight UTC via `.github/workflows/updateGTFS.yml`, and can be triggered manually via `workflow_dispatch`.
+`.github/workflows/deployBackend.yml` runs the ETL, builds the backend image with the database inside, and deploys it to Cloud Run. It runs:
 
-The `DATABASE_URL` for the production Cloud SQL instance is stored as the `DBURI` repository secret.
+- on every push to `main` (via `main.yml`), so ETL and schema changes ship with the code that depends on them;
+- nightly (via `updateGTFS.yml`), redeploying only when the built feed's `feed_version` differs from what the live backend reports at `/api/feed-info`.
+
+When the feed changed, the workflow also rotates the edge cache's `CACHE_VERSION` and re-warms it.
 
 ## Architecture Decision
 
-The ETL pipeline owns the database schema rather than the server. This means:
+The GTFS static data is read-only between feed updates and small (about 1M rows), so it ships as a file inside the image instead of living in a managed database:
 
-- Schema changes are made in `etl/schema.sql`, not in the server's ORM models
-- The server's Peewee models mirror the schema but do not define it
-- A full data refresh (teardown + reload) is the update strategy — there is no incremental migration
-
-This fits the nature of GTFS static data, which is replaced wholesale on each feed update rather than patched incrementally.
+- No database to pay for or operate; Cloud Run stays within its free tier behind the edge cache.
+- Schema changes are made in `etl/sql/`; the server's SQLAlchemy models mirror the schema but do not define it.
+- A full rebuild is the only update strategy; there are no migrations.
+- Postgres extensions were replaced with plain code: fuzzy search uses a Python port of pg_trgm's `word_similarity` registered as a SQLite function (`server/services/text_similarity.py`), and nearby-stops uses a lat/lon bounding box plus haversine distance.
