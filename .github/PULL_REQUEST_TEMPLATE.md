@@ -85,13 +85,13 @@ Closes #
 
 - [ ] I have updated the documentation accordingly (if needed)
 - [ ] I have updated TypeScript types (if applicable)
-- [ ] I have regenerated GraphQL types (`npm run generate`) if schema changed
+- [ ] I have regenerated the API client (`npm run generate`) if endpoints or response models changed
 - [ ] I have updated CLAUDE.md if adding new patterns or conventions
 
 ### Dependencies
 
 - [ ] I have updated `package.json` dependencies (if applicable)
-- [ ] I have updated `requirements.txt` (if applicable)
+- [ ] I have updated `server/pyproject.toml` (if applicable)
 - [ ] No unnecessary dependencies were added
 
 ## Additional Notes

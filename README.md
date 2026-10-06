@@ -39,7 +39,7 @@ Run `make help` to see all available commands organized by category.
 **Frontend:**
 - `make build-fe` - Build frontend for production
 - `make test-fe` - Run frontend tests
-- `make generate` - Generate GraphQL TypeScript types
+- `make generate` - Export the OpenAPI spec and regenerate typed API hooks (orval)
 
 **Testing:**
 - `make test` - Run Python unit tests

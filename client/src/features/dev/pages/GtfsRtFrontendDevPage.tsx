@@ -196,7 +196,7 @@ export const GtfsRtFrontendDevPage: React.FC = () => {
         <code>data.texas.gov</code> and decodes it using{" "}
         <code>gtfs-realtime-bindings</code> (a protobufjs wrapper). The decoded
         objects are then mapped to the same TypeScript types used by the
-        existing GraphQL-backed components, so the data can be dropped in as a
+        existing backend-API components, so the data can be dropped in as a
         direct replacement.
       </Alert>
       {/* ── route filter ── */}

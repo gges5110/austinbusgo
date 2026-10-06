@@ -1,24 +1,28 @@
-# GraphQL Edge Cache
+# API Edge Cache
 
-Cloudflare Worker that fronts the Cloud Run GraphQL backend and caches read
-queries at the edge. GraphQL reads travel over POST, which CDNs won't cache
-(the body isn't part of the cache key), so the worker builds its own key —
-operation name + SHA-256 of the request body — and applies a per-operation
-TTL:
+Cloudflare Worker in front of the Cloud Run REST API (`/api/*`). It caches
+GET responses at the edge with a per-path TTL (rules in `src/ttl.ts`):
 
-- **15 s**: operations backed by the GTFS-RT feed (`VehiclePositions`,
-  `ArrivalTimes`, …), matching the feed cadence
-- **6 h**: static GTFS data (`Stops`, `Routes`, `StopsAndShapes`, …)
-- **Bypass**: mutations, unknown operations, unparseable bodies
+- **15 s**: endpoints that read the GTFS-RT feed (`/api/rt/*`,
+  `*/earliest-arrival-times`, `*/upcoming`), matching the feed cadence
+- **6 h**: static GTFS data (stops, routes, shapes, search, …)
+- **Not cached**: non-`/api/` paths and non-200 responses
 
-GraphQL error responses (200 + `errors`) are never cached. Every response
-carries `X-Edge-Cache: HIT | MISS | BYPASS`.
+Any new endpoint that reads real-time data must be added to the 15 s tier,
+or it falls into the 6 h tier and serves stale predictions.
 
-`CACHE_VERSION` is part of every cache key. The `updateGTFS.yml` workflow
-redeploys this worker with a fresh value (`--var CACHE_VERSION:gtfs-<run id>`)
-after each nightly data load, so static entries never outlive the GTFS data
-they came from. To invalidate manually: `npx wrangler deploy --var
-CACHE_VERSION:<anything new>`.
+The cache key is `CACHE_VERSION` + path + sorted query string, so parameter
+order never splits the cache. Every response carries
+`X-Edge-Cache: HIT | MISS | BYPASS`.
+
+`CACHE_VERSION` orphans every cached entry when it changes. The backend
+deploy workflow (`.github/workflows/deployBackend.yml`) redeploys this worker
+with a fresh value whenever a new GTFS feed ships, then re-warms the cache
+(`scripts/warm-cache.mjs`).
+
+> The worker is still named `graphql-edge-cache` from before the REST
+> migration; the name is part of its `workers.dev` URL, which the
+> `VITE_API_BASE` secret points at.
 
 ## Develop
 
@@ -26,16 +30,20 @@ CACHE_VERSION:<anything new>`.
 cd workers/graphql-edge-cache
 npm install
 npm run dev        # local worker on http://localhost:8787
+npm test           # TTL rules (Node's built-in test runner)
 ```
 
-Point the client at it with `VITE_API_BASE=http://localhost:8787`
-(the client appends `/graphql`; the worker accepts any path).
+Point the client at it with `VITE_API_BASE=http://localhost:8787`.
 
 ## Deploy
 
+Deploys are manual. Always pass a fresh `CACHE_VERSION`; a plain deploy
+resets it to the `"v1"` in `wrangler.toml`:
+
 ```bash
-npm run deploy     # prints the workers.dev URL
+npx wrangler deploy --var CACHE_VERSION:manual-$(date +%s)
+node scripts/warm-cache.mjs   # optional: refill the cache
 ```
 
-To route production traffic through the cache, set the `VITE_API_BASE`
-GitHub secret to the deployed worker URL.
+`wrangler` needs a login (`npx wrangler login`, interactive) or a
+`CLOUDFLARE_API_TOKEN` with Workers Scripts: Edit.
