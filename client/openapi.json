@@ -193,59 +193,6 @@
         }
       }
     },
-    "/api/stops/{stop_id}/arrival-times": {
-      "get": {
-        "tags": ["stops"],
-        "summary": "Arrival Times",
-        "operationId": "arrivalTimes",
-        "parameters": [
-          {
-            "name": "stop_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Stop Id"
-            }
-          },
-          {
-            "name": "date",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Date"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArrivalTime"
-                  },
-                  "title": "Response Arrivaltimes"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/stops/{stop_id}/upcoming": {
       "get": {
         "tags": ["stops"],
@@ -800,31 +747,6 @@
   },
   "components": {
     "schemas": {
-      "ArrivalTime": {
-        "properties": {
-          "scheduledArrivalTime": {
-            "type": "string",
-            "title": "Scheduledarrivaltime"
-          },
-          "updatedArrivalTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updatedarrivaltime"
-          },
-          "trip": {
-            "$ref": "#/components/schemas/Trip"
-          }
-        },
-        "type": "object",
-        "required": ["scheduledArrivalTime", "trip"],
-        "title": "ArrivalTime"
-      },
       "ArrivalTimeAtStop": {
         "properties": {
           "stopId": {

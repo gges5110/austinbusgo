@@ -4,28 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 import { axe } from "vitest-axe";
 import { RoutesSelector } from "./RoutesSelector";
 
-const mockArrivalTimes = [
-  {
-    trip: {
-      routeId: "10",
-      tripId: "trip-1",
-      route: { routeColor: "0000FF" },
-    },
-  },
-  {
-    trip: {
-      routeId: "20",
-      tripId: "trip-2",
-      route: { routeColor: "FF0000" },
-    },
-  },
-] as Parameters<typeof RoutesSelector>[0]["arrivalTimes"];
+const mockRoutes = [
+  { routeId: "10", routeColor: "0000FF" },
+  { routeId: "20", routeColor: "FF0000" },
+];
 
 describe("RoutesSelector accessibility", () => {
   it("has no accessibility violations with all routes selected", async () => {
     const { container } = render(
       <RoutesSelector
-        arrivalTimes={mockArrivalTimes}
+        routes={mockRoutes}
         selectedRouteIds={["10", "20"]}
         setSelectedRouteIds={vi.fn()}
       />
@@ -36,7 +24,7 @@ describe("RoutesSelector accessibility", () => {
   it("has no accessibility violations with partial selection (shows clear button)", async () => {
     const { container } = render(
       <RoutesSelector
-        arrivalTimes={mockArrivalTimes}
+        routes={mockRoutes}
         selectedRouteIds={["10"]}
         setSelectedRouteIds={vi.fn()}
       />
@@ -47,7 +35,7 @@ describe("RoutesSelector accessibility", () => {
   it("route buttons have aria-pressed reflecting selection state", () => {
     const { getByRole } = render(
       <RoutesSelector
-        arrivalTimes={mockArrivalTimes}
+        routes={mockRoutes}
         selectedRouteIds={["10"]}
         setSelectedRouteIds={vi.fn()}
       />
@@ -63,7 +51,7 @@ describe("RoutesSelector accessibility", () => {
   it("clear button has accessible label", () => {
     const { getByRole } = render(
       <RoutesSelector
-        arrivalTimes={mockArrivalTimes}
+        routes={mockRoutes}
         selectedRouteIds={["10"]}
         setSelectedRouteIds={vi.fn()}
       />

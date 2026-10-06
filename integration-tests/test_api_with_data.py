@@ -172,18 +172,6 @@ def test_stop_times_for_trip(data_app_client):
     assert stop_times[1]["stop"]["stopId"] == "stop-2"
 
 
-def test_arrival_times_executes_without_error(data_app_client):
-    """
-    /api/stops/{id}/arrival-times runs against the real DB without error.
-
-    The query applies a time-of-day cutoff (arrival_time > now - 10 min) so
-    the number of results depends on when the test is executed.  We therefore
-    only assert structure, not a specific row count.
-    """
-    body = _get(data_app_client, "/api/stops/stop-1/arrival-times?date=20260224")
-    assert isinstance(body, list)
-
-
 def test_earliest_arrival_times_on_route(data_app_client):
     """Earliest arrivals returns one row per stop starting from time=00:00:00."""
     rows = _get(

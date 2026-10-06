@@ -1,7 +1,11 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import * as React from "react";
-import { ArrivalTime } from "shared/api/generated/model";
+
+export interface RouteOption {
+  routeId: string;
+  routeColor?: string | null;
+}
 
 interface RoutesSelectorProps {
   selectedRouteIds: Array<string>;
@@ -10,21 +14,18 @@ interface RoutesSelectorProps {
     arg1: ((prevState: string[]) => string[]) | string[]
   ) => void;
 
-  arrivalTimes: ArrivalTime[];
+  /** Routes to offer; duplicates are ignored */
+  routes: RouteOption[];
 }
 
 export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
   selectedRouteIds,
   setSelectedRouteIds,
-  arrivalTimes,
+  routes,
 }) => {
-  const routeIds = arrivalTimes?.map((arrivalTime) => arrivalTime.trip.routeId);
-  const uniqueRouteIds =
-    routeIds
-      ?.filter((item, pos, arr) => arr.indexOf(item) == pos)
-      .sort((a, b) => {
-        return Number(a) - Number(b);
-      }) || [];
+  const uniqueRouteIds = [
+    ...new Set(routes.map((route) => route.routeId)),
+  ].sort((a, b) => Number(a) - Number(b));
   const clearSelection = () => {
     setSelectedRouteIds(uniqueRouteIds);
   };
@@ -38,9 +39,9 @@ export const RoutesSelector: React.FC<RoutesSelectorProps> = ({
     >
       <Box sx={{ display: "flex", gap: 1 }}>
         {uniqueRouteIds.map((uniqueRouteId) => {
-          const routeColor = arrivalTimes?.find(
-            (arrivalTime) => arrivalTime.trip.routeId === uniqueRouteId
-          )?.trip.route?.routeColor;
+          const routeColor = routes.find(
+            (route) => route.routeId === uniqueRouteId
+          )?.routeColor;
           const isSelected = selectedRouteIds.includes(uniqueRouteId);
           // TODO: fix hover styles
           return (

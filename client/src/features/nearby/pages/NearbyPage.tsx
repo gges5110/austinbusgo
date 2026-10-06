@@ -1,7 +1,6 @@
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import {
-  Alert,
   Box,
   Button,
   List,
@@ -13,7 +12,7 @@ import {
 import { NearbySheet } from "features/nearby/components/NearbySheet";
 import { StopHeader } from "features/nearby/components/StopHeader";
 import { StopIdEntry } from "features/nearby/components/StopIdEntry";
-import { UpcomingRow } from "features/nearby/components/UpcomingRow";
+import { UpcomingList } from "features/nearby/components/UpcomingList";
 import { useGeolocation } from "features/nearby/hooks/useGeolocation";
 import {
   NEARBY_RADIUS_METERS,
@@ -21,10 +20,7 @@ import {
   WIDE_RADIUS_METERS,
 } from "features/nearby/hooks/useNearestStop";
 import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
-import {
-  formatClockTime,
-  formatHeadsign,
-} from "features/nearby/utils/countdown";
+
 import { distanceMeters } from "features/nearby/utils/geo";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
@@ -155,40 +151,12 @@ export const NearbyPage: React.FC = () => {
         </Box>
       )}
 
-      {upcoming.data && !upcoming.data.realtimeAvailable && (
-        <Alert severity={"info"} sx={{ borderRadius: 0 }}>
-          Live tracking is unavailable right now. Showing scheduled times.
-        </Alert>
-      )}
-
-      {!upcoming.data ? (
-        <Box sx={{ px: 2 }}>
-          {[0, 1, 2].map((i) => (
-            <Skeleton height={56} key={i} />
-          ))}
-        </Box>
-      ) : upcoming.data.arrivals.length === 0 ? (
-        <Message title={"No buses in the next hour"}>
-          {upcoming.data.nextScheduled &&
-            `Next: Route ${upcoming.data.nextScheduled.routeId} ${formatHeadsign(
-              upcoming.data.nextScheduled.headsign,
-              upcoming.data.nextScheduled.routeId
-            )} at ${formatClockTime(upcoming.data.nextScheduled.scheduledAt)}`}
-        </Message>
-      ) : (
-        <Box aria-live={"polite"} component={"ul"} sx={{ m: 0, p: 0 }}>
-          {upcoming.data.arrivals.map((arrival) => (
-            <UpcomingRow
-              arrival={arrival}
-              expanded={arrival.tripId === selectedTripId}
-              key={`${arrival.tripId}-${arrival.scheduledAt}`}
-              nowSeconds={nowSeconds}
-              onToggle={() => toggleTrip(arrival.tripId)}
-              stopId={upcoming.data.stop.stopId}
-            />
-          ))}
-        </Box>
-      )}
+      <UpcomingList
+        data={upcoming.data}
+        expandedTripId={selectedTripId}
+        nowSeconds={nowSeconds}
+        onToggle={toggleTrip}
+      />
 
       {!pinned && <StopIdEntry />}
     </NearbySheet>

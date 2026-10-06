@@ -13,9 +13,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  ArrivalTime,
   ArrivalTimeAtStop,
-  ArrivalTimesParams,
   EarliestArrivalTimesOnRouteParams,
   FeedInfo,
   HTTPValidationError,
@@ -379,118 +377,6 @@ export function useStop<
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getStopQueryOptions(stopId, options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getArrivalTimesUrl = (
-  stopId: string,
-  params: ArrivalTimesParams
-) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/stops/${stopId}/arrival-times?${stringifiedParams}`
-    : `/api/stops/${stopId}/arrival-times`;
-};
-
-/**
- * @summary Arrival Times
- */
-export const arrivalTimes = async (
-  stopId: string,
-  params: ArrivalTimesParams,
-  options?: RequestInit
-): Promise<ArrivalTime[]> => {
-  return apiFetch<ArrivalTime[]>(getArrivalTimesUrl(stopId, params), {
-    ...options,
-    method: "GET",
-  });
-};
-
-export const getArrivalTimesQueryKey = (
-  stopId: string,
-  params?: ArrivalTimesParams
-) => {
-  return [
-    `/api/stops/${stopId}/arrival-times`,
-    ...(params ? [params] : []),
-  ] as const;
-};
-
-export const getArrivalTimesQueryOptions = <
-  TData = Awaited<ReturnType<typeof arrivalTimes>>,
-  TError = HTTPValidationError,
->(
-  stopId: string,
-  params: ArrivalTimesParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof arrivalTimes>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getArrivalTimesQueryKey(stopId, params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof arrivalTimes>>> = ({
-    signal,
-  }) => arrivalTimes(stopId, params, { signal, ...requestOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: stopId !== null && stopId !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof arrivalTimes>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type ArrivalTimesQueryResult = NonNullable<
-  Awaited<ReturnType<typeof arrivalTimes>>
->;
-export type ArrivalTimesQueryError = HTTPValidationError;
-
-/**
- * @summary Arrival Times
- */
-
-export function useArrivalTimes<
-  TData = Awaited<ReturnType<typeof arrivalTimes>>,
-  TError = HTTPValidationError,
->(
-  stopId: string,
-  params: ArrivalTimesParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof arrivalTimes>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  }
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getArrivalTimesQueryOptions(stopId, params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

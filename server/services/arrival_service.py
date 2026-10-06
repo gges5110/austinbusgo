@@ -32,28 +32,6 @@ class ArrivalService:
         self.gtfs_service = gtfs_service
         self.gtfs_rt_service = gtfs_rt_service
 
-    def _get_updated_arrival_time(
-        self, stop_id: str, stop_time_updates: List[TripUpdate.StopTimeUpdate]
-    ):
-        """Get updated arrival time for a stop from real-time data."""
-        stop_time_update = self.gtfs_rt_service.get_arrival_time_by_stop_id(
-            stop_time_updates, stop_id
-        )
-        if stop_time_update is None:
-            return None
-        if stop_time_update.schedule_relationship == 1:
-            return None
-        arrival_time_update = (
-            stop_time_update.arrival.time
-            if stop_time_update.HasField("arrival")
-            else stop_time_update.departure.time
-        )
-        return (
-            datetime.fromtimestamp(arrival_time_update)
-            .astimezone(timezone("US/Central"))
-            .strftime("%H:%M:%S")
-        )
-
     def _get_raw_arrival_timestamp(
         self, stop_id: str, stop_time_updates: List[TripUpdate.StopTimeUpdate]
     ) -> Optional[float]:
@@ -93,25 +71,6 @@ class ArrivalService:
                     .strftime("%H:%M:%S")
                 )
         return earliest_str
-
-    async def get_arrival_times(self, stop_id: str, date: str) -> List[SimpleNamespace]:
-        stop_times = await self.gtfs_service.get_stop_times_by_stop_id(stop_id, date)
-        trip_ids = [st.trip.trip_id for st in stop_times]
-        trip_updates = await self.gtfs_rt_service.get_real_time_trip_updates(trip_ids)
-        trip_updates_by_trip_id = {
-            tu.trip.trip_id: self._get_updated_arrival_time(
-                stop_id, tu.stop_time_update
-            )
-            for tu in trip_updates
-        }
-        return [
-            SimpleNamespace(
-                scheduled_arrival_time=st.arrival_time,
-                updated_arrival_time=trip_updates_by_trip_id.get(st.trip.trip_id, None),
-                trip=st.trip,
-            )
-            for st in stop_times
-        ]
 
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str

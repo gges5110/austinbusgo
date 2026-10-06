@@ -24,7 +24,6 @@ export const colorModeAtom = atomWithStorage<ColorModeType>(
   "light"
 );
 
-export const selectedRouteIdsAtStopAtom = atom<string[]>([]);
 export const hoveringStopAtom = atom<Stop | undefined>(undefined);
 export const hoveringVehiclePositionAtom = atom<VehiclePosition | undefined>(
   undefined

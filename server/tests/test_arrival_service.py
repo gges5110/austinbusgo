@@ -32,41 +32,6 @@ def make_service():
 
 
 @pytest.mark.asyncio
-async def test_get_arrival_times(mocker):
-    svc, gtfs_service, gtfs_rt_service = make_service()
-    trip = SimpleNamespace(trip_id="trip_1", route_id="1")
-    stop_times = [
-        SimpleNamespace(
-            trip_id="trip_1",
-            stop_id="stop_1",
-            arrival_time="10:00:00",
-            departure_time="10:01:00",
-            stop_sequence=1,
-            trip=trip,
-        ),
-    ]
-    gtfs_service.get_stop_times_by_stop_id.return_value = stop_times
-
-    tu = create_trip_update_with_stop("trip_1", "stop_1", 1234567890)
-    gtfs_rt_service.get_real_time_trip_updates.return_value = [tu]
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = tu.stop_time_update[0]
-
-    mock_dt = mocker.Mock()
-    mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch(
-        "server.services.arrival_service.datetime"
-    ).fromtimestamp.return_value = mock_dt
-    mocker.patch("server.services.arrival_service.timezone")
-
-    result = await svc.get_arrival_times("stop_1", "2025-01-01")
-
-    assert len(result) == 1
-    assert result[0].scheduled_arrival_time == "10:00:00"
-    assert result[0].updated_arrival_time == "10:05:00"
-    assert result[0].trip is trip
-
-
-@pytest.mark.asyncio
 async def test_get_earliest_arrival_times_on_route(mocker):
     svc, gtfs_service, gtfs_rt_service = make_service()
     arrival = SimpleNamespace(
@@ -92,43 +57,6 @@ async def test_get_earliest_arrival_times_on_route(mocker):
     assert len(result) == 1
     assert result[0].scheduled_arrival_time == "10:00:00"
     assert result[0].stop_id == "stop_1"
-
-
-def test_get_updated_arrival_time_with_arrival_field(mocker):
-    svc, _, gtfs_rt_service = make_service()
-    stu = TripUpdate.StopTimeUpdate()
-    stu.stop_id = "stop_1"
-    stu.arrival.time = 1234567890
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = stu
-
-    mock_dt = mocker.Mock()
-    mock_dt.astimezone.return_value.strftime.return_value = "10:05:00"
-    mocker.patch(
-        "server.services.arrival_service.datetime"
-    ).fromtimestamp.return_value = mock_dt
-    mocker.patch("server.services.arrival_service.timezone")
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result == "10:05:00"
-
-
-def test_get_updated_arrival_time_not_found():
-    svc, _, gtfs_rt_service = make_service()
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = None
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result is None
-
-
-def test_get_updated_arrival_time_skipped_stop():
-    svc, _, gtfs_rt_service = make_service()
-    stu = TripUpdate.StopTimeUpdate()
-    stu.stop_id = "stop_1"
-    stu.schedule_relationship = 1
-    gtfs_rt_service.get_arrival_time_by_stop_id.return_value = stu
-
-    result = svc._get_updated_arrival_time("stop_1", [])
-    assert result is None
 
 
 def test_get_earliest_updated_arrival_time(mocker):

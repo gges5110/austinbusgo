@@ -7,7 +7,6 @@ import { RT_TTL, STATIC_TTL, ttlForPath } from "./ttl.ts";
 
 const realtimePaths = [
   "/api/rt/vehicle-positions",
-  "/api/stops/1002/arrival-times",
   "/api/routes/801/earliest-arrival-times",
   "/api/stops/1002/upcoming",
 ];

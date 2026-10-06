@@ -1,7 +1,7 @@
 """This file contains methods to retrieve data from database"""
 
 import math
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from types import SimpleNamespace
 from typing import List, Optional
 
@@ -15,7 +15,6 @@ from server.models.gtfs_models import (
     Routes,
     RoutesAtStop,
     Stops,
-    StopTimes,
     Trips,
 )
 
@@ -439,69 +438,6 @@ class GTFSService:
                 shape_dist_traveled=row.shape_dist_traveled,
                 timepoint=row.timepoint,
                 stop=stop,
-            )
-            stop_times.append(st)
-        return stop_times
-
-    async def get_stop_times_by_stop_id(
-        self, stop_id: str, date: str
-    ) -> List[SimpleNamespace]:
-        parsed_date = datetime.strptime(date, "%Y%m%d").date()
-        cutoff = (datetime.now() + timedelta(minutes=-10)).strftime("%H:%M:%S")
-        sql = text("""
-            SELECT st.trip_id, st.arrival_time, st.departure_time,
-                   st.stop_id, st.stop_sequence,
-                   trips.trip_id AS t_trip_id, trips.route_id,
-                   trips.trip_headsign, trips.direction_id,
-                   trips.shape_id, trips.service_id,
-                   trips.scheduled_trip_id, trips.trip_short_name,
-                   trips.wheelchair_accessible, trips.bikes_allowed,
-                   trips.block_id,
-                   routes.route_id AS r_route_id,
-                   routes.route_short_name, routes.route_long_name,
-                   routes.agency_id, routes.route_color
-            FROM stop_times st
-            JOIN trips ON st.trip_id = trips.trip_id
-            JOIN routes ON routes.route_id = trips.route_id
-            JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
-            WHERE st.stop_id = :stop_id
-              AND calendar_dates.date = :date
-              AND st.arrival_time > :cutoff
-            ORDER BY st.arrival_time
-            """)
-        result = await self.session.execute(
-            sql, {"stop_id": stop_id, "date": parsed_date.isoformat(), "cutoff": cutoff}
-        )
-        stop_times = []
-        for row in result:
-            route = SimpleNamespace(
-                route_id=row.r_route_id,
-                route_short_name=row.route_short_name,
-                route_long_name=row.route_long_name,
-                agency_id=row.agency_id,
-                route_color=row.route_color,
-            )
-            trip = SimpleNamespace(
-                trip_id=row.t_trip_id,
-                route_id=row.route_id,
-                service_id=row.service_id,
-                trip_headsign=row.trip_headsign,
-                direction_id=row.direction_id,
-                block_id=row.block_id,
-                shape_id=row.shape_id,
-                scheduled_trip_id=row.scheduled_trip_id,
-                trip_short_name=row.trip_short_name,
-                wheelchair_accessible=row.wheelchair_accessible,
-                bikes_allowed=row.bikes_allowed,
-                route=route,
-            )
-            st = SimpleNamespace(
-                trip_id=row.trip_id,
-                arrival_time=row.arrival_time,
-                departure_time=row.departure_time,
-                stop_id=row.stop_id,
-                stop_sequence=row.stop_sequence,
-                trip=trip,
             )
             stop_times.append(st)
         return stop_times

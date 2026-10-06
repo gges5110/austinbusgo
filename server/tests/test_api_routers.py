@@ -115,29 +115,6 @@ def test_stop_not_found(client, services):
     assert response.status_code == 404
 
 
-def test_arrival_times(client, services):
-    _, _, arrivals = services
-    trip = SimpleNamespace(
-        trip_id="trip_1", route_id="1", service_id="svc", route=make_route()
-    )
-    arrivals.get_arrival_times.return_value = [
-        SimpleNamespace(
-            scheduled_arrival_time="10:00:00",
-            updated_arrival_time="10:05:00",
-            trip=trip,
-        )
-    ]
-
-    response = client.get("/api/stops/stop_1/arrival-times?date=20260101")
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body[0]["scheduledArrivalTime"] == "10:00:00"
-    assert body[0]["updatedArrivalTime"] == "10:05:00"
-    assert body[0]["trip"]["route"]["routeColor"] == "AA0000"
-    arrivals.get_arrival_times.assert_called_once_with("stop_1", "20260101")
-
-
 def test_routes(client, services):
     gtfs, _, _ = services
     gtfs.get_routes.return_value = [make_route("1"), make_route("2")]

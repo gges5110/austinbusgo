@@ -84,12 +84,6 @@ class StopTime(ApiModel):
     stop: Optional[Stop] = None
 
 
-class ArrivalTime(ApiModel):
-    scheduled_arrival_time: str
-    updated_arrival_time: Optional[str] = None
-    trip: Trip
-
-
 class ArrivalTimeAtStop(ApiModel):
     stop_id: str
     stop_sequence: int

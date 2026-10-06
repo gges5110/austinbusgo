@@ -17,7 +17,6 @@ export function ttlForPath(pathname: string): number | undefined {
   }
   if (
     pathname.startsWith("/api/rt/") ||
-    pathname.endsWith("/arrival-times") ||
     pathname.endsWith("/earliest-arrival-times") ||
     pathname.endsWith("/upcoming")
   ) {

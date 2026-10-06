@@ -1,6 +1,6 @@
 """Stop endpoints."""
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import NoResultFound
@@ -84,22 +84,6 @@ async def stop(stop_id: str, gtfs_service: GTFSService = Depends(get_gtfs_servic
         for r in await gtfs_service.get_routes_at_stop(stop_id)
     ]
     return result
-
-
-@router.get(
-    "/stops/{stop_id}/arrival-times",
-    operation_id="arrivalTimes",
-    response_model=List[schemas.ArrivalTime],
-)
-async def arrival_times(
-    stop_id: str,
-    date: str,
-    arrival_service: ArrivalService = Depends(get_arrival_service),
-):
-    return [
-        schemas.ArrivalTime.model_validate(row)
-        for row in await arrival_service.get_arrival_times(stop_id, date)
-    ]
 
 
 @router.get(

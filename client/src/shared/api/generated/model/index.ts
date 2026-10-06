@@ -5,9 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from "./arrivalTime";
 export * from "./arrivalTimeAtStop";
-export * from "./arrivalTimesParams";
 export * from "./earliestArrivalTimesOnRouteParams";
 export * from "./feedInfo";
 export * from "./hTTPValidationError";
