@@ -61,8 +61,9 @@ jobs:
 
   # Tell Google the sitemap changed (new stops/routes after a feed update).
   # Google re-fetches submitted sitemaps on its own, so this only speeds up
-  # discovery; it never fails the deploy. Needs the CI service account to be
-  # a Full user on the Search Console property (Restricted can't submit).
+  # discovery; it never fails the deploy. Runs as the dedicated
+  # search-console-reader service account (a Full user on the property, since
+  # Restricted users can't submit), not the broader CI deploy account.
   submit-sitemap:
     needs: deploy-client
     runs-on: ubuntu-latest
@@ -76,7 +77,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-          service_account: github-actions@austin-bus-go.iam.gserviceaccount.com
+          service_account: search-console-reader@austin-bus-go.iam.gserviceaccount.com
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/webmasters
           access_token_lifetime: 300s
