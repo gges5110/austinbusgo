@@ -96,6 +96,29 @@ describe("useCurrentStop", () => {
     expect(mockSetCurrentStop).toHaveBeenCalledWith(mockStop);
   });
 
+  test("should not clear a stop published by another page on mount", () => {
+    // e.g. Nearby set the atom; the lazily loaded map mounts later on a
+    // route without a stop loader
+    mocks.mockUseDataFromRouteLoader.mockReturnValue(undefined);
+    mocks.mockUseAtom.mockReturnValue([mockStop, mockSetCurrentStop]);
+
+    renderHook(() => useCurrentStop(), { wrapper: BrowserRouter });
+
+    expect(mockSetCurrentStop).not.toHaveBeenCalled();
+  });
+
+  test("should clear the stop when leaving a stop page", () => {
+    mocks.mockUseDataFromRouteLoader.mockReturnValue(mockStop);
+    const { rerender } = renderHook(() => useCurrentStop(), {
+      wrapper: BrowserRouter,
+    });
+    mocks.mockUseDataFromRouteLoader.mockReturnValue(undefined);
+
+    rerender();
+
+    expect(mockSetCurrentStop).toHaveBeenLastCalledWith(undefined);
+  });
+
   test("should navigate to stop page when setStop is called", () => {
     Object.defineProperty(window, "location", {
       value: {
