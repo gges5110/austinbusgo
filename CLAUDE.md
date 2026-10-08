@@ -101,7 +101,7 @@ Run `make help` to see all available targets organized by category.
 - `make build-fe` - Build frontend for production
 - `make test-fe` - Run frontend tests with Vitest
 - `make generate` - Regenerate typed API hooks from the OpenAPI spec
-- `cd client && npm run prerender` - After a build: write static SEO pages for every stop/route (`build/stop/<id>.html`, `build/route/<id>/direction/0.html`) and `build/sitemap.xml` from the live API (deploy workflows run it; see `client/scripts/prerender/`)
+- `cd client && npm run prerender` - After a build: write static SEO pages for every stop/route (`build/stop/<id>.html`, `build/route/<id>/direction/0.html`) and `build/sitemap.xml` from the live API (deploy workflows run it; see `client/scripts/prerender/`). The production deploy also notifies IndexNow (Bing etc.) of added/removed stop and route URLs (`client/scripts/prerender/indexnow.mjs`)
 
 **Testing:**
 - `make test` - Run Python unit tests with pytest
@@ -216,6 +216,7 @@ Run `make help` to see all available targets organized by category.
 
 ### Environment Variables
 - `GTFS_DB_PATH`: path to the GTFS SQLite file (required; the Makefile and Dockerfile set it)
+- `VITE_CF_ANALYTICS_TOKEN` (client build): Cloudflare Web Analytics site token, from the `CF_ANALYTICS_TOKEN` repository variable; unset means no analytics (local dev, PR previews)
 - Set in Makefile for local development
 
 ## Common Tasks
