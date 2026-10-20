@@ -13,8 +13,8 @@ import { useMapImage } from "features/map/hooks/useMapImage";
 import { toPointFeatureCollection } from "features/map/utils/geojson";
 import {
   createBusGlyph,
+  createStoppedDot,
   createTeardropIncoming,
-  createTeardropStopped,
   createTeardropTransit,
   SELECTED_RED,
   VEHICLE_INCOMING_ORANGE,
@@ -41,12 +41,13 @@ export const VEHICLES_LAYER_ID = "vehicle-markers";
 const VEHICLES_HOVER_LAYER_ID = "vehicle-markers-hover";
 const VEHICLE_GLYPHS_LAYER_ID = "vehicle-glyphs";
 const VEHICLE_LABELS_LAYER_ID = "vehicle-labels";
+const VEHICLE_STATUS_LAYER_ID = "vehicle-status-label";
 const VEHICLE_LAYER_IDS = [VEHICLES_LAYER_ID];
 const VEHICLES_SOURCE_ID = "vehicles-source";
 
 const TEARDROP_TRANSIT_IMAGE_ID = "vehicle-teardrop-transit";
 const TEARDROP_INCOMING_IMAGE_ID = "vehicle-teardrop-incoming";
-const TEARDROP_STOPPED_IMAGE_ID = "vehicle-teardrop-stopped";
+const STOPPED_DOT_IMAGE_ID = "vehicle-dot-stopped";
 const BUS_GLYPH_IMAGE_ID = "vehicle-bus-glyph";
 
 // Stable empty collection: the source data is driven imperatively by
@@ -97,7 +98,7 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({
 
   useMapImage(TEARDROP_TRANSIT_IMAGE_ID, createTeardropTransit);
   useMapImage(TEARDROP_INCOMING_IMAGE_ID, createTeardropIncoming);
-  useMapImage(TEARDROP_STOPPED_IMAGE_ID, createTeardropStopped);
+  useMapImage(STOPPED_DOT_IMAGE_ID, createStoppedDot);
   useMapImage(BUS_GLYPH_IMAGE_ID, createBusGlyph);
 
   // Lookup map for click/hover resolution
@@ -252,8 +253,9 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({
         type={"circle"}
       />
 
-      {/* Teardrop marker: bulb centered on the vehicle position, tip
-          rotated to the heading — replaces the old circle + chevron */}
+      {/* Vehicle marker: a teardrop pointing along the heading for moving/
+          approaching vehicles, or a non-directional dot when stopped (a
+          stationary bus shouldn't imply a direction of travel). */}
       <Layer
         id={VEHICLES_LAYER_ID}
         layout={{
@@ -262,12 +264,19 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({
             "match",
             ["get", "currentStatus"],
             "STOPPED_AT",
-            TEARDROP_STOPPED_IMAGE_ID,
+            STOPPED_DOT_IMAGE_ID,
             "INCOMING_AT",
             TEARDROP_INCOMING_IMAGE_ID,
             /* IN_TRANSIT_TO + default */ TEARDROP_TRANSIT_IMAGE_ID,
           ],
-          "icon-rotate": ["get", "bearing"],
+          // Stopped vehicles use a symmetric dot, so keep it unrotated;
+          // everything else points along the reported bearing.
+          "icon-rotate": [
+            "case",
+            ["==", ["get", "currentStatus"], "STOPPED_AT"],
+            0,
+            ["get", "bearing"],
+          ],
           "icon-rotation-alignment": "map",
           "icon-size": [
             "interpolate",
@@ -334,6 +343,52 @@ export const VehicleLayer: FC<VehicleLayerProps> = ({
           ],
           "text-halo-width": 1.5,
           "text-opacity": opacityExpression,
+        }}
+        slot={"top"}
+        type={"symbol"}
+      />
+
+      {/* Status word under the teardrop (issue #77: read a vehicle's stop
+          status without opening the popup). Kept clutter-free by showing
+          only for the hovered/pinned vehicle — gated by the same
+          feature-state as the hover ring (synced by useFeatureHoverState). */}
+      <Layer
+        id={VEHICLE_STATUS_LAYER_ID}
+        layout={{
+          "text-allow-overlap": true,
+          "text-field": [
+            "match",
+            ["get", "currentStatus"],
+            "STOPPED_AT",
+            "STOPPED",
+            "INCOMING_AT",
+            "ARRIVING",
+            "IN_TRANSIT_TO",
+            "IN TRANSIT",
+            "",
+          ],
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-offset": [0, 1.6],
+          "text-size": 11,
+        }}
+        paint={{
+          "text-color": [
+            "match",
+            ["get", "currentStatus"],
+            "STOPPED_AT",
+            VEHICLE_STOPPED_RED,
+            "INCOMING_AT",
+            VEHICLE_INCOMING_ORANGE,
+            VEHICLE_TRANSIT_BLUE,
+          ],
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.5,
+          "text-opacity": [
+            "case",
+            ["boolean", ["feature-state", "hovered"], false],
+            1,
+            0,
+          ],
         }}
         slot={"top"}
         type={"symbol"}
