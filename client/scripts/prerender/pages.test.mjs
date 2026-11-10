@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  busiestStops,
   cleanName,
+  homePage,
   escapeHtml,
   renderPage,
   routeName,
@@ -174,4 +176,48 @@ test("escapeHtml", () => {
   expect(escapeHtml(`<a href="x">'&'</a>`)).toBe(
     "&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;"
   );
+});
+
+describe("homePage", () => {
+  const stations = [
+    {
+      ...stop,
+      stopId: "2",
+      stopName: "Republic  Square",
+      routes: [route7, route20],
+    },
+  ];
+  const html = homePage(TEMPLATE, [route20, route7], stations);
+
+  test("links every route (by number) and the major stops in #root", () => {
+    expect(html).toContain('<div id="root" style="height:100vh"><main>');
+    expect(html.indexOf("Route 7:")).toBeLessThan(html.indexOf("Route 20:"));
+    expect(html).toContain(
+      '<a href="/route/20/direction/0">Route 20: Riverside</a>'
+    );
+    expect(html).toContain('<a href="/stop/2">Republic Square</a>');
+  });
+
+  test("keeps the home page's own title and canonical URL", () => {
+    expect(html).toContain("<title>Home</title>");
+    expect(html).toContain(
+      '<link rel="canonical" href="https://austinbusgo.com/" />'
+    );
+  });
+});
+
+test("busiestStops ranks by number of routes, then name", () => {
+  const one = { ...stop, stopId: "a", stopName: "B stop", routes: [route7] };
+  const two = {
+    ...stop,
+    stopId: "b",
+    stopName: "Z stop",
+    routes: [route7, route20],
+  };
+  const tie = { ...stop, stopId: "c", stopName: "A stop", routes: [route20] };
+
+  expect(busiestStops([one, two, tie], 2).map((s) => s.stopId)).toEqual([
+    "b",
+    "c",
+  ]);
 });
