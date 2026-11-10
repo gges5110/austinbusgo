@@ -202,6 +202,57 @@ export const routePage = (template, route, stops) => {
   });
 };
 
+/** Stops served by the most routes: stations and major transfer points. */
+export const busiestStops = (stops, count) =>
+  [...stops]
+    .sort(
+      (a, b) =>
+        (b.routes?.length ?? 0) - (a.routes?.length ?? 0) ||
+        cleanName(a.stopName).localeCompare(cleanName(b.stopName))
+    )
+    .slice(0, count);
+
+/**
+ * The home page with a crawlable directory in #root: every route plus the
+ * busiest stops. The home page is the one page search engines already
+ * trust, and without these links the stop/route pages are reachable only
+ * through the sitemap, which leaves them "discovered, not indexed". Route
+ * pages link on to all of their stops. Head tags are left unchanged; the
+ * app replaces the directory when it mounts.
+ */
+export const homePage = (template, routes, stations) => {
+  const body = [
+    `<main>`,
+    `<h1>Austin bus tracker: live CapMetro arrivals</h1>`,
+    `<p>Live bus locations and real-time arrival predictions for every ` +
+      `CapMetro route and stop in Austin, Texas.</p>`,
+    `<h2>Bus routes</h2>`,
+    `<ul>`,
+    ...[...routes]
+      .sort(byRouteNumber)
+      .map(
+        (route) =>
+          `<li><a href="${routePath(route)}">Route ${escapeHtml(routeLabel(route))}: ` +
+          `${escapeHtml(routeName(route))}</a></li>`
+      ),
+    `</ul>`,
+    `<h2>Major stops and stations</h2>`,
+    `<ul>`,
+    ...stations.map(
+      (stop) =>
+        `<li><a href="${stopPath(stop)}">${escapeHtml(cleanName(stop.stopName))}</a></li>`
+    ),
+    `</ul>`,
+    `</main>`,
+  ].join("");
+
+  const root = /(<div id="root"[^>]*>)(<\/div>)/;
+  if (!root.test(template)) {
+    throw new Error(`Template is missing ${root}`);
+  }
+  return template.replace(root, (_, open, close) => open + body + close);
+};
+
 /** Stops by route id, from the stops' own route lists. */
 export const stopsByRoute = (stops) => {
   const map = new Map();

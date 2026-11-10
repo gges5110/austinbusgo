@@ -11,6 +11,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  busiestStops,
+  homePage,
   routePage,
   routePath,
   sitemap,
@@ -27,6 +29,9 @@ const API_BASE =
 // A feed with fewer stops than this means a broken API response; fail the
 // build rather than replacing thousands of pages with a handful
 const MIN_EXPECTED_STOPS = 500;
+
+// Major stops linked from the home page (by number of routes serving them)
+const HOME_STATIONS = 40;
 
 const getJson = async (path) => {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -74,6 +79,12 @@ const main = async () => {
       routePage(template, route, stopsOnRoute.get(route.routeId))
     );
   }
+
+  // Last: every page above was rendered from the untouched index.html
+  await writeFile(
+    join(BUILD_DIR, "index.html"),
+    homePage(template, servedRoutes, busiestStops(servedStops, HOME_STATIONS))
+  );
 
   const today = new Date().toISOString().slice(0, 10);
   const paths = [
