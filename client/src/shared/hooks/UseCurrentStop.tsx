@@ -1,7 +1,7 @@
 import { useDataFromRouteLoader } from "app/Router";
 import { stopLoader } from "features/stop/pages/stop/StopLoader";
 import { useAtom, useSetAtom } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
@@ -19,8 +19,14 @@ export const useCurrentStop = () => {
   // Derive stop from loaders
   const stop = useDataFromRouteLoader("stop", stopLoader);
 
-  // Sync derived stop with atom
+  // Sync the stop page's loader stop into the atom, but only when it
+  // changes (opening or leaving a stop page). Syncing on mount would clear a
+  // stop another page published (Nearby does) whenever a component using
+  // this hook mounts later, e.g. the lazily loaded map.
+  const syncedStop = useRef<Stop | undefined>(undefined);
   useEffect(() => {
+    if (stop === syncedStop.current) return;
+    syncedStop.current = stop;
     setCurrentStop(stop);
   }, [stop, setCurrentStop]);
 

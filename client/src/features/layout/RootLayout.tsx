@@ -1,10 +1,9 @@
 import { Box, Popper, useMediaQuery, useTheme } from "@mui/material";
 import { AssistiveChips } from "features/layout/components/AssistiveChips";
-import { Map } from "features/map/components/Map";
+import { LazyMap } from "features/map/components/LazyMap";
 import { SearchPanel } from "features/search/components/SearchPanel/SearchPanel";
 import * as React from "react";
 import { useState } from "react";
-import { MapProvider } from "react-map-gl/mapbox";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppDrawer } from "shared/components/AppDrawer/AppDrawer";
 import {
@@ -24,9 +23,7 @@ export const RootLayout: React.FunctionComponent = () => {
   return (
     <ErrorBoundary>
       <Box sx={{ display: "flex", height: "100%", width: "100%" }}>
-        <MapProvider>
-          <Map />
-        </MapProvider>
+        <LazyMap />
         <Popper open={true}>
           <Outlet />
         </Popper>
