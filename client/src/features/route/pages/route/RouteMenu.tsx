@@ -72,6 +72,7 @@ export const RouteMenu = () => {
         directionId={
           Number.isFinite(Number(directionId)) ? Number(directionId) : 0
         }
+        key={`${route.routeId}:${directionId}`}
         routeId={route.routeId}
         stops={stops}
       />
@@ -89,7 +90,7 @@ export const RouteMenu = () => {
       </ListItemButton>
       {/* Stays in the page (not unmounted) so it's still there for search engines */}
       <Collapse id={"route-all-stops"} in={showAllStops}>
-        <RouteStopsTimeline route={route} stops={stops} />
+        <RouteStopsTimeline live={showAllStops} route={route} stops={stops} />
       </Collapse>
     </MenuPanel>
   );

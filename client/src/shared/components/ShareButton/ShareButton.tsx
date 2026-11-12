@@ -4,8 +4,12 @@ import { useSnackbar } from "notistack";
 import * as React from "react";
 import { pageType, track } from "shared/track";
 
-/** `compact`: icon only, for headers */
-export const ShareButton = ({ compact = false }: { compact?: boolean }) => {
+interface ShareButtonProps {
+  /** Icon only, for headers */
+  compact?: boolean;
+}
+
+export const ShareButton = ({ compact = false }: ShareButtonProps) => {
   const { enqueueSnackbar } = useSnackbar();
   const copy = () => {
     const { pathname } = window.location;

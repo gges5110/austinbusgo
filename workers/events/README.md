@@ -8,7 +8,9 @@ searched for, and whether they come back.
 What's stored per event: the event name, a random per-tab session ID, the
 page type, up to four short fields (see `EVENTS` in `src/index.ts`), the
 country, and two numbers. No IP address, user agent, exact location or
-persistent ID.
+persistent ID. Search terms are kept so we can see what riders look for;
+the client lowercases them and strips emails, phone and zip numbers and
+house numbers first (`scrubSearchTerm` in `client/src/shared/track.ts`).
 
 The client (`client/src/shared/track.ts`) sends nothing unless the build has
 `VITE_EVENTS_URL` (from the `EVENTS_URL` repository variable), so local dev

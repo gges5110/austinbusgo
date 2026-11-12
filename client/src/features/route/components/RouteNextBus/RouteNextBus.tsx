@@ -7,13 +7,18 @@ import {
   Typography,
 } from "@mui/material";
 import { UpcomingList } from "features/nearby/components/UpcomingList";
-import { useGeolocation } from "features/nearby/hooks/useGeolocation";
+import {
+  GeolocationState,
+  useGeolocation,
+} from "features/nearby/hooks/useGeolocation";
 import {
   NEARBY_RADIUS_METERS,
   sortByDistance,
+  useStableAnchor,
   WIDE_RADIUS_METERS,
 } from "features/nearby/hooks/useNearestStop";
 import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
+import { LatLon } from "features/nearby/utils/geo";
 import { isStop } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
@@ -75,6 +80,9 @@ export const chooseStop = ({
 /**
  * The answer a rider on a route page came for: when the next bus reaches
  * their stop, and where it is now (stops away; tap to see it on the map).
+ *
+ * Render it with `key={route:direction}` so a pick, "Change stop" and the
+ * arrivals query all start fresh in the other direction.
  */
 export const RouteNextBus: React.FC<RouteNextBusProps> = ({
   routeId,
@@ -86,20 +94,17 @@ export const RouteNextBus: React.FC<RouteNextBusProps> = ({
   const [picked, setPicked] = useState<string>();
   const [changing, setChanging] = useState(false);
   const geolocation = useGeolocation();
+  // Moves only after a real walk, so GPS jitter between two close stops
+  // doesn't flip the card back and forth
+  const anchor = useStableAnchor(geolocation.position);
   const yourStopIds = useYourStopIds();
-
-  // A pick belongs to one direction
-  useEffect(() => {
-    setPicked(undefined);
-    setChanging(false);
-  }, [key]);
 
   const choice = chooseStop({
     stops,
     picked,
     remembered: routeStops[key],
     yourStopIds,
-    position: geolocation.position,
+    position: anchor,
   });
   const stop = choice?.stop;
 
@@ -118,6 +123,7 @@ export const RouteNextBus: React.FC<RouteNextBusProps> = ({
   if (!stop || changing) {
     return (
       <StopPicker
+        farFromRoute={farFromRoute(stops, anchor)}
         geolocation={geolocation}
         onCancel={stop ? () => setChanging(false) : undefined}
         onPick={pick}
@@ -154,12 +160,26 @@ const useYourStopIds = () => {
   );
 };
 
-const NextBusAtStop: React.FC<{
+/** No stop of this direction within a long walk of the rider */
+const farFromRoute = (stops: Stop[], position?: LatLon) => {
+  if (!position) return false;
+  const nearest = sortByDistance(stops, position)[0];
+  return !nearest || nearest.distance > WIDE_RADIUS_METERS;
+};
+
+interface NextBusAtStopProps {
   directionId: number;
   onChange: () => void;
   routeId: string;
   stop: Stop;
-}> = ({ directionId, onChange, routeId, stop }) => {
+}
+
+const NextBusAtStop: React.FC<NextBusAtStopProps> = ({
+  directionId,
+  onChange,
+  routeId,
+  stop,
+}) => {
   // Only this route's buses, so "next bus tomorrow at …" is this route's
   const upcoming = useUpcoming(stop.stopId, {
     direction_id: directionId,
@@ -168,9 +188,11 @@ const NextBusAtStop: React.FC<{
   const nowSeconds = useServerNow(upcoming.clockOffset);
   const [expandedTripId, setExpandedTripId] = useState<string>();
   const flyTo = useSetAtom(mapsFlyToCoordinateAtom);
-  // Only this stop's data (keepPreviousData can still hold the last one)
+  // Only this stop's data (keepPreviousData still holds the last stop's)
   const data =
-    upcoming.data?.stop.stopId === stop.stopId ? upcoming.data : undefined;
+    !upcoming.isPreviousData && upcoming.data?.stop.stopId === stop.stopId
+      ? upcoming.data
+      : undefined;
 
   const toggle = (tripId: string) => {
     const opening = expandedTripId !== tripId;
@@ -213,17 +235,28 @@ const NextBusAtStop: React.FC<{
 const stopLabel = (stop: Stop) =>
   stop.stopName ?? `Stop ${stop.stopCode ?? stop.stopId}`;
 
-const StopPicker: React.FC<{
-  geolocation: ReturnType<typeof useGeolocation>;
+interface StopPickerProps {
+  /** The rider's location is known and no stop is within a long walk */
+  farFromRoute: boolean;
+  geolocation: GeolocationState;
   onCancel?: () => void;
   onPick: (stopId: string) => void;
   stops: Stop[];
-}> = ({ geolocation, onCancel, onPick, stops }) => {
+}
+
+const StopPicker: React.FC<StopPickerProps> = ({
+  farFromRoute,
+  geolocation,
+  onCancel,
+  onPick,
+  stops,
+}) => {
   const locating = geolocation.status === "locating";
   const canUseLocation =
-    geolocation.supported && geolocation.status !== "denied";
-  const tooFar =
-    geolocation.status === "granted" && geolocation.position !== undefined;
+    geolocation.supported &&
+    geolocation.status !== "denied" &&
+    // Already located: asking again changes nothing
+    !geolocation.position;
 
   return (
     <Box aria-label={"Next bus"} component={"section"} sx={{ px: 2, py: 1.5 }}>
@@ -231,7 +264,7 @@ const StopPicker: React.FC<{
         Which stop are you at?
       </Typography>
       <Typography color={"text.secondary"} variant={"body2"}>
-        {tooFar
+        {farFromRoute
           ? "You're not near this route. Pick a stop to see its next bus."
           : "See when the next bus gets there and where it is now."}
       </Typography>
@@ -257,7 +290,7 @@ const StopPicker: React.FC<{
         sx={{ mt: 1.5 }}
       />
       <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-        {canUseLocation && !tooFar && (
+        {canUseLocation && (
           <Button
             disabled={locating}
             onClick={geolocation.request}

@@ -43,7 +43,7 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
     (!routeIds || routeIds.includes(arrival.routeId)) &&
     (directionId === undefined || arrival.directionId === directionId);
   const arrivals = (data?.arrivals ?? []).filter(matches).slice(0, limit);
-  useTrackArrivalsShown(data, arrivals, routeIds);
+  useTrackArrivalsShown(data, arrivals, routeIds, directionId);
 
   if (!data) {
     return (
@@ -120,7 +120,8 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
 const useTrackArrivalsShown = (
   data: StopUpcoming | undefined,
   arrivals: StopUpcoming["arrivals"],
-  routeIds: string[] | undefined
+  routeIds: string[] | undefined,
+  directionId: number | undefined
 ) => {
   const stopId = data?.stop.stopId;
   const routes = routeIds?.join(",") ?? "";
@@ -139,5 +140,5 @@ const useTrackArrivalsShown = (
     );
     // Once per stop and filter, not on every 15s refresh
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, stopId, routes]);
+  }, [loaded, stopId, routes, directionId]);
 };

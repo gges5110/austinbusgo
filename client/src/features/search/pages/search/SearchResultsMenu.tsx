@@ -20,7 +20,7 @@ import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
-import { track } from "shared/track";
+import { scrubSearchTerm, track } from "shared/track";
 import { Stop } from "shared/types/interface.d";
 
 import { routeDisplayName } from "shared/utils/routeNames";
@@ -44,27 +44,27 @@ export const SearchResultsMenu = () => {
   const { addToRecentSearches } = useRecentSearches();
   useTitle(`${searchTerm} - Austin Bus Go`);
 
-  if (isResponse(searchData)) {
-    return null;
-  }
-
-  const length =
-    searchData.search.stops.length + searchData.search.routes.length;
+  // Hooks first: the loader can return a Response (handled below)
+  const results = isResponse(searchData) ? undefined : searchData.search;
+  const length = results ? results.stops.length + results.routes.length : 0;
   const noResults = length === 0;
   useEffect(() => {
-    if (searchTerm && !noResults) {
+    if (results && searchTerm && !noResults) {
       addToRecentSearches({ value: searchTerm });
     }
   }, [searchTerm, noResults]);
   useEffect(() => {
-    if (searchTerm) {
-      track("search", [searchTerm.trim().toLowerCase(), resultsBucket(length)]);
+    if (results && searchTerm) {
+      track("search", [scrubSearchTerm(searchTerm), resultsBucket(length)]);
     }
     // Once per search term
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
-
+  }, [searchTerm, results === undefined]);
   const setHoveringStop = useSetAtom(hoveringStopAtom);
+
+  if (isResponse(searchData)) {
+    return null;
+  }
 
   return (
     <MenuPanel>

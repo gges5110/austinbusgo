@@ -30,11 +30,14 @@ import { getDate, getTime, parseArrivalTime } from "shared/utils/dateUtils";
 interface StopsTimelineProps {
   route: Route;
   stops: StopsAndShapes["stops"];
+  /** Fetch times and poll buses; false while the list is folded away */
+  live?: boolean;
 }
 
 export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
   route,
   stops,
+  live = true,
 }) => {
   const { directionId } = useParams();
   const { viewStatePathname, withPreservedSearch } = useViewStatePathname();
@@ -48,6 +51,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
     },
     {
       query: {
+        enabled: live,
         refetchInterval: 15000,
       },
     }
@@ -59,7 +63,7 @@ export const RouteStopsTimeline: React.FC<StopsTimelineProps> = ({
       date: getDate(),
       time: getTime(),
     },
-    { query: { keepPreviousData: true } }
+    { query: { enabled: live, keepPreviousData: true } }
   );
   const theme = useTheme();
   const vehiclePositions = vehiclePositionsData || [];

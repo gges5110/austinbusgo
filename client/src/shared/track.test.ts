@@ -5,6 +5,7 @@ import {
   initTracking,
   pageType,
   resetTracking,
+  scrubSearchTerm,
   track,
   visitSource,
 } from "./track";
@@ -45,6 +46,19 @@ describe("visitSource", () => {
   );
 });
 
+describe("scrubSearchTerm", () => {
+  test.each([
+    ["640", "640"],
+    ["  640 Bus ", "640 bus"],
+    ["801 route", "801 route"],
+    ["5869", "5869"],
+    ["North Lamar Brentwood", "north lamar brentwood"],
+    ["1234 Elm St apt 5", "# elm st apt 5"],
+    ["call 5125551234", "call #"],
+    ["me@example.com stop", "# stop"],
+  ])("%s → %s", (term, kept) => expect(scrubSearchTerm(term)).toBe(kept));
+});
+
 describe("countVisitDays", () => {
   beforeEach(() => localStorage.clear());
   const day = (iso: string) => Date.parse(`${iso}T12:00:00Z`);
@@ -69,6 +83,14 @@ describe("countVisitDays", () => {
   test("a second visit the same day is returning", () => {
     countVisitDays(day("2026-11-10"));
     expect(countVisitDays(day("2026-11-10")).returning).toBe(true);
+  });
+
+  test("days follow the rider's clock, not UTC", () => {
+    // Tests run in UTC unless TZ is set; build local times explicitly
+    const evening = new Date(2026, 10, 10, 17, 0).getTime();
+    const night = new Date(2026, 10, 10, 23, 30).getTime();
+    countVisitDays(evening);
+    expect(countVisitDays(night)).toEqual({ visitDays: 1, returning: true });
   });
 
   test("survives junk in storage", () => {

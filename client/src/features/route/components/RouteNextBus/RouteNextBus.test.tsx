@@ -178,6 +178,21 @@ describe("RouteNextBus", () => {
     expect(screen.getByText("Congress/5th")).toBeInTheDocument();
   });
 
+  test("changing a stop found by location doesn't claim the rider is far", async () => {
+    const user = userEvent.setup();
+    mocks.geolocation.mockReturnValue({
+      ...noLocation,
+      status: "granted",
+      position: { latitude: 30.2801, longitude: -97.74 },
+    });
+    renderCard();
+
+    expect(screen.getByText("Guadalupe/17th")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Change stop" }));
+    expect(screen.getByText("Which stop are you at?")).toBeInTheDocument();
+    expect(screen.queryByText(/not near this route/)).toBeNull();
+  });
+
   test("says so when no bus on this route is coming", () => {
     localStorage.setItem("routeStops", '{"640:0":"300"}');
     mocks.upcoming.mockReturnValue({

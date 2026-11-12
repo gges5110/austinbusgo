@@ -3,8 +3,9 @@
  * bus, what did they search for, do they come back.
  *
  * Sends nothing unless the build has VITE_EVENTS_URL (production only), so
- * local dev, tests and PR previews stay silent. No personal data: a random
- * per-tab session ID and a 7-day visit count kept on this device.
+ * local dev, tests and PR previews stay silent. No personal ID: a random
+ * per-tab session ID and a 7-day visit count kept on this device. Search
+ * terms are sent with house-number-like numbers removed (scrubSearchTerm).
  */
 
 export type TrackEvent =
@@ -96,13 +97,40 @@ const safeStorage = (storage: () => Storage) => {
   }
 };
 
+/** "2026-11-10" in the rider's own time zone (not UTC) */
+const localDay = (epochMs: number) => {
+  const date = new Date(epochMs);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}`;
+};
+
+// A number followed by a street-like word, unless it's a route ("640 bus")
+const HOUSE_NUMBER = /\b\d{2,}\s+(?!(bus|route|schedule|stop)\b)(?=[a-z])/g;
+
+/**
+ * A search term safe to keep: lowercased, emails and long numbers (phone,
+ * zip) and house numbers ("1234 elm st" → "# elm st") removed. Route
+ * numbers and stop IDs on their own ("640", "640 bus", "5869") stay.
+ */
+export const scrubSearchTerm = (term: string) =>
+  term
+    .trim()
+    .toLowerCase()
+    .replace(/\S+@\S+/g, "#")
+    .replace(/\d{6,}/g, "#")
+    .replace(HOUSE_NUMBER, "# ")
+    .replace(/\s+/g, " ")
+    .slice(0, 40);
+
 /**
  * Records today as a visit day and returns how many distinct days in the
  * last week (including today) this device visited.
  */
 export const countVisitDays = (now = Date.now()) => {
   const storage = safeStorage(() => window.localStorage);
-  const today = new Date(now).toISOString().slice(0, 10);
+  const today = localDay(now);
   let days: string[] = [];
   try {
     days = JSON.parse(storage?.getItem(VISITS_KEY) ?? "[]");
@@ -110,7 +138,7 @@ export const countVisitDays = (now = Date.now()) => {
   } catch {
     days = [];
   }
-  const cutoff = new Date(now - WEEK_MS).toISOString().slice(0, 10);
+  const cutoff = localDay(now - WEEK_MS);
   const recent = Array.from(new Set([...days, today])).filter(
     (day) => typeof day === "string" && day > cutoff
   );

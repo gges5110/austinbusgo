@@ -131,10 +131,19 @@ export const useGeolocation = (enabled = true): GeolocationState => {
       awaitingTap.current = false;
       track("location", [state.status, "tap"]);
     }
-  }, [state.status]);
+    // Every update, not just status changes: a re-tap while blocked ends
+    // "denied" → "locating" → "denied"
+  }, [state]);
 
+  const hasFix = useRef(false);
+  hasFix.current = state.status === "granted";
   const request = useCallback(() => {
-    awaitingTap.current = true;
+    if (hasFix.current) {
+      // Already have a fix: the watch keeps it, so record the outcome now
+      track("location", ["granted", "tap"]);
+    } else {
+      awaitingTap.current = true;
+    }
     setTapped(true);
     setAttempt((n) => n + 1);
   }, []);
