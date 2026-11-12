@@ -10,13 +10,34 @@ const STORAGE_KEY = "nearbyUsesLocation";
 const watchPosition = vi.fn();
 const clearWatch = vi.fn();
 
-const setPermission = (state: PermissionState | undefined) =>
+/** A fake PermissionStatus whose state the test can change */
+const setPermission = (state: PermissionState | undefined) => {
+  const listeners = new Set<() => void>();
+  const status = {
+    state,
+    addEventListener: (_: string, listener: () => void) =>
+      listeners.add(listener),
+    removeEventListener: (_: string, listener: () => void) =>
+      listeners.delete(listener),
+  };
   Object.defineProperty(navigator, "permissions", {
     configurable: true,
     value:
       state === undefined
         ? undefined
-        : { query: vi.fn().mockResolvedValue({ state }) },
+        : { query: vi.fn().mockResolvedValue(status) },
+  });
+  return (next: PermissionState) => {
+    status.state = next;
+    listeners.forEach((listener) => listener());
+  };
+};
+
+const PERMISSION_DENIED = 1;
+const deny = () =>
+  watchPosition.mock.calls.at(-1)?.[1]({
+    code: PERMISSION_DENIED,
+    PERMISSION_DENIED,
   });
 
 const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
@@ -93,6 +114,39 @@ describe("useGeolocation", () => {
 
     await waitFor(() => expect(result.current.status).toBe("denied"));
     expect(watchPosition).not.toHaveBeenCalled();
+  });
+
+  test("recovers when the rider allows location in settings", async () => {
+    const changePermission = setPermission("denied");
+    const { result } = render();
+    await waitFor(() => expect(result.current.status).toBe("denied"));
+
+    act(() => changePermission("granted"));
+
+    await waitFor(() => expect(watchPosition).toHaveBeenCalled());
+    expect(result.current.status).toBe("locating");
+  });
+
+  test("a refusal forgets the opt-in so later visits don't prompt on load", async () => {
+    setPermission("prompt");
+    localStorage.setItem(STORAGE_KEY, "true");
+    render();
+    await waitFor(() => expect(watchPosition).toHaveBeenCalled());
+
+    act(() => deny());
+
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("false");
+  });
+
+  test("no geolocation at all: unavailable, nothing to retry", () => {
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
+    const { result } = render();
+
+    expect(result.current.status).toBe("unavailable");
+    expect(result.current.supported).toBe(false);
   });
 
   test("no Permissions API: waits for the rider", async () => {

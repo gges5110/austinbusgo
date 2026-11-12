@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { UpcomingArrival } from "shared/api/generated/model";
 import { describe, expect, test } from "vitest";
 
@@ -7,6 +8,7 @@ import {
   formatHeadsign,
   formatNextBusTime,
   minutesUntil,
+  TRANSIT_TIME_ZONE,
 } from "./countdown";
 
 const NOW = 1_800_000_000;
@@ -87,8 +89,8 @@ describe("formatHeadsign", () => {
 });
 
 describe("formatNextBusTime", () => {
-  // Local time, so the test doesn't depend on the machine's time zone
-  const at = (iso: string) => new Date(iso).getTime() / 1000;
+  // Austin wall-clock times, whatever the machine's time zone
+  const at = (iso: string) => dayjs.tz(iso, TRANSIT_TIME_ZONE).unix();
   const now = at("2026-11-10T23:20:00"); // a Tuesday night
 
   test.each([
@@ -99,4 +101,12 @@ describe("formatNextBusTime", () => {
   ])("%s", (_, when, expected) => {
     expect(formatNextBusTime(at(when), now)).toBe(expected);
   });
+});
+
+// CI runs in UTC, where 11:30 PM Austin is already the next day
+test("counts days in Austin time, not the device's", () => {
+  const now = dayjs.tz("2026-11-10T23:30:00", TRANSIT_TIME_ZONE).unix();
+  const bus = dayjs.tz("2026-11-11T05:42:00", TRANSIT_TIME_ZONE).unix();
+
+  expect(formatNextBusTime(bus, now)).toBe("tomorrow at 5:42 AM");
 });

@@ -153,6 +153,7 @@ def make_upcoming_service(snapshot):
     gtfs_service.get_stop.return_value = SimpleNamespace(stop_id="s3", stop_name="S3")
     gtfs_service.get_routes_at_stop.return_value = []
     gtfs_service.get_stop_times_by_trip_id.return_value = upcoming_trip_stop_times()
+    gtfs_service.get_first_stop_time_on_dates.return_value = None
     rt_service.get_snapshot = AsyncMock(return_value=snapshot)
     return svc, gtfs_service
 
@@ -216,9 +217,11 @@ async def test_get_upcoming_falls_back_to_next_scheduled_and_reports_rt_down():
         [],  # yesterday's late service
         [],  # today's window
         [],  # rest of today
-        [upcoming_row("t9", "05:42:00")],  # tomorrow
     ]
     today = date(2026, 10, 5)
+    gtfs_service.get_first_stop_time_on_dates.return_value = later_row(
+        "t9", "05:42:00", today + timedelta(days=1)
+    )
     now = to_epoch(today, "23:30:00")
 
     result = await svc.get_upcoming("s3", now=now)
@@ -231,45 +234,66 @@ async def test_get_upcoming_falls_back_to_next_scheduled_and_reports_rt_down():
     )
 
 
+def later_row(trip_id, arrival_time, service_date):
+    row = upcoming_row(trip_id, arrival_time)
+    row.service_date = service_date
+    return row
+
+
 @pytest.mark.asyncio
-async def test_next_scheduled_finds_a_weekly_route_days_ahead():
+async def test_next_scheduled_looks_ahead_for_a_weekly_route():
     """A route that runs one day a week: the next bus is several days out."""
-    from server.services.gtfs_rt_service import RealtimeSnapshot
-    from server.services.upcoming import to_epoch
-
-    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
-    gtfs_service.get_stop_times_at_stop_in_window.side_effect = [
-        [],  # yesterday's late service
-        [],  # today's window
-        [],  # rest of today
-        [],  # tomorrow
-        [],  # in 2 days
-        [upcoming_row("t5", "10:22:00")],  # in 3 days
-    ]
-    today = date(2026, 11, 10)
-    now = to_epoch(today, "23:20:00")
-
-    result = await svc.get_upcoming("2810", now=now)
-
-    assert result["next_scheduled"]["trip_id"] == "t5"
-    assert result["next_scheduled"]["scheduled_at"] == to_epoch(
-        today + timedelta(days=3), "10:22:00"
-    )
-
-
-@pytest.mark.asyncio
-async def test_next_scheduled_gives_up_after_the_lookahead():
     from server.services.arrival_service import NEXT_SERVICE_LOOKAHEAD_DAYS
     from server.services.gtfs_rt_service import RealtimeSnapshot
     from server.services.upcoming import to_epoch
 
     svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
     gtfs_service.get_stop_times_at_stop_in_window.return_value = []
+    today = date(2026, 11, 10)
+    thursday = today + timedelta(days=2)
+    gtfs_service.get_first_stop_time_on_dates.return_value = later_row(
+        "t5", "10:22:00", thursday
+    )
+
+    result = await svc.get_upcoming("2810", now=to_epoch(today, "23:20:00"))
+
+    assert result["next_scheduled"]["trip_id"] == "t5"
+    assert result["next_scheduled"]["scheduled_at"] == to_epoch(thursday, "10:22:00")
+    gtfs_service.get_first_stop_time_on_dates.assert_awaited_once_with(
+        "2810",
+        today + timedelta(days=1),
+        today + timedelta(days=NEXT_SERVICE_LOOKAHEAD_DAYS),
+    )
+
+
+@pytest.mark.asyncio
+async def test_next_scheduled_later_today_skips_the_lookahead():
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
+    today = date(2026, 11, 10)
+    gtfs_service.get_stop_times_at_stop_in_window.side_effect = [
+        [],  # yesterday's late service
+        [],  # today's window
+        [upcoming_row("t7", "18:05:00")],  # rest of today
+    ]
+
+    result = await svc.get_upcoming("s3", now=to_epoch(today, "12:00:00"))
+
+    assert result["next_scheduled"]["scheduled_at"] == to_epoch(today, "18:05:00")
+    gtfs_service.get_first_stop_time_on_dates.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_next_scheduled_none_when_nothing_within_the_lookahead():
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
+    gtfs_service.get_stop_times_at_stop_in_window.return_value = []
+    gtfs_service.get_first_stop_time_on_dates.return_value = None
 
     result = await svc.get_upcoming("s3", now=to_epoch(date(2026, 11, 10), "12:00:00"))
 
     assert result["next_scheduled"] is None
-    # yesterday + today's window + rest of today + each lookahead day
-    assert gtfs_service.get_stop_times_at_stop_in_window.await_count == (
-        3 + NEXT_SERVICE_LOOKAHEAD_DAYS
-    )

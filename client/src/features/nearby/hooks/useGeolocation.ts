@@ -14,6 +14,8 @@ export interface GeolocationState {
   status: GeolocationStatus;
   /** Start (or restart) watching, e.g. when the rider taps "Use my location" */
   request: () => void;
+  /** False when the browser has no geolocation at all (nothing to retry) */
+  supported: boolean;
 }
 
 /**
@@ -37,32 +39,50 @@ export const useGeolocation = (enabled = true): GeolocationState => {
   const [checking, setChecking] = useState(true);
   // Whether we may watch now. (The stored opt-in loads after first render.)
   const requested = tapped || optedIn || allowedByBrowser;
-  const [state, setState] = useState<Omit<GeolocationState, "request">>({
+  const [state, setState] = useState<
+    Omit<GeolocationState, "request" | "supported">
+  >({
     status: supported ? "locating" : "unavailable",
   });
 
+  // Follow the browser's permission: start when it's already allowed, and
+  // recover on its own when the rider allows it in settings and comes back
   useEffect(() => {
-    if (!enabled || !supported || requested) return;
+    if (!enabled || !supported) return;
     let cancelled = false;
-    const permissions = navigator.permissions;
-    if (!permissions?.query) {
+    let permission: PermissionStatus | undefined;
+    const apply = (state: PermissionState) => {
+      if (state === "granted") {
+        setAllowedByBrowser(true);
+        // Restart a watch that already failed while blocked
+        setAttempt((n) => n + 1);
+      } else {
+        setAllowedByBrowser(false);
+        if (state === "denied") setState({ status: "denied" });
+      }
+    };
+    const onChange = () => permission && apply(permission.state);
+    if (!navigator.permissions?.query) {
       setChecking(false);
       return;
     }
-    permissions
+    navigator.permissions
       .query({ name: "geolocation" })
-      .then((permission) => {
+      .then((status) => {
         if (cancelled) return;
-        if (permission.state === "granted") setAllowedByBrowser(true);
-        if (permission.state === "denied") setState({ status: "denied" });
+        permission = status;
+        // "prompt" needs nothing: wait for the rider (or their opt-in)
+        if (status.state !== "prompt") apply(status.state);
+        status.addEventListener?.("change", onChange);
       })
       // Some browsers reject unknown permission names; treat as "ask"
       .catch(() => undefined)
       .finally(() => !cancelled && setChecking(false));
     return () => {
       cancelled = true;
+      permission?.removeEventListener?.("change", onChange);
     };
-  }, [enabled, supported, requested]);
+  }, [enabled, supported]);
 
   useEffect(() => {
     if (!enabled || !supported || !requested) return;
@@ -70,15 +90,16 @@ export const useGeolocation = (enabled = true): GeolocationState => {
       previous.position ? previous : { status: "locating" }
     );
     const watchId = navigator.geolocation.watchPosition(
-      ({ coords }) => {
-        setOptedIn(true);
+      ({ coords }) =>
         setState({
           position: { latitude: coords.latitude, longitude: coords.longitude },
           accuracy: coords.accuracy,
           status: "granted",
-        });
-      },
-      (error) =>
+        }),
+      (error) => {
+        // A refusal also forgets the opt-in, so later visits don't prompt
+        // on load again
+        if (error.code === error.PERMISSION_DENIED) setOptedIn(false);
         setState((previous) =>
           // A transient timeout keeps the last known position
           previous.position && error.code !== error.PERMISSION_DENIED
@@ -89,11 +110,18 @@ export const useGeolocation = (enabled = true): GeolocationState => {
                     ? "denied"
                     : "unavailable",
               }
-        ),
+        );
+      },
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [enabled, supported, requested, attempt, setOptedIn]);
+
+  // Remember the opt-in once (not on every GPS fix)
+  const located = state.status === "granted";
+  useEffect(() => {
+    if (located && !optedIn) setOptedIn(true);
+  }, [located, optedIn, setOptedIn]);
 
   const request = useCallback(() => {
     setTapped(true);
@@ -107,5 +135,5 @@ export const useGeolocation = (enabled = true): GeolocationState => {
         ? "locating"
         : "idle";
 
-  return { ...state, status, request };
+  return { ...state, status, request, supported };
 };

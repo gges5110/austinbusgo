@@ -31,7 +31,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { StopUpcoming } from "shared/api/generated/model";
-import { EXPLORE_PATH } from "shared/components/BottomTabs/BottomTabs";
+import { useExplorePath } from "shared/components/BottomTabs/BottomTabs";
 import { useTitle } from "shared/hooks/UseTitle";
 import {
   currentStopAtom,
@@ -103,7 +103,7 @@ export const NearbyPage: React.FC = () => {
     return (
       <NearbySheet>
         <LocationPrompt
-          onRequest={geolocation.request}
+          onRequest={geolocation.supported ? geolocation.request : undefined}
           status={geolocation.status}
         />
       </NearbySheet>
@@ -241,9 +241,11 @@ const UNBLOCK_HELP = [
  * unavailable. The stop ID from the sign and saved stops always work.
  */
 const LocationPrompt: React.FC<{
-  onRequest: () => void;
+  /** Undefined when the browser has no geolocation: no button to offer */
+  onRequest?: () => void;
   status: GeolocationStatus;
 }> = ({ onRequest, status }) => {
+  const explorePath = useExplorePath();
   const favorites = useAtomValue(favoritesAtom);
   const savedStops = favorites.filter(
     (favorite): favorite is Stop => "stopId" in favorite
@@ -286,22 +288,26 @@ const LocationPrompt: React.FC<{
               ))}
             </>
           ) : (
-            "Enter the stop ID from the sign instead, or try again."
+            `Enter the stop ID from the sign instead${
+              onRequest ? ", or try again" : ""
+            }.`
           )}
         </Typography>
       </Box>
-      <Box sx={{ pt: 2, textAlign: "center" }}>
-        <Button
-          onClick={onRequest}
-          startIcon={<MyLocationIcon />}
-          variant={firstVisit ? "contained" : "text"}
-        >
-          {firstVisit ? "Use my location" : "Try again"}
-        </Button>
-      </Box>
+      {onRequest && (
+        <Box sx={{ pt: 2, textAlign: "center" }}>
+          <Button
+            onClick={onRequest}
+            startIcon={<MyLocationIcon />}
+            variant={firstVisit ? "contained" : "text"}
+          >
+            {firstVisit ? "Use my location" : "Try again"}
+          </Button>
+        </Box>
+      )}
       <StopIdEntry prominent={true} />
       <Box sx={{ textAlign: "center" }}>
-        <Button component={RouterLink} size={"small"} to={EXPLORE_PATH}>
+        <Button component={RouterLink} size={"small"} to={explorePath}>
           Or search for a route or stop
         </Button>
       </Box>
