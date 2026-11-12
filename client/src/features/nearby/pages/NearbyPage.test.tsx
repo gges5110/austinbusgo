@@ -74,7 +74,8 @@ describe("NearbyPage", () => {
       position: HERE,
       accuracy: 10,
       status: "granted",
-      retry: vi.fn(),
+      request: vi.fn(),
+      supported: true,
     });
     mocks.nearestStop.mockReturnValue({
       nearest: { stop, distance: 40 },
@@ -98,7 +99,11 @@ describe("NearbyPage", () => {
   });
 
   test("while locating, offers the stop-ID field", () => {
-    mocks.geolocation.mockReturnValue({ status: "locating", retry: vi.fn() });
+    mocks.geolocation.mockReturnValue({
+      status: "locating",
+      request: vi.fn(),
+      supported: true,
+    });
 
     renderAt("/nearby");
 
@@ -106,16 +111,55 @@ describe("NearbyPage", () => {
     expect(screen.getByLabelText("Stop ID")).toBeTruthy();
   });
 
-  test("location denied: stop ID first, with a way to retry", () => {
-    const retry = vi.fn();
-    mocks.geolocation.mockReturnValue({ status: "denied", retry });
+  test("first visit: asks before using location, with other ways in", () => {
+    const request = vi.fn();
+    mocks.geolocation.mockReturnValue({
+      status: "idle",
+      request,
+      supported: true,
+    });
 
     renderAt("/nearby");
 
-    expect(screen.getByText("Enter the stop ID from the sign")).toBeTruthy();
+    expect(screen.getByText("See the next buses at your stop")).toBeTruthy();
     expect(screen.getByLabelText("Stop ID")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Or search for a route or stop" })
+    ).toBeTruthy();
+    expect(request).not.toHaveBeenCalled();
     screen.getByRole("button", { name: "Use my location" }).click();
-    expect(retry).toHaveBeenCalled();
+    expect(request).toHaveBeenCalled();
+  });
+
+  test("location blocked: explains how to allow it", () => {
+    const request = vi.fn();
+    mocks.geolocation.mockReturnValue({
+      status: "denied",
+      request,
+      supported: true,
+    });
+
+    renderAt("/nearby");
+
+    expect(screen.getByText("Location is blocked for this site")).toBeTruthy();
+    expect(screen.getByText(/Website Settings › Location/)).toBeTruthy();
+    expect(screen.getByLabelText("Stop ID")).toBeTruthy();
+    screen.getByRole("button", { name: "Try again" }).click();
+    expect(request).toHaveBeenCalled();
+  });
+
+  test("no geolocation in the browser: no dead retry button", () => {
+    mocks.geolocation.mockReturnValue({
+      status: "unavailable",
+      request: vi.fn(),
+      supported: false,
+    });
+
+    renderAt("/nearby");
+
+    expect(screen.getByText("Couldn't get your location")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.getByLabelText("Stop ID")).toBeTruthy();
   });
 
   test("no stop within walking distance offers a wider search", () => {
@@ -173,7 +217,9 @@ describe("NearbyPage", () => {
     renderAt("/nearby");
 
     expect(screen.getByText("No buses in the next hour")).toBeTruthy();
-    expect(screen.getByText(/Next: Route 7 Duval at/)).toBeTruthy();
+    expect(
+      screen.getByText(/Next bus: Route 7 Duval, (tomorrow )?at/)
+    ).toBeTruthy();
   });
 
   test("realtime outage banner", () => {

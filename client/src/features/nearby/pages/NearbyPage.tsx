@@ -1,5 +1,6 @@
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import NearMeIcon from "@mui/icons-material/NearMe";
 import {
   Box,
   Button,
@@ -13,7 +14,10 @@ import { NearbySheet } from "features/nearby/components/NearbySheet";
 import { StopHeader } from "features/nearby/components/StopHeader";
 import { StopIdEntry } from "features/nearby/components/StopIdEntry";
 import { UpcomingList } from "features/nearby/components/UpcomingList";
-import { useGeolocation } from "features/nearby/hooks/useGeolocation";
+import {
+  GeolocationStatus,
+  useGeolocation,
+} from "features/nearby/hooks/useGeolocation";
 import {
   NEARBY_RADIUS_METERS,
   useNearestStop,
@@ -27,6 +31,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { StopUpcoming } from "shared/api/generated/model";
+import { useExplorePath } from "shared/components/BottomTabs/BottomTabs";
 import { useTitle } from "shared/hooks/UseTitle";
 import {
   currentStopAtom,
@@ -97,7 +102,10 @@ export const NearbyPage: React.FC = () => {
     }
     return (
       <NearbySheet>
-        <LocationUnavailable onRetry={geolocation.retry} />
+        <LocationPrompt
+          onRequest={geolocation.supported ? geolocation.request : undefined}
+          status={geolocation.status}
+        />
       </NearbySheet>
     );
   }
@@ -222,30 +230,85 @@ const Message: React.FC<React.PropsWithChildren<{ title: string }>> = ({
   </Box>
 );
 
-/** Location denied or unsupported: stop ID first, then saved stops. */
-const LocationUnavailable: React.FC<{ onRetry: () => void }> = ({
-  onRetry,
-}) => {
+/** How to unblock location for this site, by browser */
+const UNBLOCK_HELP = [
+  "iPhone: tap aA in the address bar › Website Settings › Location › Allow.",
+  "Android: tap the icon left of the address › Permissions › Location.",
+];
+
+/**
+ * No location yet: the first-visit welcome ("idle"), or location blocked /
+ * unavailable. The stop ID from the sign and saved stops always work.
+ */
+const LocationPrompt: React.FC<{
+  /** Undefined when the browser has no geolocation: no button to offer */
+  onRequest?: () => void;
+  status: GeolocationStatus;
+}> = ({ onRequest, status }) => {
+  const explorePath = useExplorePath();
   const favorites = useAtomValue(favoritesAtom);
   const savedStops = favorites.filter(
     (favorite): favorite is Stop => "stopId" in favorite
   );
+  const firstVisit = status === "idle";
 
   return (
     <>
       <Box sx={{ px: 2, pt: 3, textAlign: "center" }}>
-        <LocationOffIcon color={"action"} />
+        {firstVisit ? (
+          <NearMeIcon color={"primary"} />
+        ) : (
+          <LocationOffIcon color={"action"} />
+        )}
         <Typography variant={"subtitle1"}>
-          Enter the stop ID from the sign
+          {firstVisit
+            ? "See the next buses at your stop"
+            : status === "denied"
+              ? "Location is blocked for this site"
+              : "Couldn't get your location"}
         </Typography>
-        <Typography color={"text.secondary"} variant={"body2"}>
-          Or allow location access to see the stop you&apos;re at.
+        <Typography
+          color={"text.secondary"}
+          component={"div"}
+          variant={"body2"}
+        >
+          {firstVisit ? (
+            "Use your location to find the stop you're at, or enter the stop ID from the sign."
+          ) : status === "denied" ? (
+            <>
+              To use it, allow location in your browser, then try again.
+              {UNBLOCK_HELP.map((line) => (
+                <Box
+                  component={"span"}
+                  key={line}
+                  sx={{ display: "block", mt: 0.5 }}
+                >
+                  {line}
+                </Box>
+              ))}
+            </>
+          ) : (
+            `Enter the stop ID from the sign instead${
+              onRequest ? ", or try again" : ""
+            }.`
+          )}
         </Typography>
       </Box>
+      {onRequest && (
+        <Box sx={{ pt: 2, textAlign: "center" }}>
+          <Button
+            onClick={onRequest}
+            startIcon={<MyLocationIcon />}
+            variant={firstVisit ? "contained" : "text"}
+          >
+            {firstVisit ? "Use my location" : "Try again"}
+          </Button>
+        </Box>
+      )}
       <StopIdEntry prominent={true} />
       <Box sx={{ textAlign: "center" }}>
-        <Button onClick={onRetry} startIcon={<MyLocationIcon />}>
-          Use my location
+        <Button component={RouterLink} size={"small"} to={explorePath}>
+          Or search for a route or stop
         </Button>
       </Box>
       {savedStops.length > 0 && (

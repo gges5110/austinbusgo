@@ -18,6 +18,11 @@ export const recentSearchesAtom = atomWithStorage<Array<RecentSearch>>(
   "recentSearches",
   []
 );
+/** The rider has used "Use my location" on this device before */
+export const usesLocationAtom = atomWithStorage<boolean>(
+  "nearbyUsesLocation",
+  false
+);
 export type ColorModeType = "light" | "dark" | "system";
 export const colorModeAtom = atomWithStorage<ColorModeType>(
   "colorMode",

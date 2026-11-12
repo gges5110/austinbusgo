@@ -483,6 +483,42 @@ class GTFSService:
         result = await self.session.execute(sql, params)
         return [SimpleNamespace(**row._mapping) for row in result]
 
+    async def get_first_stop_time_on_dates(
+        self, stop_id: str, first_date: date, last_date: date
+    ) -> Optional[SimpleNamespace]:
+        """The earliest scheduled stop at `stop_id` on the first service day
+        between `first_date` and `last_date` (inclusive) that has one, with
+        that day as `service_date`. One query instead of one per day."""
+        sql = text("""
+            SELECT calendar_dates.date AS service_date,
+                   st.trip_id, st.arrival_time, st.departure_time,
+                   st.stop_sequence,
+                   trips.route_id, trips.trip_headsign, trips.direction_id,
+                   routes.route_color
+            FROM stop_times st
+            JOIN trips ON st.trip_id = trips.trip_id
+            JOIN routes ON routes.route_id = trips.route_id
+            JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
+            WHERE st.stop_id = :stop_id
+              AND calendar_dates.date BETWEEN :first_date AND :last_date
+            ORDER BY calendar_dates.date, st.arrival_time
+            LIMIT 1
+            """)
+        result = await self.session.execute(
+            sql,
+            {
+                "stop_id": stop_id,
+                "first_date": first_date.isoformat(),
+                "last_date": last_date.isoformat(),
+            },
+        )
+        row = result.first()
+        if row is None:
+            return None
+        found = SimpleNamespace(**row._mapping)
+        found.service_date = date.fromisoformat(found.service_date)
+        return found
+
     async def get_earliest_arrival_times_on_route(
         self, route_id: str, direction_id: int, date: str, time: str
     ) -> List[SimpleNamespace]:

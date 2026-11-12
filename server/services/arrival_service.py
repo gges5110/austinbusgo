@@ -26,6 +26,9 @@ from server.services.upcoming import (
     to_epoch,
 )
 
+# How far ahead to look for a stop's next bus when the next hour is empty
+NEXT_SERVICE_LOOKAHEAD_DAYS = 14
+
 
 class ArrivalService:
     def __init__(self, gtfs_service: GTFSService, gtfs_rt_service: GTFSRTService):
@@ -154,34 +157,39 @@ class ArrivalService:
         }
 
     async def _next_scheduled(self, stop_id: str, today, now: int) -> Optional[dict]:
-        """First scheduled bus after the window, today or tomorrow."""
-        searches = [
-            (
-                today,
-                format_gtfs_time(
-                    seconds_into_service_day(today, now) + WINDOW_AHEAD_SECONDS
-                ),
+        """First scheduled bus after the window: later today, or on one of the
+        next NEXT_SERVICE_LOOKAHEAD_DAYS days (some routes run one day a week,
+        and holidays can skip a week). At most two queries."""
+        rows = await self.gtfs_service.get_stop_times_at_stop_in_window(
+            stop_id,
+            today,
+            format_gtfs_time(
+                seconds_into_service_day(today, now) + WINDOW_AHEAD_SECONDS
             ),
-            (today + timedelta(days=1), "00:00:00"),
-        ]
-        for service_date, start_time in searches:
-            rows = await self.gtfs_service.get_stop_times_at_stop_in_window(
-                stop_id, service_date, start_time, "99:59:59", limit=1
+            "99:59:59",
+            limit=1,
+        )
+        service_date = today
+        if not rows:
+            later = await self.gtfs_service.get_first_stop_time_on_dates(
+                stop_id,
+                today + timedelta(days=1),
+                today + timedelta(days=NEXT_SERVICE_LOOKAHEAD_DAYS),
             )
-            if rows:
-                row = rows[0]
-                scheduled_at = to_epoch(service_date, row.arrival_time)
-                return {
-                    "trip_id": row.trip_id,
-                    "route_id": row.route_id,
-                    "route_color": row.route_color,
-                    "headsign": row.trip_headsign,
-                    "direction_id": row.direction_id,
-                    "scheduled_at": scheduled_at,
-                    "predicted_at": None,
-                    "stops_away": None,
-                    "status": "scheduled",
-                    "vehicle": None,
-                    "track": [],
-                }
-        return None
+            if later is None:
+                return None
+            rows, service_date = [later], later.service_date
+        row = rows[0]
+        return {
+            "trip_id": row.trip_id,
+            "route_id": row.route_id,
+            "route_color": row.route_color,
+            "headsign": row.trip_headsign,
+            "direction_id": row.direction_id,
+            "scheduled_at": to_epoch(service_date, row.arrival_time),
+            "predicted_at": None,
+            "stops_away": None,
+            "status": "scheduled",
+            "vehicle": None,
+            "track": [],
+        }

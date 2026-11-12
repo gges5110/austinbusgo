@@ -1,5 +1,15 @@
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { UpcomingArrival } from "shared/api/generated/model";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/** Schedules are Austin service days; show Austin time on any device */
+export const TRANSIT_TIME_ZONE = "America/Chicago";
+const transitTime = (epochSeconds: number) =>
+  dayjs.unix(epochSeconds).tz(TRANSIT_TIME_ZONE);
 
 /** When the bus is expected: the live prediction if any, else the schedule. */
 export const effectiveAt = (arrival: UpcomingArrival) =>
@@ -51,4 +61,20 @@ export const formatHeadsign = (headsign?: string | null, routeId?: string) => {
 
 /** "5:42 AM" */
 export const formatClockTime = (epochSeconds: number) =>
-  dayjs.unix(epochSeconds).format("h:mm A");
+  transitTime(epochSeconds).format("h:mm A");
+
+/**
+ * When a later bus comes, with the day if it isn't today: "at 5:42 AM",
+ * "tomorrow at 5:42 AM", "Thursday at 10:22 AM", "Thu, Dec 3 at 10:22 AM".
+ */
+export const formatNextBusTime = (epochSeconds: number, nowSeconds: number) => {
+  const at = transitTime(epochSeconds);
+  const days = at
+    .startOf("day")
+    .diff(transitTime(nowSeconds).startOf("day"), "day");
+  const time = `at ${at.format("h:mm A")}`;
+  if (days <= 0) return time;
+  if (days === 1) return `tomorrow ${time}`;
+  if (days < 7) return `${at.format("dddd")} ${time}`;
+  return `${at.format("ddd, MMM D")} ${time}`;
+};

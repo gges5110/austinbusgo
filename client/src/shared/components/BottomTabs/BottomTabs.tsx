@@ -10,7 +10,13 @@ export const BOTTOM_TABS_HEIGHT = 56;
 
 // Explore opens the map at the current view; a bare "/" would redirect
 // phones back to Nearby
-const DEFAULT_VIEW_STATE = "/@30.2672,-97.7431,11.5z";
+const EXPLORE_PATH = "/@30.2672,-97.7431,11.5z";
+
+/** Explore at the rider's current map view (the default view if none). */
+export const useExplorePath = () => {
+  const { viewStatePathname } = useViewStatePathname();
+  return viewStatePathname || EXPLORE_PATH;
+};
 
 export type BottomTab = "nearby" | "explore" | "saved";
 
@@ -26,7 +32,7 @@ export const tabForPath = (pathname: string): BottomTab => {
 export const BottomTabs: React.FC = () => {
   const { pathname } = useLocation();
   const { viewStatePathname } = useViewStatePathname();
-  const viewState = viewStatePathname || DEFAULT_VIEW_STATE;
+  const explorePath = useExplorePath();
 
   return (
     <Paper
@@ -56,7 +62,7 @@ export const BottomTabs: React.FC = () => {
           component={RouterLink}
           icon={<ExploreIcon />}
           label={"Explore"}
-          to={viewState}
+          to={explorePath}
           value={"explore"}
         />
         <BottomNavigationAction
