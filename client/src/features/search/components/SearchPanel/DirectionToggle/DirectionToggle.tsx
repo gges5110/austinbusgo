@@ -24,9 +24,13 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
   const labels = (distinctTrips ?? []).map((trip) =>
     directionLabel(trip, route)
   );
-  // Two directions with the same name (e.g. both loops end at one plaza)
+  // Two directions read the same (e.g. both loops end at one plaza, with no
+  // compass word to tell them apart)
   const ambiguous =
-    new Set(labels.map((label) => label.primary)).size < labels.length;
+    new Set(labels.map((label) => `${label.primary}|${label.secondary ?? ""}`))
+      .size < labels.length;
+  // A missing or garbled direction in the URL shows the first one
+  const selected = Number.isFinite(directionId) ? directionId : 0;
 
   if (labels.length === 0) return null;
 
@@ -35,11 +39,13 @@ export const DirectionToggle: React.FC<DirectionToggleProps> = ({
       aria-label={"Direction"}
       exclusive={true}
       fullWidth={true}
-      onChange={(_, value: number | null) => {
+      onChange={(event, value: number | null) => {
+        // Hand keys back to the map (arrows, space) after choosing
+        (event.currentTarget as HTMLElement).blur();
         if (value !== null) setDirection(value);
       }}
       size={"small"}
-      value={directionId ?? 0}
+      value={selected}
     >
       {distinctTrips?.map((trip, index) => {
         const label = labels[index];

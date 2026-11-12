@@ -2,20 +2,21 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, IconButton, Paper, Slide } from "@mui/material";
 import * as React from "react";
-import { PropsWithChildren, useState } from "react";
-import { BOTTOM_TABS_HEIGHT } from "shared/components/BottomTabs/BottomTabs";
+import { PropsWithChildren, useEffect, useState } from "react";
+import {
+  BOTTOM_TABS_HEIGHT,
+  PHONE_SEARCH_BAR_HEIGHT,
+  PHONE_SHEET_COLLAPSED_HEIGHT,
+  PHONE_SHEET_HEIGHT_VH,
+  PhoneSheetSize,
+  setPhoneSheetSize,
+} from "shared/layout/phoneLayout";
 
-/**
- * Share of a phone screen (vh) a half-open sheet covers, leaving the map
- * (route, stops, buses) visible above it. Shared with Nearby's sheet.
- */
-export const PHONE_SHEET_HEIGHT_VH = 55;
-
-const COLLAPSED_HEIGHT = "48px";
+const COLLAPSED_HEIGHT = `${PHONE_SHEET_COLLAPSED_HEIGHT}px`;
 // Room for the search bar, which floats over the top of the screen
-const HEADER_HEIGHT = "64px";
+const HEADER_HEIGHT = `${PHONE_SEARCH_BAR_HEIGHT}px`;
 
-type SheetSize = "collapsed" | "half" | "full";
+type SheetSize = PhoneSheetSize;
 const SIZES: SheetSize[] = ["collapsed", "half", "full"];
 
 const HEIGHTS: Record<SheetSize, string> = {
@@ -38,6 +39,11 @@ export const MobileMenuPanel = ({
   innerRef,
 }: PropsWithChildren<MobileMenuPanelProps>) => {
   const [size, setSize] = useState<SheetSize>("half");
+  // Let the map frame targets above the panel at its current size
+  useEffect(() => {
+    setPhoneSheetSize(size);
+    return () => setPhoneSheetSize("half");
+  }, [size]);
   const step = (by: number) =>
     setSize((current) => SIZES[SIZES.indexOf(current) + by] ?? current);
 

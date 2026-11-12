@@ -10,6 +10,8 @@ describe("routeDisplayName", () => {
     ["800", "800 PLEASANT VALLEY", "PLEASANT VALLEY"],
     ["7", "Duval", "Duval"],
     ["7", "7", "7"],
+    ["3", "3rd Street", "3rd Street"],
+    ["1", "1st/Red River", "1st/Red River"],
   ])("%s %s → %s", (routeId, routeLongName, expected) => {
     expect(routeDisplayName({ routeId, routeLongName })).toBe(expected);
   });
@@ -65,6 +67,15 @@ describe("directionLabel", () => {
         r801
       )
     ).toEqual({ primary: "To Southpark Meadows", secondary: undefined });
+  });
+
+  test("same destination, different compass directions", () => {
+    expect(
+      directionLabel(
+        { tripShortName: "Downtown", tripHeadsign: "9 Downtown NB" },
+        r801
+      ).secondary
+    ).toBe("Northbound");
   });
 
   test("nothing to go on", () => {

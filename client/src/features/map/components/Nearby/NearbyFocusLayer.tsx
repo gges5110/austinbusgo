@@ -1,9 +1,8 @@
-import { NEARBY_SHEET_HEIGHT_VH } from "features/nearby/components/NearbySheet";
+import { uiMapPadding } from "features/map/utils/mapPadding";
 import { trackPath } from "features/nearby/utils/mapData";
 import * as React from "react";
 import { FC, useEffect, useMemo, useRef } from "react";
 import { Layer, Source, useMap } from "react-map-gl/mapbox";
-import { BOTTOM_TABS_HEIGHT } from "shared/components/BottomTabs/BottomTabs";
 import { NearbyFocus } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
@@ -12,22 +11,10 @@ const TRACK_SOURCE_ID = "nearby-track";
 // Margin around the framed points, in pixels
 const FRAME_MARGIN = 48;
 
-// Keep the framed points clear of the Nearby sheet and tab bar on phones
-// (see NearbySheet / BottomTabs) and the side panel on desktop
-const nearbyMapPadding = () => {
-  const isMobile = window.innerWidth < 600;
-  const sheetHeight = Math.round(
-    (window.innerHeight * NEARBY_SHEET_HEIGHT_VH) / 100
-  );
-  return {
-    top: FRAME_MARGIN,
-    left: isMobile ? FRAME_MARGIN : 420 + FRAME_MARGIN,
-    right: FRAME_MARGIN,
-    bottom: isMobile
-      ? sheetHeight + BOTTOM_TABS_HEIGHT + FRAME_MARGIN
-      : FRAME_MARGIN,
-  };
-};
+// Keep the framed points clear of the Nearby sheet (always half height, no
+// search bar) and tab bar on phones, and the side panel on desktop
+const nearbyMapPadding = () =>
+  uiMapPadding({ margin: FRAME_MARGIN, searchBar: false, sheet: "half" });
 
 interface NearbyFocusLayerProps {
   readonly focus: NearbyFocus;

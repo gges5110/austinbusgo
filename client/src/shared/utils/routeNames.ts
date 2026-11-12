@@ -12,7 +12,10 @@ interface NamedRoute {
 /** "640-Forty Acres" → "Forty Acres" (the number is shown next to it) */
 export const routeDisplayName = ({ routeId, routeLongName }: NamedRoute) => {
   const name = (routeLongName ?? "").trim();
-  return name.startsWith(routeId)
+  // Only a whole leading number: route 3's "3rd Street" keeps its "3"
+  const repeatsNumber =
+    name.startsWith(routeId) && /^($|[\s-])/.test(name.slice(routeId.length));
+  return repeatsNumber
     ? name.slice(routeId.length).replace(/^[\s-]+/, "") || name
     : name;
 };

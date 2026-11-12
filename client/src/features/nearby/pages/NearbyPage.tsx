@@ -81,7 +81,11 @@ export const NearbyPage: React.FC = () => {
     );
 
   const stop = upcoming.data?.stop;
-  useRememberPinnedStop(pinned ? (stop as Stop | undefined) : undefined);
+  // keepPreviousData can still hold the last stop right after switching;
+  // remember only the stop the rider opened
+  useRememberPinnedStop(
+    pinned && stop?.stopId === pinnedStopId ? stop : undefined
+  );
   useTitle(
     stop ? `${stop.stopName} - Austin Bus Go` : "Nearby - Austin Bus Go"
   );

@@ -5,8 +5,9 @@ import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import * as React from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { BOTTOM_TABS_HEIGHT } from "shared/layout/phoneLayout";
 
-export const BOTTOM_TABS_HEIGHT = 56;
+export { BOTTOM_TABS_HEIGHT };
 
 // Explore opens the map at the current view; a bare "/" would redirect
 // phones back to Nearby

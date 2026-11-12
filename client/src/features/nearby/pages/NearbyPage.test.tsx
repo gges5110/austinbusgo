@@ -172,6 +172,13 @@ describe("NearbyPage", () => {
     ]);
   });
 
+  test("a stop still showing from before isn't remembered as opened", () => {
+    // Switching to stop 999: the query still holds the previous stop
+    renderAt("/nearby/stop/999");
+
+    expect(localStorage.getItem("recentSearches")).toBeNull();
+  });
+
   test("a stop opened by ID joins the recent stops", () => {
     renderAt("/nearby/stop/5869");
 
