@@ -20,7 +20,7 @@ describe("MobileMenuPanel", () => {
     expect(screen.getByTestId("test-content")).toBeInTheDocument();
   });
 
-  it("starts in expanded state", () => {
+  const renderPanel = () =>
     render(
       <ThemeProvider theme={theme}>
         <MobileMenuPanel>
@@ -28,82 +28,47 @@ describe("MobileMenuPanel", () => {
         </MobileMenuPanel>
       </ThemeProvider>
     );
+  const panel = () =>
+    screen.getByTestId("test-content").closest(".MuiPaper-root") as HTMLElement;
+  const grow = () => screen.queryByRole("button", { name: /expand menu/i });
+  const shrink = () => screen.queryByRole("button", { name: /collapse menu/i });
 
-    expect(
-      screen.getByRole("button", { name: /collapse menu/i })
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("test-content")).toBeInTheDocument();
+  it("opens half height so the map stays visible, with both controls", () => {
+    renderPanel();
+
+    expect(panel()).toHaveStyle({ height: "55vh" });
+    expect(grow()).toBeInTheDocument();
+    expect(shrink()).toBeInTheDocument();
+    expect(screen.getByTestId("test-content")).toBeVisible();
   });
 
-  it("toggles between expanded and collapsed states", async () => {
+  it("grows to full screen, then back to half", async () => {
     const user = userEvent.setup();
+    renderPanel();
 
-    render(
-      <ThemeProvider theme={theme}>
-        <MobileMenuPanel>
-          <div data-testid={"test-content"}>Test Content</div>
-        </MobileMenuPanel>
-      </ThemeProvider>
-    );
+    await user.click(grow()!);
 
-    const toggleButton = screen.getByRole("button", {
-      name: /collapse menu/i,
-    });
+    expect(panel()).toHaveStyle({ height: "calc(100vh - 56px)" });
+    expect(grow()).toBeNull();
 
-    // Click to collapse
-    await user.click(toggleButton);
+    await user.click(shrink()!);
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /expand menu/i })
-      ).toBeInTheDocument();
-    });
-
-    // Click to expand again
-    const expandButton = screen.getByRole("button", { name: /expand menu/i });
-    await user.click(expandButton);
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /collapse menu/i })
-      ).toBeInTheDocument();
-    });
+    expect(panel()).toHaveStyle({ height: "55vh" });
   });
 
-  it("shows correct icon when expanded", () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MobileMenuPanel>
-          <div>Test Content</div>
-        </MobileMenuPanel>
-      </ThemeProvider>
-    );
-
-    const button = screen.getByRole("button", { name: /collapse menu/i });
-    expect(button).toBeInTheDocument();
-  });
-
-  it("shows correct icon when collapsed", async () => {
+  it("shrinks to a bar that hides the content, then back to half", async () => {
     const user = userEvent.setup();
+    renderPanel();
 
-    render(
-      <ThemeProvider theme={theme}>
-        <MobileMenuPanel>
-          <div>Test Content</div>
-        </MobileMenuPanel>
-      </ThemeProvider>
-    );
+    await user.click(shrink()!);
 
-    const collapseButton = screen.getByRole("button", {
-      name: /collapse menu/i,
-    });
-    await user.click(collapseButton);
+    await waitFor(() => expect(panel()).toHaveStyle({ height: "48px" }));
+    expect(shrink()).toBeNull();
+    expect(screen.getByTestId("test-content")).not.toBeVisible();
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /expand menu/i })
-      ).toBeInTheDocument();
-    });
+    await user.click(grow()!);
+
+    expect(panel()).toHaveStyle({ height: "55vh" });
   });
 
   it("passes innerRef correctly", () => {
@@ -148,20 +113,6 @@ describe("MobileMenuPanel", () => {
     expect(screen.getByText("Child 1")).toBeInTheDocument();
     expect(screen.getByText("Child 2")).toBeInTheDocument();
     expect(screen.getByText("Child 3")).toBeInTheDocument();
-  });
-
-  it("always shows toggle button regardless of state", () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MobileMenuPanel>
-          <div>Test Content</div>
-        </MobileMenuPanel>
-      </ThemeProvider>
-    );
-
-    expect(
-      screen.getByRole("button", { name: /collapse menu/i })
-    ).toBeInTheDocument();
   });
 
   it("has fixed positioning", () => {

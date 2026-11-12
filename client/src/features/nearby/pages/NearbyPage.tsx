@@ -1,3 +1,5 @@
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import HistoryIcon from "@mui/icons-material/History";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import NearMeIcon from "@mui/icons-material/NearMe";
@@ -6,6 +8,7 @@ import {
   Button,
   List,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Skeleton,
   Typography,
@@ -26,12 +29,14 @@ import {
 import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
 
 import { distanceMeters } from "features/nearby/utils/geo";
+import { isStop } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { StopUpcoming } from "shared/api/generated/model";
 import { useExplorePath } from "shared/components/BottomTabs/BottomTabs";
+import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useTitle } from "shared/hooks/UseTitle";
 import {
   currentStopAtom,
@@ -76,6 +81,7 @@ export const NearbyPage: React.FC = () => {
     );
 
   const stop = upcoming.data?.stop;
+  useRememberPinnedStop(pinned ? (stop as Stop | undefined) : undefined);
   useTitle(
     stop ? `${stop.stopName} - Austin Bus Go` : "Nearby - Austin Bus Go"
   );
@@ -171,6 +177,20 @@ export const NearbyPage: React.FC = () => {
   );
 };
 
+/**
+ * A stop opened by ID (the sign, a short link, a saved stop) joins the
+ * rider's recent stops, so next time it's one tap from Nearby.
+ */
+const useRememberPinnedStop = (stop: Stop | undefined) => {
+  const { addToRecentSearches } = useRecentSearches();
+  const stopId = stop?.stopId;
+  useEffect(() => {
+    if (stop && stopId) addToRecentSearches(stop);
+    // Once per stop, not on every 15s refresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopId]);
+};
+
 const isNotFound = (error: unknown) => String(error).includes(" 404 ");
 
 /**
@@ -246,10 +266,6 @@ const LocationPrompt: React.FC<{
   status: GeolocationStatus;
 }> = ({ onRequest, status }) => {
   const explorePath = useExplorePath();
-  const favorites = useAtomValue(favoritesAtom);
-  const savedStops = favorites.filter(
-    (favorite): favorite is Stop => "stopId" in favorite
-  );
   const firstVisit = status === "idle";
 
   return (
@@ -305,38 +321,70 @@ const LocationPrompt: React.FC<{
           </Button>
         </Box>
       )}
+      <YourStops />
       <StopIdEntry prominent={true} />
       <Box sx={{ textAlign: "center" }}>
         <Button component={RouterLink} size={"small"} to={explorePath}>
           Or search for a route or stop
         </Button>
       </Box>
-      {savedStops.length > 0 && (
-        <List
-          subheader={
-            <Typography
-              color={"text.secondary"}
-              sx={{ px: 2, pt: 1 }}
-              variant={"caption"}
-            >
-              Saved stops
-            </Typography>
-          }
-        >
-          {savedStops.map((savedStop) => (
-            <ListItemButton
-              component={RouterLink}
-              key={savedStop.stopId}
-              to={`/nearby/stop/${savedStop.stopId}`}
-            >
-              <ListItemText
-                primary={savedStop.stopName}
-                secondary={`Stop ${savedStop.stopCode ?? savedStop.stopId}`}
-              />
-            </ListItemButton>
-          ))}
-        </List>
-      )}
     </>
+  );
+};
+
+// Recent stops shown on top of saved ones, so the list stays short
+const MAX_RECENT_STOPS = 3;
+
+/**
+ * One tap back to the rider's stops: saved stops, then the last few they
+ * opened (search, map, or stop ID), most recent first.
+ */
+const YourStops: React.FC = () => {
+  const favorites = useAtomValue(favoritesAtom);
+  const { recentSearches } = useRecentSearches();
+  const saved = favorites.filter(
+    (favorite): favorite is Stop => "stopId" in favorite
+  );
+  const savedIds = new Set(saved.map((stop) => stop.stopId));
+  const recent = recentSearches
+    .map((search) => search.value)
+    .filter(isStop)
+    .filter((stop) => !savedIds.has(stop.stopId))
+    .slice(0, MAX_RECENT_STOPS);
+
+  if (saved.length + recent.length === 0) return null;
+
+  return (
+    <List
+      dense={true}
+      subheader={
+        <Typography
+          color={"text.secondary"}
+          sx={{ px: 2, pt: 1 }}
+          variant={"caption"}
+        >
+          Your stops
+        </Typography>
+      }
+    >
+      {[
+        ...saved.map((stop) => ({ stop, Icon: BookmarkIcon })),
+        ...recent.map((stop) => ({ stop, Icon: HistoryIcon })),
+      ].map(({ stop, Icon }) => (
+        <ListItemButton
+          component={RouterLink}
+          key={stop.stopId}
+          to={`/nearby/stop/${stop.stopId}`}
+        >
+          <ListItemIcon sx={{ minWidth: 36 }}>
+            <Icon fontSize={"small"} />
+          </ListItemIcon>
+          <ListItemText
+            primary={stop.stopName}
+            secondary={`Stop ${stop.stopCode ?? stop.stopId}`}
+          />
+        </ListItemButton>
+      ))}
+    </List>
   );
 };

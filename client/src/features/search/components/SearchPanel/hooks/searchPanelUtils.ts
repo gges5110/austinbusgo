@@ -1,5 +1,6 @@
 import { Stop as ApiStop } from "shared/api/generated/model";
 import { Route, Stop } from "shared/types/interface.d";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 export interface SearchTerm {
   value: string;
@@ -32,7 +33,7 @@ export const isViewAllRecent = (
 
 // Label helpers
 export const getRouteOptionLabel = (route: Route): string => {
-  return `${route.routeId} ${route.routeLongName}`;
+  return `${route.routeId} ${routeDisplayName(route)}`;
 };
 
 export const getStopOptionLabel = (stop: Stop): string => {

@@ -3,9 +3,10 @@ import * as React from "react";
 import { PropsWithChildren } from "react";
 import { BOTTOM_TABS_HEIGHT } from "shared/components/BottomTabs/BottomTabs";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
+import { PHONE_SHEET_HEIGHT_VH } from "shared/components/MenuPanel/MobileMenuPanel";
 
 /** Share of a phone screen (vh) the sheet covers; the map shows above it */
-export const NEARBY_SHEET_HEIGHT_VH = 55;
+export const NEARBY_SHEET_HEIGHT_VH = PHONE_SHEET_HEIGHT_VH;
 
 /**
  * Phones: a fixed sheet over the lower part of the screen so the map (and

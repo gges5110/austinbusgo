@@ -28,6 +28,7 @@ import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 export const RecentSearchesMenu = () => {
   const { recentSearches, removeFromRecentSearches } = useRecentSearches();
@@ -186,7 +187,7 @@ export const RecentSearchesMenu = () => {
                           routeColor={value.routeColor}
                           routeId={value.routeId}
                         />
-                        {value.routeLongName}
+                        {routeDisplayName(value)}
                       </Box>
                     </ListItemButton>
                   </ListItem>

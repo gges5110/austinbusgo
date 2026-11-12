@@ -13,11 +13,13 @@ describe("uiMapPadding", () => {
     expect(uiMapPadding().bottom).toBe(10);
   });
 
-  test("mobile reserves room for the bottom sheet instead", () => {
+  test("mobile frames the map between the search bar and the half sheet", () => {
     vi.stubGlobal("innerWidth", 390);
     vi.stubGlobal("innerHeight", 800);
     const padding = uiMapPadding();
     expect(padding.left).toBe(10);
-    expect(padding.bottom).toBe(240);
+    expect(padding.top).toBe(74);
+    // 55% sheet (440) + tab bar (56) + margin (10)
+    expect(padding.bottom).toBe(506);
   });
 });

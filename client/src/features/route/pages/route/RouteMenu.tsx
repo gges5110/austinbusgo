@@ -11,6 +11,7 @@ import { ShareButton } from "shared/components/ShareButton/ShareButton";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { Trip } from "shared/types/interface.d";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 import { routeLoader } from "./RouteLoader";
 
@@ -21,7 +22,7 @@ export const RouteMenu = () => {
 
   const { viewStatePathname } = useViewStatePathname();
 
-  useTitle(`${route.routeId} ${route.routeLongName} - Austin Bus Go`);
+  useTitle(`${route.routeId} ${routeDisplayName(route)} - Austin Bus Go`);
 
   const setDirection = (directionId: Trip["directionId"]) => {
     if (directionId !== undefined) {
@@ -50,13 +51,14 @@ export const RouteMenu = () => {
           <RouteDisplayBanner
             routeColor={route.routeColor}
             routeId={route.routeId}
-            routeName={route.routeLongName}
+            routeName={routeDisplayName(route)}
           />
         </Box>
-        <Box sx={{ pl: 4 }}>
+        <Box sx={{ px: 2 }}>
           <DirectionToggle
             directionId={Number(directionId)}
             distinctTrips={distinctTrips}
+            route={route}
             setDirection={setDirection}
           />
         </Box>
@@ -65,7 +67,7 @@ export const RouteMenu = () => {
         sx={{
           display: "flex",
           px: "22px",
-          py: "10px",
+          py: 0.5,
         }}
       >
         <AddToFavorites value={route} />

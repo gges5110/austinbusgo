@@ -24,6 +24,7 @@ import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 export const FavoritesMenu = () => {
   const { favorites } = useFavorites();
@@ -152,7 +153,7 @@ export const FavoritesMenu = () => {
                       routeColor={route.routeColor}
                       routeId={route.routeId}
                     />
-                    {route.routeLongName}
+                    {routeDisplayName(route)}
                   </Box>
                 </ListItemButton>
               </ListItem>
