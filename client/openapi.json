@@ -197,7 +197,7 @@
       "get": {
         "tags": ["stops"],
         "summary": "Upcoming At Stop",
-        "description": "Buses due at the stop in the next hour, with live predictions.",
+        "description": "Buses due at the stop in the next hour, with live predictions.\n\n`route_id` (and `direction_id`) limit the buses, and the next scheduled\nbus when none is due, to one route: a route page's \"next bus here\".",
         "operationId": "upcomingAtStop",
         "parameters": [
           {
@@ -207,6 +207,38 @@
             "schema": {
               "type": "string",
               "title": "Stop Id"
+            }
+          },
+          {
+            "name": "route_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Route Id"
+            }
+          },
+          {
+            "name": "direction_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction Id"
             }
           }
         ],

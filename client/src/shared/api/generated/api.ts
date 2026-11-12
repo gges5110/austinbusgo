@@ -31,6 +31,7 @@ import type {
   TripIds,
   TripIdsForRouteParams,
   TripUpdate,
+  UpcomingAtStopParams,
   VehiclePosition,
   VehiclePositionsParams,
 } from "./model";
@@ -385,26 +386,51 @@ export function useStop<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getUpcomingAtStopUrl = (stopId: string) => {
-  return `/api/stops/${stopId}/upcoming`;
+export const getUpcomingAtStopUrl = (
+  stopId: string,
+  params?: UpcomingAtStopParams
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/stops/${stopId}/upcoming?${stringifiedParams}`
+    : `/api/stops/${stopId}/upcoming`;
 };
 
 /**
  * Buses due at the stop in the next hour, with live predictions.
+ *
+ * `route_id` (and `direction_id`) limit the buses, and the next scheduled
+ * bus when none is due, to one route: a route page's "next bus here".
  * @summary Upcoming At Stop
  */
 export const upcomingAtStop = async (
   stopId: string,
+  params?: UpcomingAtStopParams,
   options?: RequestInit
 ): Promise<StopUpcoming> => {
-  return apiFetch<StopUpcoming>(getUpcomingAtStopUrl(stopId), {
+  return apiFetch<StopUpcoming>(getUpcomingAtStopUrl(stopId, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getUpcomingAtStopQueryKey = (stopId: string) => {
-  return [`/api/stops/${stopId}/upcoming`] as const;
+export const getUpcomingAtStopQueryKey = (
+  stopId: string,
+  params?: UpcomingAtStopParams
+) => {
+  return [
+    `/api/stops/${stopId}/upcoming`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getUpcomingAtStopQueryOptions = <
@@ -412,6 +438,7 @@ export const getUpcomingAtStopQueryOptions = <
   TError = HTTPValidationError,
 >(
   stopId: string,
+  params?: UpcomingAtStopParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof upcomingAtStop>>,
@@ -423,11 +450,12 @@ export const getUpcomingAtStopQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getUpcomingAtStopQueryKey(stopId);
+  const queryKey =
+    queryOptions?.queryKey ?? getUpcomingAtStopQueryKey(stopId, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof upcomingAtStop>>> = ({
     signal,
-  }) => upcomingAtStop(stopId, { signal, ...requestOptions });
+  }) => upcomingAtStop(stopId, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -455,6 +483,7 @@ export function useUpcomingAtStop<
   TError = HTTPValidationError,
 >(
   stopId: string,
+  params?: UpcomingAtStopParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof upcomingAtStop>>,
@@ -464,7 +493,7 @@ export function useUpcomingAtStop<
     request?: SecondParameter<typeof apiFetch>;
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getUpcomingAtStopQueryOptions(stopId, options);
+  const queryOptions = getUpcomingAtStopQueryOptions(stopId, params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

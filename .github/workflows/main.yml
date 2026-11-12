@@ -40,6 +40,8 @@ jobs:
           # Cloudflare Web Analytics site token (a public identifier, so a
           # repository variable rather than a secret); unset = no analytics
           VITE_CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
+          # rider-events worker (workers/events); unset = no rider events
+          VITE_EVENTS_URL: ${{ vars.EVENTS_URL }}
         run: npm run build
 
       # Static per-stop/per-route pages (HTTP 200, own title/canonical) and

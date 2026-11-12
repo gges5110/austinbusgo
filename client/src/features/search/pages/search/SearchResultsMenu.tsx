@@ -20,6 +20,7 @@ import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
+import { track } from "shared/track";
 import { Stop } from "shared/types/interface.d";
 
 import { routeDisplayName } from "shared/utils/routeNames";
@@ -30,6 +31,10 @@ export const isResponse = (
 ): data is Response => {
   return data !== undefined && "ok" in data;
 };
+
+/** Coarse result counts, so "no results" stands out */
+const resultsBucket = (count: number) =>
+  count === 0 ? "0" : count === 1 ? "1" : count <= 5 ? "2-5" : "6+";
 
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
@@ -51,6 +56,13 @@ export const SearchResultsMenu = () => {
       addToRecentSearches({ value: searchTerm });
     }
   }, [searchTerm, noResults]);
+  useEffect(() => {
+    if (searchTerm) {
+      track("search", [searchTerm.trim().toLowerCase(), resultsBucket(length)]);
+    }
+    // Once per search term
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   const setHoveringStop = useSetAtom(hoveringStopAtom);
 
@@ -103,6 +115,11 @@ export const SearchResultsMenu = () => {
                     component={RouterLink}
                     onClick={() => {
                       addToRecentSearches(stop);
+                      track("search_pick", [
+                        "stop",
+                        searchData.search.stops.indexOf(stop) + 1,
+                        stop.stopId,
+                      ]);
                     }}
                     onMouseEnter={() => {
                       setHoveringStop(stop as Stop);
@@ -176,6 +193,13 @@ export const SearchResultsMenu = () => {
                     component={RouterLink}
                     onClick={() => {
                       addToRecentSearches(route);
+                      track("search_pick", [
+                        "route",
+                        searchData.search.stops.length +
+                          searchData.search.routes.indexOf(route) +
+                          1,
+                        route.routeId,
+                      ]);
                     }}
                     to={`/route/${route.routeId}/direction/0${viewStatePathname}`}
                   >

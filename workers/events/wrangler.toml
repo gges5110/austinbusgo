@@ -1,0 +1,8 @@
+name = "rider-events"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# Workers Analytics Engine (free tier: 100k data points/day)
+[[analytics_engine_datasets]]
+binding = "EVENTS"
+dataset = "rider_events"

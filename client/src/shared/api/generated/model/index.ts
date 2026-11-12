@@ -32,6 +32,7 @@ export * from "./tripIdsForRouteParams";
 export * from "./tripUpdate";
 export * from "./upcomingArrival";
 export * from "./upcomingArrivalStatus";
+export * from "./upcomingAtStopParams";
 export * from "./upcomingVehicle";
 export * from "./validationError";
 export * from "./vehicleDescriptor";

@@ -4,6 +4,7 @@ import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { track } from "shared/track";
 
 import { SearchOption } from "./searchPanelUtils";
 
@@ -23,6 +24,17 @@ export const useSearchNavigation = () => {
 
   const handleSelect = useCallback(
     (option: SearchOption) => {
+      if (option.kind !== "viewAll") {
+        track("search_pick", [
+          option.kind,
+          "suggestion",
+          option.kind === "route"
+            ? option.route.routeId
+            : option.kind === "stop"
+              ? option.stop.stopId
+              : "",
+        ]);
+      }
       switch (option.kind) {
         case "route":
           if (currentRoute?.routeId !== option.route.routeId) {

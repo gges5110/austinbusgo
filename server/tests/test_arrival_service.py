@@ -263,7 +263,30 @@ async def test_next_scheduled_looks_ahead_for_a_weekly_route():
         "2810",
         today + timedelta(days=1),
         today + timedelta(days=NEXT_SERVICE_LOOKAHEAD_DAYS),
+        route_id=None,
+        direction_id=None,
     )
+
+
+@pytest.mark.asyncio
+async def test_route_filter_reaches_every_schedule_query():
+    """A route page's request only looks at that route and direction."""
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
+    gtfs_service.get_stop_times_at_stop_in_window.return_value = []
+    today = date(2026, 11, 10)
+
+    await svc.get_upcoming(
+        "2810", now=to_epoch(today, "12:00:00"), route_id="640", direction_id=1
+    )
+
+    for call in gtfs_service.get_stop_times_at_stop_in_window.await_args_list:
+        assert call.kwargs["route_id"] == "640"
+        assert call.kwargs["direction_id"] == 1
+    later = gtfs_service.get_first_stop_time_on_dates.await_args
+    assert later.kwargs == {"route_id": "640", "direction_id": 1}
 
 
 @pytest.mark.asyncio

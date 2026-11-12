@@ -98,8 +98,15 @@ class ArrivalService:
             for r in earliest
         ]
 
-    async def get_upcoming(self, stop_id: str, now: Optional[int] = None) -> dict:
-        """Buses due at a stop in the next hour, merged with live data.
+    async def get_upcoming(
+        self,
+        stop_id: str,
+        now: Optional[int] = None,
+        route_id: Optional[str] = None,
+        direction_id: Optional[int] = None,
+    ) -> dict:
+        """Buses due at a stop in the next hour, merged with live data;
+        only one route (and direction) when given.
 
         Raises NoResultFound for an unknown stop.
         """
@@ -118,6 +125,8 @@ class ArrivalService:
                 service_date,
                 format_gtfs_time(offset - SCHEDULE_LOOKBACK_SECONDS),
                 format_gtfs_time(offset + WINDOW_AHEAD_SECONDS),
+                route_id=route_id,
+                direction_id=direction_id,
             )
             for row in rows:
                 arrival = build_arrival(row, service_date, stop_id, snapshot, now)
@@ -152,11 +161,22 @@ class ArrivalService:
             "realtime_available": snapshot.available,
             "arrivals": arrivals,
             "next_scheduled": (
-                None if arrivals else await self._next_scheduled(stop_id, today, now)
+                None
+                if arrivals
+                else await self._next_scheduled(
+                    stop_id, today, now, route_id, direction_id
+                )
             ),
         }
 
-    async def _next_scheduled(self, stop_id: str, today, now: int) -> Optional[dict]:
+    async def _next_scheduled(
+        self,
+        stop_id: str,
+        today,
+        now: int,
+        route_id: Optional[str] = None,
+        direction_id: Optional[int] = None,
+    ) -> Optional[dict]:
         """First scheduled bus after the window: later today, or on one of the
         next NEXT_SERVICE_LOOKAHEAD_DAYS days (some routes run one day a week,
         and holidays can skip a week). At most two queries."""
@@ -168,6 +188,8 @@ class ArrivalService:
             ),
             "99:59:59",
             limit=1,
+            route_id=route_id,
+            direction_id=direction_id,
         )
         service_date = today
         if not rows:
@@ -175,6 +197,8 @@ class ArrivalService:
                 stop_id,
                 today + timedelta(days=1),
                 today + timedelta(days=NEXT_SERVICE_LOOKAHEAD_DAYS),
+                route_id=route_id,
+                direction_id=direction_id,
             )
             if later is None:
                 return None

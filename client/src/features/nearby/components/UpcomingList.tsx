@@ -5,7 +5,9 @@ import {
   formatNextBusTime,
 } from "features/nearby/utils/countdown";
 import * as React from "react";
-import { StopUpcoming } from "shared/api/generated/model";
+import { useEffect } from "react";
+import { StopUpcoming, UpcomingArrival } from "shared/api/generated/model";
+import { sinceLanding, track } from "shared/track";
 
 interface UpcomingListProps {
   data?: StopUpcoming;
@@ -14,6 +16,12 @@ interface UpcomingListProps {
   onToggle: (tripId: string) => void;
   /** Only show these routes; all when undefined */
   routeIds?: string[];
+  /** Only show this direction of those routes */
+  directionId?: number;
+  /** Show at most this many buses */
+  limit?: number;
+  /** Shown when no bus matches, instead of the generic message */
+  emptyTitle?: string;
 }
 
 /**
@@ -27,7 +35,16 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
   nowSeconds,
   onToggle,
   routeIds,
+  directionId,
+  limit,
+  emptyTitle,
 }) => {
+  const matches = (arrival: UpcomingArrival) =>
+    (!routeIds || routeIds.includes(arrival.routeId)) &&
+    (directionId === undefined || arrival.directionId === directionId);
+  const arrivals = (data?.arrivals ?? []).filter(matches).slice(0, limit);
+  useTrackArrivalsShown(data, arrivals, routeIds);
+
   if (!data) {
     return (
       <Box sx={{ px: 2 }}>
@@ -38,11 +55,12 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
     );
   }
 
-  const arrivals = routeIds
-    ? data.arrivals.filter((arrival) => routeIds.includes(arrival.routeId))
-    : data.arrivals;
-  const next = data.nextScheduled;
   const hiddenByFilter = arrivals.length === 0 && data.arrivals.length > 0;
+  // The server looks ahead only when nothing at all comes in the next hour
+  const next =
+    data.nextScheduled && matches(data.nextScheduled)
+      ? data.nextScheduled
+      : undefined;
 
   return (
     <>
@@ -54,11 +72,12 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
       {arrivals.length === 0 ? (
         <Box sx={{ px: 2, py: 3, textAlign: "center" }}>
           <Typography variant={"subtitle1"}>
-            {hiddenByFilter
-              ? "No buses on the selected routes in the next hour"
-              : "No buses in the next hour"}
+            {emptyTitle ??
+              (hiddenByFilter
+                ? "No buses on the selected routes in the next hour"
+                : "No buses in the next hour")}
           </Typography>
-          {next && !hiddenByFilter && (
+          {next && (
             <Typography color={"text.secondary"} variant={"body2"}>
               {`Next bus: Route ${next.routeId} ${formatHeadsign(
                 next.headsign,
@@ -75,7 +94,16 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
               expanded={arrival.tripId === expandedTripId}
               key={`${arrival.tripId}-${arrival.scheduledAt}`}
               nowSeconds={nowSeconds}
-              onToggle={() => onToggle(arrival.tripId)}
+              onToggle={() => {
+                if (arrival.tripId !== expandedTripId) {
+                  track("bus_tap", [
+                    arrival.status,
+                    data.stop.stopId,
+                    arrival.routeId,
+                  ]);
+                }
+                onToggle(arrival.tripId);
+              }}
               stopId={data.stop.stopId}
             />
           ))}
@@ -83,4 +111,33 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
       )}
     </>
   );
+};
+
+/**
+ * Records once per stop (and route filter) whether the rider got an answer:
+ * any buses, any live, and how long after landing.
+ */
+const useTrackArrivalsShown = (
+  data: StopUpcoming | undefined,
+  arrivals: StopUpcoming["arrivals"],
+  routeIds: string[] | undefined
+) => {
+  const stopId = data?.stop.stopId;
+  const routes = routeIds?.join(",") ?? "";
+  const loaded = data !== undefined;
+  useEffect(() => {
+    if (!loaded || !stopId) return;
+    track(
+      "arrivals",
+      [
+        arrivals.length > 0,
+        arrivals.some((arrival) => arrival.status !== "scheduled"),
+        stopId,
+        routes,
+      ],
+      sinceLanding()
+    );
+    // Once per stop and filter, not on every 15s refresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, stopId, routes]);
 };

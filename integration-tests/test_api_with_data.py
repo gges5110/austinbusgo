@@ -275,3 +275,32 @@ def test_upcoming_unknown_stop_is_404(data_app_client, frozen_without_realtime):
     response = data_app_client.get("/api/stops/nope/upcoming")
 
     assert response.status_code == 404
+
+
+def test_upcoming_for_one_route_filters_buses_and_next_scheduled(
+    data_app_client, frozen_without_realtime
+):
+    """A route page asks for its own buses at the rider's stop."""
+    frozen_without_realtime(date(2026, 2, 24), "23:40:00")
+    url = "/api/stops/stop-1/upcoming"
+
+    same = _get(data_app_client, f"{url}?route_id=10&direction_id=0")
+    assert [a["tripId"] for a in same["arrivals"]] == ["trip-1", "trip-2"]
+
+    other_direction = _get(data_app_client, f"{url}?route_id=10&direction_id=1")
+    assert other_direction["arrivals"] == []
+    assert other_direction["nextScheduled"] is None
+
+
+def test_upcoming_for_one_route_looks_ahead_for_that_route(
+    data_app_client, frozen_without_realtime
+):
+    # Midday the day before: route 10's next bus is tomorrow night's trip-1
+    frozen_without_realtime(date(2026, 2, 23), "12:00:00")
+    url = "/api/stops/stop-1/upcoming"
+
+    body = _get(data_app_client, f"{url}?route_id=10")
+    assert body["arrivals"] == []
+    assert body["nextScheduled"]["tripId"] == "trip-1"
+
+    assert _get(data_app_client, f"{url}?route_id=99")["nextScheduled"] is None
