@@ -3,8 +3,10 @@ import React from "react";
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import { initAnalytics } from "shared/analytics";
+import { initTracking } from "shared/track";
 
 initAnalytics();
+initTracking();
 
 const container = document.getElementById("root");
 

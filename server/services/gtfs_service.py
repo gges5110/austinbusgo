@@ -449,8 +449,11 @@ class GTFSService:
         start_time: str,
         end_time: str,
         limit: Optional[int] = None,
+        route_id: Optional[str] = None,
+        direction_id: Optional[int] = None,
     ) -> List[SimpleNamespace]:
-        """Scheduled stops at `stop_id` on one service day, in a time window.
+        """Scheduled stops at `stop_id` on one service day, in a time window,
+        optionally of one route (and direction).
 
         Times are GTFS "HH:MM:SS" strings relative to the service day; they
         can exceed 24:00:00 for trips running past midnight. Zero-padded
@@ -469,6 +472,8 @@ class GTFSService:
               AND calendar_dates.date = :date
               AND st.arrival_time >= :start_time
               AND st.arrival_time <= :end_time
+              {"AND trips.route_id = :route_id" if route_id is not None else ""}
+              {"AND trips.direction_id = :direction_id" if direction_id is not None else ""}
             ORDER BY st.arrival_time
             {"LIMIT :limit" if limit is not None else ""}
             """)
@@ -480,16 +485,23 @@ class GTFSService:
         }
         if limit is not None:
             params["limit"] = limit
+        params.update(_route_filter(route_id, direction_id))
         result = await self.session.execute(sql, params)
         return [SimpleNamespace(**row._mapping) for row in result]
 
     async def get_first_stop_time_on_dates(
-        self, stop_id: str, first_date: date, last_date: date
+        self,
+        stop_id: str,
+        first_date: date,
+        last_date: date,
+        route_id: Optional[str] = None,
+        direction_id: Optional[int] = None,
     ) -> Optional[SimpleNamespace]:
-        """The earliest scheduled stop at `stop_id` on the first service day
-        between `first_date` and `last_date` (inclusive) that has one, with
-        that day as `service_date`. One query instead of one per day."""
-        sql = text("""
+        """The earliest scheduled stop at `stop_id` (optionally of one route
+        and direction) on the first service day between `first_date` and
+        `last_date` (inclusive) that has one, with that day as
+        `service_date`. One query instead of one per day."""
+        sql = text(f"""
             SELECT calendar_dates.date AS service_date,
                    st.trip_id, st.arrival_time, st.departure_time,
                    st.stop_sequence,
@@ -501,6 +513,8 @@ class GTFSService:
             JOIN calendar_dates ON calendar_dates.service_id = trips.service_id
             WHERE st.stop_id = :stop_id
               AND calendar_dates.date BETWEEN :first_date AND :last_date
+              {"AND trips.route_id = :route_id" if route_id is not None else ""}
+              {"AND trips.direction_id = :direction_id" if direction_id is not None else ""}
             ORDER BY calendar_dates.date, st.arrival_time
             LIMIT 1
             """)
@@ -510,6 +524,7 @@ class GTFSService:
                 "stop_id": stop_id,
                 "first_date": first_date.isoformat(),
                 "last_date": last_date.isoformat(),
+                **_route_filter(route_id, direction_id),
             },
         )
         row = result.first()
@@ -579,3 +594,13 @@ def _distance_meters(lat1: float, lon1: float, lat2: float, lon2: float) -> floa
         + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
     )
     return 2 * 6371008.8 * math.asin(math.sqrt(a))
+
+
+def _route_filter(route_id: Optional[str], direction_id: Optional[int]) -> dict:
+    """Bind parameters for the optional route/direction conditions."""
+    params: dict = {}
+    if route_id is not None:
+        params["route_id"] = route_id
+    if direction_id is not None:
+        params["direction_id"] = direction_id
+    return params

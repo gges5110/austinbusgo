@@ -1,7 +1,8 @@
 import { LatLon } from "features/nearby/utils/geo";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usesLocationAtom } from "shared/state/atoms";
+import { track } from "shared/track";
 
 export type GeolocationStatus =
   /** Not asked yet: waiting for the rider to tap "Use my location" */
@@ -123,7 +124,26 @@ export const useGeolocation = (enabled = true): GeolocationState => {
     if (located && !optedIn) setOptedIn(true);
   }, [located, optedIn, setOptedIn]);
 
+  // Record how a tap on "Use my location" turned out (once per tap)
+  const awaitingTap = useRef(false);
+  useEffect(() => {
+    if (awaitingTap.current && state.status !== "locating") {
+      awaitingTap.current = false;
+      track("location", [state.status, "tap"]);
+    }
+    // Every update, not just status changes: a re-tap while blocked ends
+    // "denied" → "locating" → "denied"
+  }, [state]);
+
+  const hasFix = useRef(false);
+  hasFix.current = state.status === "granted";
   const request = useCallback(() => {
+    if (hasFix.current) {
+      // Already have a fix: the watch keeps it, so record the outcome now
+      track("location", ["granted", "tap"]);
+    } else {
+      awaitingTap.current = true;
+    }
     setTapped(true);
     setAttempt((n) => n + 1);
   }, []);

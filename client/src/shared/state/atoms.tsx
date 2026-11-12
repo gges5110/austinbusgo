@@ -23,6 +23,14 @@ export const usesLocationAtom = atomWithStorage<boolean>(
   "nearbyUsesLocation",
   false
 );
+/**
+ * The stop the rider picked on each route page ("640:0" → stop ID), so the
+ * next visit opens straight to their next bus
+ */
+export const routeStopsAtom = atomWithStorage<Record<string, string>>(
+  "routeStops",
+  {}
+);
 export type ColorModeType = "light" | "dark" | "system";
 export const colorModeAtom = atomWithStorage<ColorModeType>(
   "colorMode",

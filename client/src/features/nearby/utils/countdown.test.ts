@@ -78,6 +78,10 @@ describe("formatHeadsign", () => {
   test.each([
     ["801 Tech Ridge Park & Ride NB", "801", "Tech Ridge Park & Ride NB"],
     ["801-Tech Ridge", "801", "Tech Ridge"],
+    ["640 Forty Acres-OB OB", "640", "Forty Acres OB"],
+    ["640 Forty Acres-IB IB", "640", "Forty Acres IB"],
+    ["3rd Street", "3", "3rd Street"],
+    ["Highland-Airport", "20", "Highland-Airport"],
     ["Downtown", "10", "Downtown"],
   ])("%s", (headsign, routeId, expected) => {
     expect(formatHeadsign(headsign, routeId)).toBe(expected);

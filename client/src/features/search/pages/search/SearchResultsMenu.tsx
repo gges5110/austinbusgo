@@ -20,6 +20,7 @@ import { useRecentSearches } from "shared/hooks/UseRecentSearches";
 import { useTitle } from "shared/hooks/UseTitle";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
+import { scrubSearchTerm, track } from "shared/track";
 import { Stop } from "shared/types/interface.d";
 
 import { routeDisplayName } from "shared/utils/routeNames";
@@ -31,6 +32,10 @@ export const isResponse = (
   return data !== undefined && "ok" in data;
 };
 
+/** Coarse result counts, so "no results" stands out */
+const resultsBucket = (count: number) =>
+  count === 0 ? "0" : count === 1 ? "1" : count <= 5 ? "2-5" : "6+";
+
 export const SearchResultsMenu = () => {
   const searchData = useDataFromLoader(searchLoader);
   const { searchTerm } = useParams();
@@ -39,20 +44,27 @@ export const SearchResultsMenu = () => {
   const { addToRecentSearches } = useRecentSearches();
   useTitle(`${searchTerm} - Austin Bus Go`);
 
-  if (isResponse(searchData)) {
-    return null;
-  }
-
-  const length =
-    searchData.search.stops.length + searchData.search.routes.length;
+  // Hooks first: the loader can return a Response (handled below)
+  const results = isResponse(searchData) ? undefined : searchData.search;
+  const length = results ? results.stops.length + results.routes.length : 0;
   const noResults = length === 0;
   useEffect(() => {
-    if (searchTerm && !noResults) {
+    if (results && searchTerm && !noResults) {
       addToRecentSearches({ value: searchTerm });
     }
   }, [searchTerm, noResults]);
-
+  useEffect(() => {
+    if (results && searchTerm) {
+      track("search", [scrubSearchTerm(searchTerm), resultsBucket(length)]);
+    }
+    // Once per search term
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, results === undefined]);
   const setHoveringStop = useSetAtom(hoveringStopAtom);
+
+  if (isResponse(searchData)) {
+    return null;
+  }
 
   return (
     <MenuPanel>
@@ -103,6 +115,11 @@ export const SearchResultsMenu = () => {
                     component={RouterLink}
                     onClick={() => {
                       addToRecentSearches(stop);
+                      track("search_pick", [
+                        "stop",
+                        searchData.search.stops.indexOf(stop) + 1,
+                        stop.stopId,
+                      ]);
                     }}
                     onMouseEnter={() => {
                       setHoveringStop(stop as Stop);
@@ -176,6 +193,13 @@ export const SearchResultsMenu = () => {
                     component={RouterLink}
                     onClick={() => {
                       addToRecentSearches(route);
+                      track("search_pick", [
+                        "route",
+                        searchData.search.stops.length +
+                          searchData.search.routes.indexOf(route) +
+                          1,
+                        route.routeId,
+                      ]);
                     }}
                     to={`/route/${route.routeId}/direction/0${viewStatePathname}`}
                   >

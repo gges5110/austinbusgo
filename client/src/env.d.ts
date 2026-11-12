@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_MAPBOX_ACCESS_TOKEN: string;
   /** Cloudflare Web Analytics site token; analytics are off when unset */
   readonly VITE_CF_ANALYTICS_TOKEN?: string;
+  /** rider-events worker endpoint (…/e); rider events are off when unset */
+  readonly VITE_EVENTS_URL?: string;
   // more env variables...
 }
 

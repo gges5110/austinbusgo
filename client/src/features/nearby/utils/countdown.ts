@@ -48,15 +48,21 @@ export const distanceLabel = (arrival: UpcomingArrival) => {
 /**
  * CapMetro headsigns repeat the route ("801-Tech Ridge Park & Ride NB" or
  * "801 Tech Ridge…"); keep the destination, like the stop page does.
+ * "640 Forty Acres-OB OB" → "Forty Acres OB".
  */
 export const formatHeadsign = (headsign?: string | null, routeId?: string) => {
   if (!headsign) return "";
-  const afterDash = headsign.split("-").pop() ?? headsign;
-  const withoutRoute =
-    routeId && afterDash.startsWith(`${routeId} `)
-      ? afterDash.slice(routeId.length + 1)
-      : afterDash;
-  return withoutRoute.trim();
+  let name = headsign.trim();
+  // Only a whole leading route number ("801 …", "801-…"), not "3rd Street"
+  if (
+    routeId &&
+    name.startsWith(routeId) &&
+    /^[\s-]/.test(name.slice(routeId.length))
+  ) {
+    name = name.slice(routeId.length).replace(/^[\s-]+/, "");
+  }
+  // The UT shuttles repeat their direction code: "Forty Acres-OB OB"
+  return name.replace(/-([A-Z]+)\s+\1$/i, " $1").trim();
 };
 
 /** "5:42 AM" */

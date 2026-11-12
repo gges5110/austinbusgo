@@ -217,6 +217,7 @@ Run `make help` to see all available targets organized by category.
 ### Environment Variables
 - `GTFS_DB_PATH`: path to the GTFS SQLite file (required; the Makefile and Dockerfile set it)
 - `VITE_CF_ANALYTICS_TOKEN` (client build): Cloudflare Web Analytics site token, from the `CF_ANALYTICS_TOKEN` repository variable; unset means no analytics (local dev, PR previews)
+- `VITE_EVENTS_URL` (client build): the rider-events worker endpoint (`workers/events`, Workers Analytics Engine), from the `EVENTS_URL` repository variable; unset means no rider events. Events are sent with `track()` from `client/src/shared/track.ts`; query them as described in `workers/events/README.md`
 - Set in Makefile for local development
 
 ## Common Tasks
