@@ -1,44 +1,83 @@
 import { LatLon } from "features/nearby/utils/geo";
+import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
+import { usesLocationAtom } from "shared/state/atoms";
 
 export type GeolocationStatus =
-  | "locating"
-  | "granted"
-  | "denied"
-  | "unavailable";
+  /** Not asked yet: waiting for the rider to tap "Use my location" */
+  "idle" | "locating" | "granted" | "denied" | "unavailable";
 
 export interface GeolocationState {
   position?: LatLon;
   /** Accuracy radius in meters */
   accuracy?: number;
   status: GeolocationStatus;
-  /** Ask again (e.g. after the rider taps "Use my location") */
-  retry: () => void;
+  /** Start (or restart) watching, e.g. when the rider taps "Use my location" */
+  request: () => void;
 }
 
 /**
- * Watches the rider's location. Never re-prompts on its own after a denial;
- * `retry` starts a new watch, which shows the browser prompt if allowed.
+ * Watches the rider's location, but only once they've asked for it.
+ *
+ * A first-time visitor (often arriving from a search result) never gets a
+ * permission prompt on page load: an unexplained prompt is usually refused,
+ * and phones then block the site for good. Watching starts on its own only
+ * when the browser already allows location, or the rider used it before
+ * (remembered per device).
  */
 export const useGeolocation = (enabled = true): GeolocationState => {
   const supported = typeof navigator !== "undefined" && !!navigator.geolocation;
+  const [optedIn, setOptedIn] = useAtom(usesLocationAtom);
+  // Bumped by `request` so a new tap restarts the watch (and the prompt)
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<Omit<GeolocationState, "retry">>({
+  const [tapped, setTapped] = useState(false);
+  const [allowedByBrowser, setAllowedByBrowser] = useState(false);
+  // Until the permission check answers, show "locating" rather than flash
+  // the first-visit screen at a rider who already allowed location
+  const [checking, setChecking] = useState(true);
+  // Whether we may watch now. (The stored opt-in loads after first render.)
+  const requested = tapped || optedIn || allowedByBrowser;
+  const [state, setState] = useState<Omit<GeolocationState, "request">>({
     status: supported ? "locating" : "unavailable",
   });
 
   useEffect(() => {
-    if (!enabled || !supported) return;
+    if (!enabled || !supported || requested) return;
+    let cancelled = false;
+    const permissions = navigator.permissions;
+    if (!permissions?.query) {
+      setChecking(false);
+      return;
+    }
+    permissions
+      .query({ name: "geolocation" })
+      .then((permission) => {
+        if (cancelled) return;
+        if (permission.state === "granted") setAllowedByBrowser(true);
+        if (permission.state === "denied") setState({ status: "denied" });
+      })
+      // Some browsers reject unknown permission names; treat as "ask"
+      .catch(() => undefined)
+      .finally(() => !cancelled && setChecking(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, supported, requested]);
+
+  useEffect(() => {
+    if (!enabled || !supported || !requested) return;
     setState((previous) =>
       previous.position ? previous : { status: "locating" }
     );
     const watchId = navigator.geolocation.watchPosition(
-      ({ coords }) =>
+      ({ coords }) => {
+        setOptedIn(true);
         setState({
           position: { latitude: coords.latitude, longitude: coords.longitude },
           accuracy: coords.accuracy,
           status: "granted",
-        }),
+        });
+      },
       (error) =>
         setState((previous) =>
           // A transient timeout keeps the last known position
@@ -54,9 +93,19 @@ export const useGeolocation = (enabled = true): GeolocationState => {
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [enabled, supported, attempt]);
+  }, [enabled, supported, requested, attempt, setOptedIn]);
 
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  const request = useCallback(() => {
+    setTapped(true);
+    setAttempt((n) => n + 1);
+  }, []);
 
-  return { ...state, retry };
+  const status: GeolocationStatus =
+    !supported || requested || state.status === "denied"
+      ? state.status
+      : checking
+        ? "locating"
+        : "idle";
+
+  return { ...state, status, request };
 };

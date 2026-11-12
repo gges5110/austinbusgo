@@ -10,7 +10,7 @@ export const BOTTOM_TABS_HEIGHT = 56;
 
 // Explore opens the map at the current view; a bare "/" would redirect
 // phones back to Nearby
-const DEFAULT_VIEW_STATE = "/@30.2672,-97.7431,11.5z";
+export const EXPLORE_PATH = "/@30.2672,-97.7431,11.5z";
 
 export type BottomTab = "nearby" | "explore" | "saved";
 
@@ -26,7 +26,7 @@ export const tabForPath = (pathname: string): BottomTab => {
 export const BottomTabs: React.FC = () => {
   const { pathname } = useLocation();
   const { viewStatePathname } = useViewStatePathname();
-  const viewState = viewStatePathname || DEFAULT_VIEW_STATE;
+  const viewState = viewStatePathname || EXPLORE_PATH;
 
   return (
     <Paper

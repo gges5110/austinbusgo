@@ -5,6 +5,7 @@ import {
   countdownLabel,
   distanceLabel,
   formatHeadsign,
+  formatNextBusTime,
   minutesUntil,
 } from "./countdown";
 
@@ -82,5 +83,20 @@ describe("formatHeadsign", () => {
 
   test("missing headsign", () => {
     expect(formatHeadsign(null, "1")).toBe("");
+  });
+});
+
+describe("formatNextBusTime", () => {
+  // Local time, so the test doesn't depend on the machine's time zone
+  const at = (iso: string) => new Date(iso).getTime() / 1000;
+  const now = at("2026-11-10T23:20:00"); // a Tuesday night
+
+  test.each([
+    ["later today", "2026-11-10T23:50:00", "at 11:50 PM"],
+    ["tomorrow", "2026-11-11T05:42:00", "tomorrow at 5:42 AM"],
+    ["later this week", "2026-11-12T10:22:00", "Thursday at 10:22 AM"],
+    ["a week or more out", "2026-11-19T10:22:00", "Thu, Nov 19 at 10:22 AM"],
+  ])("%s", (_, when, expected) => {
+    expect(formatNextBusTime(at(when), now)).toBe(expected);
   });
 });

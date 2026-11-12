@@ -26,6 +26,9 @@ from server.services.upcoming import (
     to_epoch,
 )
 
+# How far ahead to look for a stop's next bus when the next hour is empty
+NEXT_SERVICE_LOOKAHEAD_DAYS = 14
+
 
 class ArrivalService:
     def __init__(self, gtfs_service: GTFSService, gtfs_rt_service: GTFSRTService):
@@ -154,15 +157,19 @@ class ArrivalService:
         }
 
     async def _next_scheduled(self, stop_id: str, today, now: int) -> Optional[dict]:
-        """First scheduled bus after the window, today or tomorrow."""
+        """First scheduled bus after the window: later today, or on one of the
+        next NEXT_SERVICE_LOOKAHEAD_DAYS days (some routes run one day a week,
+        and holidays can skip a week)."""
         searches = [
             (
                 today,
                 format_gtfs_time(
                     seconds_into_service_day(today, now) + WINDOW_AHEAD_SECONDS
                 ),
-            ),
-            (today + timedelta(days=1), "00:00:00"),
+            )
+        ] + [
+            (today + timedelta(days=days), "00:00:00")
+            for days in range(1, NEXT_SERVICE_LOOKAHEAD_DAYS + 1)
         ]
         for service_date, start_time in searches:
             rows = await self.gtfs_service.get_stop_times_at_stop_in_window(

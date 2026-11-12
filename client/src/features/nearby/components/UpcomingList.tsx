@@ -1,8 +1,8 @@
 import { Alert, Box, Skeleton, Typography } from "@mui/material";
 import { UpcomingRow } from "features/nearby/components/UpcomingRow";
 import {
-  formatClockTime,
   formatHeadsign,
+  formatNextBusTime,
 } from "features/nearby/utils/countdown";
 import * as React from "react";
 import { StopUpcoming } from "shared/api/generated/model";
@@ -60,10 +60,10 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
           </Typography>
           {next && !hiddenByFilter && (
             <Typography color={"text.secondary"} variant={"body2"}>
-              {`Next: Route ${next.routeId} ${formatHeadsign(
+              {`Next bus: Route ${next.routeId} ${formatHeadsign(
                 next.headsign,
                 next.routeId
-              )} at ${formatClockTime(next.scheduledAt)}`}
+              )}, ${formatNextBusTime(next.scheduledAt, nowSeconds)}`}
             </Typography>
           )}
         </Box>

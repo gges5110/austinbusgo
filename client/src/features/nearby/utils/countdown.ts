@@ -52,3 +52,19 @@ export const formatHeadsign = (headsign?: string | null, routeId?: string) => {
 /** "5:42 AM" */
 export const formatClockTime = (epochSeconds: number) =>
   dayjs.unix(epochSeconds).format("h:mm A");
+
+/**
+ * When a later bus comes, with the day if it isn't today: "at 5:42 AM",
+ * "tomorrow at 5:42 AM", "Thursday at 10:22 AM", "Thu, Dec 3 at 10:22 AM".
+ */
+export const formatNextBusTime = (epochSeconds: number, nowSeconds: number) => {
+  const at = dayjs.unix(epochSeconds);
+  const days = at
+    .startOf("day")
+    .diff(dayjs.unix(nowSeconds).startOf("day"), "day");
+  const time = `at ${at.format("h:mm A")}`;
+  if (days <= 0) return time;
+  if (days === 1) return `tomorrow ${time}`;
+  if (days < 7) return `${at.format("dddd")} ${time}`;
+  return `${at.format("ddd, MMM D")} ${time}`;
+};

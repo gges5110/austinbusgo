@@ -229,3 +229,47 @@ async def test_get_upcoming_falls_back_to_next_scheduled_and_reports_rt_down():
     assert result["next_scheduled"]["scheduled_at"] == to_epoch(
         today + timedelta(days=1), "05:42:00"
     )
+
+
+@pytest.mark.asyncio
+async def test_next_scheduled_finds_a_weekly_route_days_ahead():
+    """A route that runs one day a week: the next bus is several days out."""
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
+    gtfs_service.get_stop_times_at_stop_in_window.side_effect = [
+        [],  # yesterday's late service
+        [],  # today's window
+        [],  # rest of today
+        [],  # tomorrow
+        [],  # in 2 days
+        [upcoming_row("t5", "10:22:00")],  # in 3 days
+    ]
+    today = date(2026, 11, 10)
+    now = to_epoch(today, "23:20:00")
+
+    result = await svc.get_upcoming("2810", now=now)
+
+    assert result["next_scheduled"]["trip_id"] == "t5"
+    assert result["next_scheduled"]["scheduled_at"] == to_epoch(
+        today + timedelta(days=3), "10:22:00"
+    )
+
+
+@pytest.mark.asyncio
+async def test_next_scheduled_gives_up_after_the_lookahead():
+    from server.services.arrival_service import NEXT_SERVICE_LOOKAHEAD_DAYS
+    from server.services.gtfs_rt_service import RealtimeSnapshot
+    from server.services.upcoming import to_epoch
+
+    svc, gtfs_service = make_upcoming_service(RealtimeSnapshot(available=True))
+    gtfs_service.get_stop_times_at_stop_in_window.return_value = []
+
+    result = await svc.get_upcoming("s3", now=to_epoch(date(2026, 11, 10), "12:00:00"))
+
+    assert result["next_scheduled"] is None
+    # yesterday + today's window + rest of today + each lookahead day
+    assert gtfs_service.get_stop_times_at_stop_in_window.await_count == (
+        3 + NEXT_SERVICE_LOOKAHEAD_DAYS
+    )
