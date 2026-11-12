@@ -4,6 +4,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Stop } from "shared/api/generated/model";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 interface StopRoutesProps {
   routes: Stop["routes"];
@@ -40,7 +41,7 @@ export const StopRoutes: React.FC<StopRoutesProps> = ({ routes }) => {
         }}
       >
         {routes.map((route) => (
-          <Tooltip key={route.routeId} title={route.routeLongName}>
+          <Tooltip key={route.routeId} title={routeDisplayName(route)}>
             <RouterLink
               style={{ textDecoration: "none" }}
               to={`/route/${route.routeId}/direction/0${viewStatePathname}`}

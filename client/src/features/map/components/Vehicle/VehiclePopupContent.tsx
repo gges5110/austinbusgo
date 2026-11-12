@@ -10,6 +10,7 @@ import { Stop, Trip } from "shared/api/generated/model";
 import { RouteIdDisplay } from "shared/components/RouteIdDisplay/RouteIdDisplay";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { VehiclePosition, VehicleStopStatus } from "shared/types/interface.d";
+import { routeDisplayName } from "shared/utils/routeNames";
 
 dayjs.extend(relativeTime);
 
@@ -75,7 +76,11 @@ export const VehiclePopupContent: React.FunctionComponent<
           ]}
           variant={"body2"}
         >
-          {tripLoading ? <Skeleton /> : trip?.route?.routeLongName}
+          {tripLoading ? (
+            <Skeleton />
+          ) : (
+            trip?.route && routeDisplayName(trip.route)
+          )}
         </Typography>
       </Box>
       <Typography

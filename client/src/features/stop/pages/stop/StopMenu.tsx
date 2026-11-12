@@ -120,21 +120,6 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
             </Typography>
           </Box>
         </Box>
-        <Divider />
-        <Box
-          sx={{
-            display: "flex",
-            px: "22px",
-            py: "10px",
-          }}
-        >
-          <AddToFavorites value={stop} />
-          <ShareButton />
-        </Box>
-
-        <Divider />
-        <StopRoutes routes={stop.routes} />
-
         {routeIds.length > 1 && (
           <Box
             sx={{
@@ -187,6 +172,21 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
         }
         routeIds={routeFilter ? selectedRouteIds : undefined}
       />
+      {/* Arrivals come first (a half-open phone sheet shows little else);
+          saving, sharing and the stop's routes follow */}
+      <Divider sx={{ mt: 1 }} />
+      <Box
+        sx={{
+          display: "flex",
+          px: "22px",
+          py: 0.5,
+        }}
+      >
+        <AddToFavorites value={stop} />
+        <ShareButton />
+      </Box>
+      <Divider />
+      <StopRoutes routes={stop.routes} />
     </MenuPanel>
   );
 };

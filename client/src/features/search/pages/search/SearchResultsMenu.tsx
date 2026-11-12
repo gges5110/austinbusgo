@@ -22,6 +22,7 @@ import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
 import { hoveringStopAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
+import { routeDisplayName } from "shared/utils/routeNames";
 import { searchLoader, SearchLoaderData } from "./SearchLoader";
 
 export const isResponse = (
@@ -189,7 +190,7 @@ export const SearchResultsMenu = () => {
                         routeColor={route.routeColor}
                         routeId={route.routeId}
                       />
-                      {route.routeLongName}
+                      {routeDisplayName(route)}
                     </Box>
                   </ListItemButton>
                 </ListItem>

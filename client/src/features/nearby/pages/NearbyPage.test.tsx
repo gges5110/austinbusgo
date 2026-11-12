@@ -70,6 +70,7 @@ const renderAt = (path: string) =>
 
 describe("NearbyPage", () => {
   beforeEach(() => {
+    localStorage.clear();
     mocks.geolocation.mockReturnValue({
       position: HERE,
       accuracy: 10,
@@ -129,6 +130,60 @@ describe("NearbyPage", () => {
     expect(request).not.toHaveBeenCalled();
     screen.getByRole("button", { name: "Use my location" }).click();
     expect(request).toHaveBeenCalled();
+  });
+
+  test("first screen lists saved stops, then recent ones", () => {
+    const saved = { ...stop, stopId: "1002", stopName: "Republic Square" };
+    const recentStop = (stopId: string, stopName: string) => ({
+      timestamp: 1,
+      value: { ...stop, stopId, stopCode: stopId, stopName },
+    });
+    localStorage.setItem("favorites", JSON.stringify([saved]));
+    localStorage.setItem(
+      "recentSearches",
+      JSON.stringify([
+        recentStop("475", "Lamar/Brentwood"),
+        // Already saved: not listed twice
+        recentStop("1002", "Republic Square"),
+        { timestamp: 1, value: { type: "searchTerm", value: "lamar" } },
+        recentStop("618", "Brentwood/Lamar"),
+        recentStop("1", "One"),
+        recentStop("2", "Two"),
+      ])
+    );
+    mocks.geolocation.mockReturnValue({
+      status: "idle",
+      request: vi.fn(),
+      supported: true,
+    });
+
+    renderAt("/nearby");
+
+    const links = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"))
+      .filter((href) => href?.startsWith("/nearby/stop/"));
+    // Saved first, then the 3 most recent unsaved stops
+    expect(links).toEqual([
+      "/nearby/stop/1002",
+      "/nearby/stop/475",
+      "/nearby/stop/618",
+      "/nearby/stop/1",
+    ]);
+  });
+
+  test("a stop still showing from before isn't remembered as opened", () => {
+    // Switching to stop 999: the query still holds the previous stop
+    renderAt("/nearby/stop/999");
+
+    expect(localStorage.getItem("recentSearches")).toBeNull();
+  });
+
+  test("a stop opened by ID joins the recent stops", () => {
+    renderAt("/nearby/stop/5869");
+
+    const recent = JSON.parse(localStorage.getItem("recentSearches") ?? "[]");
+    expect(recent[0].value.stopId).toBe("5869");
   });
 
   test("location blocked: explains how to allow it", () => {

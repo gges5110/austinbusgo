@@ -3,9 +3,7 @@ import * as React from "react";
 import { PropsWithChildren } from "react";
 import { BOTTOM_TABS_HEIGHT } from "shared/components/BottomTabs/BottomTabs";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
-
-/** Share of a phone screen (vh) the sheet covers; the map shows above it */
-export const NEARBY_SHEET_HEIGHT_VH = 55;
+import { PHONE_SHEET_HEIGHT_VH } from "shared/layout/phoneLayout";
 
 /**
  * Phones: a fixed sheet over the lower part of the screen so the map (and
@@ -26,7 +24,7 @@ export const NearbySheet: React.FC<PropsWithChildren> = ({ children }) => {
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         bottom: BOTTOM_TABS_HEIGHT,
-        height: `${NEARBY_SHEET_HEIGHT_VH}vh`,
+        height: `${PHONE_SHEET_HEIGHT_VH}vh`,
         left: 0,
         overflowY: "auto",
         position: "fixed",

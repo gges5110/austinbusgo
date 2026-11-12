@@ -6,6 +6,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, IconButton } from "@mui/material";
 import * as React from "react";
 
+import { routeDisplayName } from "shared/utils/routeNames";
 import { Highlight } from "./Highlight/Highlight";
 import { OptionValue, SearchOption } from "./hooks/searchPanelUtils";
 
@@ -20,7 +21,7 @@ const OptionLabel: React.FC<{ inputValue: string; option: SearchOption }> = ({
       return (
         <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Highlight query={inputValue} text={String(option.route.routeId)} />
-          <Highlight query={inputValue} text={option.route.routeLongName} />
+          <Highlight query={inputValue} text={routeDisplayName(option.route)} />
         </Box>
       );
     case "stop":
