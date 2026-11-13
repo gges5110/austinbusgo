@@ -28,9 +28,14 @@ npm run dev        # local worker on http://localhost:8787
 
 ## Deploy
 
+Merging a change under `workers/events/` to `main` deploys it
+(`.github/workflows/deployWorkers.yml`, using the `CLOUDFLARE_API_TOKEN`
+secret). To deploy without a change: Actions → Deploy Workers → Run workflow.
+
+The site sends events only when the `EVENTS_URL` repository variable is set,
+which only needs doing once:
+
 ```bash
-npx wrangler login   # once, opens browser
-npm run deploy       # prints the workers.dev URL
 gh variable set EVENTS_URL --body "https://rider-events.<subdomain>.workers.dev/e"
 ```
 
