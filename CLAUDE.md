@@ -209,6 +209,10 @@ Run `make help` to see all available targets organized by category.
 - Real-time data: vehicle positions, trip updates
 - Data stored in `etl/capmetro/`
 
+### Cloudflare Workers
+- `workers/events` and `workers/gtfs-rt-proxy` deploy from `.github/workflows/deployWorkers.yml` when their files change on `main` (or by hand: Actions → Deploy Workers); PRs that touch them run their type check and tests
+- `workers/graphql-edge-cache` is deployed by `deployBackend.yml` with a fresh `CACHE_VERSION` after each data load; don't deploy it plainly, which resets the version
+
 ### Git Workflow
 - Git hooks installed via `./setup-hooks.sh`
 - Pre-commit: Python linting (Black), Prettier for frontend
