@@ -35,8 +35,8 @@ describe("uiMapPadding follows the phone sheet", () => {
     vi.stubGlobal("innerWidth", 390);
     vi.stubGlobal("innerHeight", 800);
     setPhoneSheetSize("collapsed");
-    // 88 title bar + 56 tabs + 10 margin
-    expect(uiMapPadding().bottom).toBe(154);
+    // 92 title bar + 56 tabs + 10 margin
+    expect(uiMapPadding().bottom).toBe(158);
   });
 
   test("a half panel fitted to short content covers only its height", () => {

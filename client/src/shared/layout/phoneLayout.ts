@@ -17,13 +17,18 @@ export const PHONE_SEARCH_BAR_HEIGHT = 64;
 export const PHONE_SHEET_HEIGHT_VH = 55;
 
 /** The grab handle along the top of the Explore panel, in pixels */
-export const PHONE_SHEET_HANDLE_HEIGHT = 24;
+export const PHONE_SHEET_HANDLE_HEIGHT = 28;
+
+/** A page's title row at the top of the Explore panel, in pixels */
+export const PHONE_SHEET_TITLE_HEIGHT = 64;
 
 /**
  * A collapsed Explore panel, in pixels: the handle plus the page's title
- * row, so riders can still see what's open
+ * row, so riders can still see what's open. Drags anywhere on this strip
+ * resize the panel.
  */
-export const PHONE_SHEET_COLLAPSED_HEIGHT = 88;
+export const PHONE_SHEET_COLLAPSED_HEIGHT =
+  PHONE_SHEET_HANDLE_HEIGHT + PHONE_SHEET_TITLE_HEIGHT;
 
 export type PhoneSheetSize = "collapsed" | "half" | "full";
 

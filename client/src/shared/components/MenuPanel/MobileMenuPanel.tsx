@@ -41,6 +41,8 @@ interface Drag {
   startY: number;
   startHeight: number;
   moved: boolean;
+  /** Started on the handle, so letting go without moving is a tap */
+  onHandle: boolean;
 }
 
 interface MobileMenuPanelProps {
@@ -50,9 +52,10 @@ interface MobileMenuPanelProps {
 /**
  * The phone panel for Explore pages (stop, route, trip, search, saved).
  * Opens at most half height, and only as tall as its content, so the map
- * stays in view. A grab handle on top resizes it: tap to grow (or shrink
- * back from full screen), drag up or down, or use the arrow keys.
- * Collapsed, it keeps the page's title row in view.
+ * stays in view. Tap the grab handle on top to grow it (or shrink it back
+ * from full screen), drag the handle or the title row below it up or
+ * down, or use the arrow keys on the handle. Collapsed, it keeps the
+ * page's title row in view.
  */
 export const MobileMenuPanel = ({
   children,
@@ -61,20 +64,21 @@ export const MobileMenuPanel = ({
   const [size, setSize] = useState<SheetSize>("half");
   const [dragHeight, setDragHeight] = useState<number>();
   const drag = useRef<Drag>();
-  const dragged = useRef(false);
   const paper = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const content = useRef<HTMLDivElement | null>(null);
   const handle = useRef<HTMLButtonElement | null>(null);
   const contentHeight = useContentHeight(content);
 
-  // Keep the browser from turning a drag on the handle into its own
-  // gesture (pull-to-refresh, page scroll). React's touch listeners are
+  // Keep the browser from turning a drag on the panel's top strip into its
+  // own gesture (pull-to-refresh, page scroll). React's touch listeners are
   // passive, so this needs a native one.
   useEffect(() => {
-    const element = handle.current;
+    const element = paper.current;
     if (!element) return;
-    const hold = (event: TouchEvent) => event.preventDefault();
+    const hold = (event: TouchEvent) => {
+      if (drag.current) event.preventDefault();
+    };
     element.addEventListener("touchmove", hold, { passive: false });
     return () => element.removeEventListener("touchmove", hold);
   }, []);
@@ -117,14 +121,42 @@ export const MobileMenuPanel = ({
             ? `${PHONE_SHEET_HEIGHT_VH}vh`
             : `min(${fitted}px, ${PHONE_SHEET_HEIGHT_VH}vh)`;
 
+  /**
+   * Whether a press here can drag the panel: the handle, or the page's
+   * title row below it while the page is scrolled to the top (taps on its
+   * buttons still work; text fields never drag)
+   */
+  const inDragStrip = (event: React.PointerEvent<HTMLElement>) => {
+    const target = event.target as Element;
+    if (handle.current?.contains(target)) return true;
+    if (target.closest?.("input, textarea, select, [contenteditable]")) {
+      return false;
+    }
+    if ((scroller.current?.scrollTop ?? 0) > 0) return false;
+    const top =
+      (paper.current?.getBoundingClientRect().top ?? 0) +
+      (size === "full" ? PHONE_SEARCH_BAR_HEIGHT : 0);
+    const offset = event.clientY - top;
+    return offset >= 0 && offset <= PHONE_SHEET_COLLAPSED_HEIGHT;
+  };
+
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    drag.current = undefined;
+    if (!inDragStrip(event)) return;
+    const target = event.target as Element;
+    const onHandle = handle.current?.contains(target) ?? false;
     drag.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
       startHeight: paper.current?.getBoundingClientRect().height ?? 0,
       moved: false,
+      onHandle,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    // Keep the pointer even if it leaves the strip. Not yet on a button in
+    // the title row, so a tap there still clicks it.
+    if (onHandle || !target.closest?.("button, a, [role='button']")) {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
@@ -132,7 +164,14 @@ export const MobileMenuPanel = ({
     if (!current || current.pointerId !== event.pointerId) return;
     const dy = event.clientY - current.startY;
     if (!current.moved && Math.abs(dy) < DRAG_THRESHOLD_PX) return;
-    current.moved = true;
+    if (!current.moved) {
+      // A drag, not a tap: also take the pointer from a button it started
+      // on, so letting go doesn't click it
+      current.moved = true;
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      // Moving the panel, not selecting its title
+      window.getSelection?.()?.removeAllRanges();
+    }
     setDragHeight(
       Math.min(
         fullHeightPx(),
@@ -145,8 +184,10 @@ export const MobileMenuPanel = ({
     const current = drag.current;
     drag.current = undefined;
     if (!current || current.pointerId !== event.pointerId) return;
-    dragged.current = current.moved;
-    if (!current.moved) return;
+    if (!current.moved) {
+      if (current.onHandle) tap();
+      return;
+    }
     setDragHeight(undefined);
     // Snap to the size nearest where the panel was let go
     const at = current.startHeight - (event.clientY - current.startY);
@@ -164,17 +205,12 @@ export const MobileMenuPanel = ({
   // The browser took the gesture over: put the panel back where it was
   const cancelDrag = () => {
     drag.current = undefined;
-    dragged.current = false;
     setDragHeight(undefined);
   };
 
-  const onClick = () => {
-    // The click that ends a drag isn't a tap
-    if (dragged.current) {
-      dragged.current = false;
-      return;
-    }
-    tap();
+  // Enter or Space on the handle (pointer taps end in endDrag)
+  const onClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.detail === 0) tap();
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -187,6 +223,10 @@ export const MobileMenuPanel = ({
   return (
     <Paper
       elevation={8}
+      onPointerCancel={cancelDrag}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
       ref={(element: HTMLDivElement | null) => {
         paper.current = element;
         if (innerRef) innerRef.current = element;
@@ -206,6 +246,7 @@ export const MobileMenuPanel = ({
         pt: size === "full" ? `${PHONE_SEARCH_BAR_HEIGHT}px` : 0,
         borderTopLeftRadius: size === "full" ? 0 : 16,
         borderTopRightRadius: size === "full" ? 0 : 16,
+        userSelect: dragHeight === undefined ? undefined : "none",
         // Follow the finger while dragging; animate snaps
         transition:
           dragHeight === undefined ? "height 0.3s ease-in-out" : "none",
@@ -219,10 +260,6 @@ export const MobileMenuPanel = ({
         component={"button"}
         onClick={onClick}
         onKeyDown={onKeyDown}
-        onPointerCancel={cancelDrag}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
         ref={handle}
         sx={{
           alignItems: "center",
