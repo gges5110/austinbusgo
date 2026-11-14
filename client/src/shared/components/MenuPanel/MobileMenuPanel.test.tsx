@@ -107,6 +107,41 @@ describe("MobileMenuPanel", () => {
     vi.unstubAllGlobals();
   });
 
+  it("a drag the browser cancels leaves the panel as it was", () => {
+    vi.stubGlobal("innerHeight", 800);
+    vi.stubGlobal(
+      "PointerEvent",
+      class extends MouseEvent {
+        pointerId: number;
+        constructor(type: string, init: PointerEventInit = {}) {
+          super(type, init);
+          this.pointerId = init.pointerId ?? 0;
+        }
+      }
+    );
+    renderPanel();
+    vi.spyOn(panel(), "getBoundingClientRect").mockReturnValue({
+      height: 440,
+    } as DOMRect);
+
+    fireEvent.pointerDown(handle(), { clientY: 400, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientY: 600, pointerId: 1 });
+    fireEvent.pointerCancel(handle(), { clientY: 0, pointerId: 1 });
+
+    expect(panel()).toHaveStyle({ height: "55vh" });
+    vi.unstubAllGlobals();
+  });
+
+  it("stops the browser's own gestures on the handle", () => {
+    renderPanel();
+    const move = new Event("touchmove", { bubbles: true, cancelable: true });
+
+    handle().dispatchEvent(move);
+
+    // No pull-to-refresh or page scroll while dragging the panel
+    expect(move.defaultPrevented).toBe(true);
+  });
+
   it("fits a half panel to short content", () => {
     let observed: (() => void) | undefined;
     vi.stubGlobal(

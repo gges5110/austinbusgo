@@ -65,7 +65,19 @@ export const MobileMenuPanel = ({
   const paper = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const content = useRef<HTMLDivElement | null>(null);
+  const handle = useRef<HTMLButtonElement | null>(null);
   const contentHeight = useContentHeight(content);
+
+  // Keep the browser from turning a drag on the handle into its own
+  // gesture (pull-to-refresh, page scroll). React's touch listeners are
+  // passive, so this needs a native one.
+  useEffect(() => {
+    const element = handle.current;
+    if (!element) return;
+    const hold = (event: TouchEvent) => event.preventDefault();
+    element.addEventListener("touchmove", hold, { passive: false });
+    return () => element.removeEventListener("touchmove", hold);
+  }, []);
 
   // A half panel shrinks to fit short content
   const fitted =
@@ -149,6 +161,13 @@ export const MobileMenuPanel = ({
     setSize(nearest);
   };
 
+  // The browser took the gesture over: put the panel back where it was
+  const cancelDrag = () => {
+    drag.current = undefined;
+    dragged.current = false;
+    setDragHeight(undefined);
+  };
+
   const onClick = () => {
     // The click that ends a drag isn't a tap
     if (dragged.current) {
@@ -200,10 +219,11 @@ export const MobileMenuPanel = ({
         component={"button"}
         onClick={onClick}
         onKeyDown={onKeyDown}
-        onPointerCancel={endDrag}
+        onPointerCancel={cancelDrag}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
+        ref={handle}
         sx={{
           alignItems: "center",
           bgcolor: "transparent",

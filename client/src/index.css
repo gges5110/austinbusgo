@@ -1,3 +1,10 @@
+/* A full-screen map app: dragging the map or a panel must never pull to
+   refresh or bounce the page */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   padding: 0;
