@@ -20,22 +20,21 @@ describe("MobileMenuPanel accessibility", () => {
         <div>Content</div>
       </MobileMenuPanel>
     );
-    fireEvent.click(getByRole("button", { name: /collapse menu/i }));
+    fireEvent.keyDown(getByRole("button", { name: /expand menu/i }), {
+      key: "ArrowDown",
+    });
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("toggle button has aria-expanded reflecting state", () => {
+  it("handle has aria-expanded reflecting state", () => {
     const { getByRole } = render(
       <MobileMenuPanel>
         <div>Content</div>
       </MobileMenuPanel>
     );
-    const btn = getByRole("button", { name: /collapse menu/i });
-    expect(btn).toHaveAttribute("aria-expanded", "true");
-    fireEvent.click(btn);
-    expect(getByRole("button", { name: /expand menu/i })).toHaveAttribute(
-      "aria-expanded",
-      "false"
-    );
+    const handle = getByRole("button", { name: /expand menu/i });
+    expect(handle).toHaveAttribute("aria-expanded", "true");
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    expect(handle).toHaveAttribute("aria-expanded", "false");
   });
 });

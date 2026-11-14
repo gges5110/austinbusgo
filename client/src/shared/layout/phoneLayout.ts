@@ -16,24 +16,38 @@ export const PHONE_SEARCH_BAR_HEIGHT = 64;
  */
 export const PHONE_SHEET_HEIGHT_VH = 55;
 
-/** A collapsed Explore panel: just its controls, in pixels */
-export const PHONE_SHEET_COLLAPSED_HEIGHT = 48;
+/** The grab handle along the top of the Explore panel, in pixels */
+export const PHONE_SHEET_HANDLE_HEIGHT = 24;
+
+/**
+ * A collapsed Explore panel, in pixels: the handle plus the page's title
+ * row, so riders can still see what's open
+ */
+export const PHONE_SHEET_COLLAPSED_HEIGHT = 88;
 
 export type PhoneSheetSize = "collapsed" | "half" | "full";
 
 // The Explore panel's current size; "half" when none is open. Module state
 // rather than an atom because the map reads it imperatively at fly time.
 let currentSize: PhoneSheetSize = "half";
+// What the panel actually covers when it's measured (a half panel shrinks
+// to fit short content)
+let currentHeightPx: number | undefined;
 
-export const setPhoneSheetSize = (size: PhoneSheetSize) => {
+export const setPhoneSheetSize = (size: PhoneSheetSize, heightPx?: number) => {
   currentSize = size;
+  currentHeightPx = heightPx;
 };
 
 export const phoneSheetSize = () => currentSize;
 
-/** Pixels a sheet of `size` covers above the tab bar */
-export const phoneSheetHeightPx = (size: PhoneSheetSize = currentSize) => {
-  switch (size) {
+/**
+ * Pixels a sheet of `size` covers above the tab bar; without a size, what
+ * the Explore panel covers right now
+ */
+export const phoneSheetHeightPx = (size?: PhoneSheetSize) => {
+  if (!size && currentHeightPx !== undefined) return currentHeightPx;
+  switch (size ?? currentSize) {
     case "collapsed":
       return PHONE_SHEET_COLLAPSED_HEIGHT;
     case "full":

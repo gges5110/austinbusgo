@@ -31,12 +31,22 @@ describe("uiMapPadding follows the phone sheet", () => {
     vi.restoreAllMocks();
   });
 
-  test("collapsed: only the bar and tab bar are covered", () => {
+  test("collapsed: only the title bar and tab bar are covered", () => {
     vi.stubGlobal("innerWidth", 390);
     vi.stubGlobal("innerHeight", 800);
     setPhoneSheetSize("collapsed");
-    // 48 bar + 56 tabs + 10 margin
-    expect(uiMapPadding().bottom).toBe(114);
+    // 88 title bar + 56 tabs + 10 margin
+    expect(uiMapPadding().bottom).toBe(154);
+  });
+
+  test("a half panel fitted to short content covers only its height", () => {
+    vi.stubGlobal("innerWidth", 390);
+    vi.stubGlobal("innerHeight", 800);
+    setPhoneSheetSize("half", 300);
+    // 300 panel + 56 tabs + 10 margin
+    expect(uiMapPadding().bottom).toBe(366);
+    // Nearby's sheet asks for its own (always half) size
+    expect(uiMapPadding({ sheet: "half" }).bottom).toBe(506);
   });
 
   test("full screen or a short window keeps a strip of map", () => {
