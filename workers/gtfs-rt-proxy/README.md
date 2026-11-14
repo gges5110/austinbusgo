@@ -27,6 +27,9 @@ Point the client at it with `VITE_GTFS_RT_PROXY_URL=http://localhost:8787`.
 
 ## Deploy
 
+Merging a change under `workers/gtfs-rt-proxy/` to `main` deploys it
+(`.github/workflows/deployWorkers.yml`). To deploy by hand:
+
 ```bash
 npx wrangler login   # once, opens browser
 npm run deploy       # prints the workers.dev URL
