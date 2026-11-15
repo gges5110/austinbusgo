@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, List
 
@@ -100,8 +101,11 @@ class GTFSRTService:
 
     async def get_snapshot(self) -> RealtimeSnapshot:
         try:
-            trip_updates = await self.gtfs_rt_client.load_trip_updates()
-            vehicles = await self.gtfs_rt_client.load_vehicle_positions()
+            # Together, so a slow upstream costs one wait, not two
+            trip_updates, vehicles = await asyncio.gather(
+                self.gtfs_rt_client.load_trip_updates(),
+                self.gtfs_rt_client.load_vehicle_positions(),
+            )
         except RealtimeFeedError:
             return RealtimeSnapshot(available=False)
         return RealtimeSnapshot(

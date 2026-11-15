@@ -49,3 +49,21 @@ def test_create_app_no_db_path(mocker):
     with pytest.raises(Exception):
         with TestClient(app):
             pass
+
+
+def test_realtime_feed_errors_are_503_not_500():
+    from fastapi.testclient import TestClient
+
+    from server.main import create_app
+    from server.services.gtfs_rt_client import RealtimeFeedError
+
+    app = create_app()
+
+    @app.get("/boom")
+    async def boom():
+        raise RealtimeFeedError("ConnectTimeout")
+
+    response = TestClient(app).get("/boom")
+
+    assert response.status_code == 503
+    assert "ConnectTimeout" in response.json()["detail"]

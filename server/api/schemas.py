@@ -324,6 +324,7 @@ class RealtimeFeedStatus(ApiModel):
     last_fetch_ms: Optional[int] = None
     feed_timestamp: Optional[int] = None
     entities: Optional[int] = None
+    serving_stale: bool = False
 
 
 class Status(ApiModel):

@@ -140,7 +140,88 @@ async def test_fetch_failure_raises_realtime_feed_error(mocker):
     stats = feed_stats("http://test-url")
     assert stats["failures"] == 1
     assert stats["successes"] == 0
-    assert stats["last_error"].startswith("ReadTimeout")
+    assert stats["last_error"] == "ReadTimeout: slow"
+
+
+@pytest.mark.asyncio
+async def test_a_timeout_without_a_message_still_says_what_happened(mocker):
+    mock_async_client(mocker, error=httpx.ConnectTimeout(""))
+
+    with pytest.raises(RealtimeFeedError, match="^ConnectTimeout$"):
+        await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+
+
+@pytest.mark.asyncio
+async def test_a_slow_download_keeps_going_for_the_next_request(mocker):
+    import asyncio
+
+    mocker.patch("server.services.gtfs_rt_client.WAIT_WITHOUT_COPY_SECONDS", 0.01)
+    release = asyncio.Event()
+    get = mock_async_client(mocker, content=make_feed_bytes("1"))
+    response = get.return_value
+
+    async def slow_get(url):
+        await release.wait()
+        return response
+
+    get.side_effect = slow_get
+
+    # A fresh worker: the first rider gets scheduled times quickly...
+    with pytest.raises(RealtimeFeedError, match="still downloading"):
+        await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+
+    # ...and the download it started serves the next one
+    release.set()
+    result = await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+    assert result[0].id == "1"
+    assert get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_a_failed_fetch_serves_the_last_copy_for_two_minutes(mocker):
+    get = mock_async_client(mocker, content=make_feed_bytes("old"))
+    clock = mocker.patch("server.services.gtfs_rt_client.time.monotonic")
+    clock.return_value = 100.0
+    await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+    get.side_effect = httpx.ConnectTimeout("")
+
+    clock.return_value = 160.0
+    result = await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+
+    assert result[0].id == "old"
+    assert get.call_count == 2
+    assert feed_stats("http://test-url")["serving_stale"] is True
+
+    clock.return_value = 230.0
+    with pytest.raises(RealtimeFeedError):
+        await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+
+
+@pytest.mark.asyncio
+async def test_concurrent_requests_share_one_fetch(mocker):
+    import asyncio
+
+    release = asyncio.Event()
+    get = mock_async_client(mocker, content=make_feed_bytes("1"))
+    response = get.return_value
+
+    async def slow_get(url):
+        await release.wait()
+        return response
+
+    get.side_effect = slow_get
+    requests = [
+        asyncio.ensure_future(
+            GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+        )
+        for _ in range(5)
+    ]
+    await asyncio.sleep(0)
+    release.set()
+    results = await asyncio.gather(*requests)
+
+    assert get.call_count == 1
+    assert all(result[0].id == "1" for result in results)
 
 
 @pytest.mark.asyncio

@@ -20,4 +20,5 @@ export interface RealtimeFeedStatus {
   lastFetchMs?: number | null;
   feedTimestamp?: number | null;
   entities?: number | null;
+  servingStale?: boolean;
 }

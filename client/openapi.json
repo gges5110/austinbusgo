@@ -1074,6 +1074,11 @@
               }
             ],
             "title": "Entities"
+          },
+          "servingStale": {
+            "type": "boolean",
+            "title": "Servingstale",
+            "default": false
           }
         },
         "type": "object",
