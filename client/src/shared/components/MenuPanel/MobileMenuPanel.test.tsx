@@ -74,6 +74,25 @@ describe("MobileMenuPanel", () => {
     expect(panel()).toHaveStyle({ height: "55vh" });
   });
 
+  it("full screen leaves room for the search bar, except without one", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderPanel();
+    await user.click(handle());
+    expect(panel()).toHaveStyle({ paddingTop: "64px" });
+    unmount();
+
+    render(
+      <ThemeProvider theme={theme}>
+        <MobileMenuPanel searchBar={false}>
+          <div data-testid={"test-content"}>Test Content</div>
+        </MobileMenuPanel>
+      </ThemeProvider>
+    );
+    await user.click(handle());
+    expect(panel()).toHaveStyle({ height: "calc(100vh - 56px)" });
+    expect(panel()).toHaveStyle({ paddingTop: "0px" });
+  });
+
   it("Enter on the handle grows the panel like a tap", async () => {
     const user = userEvent.setup();
     renderPanel();
