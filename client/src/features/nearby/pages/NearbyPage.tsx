@@ -42,6 +42,7 @@ import {
   currentStopAtom,
   favoritesAtom,
   nearbyFocusAtom,
+  nearbyRiderAtom,
 } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
@@ -67,6 +68,7 @@ export const NearbyPage: React.FC = () => {
   const nowSeconds = useServerNow(upcoming.clockOffset);
 
   useSyncMapFocus(stopId, upcoming.data, geolocation.position);
+  useSyncRider(pinned ? undefined : geolocation.position);
   const [focus, setFocus] = useAtom(nearbyFocusAtom);
   const selectedTripId = focus?.selectedTripId;
   const toggleTrip = (tripId: string) =>
@@ -238,6 +240,15 @@ const useSyncMapFocus = (
     },
     [setFocus, setCurrentStop]
   );
+};
+
+/** Publishes the rider's location to the map (nearbyRiderAtom) */
+const useSyncRider = (
+  rider: { latitude: number; longitude: number } | undefined
+) => {
+  const setRider = useSetAtom(nearbyRiderAtom);
+  useEffect(() => setRider(rider), [rider, setRider]);
+  useEffect(() => () => setRider(undefined), [setRider]);
 };
 
 const Message: React.FC<React.PropsWithChildren<{ title: string }>> = ({

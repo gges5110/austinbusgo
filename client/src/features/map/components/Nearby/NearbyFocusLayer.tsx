@@ -13,7 +13,7 @@ const FRAME_MARGIN = 48;
 
 // Keep the framed points clear of the Nearby panel (at its current size; no
 // search bar) and tab bar on phones, and the side panel on desktop
-const nearbyMapPadding = () =>
+export const nearbyMapPadding = () =>
   uiMapPadding({ margin: FRAME_MARGIN, searchBar: false });
 
 interface NearbyFocusLayerProps {
