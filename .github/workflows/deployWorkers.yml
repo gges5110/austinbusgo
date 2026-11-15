@@ -1,8 +1,8 @@
 # Deploys the Cloudflare Workers in workers/ when their code changes on main.
 #
-# graphql-edge-cache is not here on purpose: deployBackend.yml deploys it
-# with a fresh CACHE_VERSION after each data load, and a plain deploy would
-# reset that version.
+# graphql-edge-cache always deploys with a fresh CACHE_VERSION (as
+# deployBackend.yml does after each data load), then warms the cache: a
+# plain deploy would reset the version to wrangler.toml's "v1".
 
 name: Deploy Workers
 
@@ -13,6 +13,7 @@ on:
     paths:
       - "workers/events/**"
       - "workers/gtfs-rt-proxy/**"
+      - "workers/graphql-edge-cache/**"
       - ".github/workflows/deployWorkers.yml"
   workflow_dispatch:
     inputs:
@@ -23,6 +24,7 @@ on:
           - all
           - events
           - gtfs-rt-proxy
+          - graphql-edge-cache
         default: all
 
 concurrency:
@@ -47,6 +49,9 @@ jobs:
             gtfs-rt-proxy:
               - 'workers/gtfs-rt-proxy/**'
               - '.github/workflows/deployWorkers.yml'
+            graphql-edge-cache:
+              - 'workers/graphql-edge-cache/**'
+              - '.github/workflows/deployWorkers.yml'
       - name: Pick workers
         id: pick
         env:
@@ -55,7 +60,7 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$CHOICE" = "all" ]; then
-              echo 'workers=["events","gtfs-rt-proxy"]' >> "$GITHUB_OUTPUT"
+              echo 'workers=["events","gtfs-rt-proxy","graphql-edge-cache"]' >> "$GITHUB_OUTPUT"
             else
               echo "workers=[\"$CHOICE\"]" >> "$GITHUB_OUTPUT"
             fi
@@ -97,4 +102,17 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy
+          WORKER: ${{ matrix.worker }}
+        run: |
+          if [ "$WORKER" = "graphql-edge-cache" ]; then
+            npx wrangler deploy --var "CACHE_VERSION:deploy-${{ github.run_id }}"
+          else
+            npx wrangler deploy
+          fi
+
+      # A fresh CACHE_VERSION starts the cache empty; replay the expensive
+      # queries so the first visitor doesn't pay the cold upstream cost
+      - name: Warm edge cache
+        if: matrix.worker == 'graphql-edge-cache'
+        working-directory: .
+        run: node workers/graphql-edge-cache/scripts/warm-cache.mjs
