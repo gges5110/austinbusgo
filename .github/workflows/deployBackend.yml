@@ -22,6 +22,9 @@ env:
   CLOUD_RUN_SERVICE: austinbusgo-backend
   WORKLOAD_IDENTITY_PROVIDER: projects/761140212463/locations/global/workloadIdentityPools/github-pool/providers/github-provider
   SERVICE_ACCOUNT: github-actions@austin-bus-go.iam.gserviceaccount.com
+  # What the backend runs as: holds no roles, since it calls no Google APIs
+  # (the default compute account has Editor on the whole project)
+  RUNTIME_SERVICE_ACCOUNT: austinbusgo-backend-run@austin-bus-go.iam.gserviceaccount.com
 
 jobs:
   deploy:
@@ -94,8 +97,11 @@ jobs:
           service: ${{ env.CLOUD_RUN_SERVICE }}
           region: ${{ env.GCP_REGION }}
           image: ${{ env.IMAGE }}:${{ github.sha }}-${{ github.run_id }}
-          # Detach the retired Cloud SQL instance (no-ops once detached)
-          flags: --clear-cloudsql-instances --remove-env-vars=DATABASE_URL
+          # Run as the no-role account; detach the retired Cloud SQL
+          # instance (no-ops once detached)
+          flags: >-
+            --service-account=${{ env.RUNTIME_SERVICE_ACCOUNT }}
+            --clear-cloudsql-instances --remove-env-vars=DATABASE_URL
 
   invalidate-edge-cache:
     needs: [deploy]
