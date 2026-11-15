@@ -47,10 +47,16 @@ interface Drag {
 
 interface MobileMenuPanelProps {
   innerRef?: React.MutableRefObject<HTMLDivElement | null>;
+  /**
+   * Whether the floating search bar sits over the top of the screen
+   * (Explore; not Nearby), so a full-screen panel starts below it
+   */
+  searchBar?: boolean;
 }
 
 /**
- * The phone panel for Explore pages (stop, route, trip, search, saved).
+ * The phone panel for Explore pages (stop, route, trip, search, saved) and
+ * Nearby.
  * Opens at most half height, and only as tall as its content, so the map
  * stays in view. Tap the grab handle on top to grow it (or shrink it back
  * from full screen), drag the handle or the title row below it up or
@@ -60,6 +66,7 @@ interface MobileMenuPanelProps {
 export const MobileMenuPanel = ({
   children,
   innerRef,
+  searchBar = true,
 }: PropsWithChildren<MobileMenuPanelProps>) => {
   const [size, setSize] = useState<SheetSize>("half");
   const [dragHeight, setDragHeight] = useState<number>();
@@ -69,6 +76,8 @@ export const MobileMenuPanel = ({
   const content = useRef<HTMLDivElement | null>(null);
   const handle = useRef<HTMLButtonElement | null>(null);
   const contentHeight = useContentHeight(content);
+  // Room left above a full-screen panel for the search bar
+  const fullTop = searchBar ? PHONE_SEARCH_BAR_HEIGHT : 0;
 
   // Keep the browser from turning a drag on the panel's top strip into its
   // own gesture (pull-to-refresh, page scroll). React's touch listeners are
@@ -135,7 +144,7 @@ export const MobileMenuPanel = ({
     if ((scroller.current?.scrollTop ?? 0) > 0) return false;
     const top =
       (paper.current?.getBoundingClientRect().top ?? 0) +
-      (size === "full" ? PHONE_SEARCH_BAR_HEIGHT : 0);
+      (size === "full" ? fullTop : 0);
     const offset = event.clientY - top;
     return offset >= 0 && offset <= PHONE_SHEET_COLLAPSED_HEIGHT;
   };
@@ -243,7 +252,7 @@ export const MobileMenuPanel = ({
         display: "flex",
         flexDirection: "column",
         // Full screen: the handle sits below the floating search bar
-        pt: size === "full" ? `${PHONE_SEARCH_BAR_HEIGHT}px` : 0,
+        pt: size === "full" ? `${fullTop}px` : 0,
         borderTopLeftRadius: size === "full" ? 0 : 16,
         borderTopRightRadius: size === "full" ? 0 : 16,
         userSelect: dragHeight === undefined ? undefined : "none",

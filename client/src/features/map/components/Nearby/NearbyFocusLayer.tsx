@@ -11,10 +11,10 @@ const TRACK_SOURCE_ID = "nearby-track";
 // Margin around the framed points, in pixels
 const FRAME_MARGIN = 48;
 
-// Keep the framed points clear of the Nearby sheet (always half height, no
+// Keep the framed points clear of the Nearby panel (at its current size; no
 // search bar) and tab bar on phones, and the side panel on desktop
 const nearbyMapPadding = () =>
-  uiMapPadding({ margin: FRAME_MARGIN, searchBar: false, sheet: "half" });
+  uiMapPadding({ margin: FRAME_MARGIN, searchBar: false });
 
 interface NearbyFocusLayerProps {
   readonly focus: NearbyFocus;
