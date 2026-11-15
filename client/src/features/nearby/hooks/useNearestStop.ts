@@ -1,10 +1,14 @@
 import { boundingBox, distanceMeters, LatLon } from "features/nearby/utils/geo";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNearByStops } from "shared/api/generated/api";
 import { Stop } from "shared/api/generated/model";
 
 /** A 5-minute walk */
 export const NEARBY_RADIUS_METERS = 400;
+/**
+ * About a 20-minute walk: searched on its own when nothing is within a
+ * 5-minute walk. Nothing here either usually means outside the service area.
+ */
 export const WIDE_RADIUS_METERS = 1500;
 /**
  * The rider must move this far before the nearest stop is recomputed, so GPS
@@ -48,13 +52,16 @@ export const sortByDistance = (
 
 /**
  * The stop closest to the rider plus a few alternates (e.g. the other side
- * of the street). `radius` widens the search for "Show the closest".
+ * of the street). Searches a 5-minute walk first (a small box keeps the
+ * closest stops in the results); finding nothing, it widens to
+ * WIDE_RADIUS_METERS, so riders always get their closest stop.
  */
-export const useNearestStop = (
-  position?: LatLon,
-  radius: number = NEARBY_RADIUS_METERS
-) => {
+export const useNearestStop = (position?: LatLon) => {
   const anchor = useStableAnchor(position);
+  // The anchor the wide search is for; a new anchor starts narrow again
+  const [wideFor, setWideFor] = useState<LatLon>();
+  const wide = !!anchor && wideFor === anchor;
+  const radius = wide ? WIDE_RADIUS_METERS : NEARBY_RADIUS_METERS;
   const box = anchor ? boundingBox(anchor, radius) : undefined;
   const { data, isLoading, isError } = useNearByStops(
     {
@@ -69,10 +76,23 @@ export const useNearestStop = (
     [anchor, data]
   );
 
+  // Nothing within a 5-minute walk: look farther
+  const widen =
+    !!anchor &&
+    !wide &&
+    !isLoading &&
+    !isError &&
+    !!data &&
+    ranked.length === 0;
+  useEffect(() => {
+    if (widen) setWideFor(anchor);
+  }, [widen, anchor]);
+
   return {
     nearest: ranked[0],
     alternates: ranked.slice(1, 1 + MAX_ALTERNATES),
-    isLoading: !!box && isLoading,
+    // Still searching while about to widen, so "no stops" isn't flashed
+    isLoading: !!box && (isLoading || widen),
     isError,
   };
 };

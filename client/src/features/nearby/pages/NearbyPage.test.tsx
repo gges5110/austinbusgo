@@ -217,7 +217,7 @@ describe("NearbyPage", () => {
     expect(screen.getByLabelText("Stop ID")).toBeTruthy();
   });
 
-  test("no stop within walking distance offers a wider search", () => {
+  test("no stop even within a 20-minute walk: stop ID and search", () => {
     mocks.nearestStop.mockReturnValue({
       alternates: [],
       isLoading: false,
@@ -226,9 +226,12 @@ describe("NearbyPage", () => {
 
     renderAt("/nearby");
 
-    expect(screen.getByText("No stops within a 5-minute walk")).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "Show the closest" })
+      screen.getByText("No bus stops within a 20-minute walk")
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Stop ID")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Or search for a route or stop" })
     ).toBeTruthy();
   });
 

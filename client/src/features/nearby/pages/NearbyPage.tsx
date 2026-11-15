@@ -21,18 +21,14 @@ import {
   GeolocationStatus,
   useGeolocation,
 } from "features/nearby/hooks/useGeolocation";
-import {
-  NEARBY_RADIUS_METERS,
-  useNearestStop,
-  WIDE_RADIUS_METERS,
-} from "features/nearby/hooks/useNearestStop";
+import { useNearestStop } from "features/nearby/hooks/useNearestStop";
 import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
 
 import { distanceMeters } from "features/nearby/utils/geo";
 import { isStop } from "features/search/components/SearchPanel/hooks/searchPanelUtils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { StopUpcoming } from "shared/api/generated/model";
 import { useExplorePath } from "shared/components/BottomTabs/BottomTabs";
@@ -42,6 +38,7 @@ import {
   currentStopAtom,
   favoritesAtom,
   nearbyFocusAtom,
+  nearbyRiderAtom,
 } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
@@ -57,16 +54,13 @@ export const NearbyPage: React.FC = () => {
   const { stopId: pinnedStopId } = useParams();
   const pinned = pinnedStopId !== undefined;
   const geolocation = useGeolocation(!pinned);
-  const [radius, setRadius] = useState(NEARBY_RADIUS_METERS);
-  const nearestStop = useNearestStop(
-    pinned ? undefined : geolocation.position,
-    radius
-  );
+  const nearestStop = useNearestStop(pinned ? undefined : geolocation.position);
   const stopId = pinnedStopId ?? nearestStop.nearest?.stop.stopId;
   const upcoming = useUpcoming(stopId);
   const nowSeconds = useServerNow(upcoming.clockOffset);
 
   useSyncMapFocus(stopId, upcoming.data, geolocation.position);
+  useSyncRider(pinned ? undefined : geolocation.position);
   const [focus, setFocus] = useAtom(nearbyFocusAtom);
   const selectedTripId = focus?.selectedTripId;
   const toggleTrip = (tripId: string) =>
@@ -123,18 +117,11 @@ export const NearbyPage: React.FC = () => {
   if (!pinned && !nearestStop.isLoading && !nearestStop.nearest) {
     return (
       <NearbySheet>
-        <Message title={"No stops within a 5-minute walk"}>
-          {radius < WIDE_RADIUS_METERS && (
-            <Button
-              onClick={() => setRadius(WIDE_RADIUS_METERS)}
-              sx={{ mt: 1 }}
-              variant={"outlined"}
-            >
-              Show the closest
-            </Button>
-          )}
+        <Message title={"No bus stops within a 20-minute walk"}>
+          Enter a stop ID from the sign, or search for a route or stop.
         </Message>
         <StopIdEntry />
+        <SearchLink />
       </NearbySheet>
     );
   }
@@ -240,6 +227,26 @@ const useSyncMapFocus = (
   );
 };
 
+/** Publishes the rider's location to the map (nearbyRiderAtom) */
+const useSyncRider = (
+  rider: { latitude: number; longitude: number } | undefined
+) => {
+  const setRider = useSetAtom(nearbyRiderAtom);
+  useEffect(() => setRider(rider), [rider, setRider]);
+  useEffect(() => () => setRider(undefined), [setRider]);
+};
+
+const SearchLink: React.FC = () => {
+  const explorePath = useExplorePath();
+  return (
+    <Box sx={{ textAlign: "center" }}>
+      <Button component={RouterLink} size={"small"} to={explorePath}>
+        Or search for a route or stop
+      </Button>
+    </Box>
+  );
+};
+
 const Message: React.FC<React.PropsWithChildren<{ title: string }>> = ({
   children,
   title,
@@ -269,7 +276,6 @@ const LocationPrompt: React.FC<{
   onRequest?: () => void;
   status: GeolocationStatus;
 }> = ({ onRequest, status }) => {
-  const explorePath = useExplorePath();
   const firstVisit = status === "idle";
 
   return (
@@ -327,11 +333,7 @@ const LocationPrompt: React.FC<{
       )}
       <YourStops />
       <StopIdEntry prominent={true} />
-      <Box sx={{ textAlign: "center" }}>
-        <Button component={RouterLink} size={"small"} to={explorePath}>
-          Or search for a route or stop
-        </Button>
-      </Box>
+      <SearchLink />
     </>
   );
 };

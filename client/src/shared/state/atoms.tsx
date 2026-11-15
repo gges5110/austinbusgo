@@ -68,3 +68,11 @@ export interface NearbyFocus {
   rider?: { latitude: number; longitude: number };
 }
 export const nearbyFocusAtom = atom<NearbyFocus | undefined>(undefined);
+
+/**
+ * The rider's location while Nearby follows it (not a pinned stop). The map
+ * marks it, and pans to it when there's no stop to frame.
+ */
+export const nearbyRiderAtom = atom<
+  { latitude: number; longitude: number } | undefined
+>(undefined);

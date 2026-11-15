@@ -1,4 +1,7 @@
 import { renderHook } from "@testing-library/react";
+import { createStore, Provider as JotaiProvider } from "jotai";
+import * as React from "react";
+import { nearbyRiderAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -94,6 +97,20 @@ describe("useStops", () => {
 
     expect(result.current.contextStops).toEqual([...searchStops, currentStop]);
     expect(mocks.useAllStops).toHaveBeenCalledWith(false);
+  });
+
+  test("shows every stop on Nearby, around the rider's stop", () => {
+    mocks.useCurrentStop.mockReturnValue({ currentStop: makeStop("c1") });
+    const store = createStore();
+    store.set(nearbyRiderAtom, { latitude: 30.2, longitude: -97.8 });
+
+    renderHook(() => useStops(), {
+      wrapper: ({ children }: React.PropsWithChildren) => (
+        <JotaiProvider store={store}>{children}</JotaiProvider>
+      ),
+    });
+
+    expect(mocks.useAllStops).toHaveBeenCalledWith(true);
   });
 
   test("deduplicates stops by stopId, later source wins", () => {

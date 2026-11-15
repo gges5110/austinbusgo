@@ -6,7 +6,7 @@ import { useRouteShapes } from "features/map/hooks/useRouteShapes";
 import { useStops } from "features/map/hooks/useStops";
 import { useViewStateSync } from "features/map/hooks/UseViewStateSync";
 import { toVehiclePositions } from "features/nearby/utils/mapData";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import * as React from "react";
 import { useCallback, useMemo, useState } from "react";
 import ReactMapGL, {
@@ -19,10 +19,11 @@ import ReactMapGL, {
 import { useCurrentRoute } from "shared/hooks/UseCurrentRoute";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { useViewStatePathname } from "shared/hooks/UseViewStatePathname";
-import { nearbyFocusAtom } from "shared/state/atoms";
+import { nearbyFocusAtom, nearbyRiderAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
 import { NearbyFocusLayer } from "./Nearby/NearbyFocusLayer";
+import { NearbyRiderLayer } from "./Nearby/NearbyRiderLayer";
 import { STOPS_LAYER_ID, StopLayer } from "./Stop/StopLayer";
 import { VEHICLES_LAYER_ID, VehicleLayer } from "./Vehicle/VehicleLayer";
 
@@ -53,6 +54,7 @@ export const Map: React.FunctionComponent = () => {
   const mergedVehiclePositions = useMergedVehiclePositions();
   // The Nearby screen narrows the map to the buses headed to its stop
   const [nearbyFocus, setNearbyFocus] = useAtom(nearbyFocusAtom);
+  const nearbyRider = useAtomValue(nearbyRiderAtom);
   const nearbyVehiclePositions = useMemo(
     () => (nearbyFocus ? toVehiclePositions(nearbyFocus.arrivals) : []),
     [nearbyFocus]
@@ -187,6 +189,13 @@ export const Map: React.FunctionComponent = () => {
         vehiclePositions={vehiclePositions}
       />
 
+      {nearbyRider && (
+        <NearbyRiderLayer
+          // With a stop, NearbyFocusLayer frames the rider and the stop
+          pan={!nearbyFocus}
+          rider={nearbyRider}
+        />
+      )}
       {nearbyFocus && <NearbyFocusLayer focus={nearbyFocus} stop={stop} />}
     </ReactMapGL>
   );
