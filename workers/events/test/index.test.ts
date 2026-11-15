@@ -6,7 +6,7 @@ import worker, { toPoint } from "../src/index.ts";
 test("keeps known events and only their declared fields", () => {
   const point = toPoint(
     { e: "search", s: "abc", p: "search", f: ["640", "0", "extra", "x"], v: 5 },
-    "US"
+    "US",
   );
   assert.deepEqual(point, {
     indexes: ["search"],
@@ -39,7 +39,7 @@ const call = async (init: RequestInit & { url?: string }) => {
   const env = { EVENTS: { writeDataPoint: (p: unknown) => written.push(p) } };
   const response = await worker.fetch(
     new Request(init.url ?? "https://x.workers.dev/e", init),
-    env as never
+    env as never,
   );
   return { status: response.status, written };
 };
@@ -68,10 +68,16 @@ test("rejects other paths, methods and bad JSON", async () => {
   assert.equal((await call({ method: "GET", headers })).status, 404);
   assert.equal(
     (await call({ method: "POST", headers, url: "https://x/other" })).status,
-    404
+    404,
   );
   assert.equal(
     (await call({ method: "POST", headers, body: "{" })).status,
-    400
+    400,
   );
+});
+
+test("health check answers anyone and writes nothing", async () => {
+  const health = await call({ method: "GET", url: "https://x/health" });
+  assert.equal(health.status, 200);
+  assert.equal(health.written.length, 0);
 });

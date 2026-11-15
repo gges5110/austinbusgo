@@ -81,6 +81,19 @@ async function fetchFeed(
 
 // ─── public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Fetch one feed through the proxy and report how fresh it is (status page)
+ */
+export async function fetchFeedHeader(
+  path: "/vehicle-positions" | "/trip-updates"
+): Promise<{ timestamp: number | null; entities: number }> {
+  const feed = await fetchFeed(feedUrl(path));
+  return {
+    timestamp: toLong(feed.header.timestamp),
+    entities: feed.entity.length,
+  };
+}
+
 /** Fetch and decode all vehicle positions from the CapMetro GTFS-RT feed. */
 export async function fetchVehiclePositions(): Promise<VehiclePosition[]> {
   const feed = await fetchFeed(feedUrl("/vehicle-positions"));

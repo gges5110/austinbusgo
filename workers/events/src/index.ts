@@ -16,6 +16,7 @@
  *
  * Route: POST /e  body: JSON {e, s, p, f: [..4], v?, n?}, sent as
  * text/plain via navigator.sendBeacon (a "simple" request, no preflight).
+ *        GET /health  200 "ok", for the site's status page (writes nothing)
  */
 
 interface Env {
@@ -105,6 +106,14 @@ export const toPoint = (body: unknown, country = ""): Point | null => {
 export default {
   async fetch(request: Request, env: Env) {
     const origin = request.headers.get("Origin") ?? "";
+    if (
+      request.method === "GET" &&
+      new URL(request.url).pathname === "/health"
+    ) {
+      return new Response("ok", {
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
+    }
     if (request.method !== "POST" || new URL(request.url).pathname !== "/e") {
       return new Response("Not found", { status: 404 });
     }

@@ -1,6 +1,7 @@
 import logging
 import time
-from typing import Dict, List, Sequence, Tuple
+from dataclasses import asdict, dataclass
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import httpx
 from google.transit import gtfs_realtime_pb2
@@ -19,12 +20,36 @@ FETCH_TIMEOUT_SECONDS = 3
 _feed_cache: Dict[str, Tuple[float, Sequence[FeedEntity]]] = {}
 
 
+@dataclass
+class FeedStats:
+    """How fetching one feed has gone since this worker started (/status)"""
+
+    successes: int = 0
+    failures: int = 0
+    last_success_at: Optional[float] = None  # epoch seconds
+    last_failure_at: Optional[float] = None
+    last_error: Optional[str] = None
+    last_fetch_ms: Optional[int] = None
+    # The feed's own header timestamp: how fresh CapMetro's data is
+    feed_timestamp: Optional[int] = None
+    entities: Optional[int] = None
+
+
+# url -> stats
+_feed_stats: Dict[str, FeedStats] = {}
+
+
+def feed_stats(url: str) -> dict:
+    return asdict(_feed_stats.get(url, FeedStats()))
+
+
 class RealtimeFeedError(Exception):
     """The upstream GTFS-RT feed could not be fetched or parsed."""
 
 
 def clear_feed_cache() -> None:
     _feed_cache.clear()
+    _feed_stats.clear()
 
 
 class GTFSRTClient:
@@ -53,6 +78,8 @@ class GTFSRTClient:
         cached = _feed_cache.get(url)
         if cached is not None and time.monotonic() - cached[0] < CACHE_TTL_SECONDS:
             return cached[1]
+        stats = _feed_stats.setdefault(url, FeedStats())
+        started = time.monotonic()
         try:
             async with httpx.AsyncClient(
                 follow_redirects=True, timeout=FETCH_TIMEOUT_SECONDS
@@ -63,7 +90,16 @@ class GTFSRTClient:
             feed_message.ParseFromString(response.content)
         except Exception as error:
             logger.warning("GTFS-RT fetch failed for %s: %s", url, error)
+            stats.failures += 1
+            stats.last_failure_at = time.time()
+            stats.last_error = f"{type(error).__name__}: {error}"[:200]
+            stats.last_fetch_ms = round((time.monotonic() - started) * 1000)
             raise RealtimeFeedError(str(error)) from error
+        stats.successes += 1
+        stats.last_success_at = time.time()
+        stats.last_fetch_ms = round((time.monotonic() - started) * 1000)
+        stats.feed_timestamp = feed_message.header.timestamp or None
+        stats.entities = len(feed_message.entity)
         _feed_cache[url] = (time.monotonic(), feed_message.entity)
         return feed_message.entity
 

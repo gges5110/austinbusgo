@@ -35,6 +35,12 @@ const GtfsRtFrontendDevPage = React.lazy(() =>
   }))
 );
 
+const StatusPage = React.lazy(() =>
+  import("features/dev/pages/StatusPage").then((m) => ({
+    default: m.StatusPage,
+  }))
+);
+
 export const useDataFromLoader = <LoaderFn extends LoaderFunction>(
   _loaderFn: LoaderFn
 ): Awaited<ReturnType<LoaderFn>> =>
@@ -51,6 +57,14 @@ export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route element={<DevLayout />} path={"/dev"}>
+        <Route
+          element={
+            <React.Suspense fallback={null}>
+              <StatusPage />
+            </React.Suspense>
+          }
+          path={"status"}
+        />
         <Route element={<VehiclePositionsDevPage />} path={"vehicles"} />
         <Route element={<TripStopTimesDevPage />} path={"trip-stop-times"} />
         <Route element={<StopsDevPage />} path={"stops"} />

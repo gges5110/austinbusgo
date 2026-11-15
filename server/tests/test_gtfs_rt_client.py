@@ -11,6 +11,7 @@ from server.services.gtfs_rt_client import (
     GTFSRTClient,
     RealtimeFeedError,
     clear_feed_cache,
+    feed_stats,
 )
 
 mock_trip_updates_pb_file_url = "http://url1"
@@ -135,6 +136,11 @@ async def test_fetch_failure_raises_realtime_feed_error(mocker):
 
     with pytest.raises(RealtimeFeedError):
         await GTFSRTClient._get_feed_message_entity_from_url("http://test-url")
+
+    stats = feed_stats("http://test-url")
+    assert stats["failures"] == 1
+    assert stats["successes"] == 0
+    assert stats["last_error"].startswith("ReadTimeout")
 
 
 @pytest.mark.asyncio

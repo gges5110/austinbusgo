@@ -8,6 +8,7 @@ export const DevLayout: React.FC = () => {
 
   // Determine which tab is currently active based on the path
   const currentTab = React.useMemo(() => {
+    if (location.pathname.includes("/dev/status")) return "/dev/status";
     if (location.pathname.includes("/dev/stops")) return "/dev/stops";
     if (location.pathname.includes("/dev/trip-stop-times"))
       return "/dev/trip-stop-times";
@@ -32,8 +33,11 @@ export const DevLayout: React.FC = () => {
           <Tabs
             aria-label={"dev page navigation"}
             onChange={handleTabChange}
+            scrollButtons={"auto"}
             value={currentTab}
+            variant={"scrollable"}
           >
+            <Tab label={"Status"} value={"/dev/status"} />
             <Tab label={"Stops"} value={"/dev/stops"} />
             <Tab label={"Trip Stop Times"} value={"/dev/trip-stop-times"} />
             <Tab label={"Vehicle Positions"} value={"/dev/vehicles"} />
