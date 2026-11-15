@@ -15,6 +15,7 @@
  */
 
 import { ttlForPath } from "./ttl";
+import { upstreamUrl as toUpstream } from "./upstream";
 
 interface Env {
   UPSTREAM_ORIGIN: string;
@@ -36,7 +37,7 @@ const CORS_HEADERS = {
 
 function withEdgeCacheHeaders(
   response: Response,
-  status: "HIT" | "MISS" | "BYPASS"
+  status: "HIT" | "MISS" | "BYPASS",
 ): Response {
   const result = new Response(response.body, response);
   result.headers.set("X-Edge-Cache", status);
@@ -53,7 +54,10 @@ export default {
     }
 
     const url = new URL(request.url);
-    const upstreamUrl = new URL(url.pathname + url.search, env.UPSTREAM_ORIGIN);
+    const upstreamUrl = toUpstream(request.url, env.UPSTREAM_ORIGIN);
+    if (!upstreamUrl) {
+      return new Response("Not Found", { status: 404, headers: CORS_HEADERS });
+    }
 
     if (request.method !== "GET") {
       return new Response("Method Not Allowed", {
@@ -64,7 +68,10 @@ export default {
 
     const ttl = ttlForPath(url.pathname);
     if (ttl === undefined) {
-      return withEdgeCacheHeaders(await fetch(upstreamUrl.toString()), "BYPASS");
+      return withEdgeCacheHeaders(
+        await fetch(upstreamUrl.toString()),
+        "BYPASS",
+      );
     }
 
     // Sort query params so parameter order never splits the cache
@@ -72,8 +79,8 @@ export default {
     const cacheKey = new Request(
       new URL(
         `/__edge-cache/${env.CACHE_VERSION ?? "v1"}${url.pathname}?${url.searchParams}`,
-        request.url
-      ).toString()
+        request.url,
+      ).toString(),
     );
     const cache = caches.default;
 

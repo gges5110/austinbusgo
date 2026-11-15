@@ -210,8 +210,8 @@ Run `make help` to see all available targets organized by category.
 - Data stored in `etl/capmetro/`
 
 ### Cloudflare Workers
-- `workers/events` and `workers/gtfs-rt-proxy` deploy from `.github/workflows/deployWorkers.yml` when their files change on `main` (or by hand: Actions → Deploy Workers); PRs that touch them run their type check and tests
-- `workers/graphql-edge-cache` is deployed by `deployBackend.yml` with a fresh `CACHE_VERSION` after each data load; don't deploy it plainly, which resets the version
+- `workers/events`, `workers/gtfs-rt-proxy` and `workers/graphql-edge-cache` deploy from `.github/workflows/deployWorkers.yml` when their files change on `main` (or by hand: Actions → Deploy Workers); PRs that touch them run their type check and tests
+- `workers/graphql-edge-cache` deploys with a fresh `CACHE_VERSION` (then a cache warm-up) from `deployWorkers.yml` when its code changes, and from `deployBackend.yml` after each data load; never deploy it plainly, which resets the version to `v1`. It forwards only `/api/` paths, always to the backend host (`src/upstream.ts`)
 
 ### Git Workflow
 - Git hooks installed via `./setup-hooks.sh`

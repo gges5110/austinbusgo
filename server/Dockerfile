@@ -26,6 +26,11 @@ ENV GTFS_DB_PATH=/app/data/gtfs.db
 
 EXPOSE 8080
 
+# Run unprivileged: the app only reads its files (the database opens
+# read-only), and gunicorn's heartbeat files go to /tmp
+RUN useradd --system --uid 10001 --no-create-home app
+USER app
+
 # The Fix: Use the Uvicorn worker and point to the actual file (main.py) and variable (app)
 # Two async workers: Cloud Run gives the container 1 vCPU and 512Mi, and each
 # worker holds ~100MB (app + SQLite page cache + search caches).

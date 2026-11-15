@@ -26,6 +26,7 @@ jobs:
             workers:
               - 'workers/events/**'
               - 'workers/gtfs-rt-proxy/**'
+              - 'workers/graphql-edge-cache/**'
 
   backend-lint:
     needs: [detect-changes]
@@ -104,7 +105,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        worker: [events, gtfs-rt-proxy]
+        worker: [events, gtfs-rt-proxy, graphql-edge-cache]
     defaults:
       run:
         working-directory: workers/${{ matrix.worker }}
