@@ -385,3 +385,37 @@ def test_upcoming_at_unknown_stop_is_404(client, services):
     response = client.get("/api/stops/nope/upcoming")
 
     assert response.status_code == 404
+
+
+def test_status_reports_each_realtime_feed(client, services, monkeypatch):
+    from server.api.routers import status as status_router
+    from server.services.gtfs_rt_client import GTFSRTClient, RealtimeFeedError
+
+    gtfs, _, _ = services
+    gtfs.get_feed_info.return_value = SimpleNamespace(
+        feed_publisher_name="Capital Metro",
+        feed_publisher_url="http://example.com",
+        feed_lang="en",
+        feed_start_date="2026-08-26",
+        feed_end_date="2027-01-09",
+        feed_version="260826_0956",
+    )
+
+    async def fetch(url):
+        if url == status_router.FEEDS["vehiclePositions"]:
+            raise RealtimeFeedError("ConnectTimeout")
+        return []
+
+    monkeypatch.setattr(
+        GTFSRTClient, "_get_feed_message_entity_from_url", staticmethod(fetch)
+    )
+
+    response = client.get("/api/rt/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["feedEndDate"] == "2027-01-09"
+    feeds = {feed["name"]: feed for feed in body["realtime"]}
+    assert feeds["tripUpdates"]["ok"] is True
+    assert feeds["vehiclePositions"]["ok"] is False
+    assert feeds["vehiclePositions"]["error"] == "ConnectTimeout"

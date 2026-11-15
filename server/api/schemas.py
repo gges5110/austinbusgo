@@ -305,3 +305,33 @@ class TripUpdate(ApiModel):
             timestamp=proto.timestamp,
             delay=proto.delay or None,
         )
+
+
+# Status page
+
+
+class RealtimeFeedStatus(ApiModel):
+    """One CapMetro GTFS-RT feed, as this backend worker sees it"""
+
+    name: str
+    ok: bool
+    error: Optional[str] = None
+    successes: int
+    failures: int
+    last_success_at: Optional[float] = None
+    last_failure_at: Optional[float] = None
+    last_error: Optional[str] = None
+    last_fetch_ms: Optional[int] = None
+    feed_timestamp: Optional[int] = None
+    entities: Optional[int] = None
+
+
+class Status(ApiModel):
+    now: float
+    started_at: float
+    revision: Optional[str] = None
+    feed_version: Optional[str] = None
+    feed_start_date: Optional[str] = None
+    feed_end_date: Optional[str] = None
+    database_built_at: Optional[float] = None
+    realtime: List[RealtimeFeedStatus]

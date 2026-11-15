@@ -775,6 +775,25 @@
           }
         }
       }
+    },
+    "/api/rt/status": {
+      "get": {
+        "tags": ["status"],
+        "summary": "Status",
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -961,6 +980,107 @@
         "required": ["latitude", "longitude"],
         "title": "Position"
       },
+      "RealtimeFeedStatus": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "successes": {
+            "type": "integer",
+            "title": "Successes"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "lastSuccessAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsuccessat"
+          },
+          "lastFailureAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastfailureat"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "lastFetchMs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastfetchms"
+          },
+          "feedTimestamp": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedtimestamp"
+          },
+          "entities": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entities"
+          }
+        },
+        "type": "object",
+        "required": ["name", "ok", "successes", "failures"],
+        "title": "RealtimeFeedStatus",
+        "description": "One CapMetro GTFS-RT feed, as this backend worker sees it"
+      },
       "Route": {
         "properties": {
           "routeId": {
@@ -1029,6 +1149,83 @@
         "type": "object",
         "required": ["stops", "routes"],
         "title": "SearchResult"
+      },
+      "Status": {
+        "properties": {
+          "now": {
+            "type": "number",
+            "title": "Now"
+          },
+          "startedAt": {
+            "type": "number",
+            "title": "Startedat"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "feedVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedversion"
+          },
+          "feedStartDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedstartdate"
+          },
+          "feedEndDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedenddate"
+          },
+          "databaseBuiltAt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Databasebuiltat"
+          },
+          "realtime": {
+            "items": {
+              "$ref": "#/components/schemas/RealtimeFeedStatus"
+            },
+            "type": "array",
+            "title": "Realtime"
+          }
+        },
+        "type": "object",
+        "required": ["now", "startedAt", "realtime"],
+        "title": "Status"
       },
       "Stop": {
         "properties": {

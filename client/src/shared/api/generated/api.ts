@@ -21,6 +21,7 @@ import type {
   Route,
   SearchParams,
   SearchResult,
+  Status,
   Stop,
   StopTime,
   StopUpcoming,
@@ -1471,6 +1472,69 @@ export function useFeedInfo<
   request?: SecondParameter<typeof apiFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getFeedInfoQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getStatusUrl = () => {
+  return `/api/rt/status`;
+};
+
+/**
+ * @summary Status
+ */
+export const status = async (options?: RequestInit): Promise<Status> => {
+  return apiFetch<Status>(getStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getStatusQueryKey = () => {
+  return [`/api/rt/status`] as const;
+};
+
+export const getStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof status>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof status>>, TError, TData>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getStatusQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof status>>> = ({
+    signal,
+  }) => status({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof status>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type StatusQueryResult = NonNullable<Awaited<ReturnType<typeof status>>>;
+export type StatusQueryError = unknown;
+
+/**
+ * @summary Status
+ */
+
+export function useStatus<
+  TData = Awaited<ReturnType<typeof status>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof status>>, TError, TData>;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getStatusQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
