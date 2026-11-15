@@ -43,6 +43,17 @@ describe("realtimeCheck", () => {
     expect(result.summary).toContain("ConnectTimeout");
   });
 
+  test("serving the last copy after a failure is degraded, with the reason", () => {
+    const result = realtimeCheck(
+      { ...feed, servingStale: true, lastError: "ConnectTimeout" },
+      NOW
+    );
+    expect(result.level).toBe("warn");
+    expect(result.summary).toBe(
+      "Fetch failing (ConnectTimeout); riders see the last copy, from 20s ago"
+    );
+  });
+
   test("frequent failures are degraded even when the last one worked", () => {
     expect(realtimeCheck({ ...feed, failures: 10 }, NOW).level).toBe("warn");
   });

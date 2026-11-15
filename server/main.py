@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from server import logging_config  # noqa: F401 - Configure logging on import
@@ -16,6 +18,7 @@ from server.database import (
     database_sanity_check,
     init_database,
 )
+from server.services.gtfs_rt_client import RealtimeFeedError, warm_realtime_feeds
 from server.services.gtfs_service import GTFSService
 
 
@@ -30,7 +33,11 @@ async def lifespan(app: FastAPI):
         app.state.stop_routes_cache = await GTFSService(
             session
         ).get_all_routes_at_stops()
+    # Start downloading the realtime feeds now, so a fresh worker's first
+    # rider doesn't wait on data.texas.gov (requests join this fetch)
+    warm = asyncio.create_task(warm_realtime_feeds())
     yield
+    warm.cancel()
 
 
 def create_app() -> FastAPI:
@@ -44,6 +51,15 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router)
+
+    # Live-bus endpoints when data.texas.gov is down or slow: say so (503,
+    # never cached by the edge) instead of a bare 500
+    @app.exception_handler(RealtimeFeedError)
+    async def realtime_unavailable(_request: Request, error: RealtimeFeedError):
+        return JSONResponse(
+            status_code=503,
+            content={"detail": f"CapMetro realtime feed unavailable: {error}"},
+        )
 
     return app
 

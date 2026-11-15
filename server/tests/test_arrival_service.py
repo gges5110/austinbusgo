@@ -320,3 +320,24 @@ async def test_next_scheduled_none_when_nothing_within_the_lookahead():
     result = await svc.get_upcoming("s3", now=to_epoch(date(2026, 11, 10), "12:00:00"))
 
     assert result["next_scheduled"] is None
+
+
+@pytest.mark.asyncio
+async def test_earliest_arrivals_fall_back_to_the_schedule_when_the_feed_is_down():
+    from server.services.gtfs_rt_client import RealtimeFeedError
+
+    gtfs = AsyncMock()
+    gtfs.get_earliest_arrival_times_on_route.return_value = [
+        SimpleNamespace(
+            stop_id="s1", stop_sequence=1, arrival_time="08:00:00", trip_id="t1"
+        )
+    ]
+    rt = AsyncMock()
+    rt.get_real_time_trip_updates_on_route.side_effect = RealtimeFeedError("down")
+
+    rows = await ArrivalService(gtfs, rt).get_earliest_arrival_times_on_route(
+        "10", 0, "20260224", "07:00:00"
+    )
+
+    assert rows[0].scheduled_arrival_time == "08:00:00"
+    assert rows[0].updated_arrival_time is None

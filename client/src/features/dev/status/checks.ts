@@ -94,12 +94,17 @@ export const realtimeCheck = (
       ? feed.failures / (feed.successes + feed.failures)
       : 0;
   return {
-    level: worst(ageLevel, failureRate > 0.05 ? "warn" : "ok"),
+    level: worst(
+      ageLevel,
+      failureRate > 0.05 || feed.servingStale ? "warn" : "ok"
+    ),
     summary: !feed.ok
       ? `Can't fetch ${FEED_NAMES[feed.name] ?? feed.name}: ${feed.error}`
-      : age !== undefined
-        ? `CapMetro data from ${ago(age)}, ${feed.entities ?? 0} entries`
-        : "Fetched, but the feed has no timestamp",
+      : feed.servingStale
+        ? `Fetch failing (${feed.lastError ?? "unknown"}); riders see the last copy, from ${age !== undefined ? ago(age) : "earlier"}`
+        : age !== undefined
+          ? `CapMetro data from ${ago(age)}, ${feed.entities ?? 0} entries`
+          : "Fetched, but the feed has no timestamp",
     details: [
       [
         "Download time",

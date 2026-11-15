@@ -12,6 +12,7 @@ from typing import List, Optional
 from google.transit.gtfs_realtime_pb2 import TripUpdate
 from pytz import timezone
 
+from server.services.gtfs_rt_client import RealtimeFeedError
 from server.services.gtfs_rt_service import GTFSRTService
 from server.services.gtfs_service import GTFSService
 from server.services.upcoming import (
@@ -81,9 +82,15 @@ class ArrivalService:
         earliest = await self.gtfs_service.get_earliest_arrival_times_on_route(
             route_id, direction_id, date, time
         )
-        trip_updates = await self.gtfs_rt_service.get_real_time_trip_updates_on_route(
-            route_id, direction_id
-        )
+        try:
+            trip_updates = (
+                await self.gtfs_rt_service.get_real_time_trip_updates_on_route(
+                    route_id, direction_id
+                )
+            )
+        except RealtimeFeedError:
+            # Feed down: scheduled times only, not an error page
+            trip_updates = []
         stop_time_updates_list = [tu.stop_time_update for tu in trip_updates]
         return [
             SimpleNamespace(
