@@ -48,7 +48,7 @@ describe("MenuPanel", () => {
 
     expect(screen.getByTestId("test-content")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /collapse menu/i })
+      screen.getByRole("button", { name: /expand menu/i })
     ).toBeInTheDocument();
   });
 

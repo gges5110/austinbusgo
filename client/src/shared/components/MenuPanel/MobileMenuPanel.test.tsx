@@ -1,13 +1,31 @@
 import { createTheme, ThemeProvider } from "@mui/material";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
-import { describe, expect, it } from "vitest";
+import { phoneSheetHeightPx } from "shared/layout/phoneLayout";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MobileMenuPanel } from "./MobileMenuPanel";
 
 const theme = createTheme();
 
+// jsdom has no PointerEvent
+const stubPointerEvents = () =>
+  vi.stubGlobal(
+    "PointerEvent",
+    class extends MouseEvent {
+      pointerId: number;
+      constructor(type: string, init: PointerEventInit = {}) {
+        super(type, init);
+        this.pointerId = init.pointerId ?? 0;
+      }
+    }
+  );
+
 describe("MobileMenuPanel", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("renders children when expanded", () => {
     render(
       <ThemeProvider theme={theme}>
@@ -30,45 +48,192 @@ describe("MobileMenuPanel", () => {
     );
   const panel = () =>
     screen.getByTestId("test-content").closest(".MuiPaper-root") as HTMLElement;
-  const grow = () => screen.queryByRole("button", { name: /expand menu/i });
-  const shrink = () => screen.queryByRole("button", { name: /collapse menu/i });
+  const handle = () =>
+    screen.getByRole("button", { name: /(expand|collapse) menu/i });
 
-  it("opens half height so the map stays visible, with both controls", () => {
+  it("opens at most half height so the map stays visible", () => {
     renderPanel();
 
     expect(panel()).toHaveStyle({ height: "55vh" });
-    expect(grow()).toBeInTheDocument();
-    expect(shrink()).toBeInTheDocument();
+    expect(handle()).toHaveAccessibleName("Expand menu");
+    expect(handle()).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByTestId("test-content")).toBeVisible();
   });
 
-  it("grows to full screen, then back to half", async () => {
+  it("tapping the handle grows to full screen, then back to half", async () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(grow()!);
+    await user.click(handle());
 
     expect(panel()).toHaveStyle({ height: "calc(100vh - 56px)" });
-    expect(grow()).toBeNull();
+    expect(handle()).toHaveAccessibleName("Collapse menu");
 
-    await user.click(shrink()!);
+    await user.click(handle());
 
     expect(panel()).toHaveStyle({ height: "55vh" });
   });
 
-  it("shrinks to a bar that hides the content, then back to half", async () => {
+  it("Enter on the handle grows the panel like a tap", async () => {
     const user = userEvent.setup();
     renderPanel();
+    handle().focus();
 
-    await user.click(shrink()!);
+    await user.keyboard("{Enter}");
 
-    await waitFor(() => expect(panel()).toHaveStyle({ height: "48px" }));
-    expect(shrink()).toBeNull();
-    expect(screen.getByTestId("test-content")).not.toBeVisible();
+    expect(panel()).toHaveStyle({ height: "calc(100vh - 56px)" });
+  });
 
-    await user.click(grow()!);
+  it("arrow keys step between a title bar, half and full", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    handle().focus();
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(panel()).toHaveStyle({ height: "92px" });
+    expect(handle()).toHaveAttribute("aria-expanded", "false");
+    // Collapsed still shows the top of the page (its title row)
+    expect(screen.getByTestId("test-content")).toBeVisible();
+
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+
+    expect(panel()).toHaveStyle({ height: "calc(100vh - 56px)" });
+  });
+
+  it("dragging the handle snaps to the nearest size", () => {
+    vi.stubGlobal("innerHeight", 800);
+    stubPointerEvents();
+    renderPanel();
+    vi.spyOn(panel(), "getBoundingClientRect").mockReturnValue({
+      height: 440,
+    } as DOMRect);
+
+    // Down 330px from 440px: let go at 110px, nearest the 92px title bar
+    fireEvent.pointerDown(handle(), { clientY: 400, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientY: 600, pointerId: 1 });
+    expect(panel()).toHaveStyle({ height: "240px" });
+    fireEvent.pointerUp(handle(), { clientY: 730, pointerId: 1 });
+
+    expect(panel()).toHaveStyle({ height: "92px" });
+    vi.unstubAllGlobals();
+  });
+
+  it("a drag the browser cancels leaves the panel as it was", () => {
+    vi.stubGlobal("innerHeight", 800);
+    stubPointerEvents();
+    renderPanel();
+    vi.spyOn(panel(), "getBoundingClientRect").mockReturnValue({
+      height: 440,
+    } as DOMRect);
+
+    fireEvent.pointerDown(handle(), { clientY: 400, pointerId: 1 });
+    fireEvent.pointerMove(handle(), { clientY: 600, pointerId: 1 });
+    fireEvent.pointerCancel(handle(), { clientY: 0, pointerId: 1 });
 
     expect(panel()).toHaveStyle({ height: "55vh" });
+    vi.unstubAllGlobals();
+  });
+
+  it("stops the browser's own gestures on the handle", () => {
+    stubPointerEvents();
+    renderPanel();
+    const move = new Event("touchmove", { bubbles: true, cancelable: true });
+
+    fireEvent.pointerDown(handle(), { clientY: 400, pointerId: 1 });
+    handle().dispatchEvent(move);
+
+    // No pull-to-refresh or page scroll while dragging the panel
+    expect(move.defaultPrevented).toBe(true);
+  });
+
+  const renderWithTitle = (onSave = vi.fn()) => {
+    render(
+      <ThemeProvider theme={theme}>
+        <MobileMenuPanel>
+          <div data-testid={"test-content"}>
+            <div>Route title</div>
+            <button onClick={onSave} type={"button"}>
+              Save
+            </button>
+            <div>A long list</div>
+          </div>
+        </MobileMenuPanel>
+      </ThemeProvider>
+    );
+    // A 440px panel whose top is at y=400
+    vi.spyOn(panel(), "getBoundingClientRect").mockReturnValue({
+      height: 440,
+      top: 400,
+    } as DOMRect);
+  };
+
+  it("drags from the title row below the handle too", () => {
+    vi.stubGlobal("innerHeight", 800);
+    stubPointerEvents();
+    renderWithTitle();
+    const title = screen.getByText("Route title");
+
+    // 50px into the panel: inside the 92px handle + title strip
+    fireEvent.pointerDown(title, { clientY: 450, pointerId: 1 });
+    fireEvent.pointerMove(title, { clientY: 750, pointerId: 1 });
+    fireEvent.pointerUp(title, { clientY: 750, pointerId: 1 });
+
+    expect(panel()).toHaveStyle({ height: "92px" });
+    vi.unstubAllGlobals();
+  });
+
+  it("a tap on a button in the title row still works", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    renderWithTitle(onSave);
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(panel()).toHaveStyle({ height: "55vh" });
+  });
+
+  it("drags below the title strip scroll the page instead", () => {
+    vi.stubGlobal("innerHeight", 800);
+    stubPointerEvents();
+    renderWithTitle();
+    const list = screen.getByText("A long list");
+
+    // 200px into the panel: the page's content, not the strip
+    fireEvent.pointerDown(list, { clientY: 600, pointerId: 1 });
+    fireEvent.pointerMove(list, { clientY: 750, pointerId: 1 });
+    const move = new Event("touchmove", { bubbles: true, cancelable: true });
+    list.dispatchEvent(move);
+    fireEvent.pointerUp(list, { clientY: 750, pointerId: 1 });
+
+    expect(move.defaultPrevented).toBe(false);
+    expect(panel()).toHaveStyle({ height: "55vh" });
+    vi.unstubAllGlobals();
+  });
+
+  it("fits a half panel to short content", () => {
+    let observed: (() => void) | undefined;
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          observed = callback;
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(200);
+    renderPanel();
+
+    vi.stubGlobal("innerHeight", 800);
+    act(() => observed?.());
+
+    // 200px of content + the 28px handle (the panel's CSS height is
+    // min(228px, 55vh), which jsdom can't parse); the map frames above it
+    expect(phoneSheetHeightPx()).toBe(228);
+    vi.unstubAllGlobals();
   });
 
   it("passes innerRef correctly", () => {
