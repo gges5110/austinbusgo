@@ -1,4 +1,6 @@
 import { uiMapPadding } from "features/map/utils/mapPadding";
+import { NEARBY_RADIUS_METERS } from "features/nearby/hooks/useNearestStop";
+import { distanceMeters } from "features/nearby/utils/geo";
 import { trackPath } from "features/nearby/utils/mapData";
 import * as React from "react";
 import { FC, useEffect, useMemo, useRef } from "react";
@@ -64,11 +66,18 @@ export const NearbyFocusLayer: FC<NearbyFocusLayerProps> = ({
     if (selected) {
       points.push(...trackPath(selected));
     } else {
+      const [longitude, latitude] = stop.stopLoc.coordinates;
+      // A rider still walking to the stop needs the way there; the bus can
+      // be miles off and would zoom the map out past the streets and stops
+      const walking =
+        !!focus.rider &&
+        distanceMeters(focus.rider, { latitude, longitude }) >
+          NEARBY_RADIUS_METERS;
       if (focus.rider) {
         points.push([focus.rider.longitude, focus.rider.latitude]);
       }
       const nearestLiveBus = focus.arrivals.find((arrival) => arrival.vehicle);
-      if (nearestLiveBus?.vehicle) {
+      if (nearestLiveBus?.vehicle && !walking) {
         points.push([nearestLiveBus.vehicle.lon, nearestLiveBus.vehicle.lat]);
       }
     }

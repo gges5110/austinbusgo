@@ -3,9 +3,11 @@ import { useAllStops } from "features/map/hooks/useAllStops";
 import { routeLoader } from "features/route/pages/route/RouteLoader";
 import { searchLoader } from "features/search/pages/search/SearchLoader";
 import { isResponse } from "features/search/pages/search/SearchResultsMenu";
+import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import { useCurrentStop } from "shared/hooks/UseCurrentStop";
 import { searchParamsDataLoader } from "shared/loaders/searchParamsDataLoader";
+import { nearbyFocusAtom, nearbyRiderAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 
 // Stable empty array so the memos below don't recompute on every render
@@ -51,9 +53,11 @@ export const useStops = () => {
     [routeStops, searchStops, currentStop]
   );
 
-  // Only show the full stops layer when no route or search context stops
-  // are present
-  const { allStops } = useAllStops(contextStops.length === 0);
+  // Show every stop when there's no route or search context, and on
+  // Nearby, so riders see the other stops around them and their stop
+  const onNearby =
+    !!useAtomValue(nearbyFocusAtom) || !!useAtomValue(nearbyRiderAtom);
+  const { allStops } = useAllStops(contextStops.length === 0 || onNearby);
 
   const stops = useMemo(
     () => uniqueById([...contextStops, ...allStops]),
