@@ -58,12 +58,15 @@ describe("uiMapPadding follows the phone sheet", () => {
     expect(uiMapPadding().bottom).toBe(400 - 74 - 80);
   });
 
-  test("Nearby: no search bar, its own margin, always half", () => {
+  test("Nearby: no search bar, its own margin, the panel's current size", () => {
     vi.stubGlobal("innerWidth", 390);
     vi.stubGlobal("innerHeight", 800);
-    setPhoneSheetSize("full");
-    expect(
-      uiMapPadding({ margin: 48, searchBar: false, sheet: "half" })
-    ).toEqual({ top: 48, left: 48, right: 48, bottom: 440 + 56 + 48 });
+    setPhoneSheetSize("half", 300);
+    expect(uiMapPadding({ margin: 48, searchBar: false })).toEqual({
+      top: 48,
+      left: 48,
+      right: 48,
+      bottom: 300 + 56 + 48,
+    });
   });
 });
