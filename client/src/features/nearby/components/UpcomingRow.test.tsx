@@ -100,4 +100,37 @@ describe("UpcomingRow", () => {
       "true"
     );
   });
+
+  test("live times carry an icon, not just a colour", () => {
+    renderRow(liveArrival);
+    expect(screen.getByTestId("live-icon")).toBeTruthy();
+  });
+
+  test("scheduled times have no live icon", () => {
+    renderRow({
+      tripId: "t2",
+      routeId: "7",
+      scheduledAt: NOW + 14 * 60,
+      status: "scheduled",
+    });
+    expect(screen.queryByTestId("live-icon")).toBeNull();
+  });
+
+  test("lists the route's later buses after the next one", () => {
+    renderRow(liveArrival, {
+      later: [
+        { ...liveArrival, tripId: "t3", predictedAt: NOW + 18 * 60 },
+        {
+          tripId: "t4",
+          routeId: "801",
+          scheduledAt: NOW + 32 * 60,
+          status: "scheduled",
+        },
+      ],
+    });
+
+    expect(
+      screen.getByLabelText("then 18 min live, 32 min scheduled")
+    ).toHaveTextContent("then 18, 32 min");
+  });
 });
