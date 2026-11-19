@@ -7,6 +7,10 @@ import {
 
 // Desktop: the menu panel (MENU_PANEL_WIDTH) over the left of the map
 const SIDE_PANEL = 410;
+// The chip row ("Buses near me" …) over the top of the map, from MUI's
+// `md` breakpoint up (AssistiveChips): 16px margin + a 36px button
+const CHIP_ROW = 52;
+const CHIPS_MIN_WIDTH = 900;
 // Never squeeze the visible map below this many pixels tall
 const MIN_VISIBLE_HEIGHT = 80;
 
@@ -34,7 +38,7 @@ export const uiMapPadding = ({
   const isMobile = window.innerWidth < 600;
   if (!isMobile) {
     return {
-      top: margin,
+      top: margin + (window.innerWidth >= CHIPS_MIN_WIDTH ? CHIP_ROW : 0),
       left: SIDE_PANEL + margin,
       right: margin,
       bottom: margin,

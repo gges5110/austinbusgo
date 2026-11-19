@@ -12,6 +12,13 @@ describe("uiMapPadding", () => {
     vi.stubGlobal("innerWidth", 1440);
     expect(uiMapPadding().left).toBe(420);
     expect(uiMapPadding().bottom).toBe(10);
+    // Below the chip row over the top of the map
+    expect(uiMapPadding().top).toBe(62);
+  });
+
+  test("tablets without the chip row use just the margin on top", () => {
+    vi.stubGlobal("innerWidth", 800);
+    expect(uiMapPadding().top).toBe(10);
   });
 
   test("mobile frames the map between the search bar and the half sheet", () => {

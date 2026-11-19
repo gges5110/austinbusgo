@@ -66,6 +66,11 @@ export interface NearbyFocus {
   selectedTripId?: string;
   /** The rider's position, framed together with the stop */
   rider?: { latitude: number; longitude: number };
+  /**
+   * Set by the Explore stop page, where the search bar floats over the
+   * top of the map (Nearby has none)
+   */
+  searchBar?: boolean;
 }
 export const nearbyFocusAtom = atom<NearbyFocus | undefined>(undefined);
 
