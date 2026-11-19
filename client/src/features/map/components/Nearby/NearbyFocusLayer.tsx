@@ -13,10 +13,11 @@ const TRACK_SOURCE_ID = "nearby-track";
 // Margin around the framed points, in pixels
 const FRAME_MARGIN = 48;
 
-// Keep the framed points clear of the Nearby panel (at its current size; no
-// search bar) and tab bar on phones, and the side panel on desktop
-export const nearbyMapPadding = () =>
-  uiMapPadding({ margin: FRAME_MARGIN, searchBar: false });
+// Keep the framed points clear of the panel (at its current size), the
+// search bar where there is one (the stop page; not Nearby) and tab bar on
+// phones, and the side panel on desktop
+export const nearbyMapPadding = (searchBar = false) =>
+  uiMapPadding({ margin: FRAME_MARGIN, searchBar });
 
 interface NearbyFocusLayerProps {
   readonly focus: NearbyFocus;
@@ -24,7 +25,7 @@ interface NearbyFocusLayerProps {
 }
 
 /**
- * Map extras for the Nearby screen: the selected bus's path to the stop,
+ * Map extras for the Nearby screen (and a stop page's tapped bus): the selected bus's path to the stop,
  * and camera framing. The buses themselves are drawn by VehicleLayer.
  */
 export const NearbyFocusLayer: FC<NearbyFocusLayerProps> = ({
@@ -90,7 +91,7 @@ export const NearbyFocusLayer: FC<NearbyFocusLayerProps> = ({
         [Math.min(...lons), Math.min(...lats)],
         [Math.max(...lons), Math.max(...lats)],
       ],
-      { maxZoom: 16, padding: nearbyMapPadding(), duration: 800 }
+      { maxZoom: 16, padding: nearbyMapPadding(focus.searchBar), duration: 800 }
     );
   }, [map, stop, focus, selected]);
 

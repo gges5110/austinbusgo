@@ -55,8 +55,11 @@ export const useStops = () => {
 
   // Show every stop when there's no route or search context, and on
   // Nearby, so riders see the other stops around them and their stop
-  const onNearby =
-    !!useAtomValue(nearbyFocusAtom) || !!useAtomValue(nearbyRiderAtom);
+  // Both hooks always run: `a() || b()` would skip the second one whenever
+  // the first is set, and React needs the same hooks on every render
+  const nearbyFocus = useAtomValue(nearbyFocusAtom);
+  const nearbyRider = useAtomValue(nearbyRiderAtom);
+  const onNearby = !!nearbyFocus || !!nearbyRider;
   const { allStops } = useAllStops(contextStops.length === 0 || onNearby);
 
   const stops = useMemo(

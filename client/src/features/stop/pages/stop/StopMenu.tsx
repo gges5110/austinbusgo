@@ -7,6 +7,7 @@ import { UpcomingList } from "features/nearby/components/UpcomingList";
 import { useServerNow, useUpcoming } from "features/nearby/hooks/useUpcoming";
 import { RoutesSelector } from "features/stop/components/RoutesSelector/RoutesSelector";
 import { StopRoutes } from "features/stop/components/StopRoutes/StopRoutes";
+import { useFollowBus } from "features/stop/hooks/useFollowBus";
 import * as React from "react";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -51,7 +52,10 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const upcoming = useUpcoming(String(stop.stopId));
   const nowSeconds = useServerNow(upcoming.clockOffset);
   const arrivals = upcoming.data?.arrivals ?? [];
-  const [expandedTripId, setExpandedTripId] = useState<string>();
+  const { expandedTripId, toggle } = useFollowBus(
+    String(stop.stopId),
+    upcoming.data
+  );
 
   // Route filter: undefined shows every route. Opening the stop from a
   // route page starts filtered to that route.
@@ -165,11 +169,7 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
         data={upcoming.data}
         expandedTripId={expandedTripId}
         nowSeconds={nowSeconds}
-        onToggle={(tripId) =>
-          setExpandedTripId((current) =>
-            current === tripId ? undefined : tripId
-          )
-        }
+        onToggle={toggle}
         routeIds={routeFilter ? selectedRouteIds : undefined}
       />
       {/* Arrivals come first (a half-open phone sheet shows little else);

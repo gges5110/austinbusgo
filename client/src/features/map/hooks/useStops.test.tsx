@@ -1,7 +1,7 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import * as React from "react";
-import { nearbyRiderAtom } from "shared/state/atoms";
+import { nearbyFocusAtom, nearbyRiderAtom } from "shared/state/atoms";
 import { Stop } from "shared/types/interface.d";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -111,6 +111,21 @@ describe("useStops", () => {
     });
 
     expect(mocks.useAllStops).toHaveBeenCalledWith(true);
+  });
+
+  // A stop page publishes the map focus only once a bus is tapped
+  test("survives the map focus appearing after the first render", () => {
+    mocks.useCurrentStop.mockReturnValue({ currentStop: makeStop("c1") });
+    const store = createStore();
+    renderHook(() => useStops(), {
+      wrapper: ({ children }: React.PropsWithChildren) => (
+        <JotaiProvider store={store}>{children}</JotaiProvider>
+      ),
+    });
+
+    act(() => store.set(nearbyFocusAtom, { arrivals: [], stopId: "c1" }));
+
+    expect(mocks.useAllStops).toHaveBeenLastCalledWith(true);
   });
 
   test("deduplicates stops by stopId, later source wins", () => {
