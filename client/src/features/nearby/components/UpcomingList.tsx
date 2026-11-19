@@ -4,6 +4,7 @@ import {
   formatHeadsign,
   formatNextBusTime,
 } from "features/nearby/utils/countdown";
+import { groupArrivals } from "features/nearby/utils/groupArrivals";
 import * as React from "react";
 import { useEffect } from "react";
 import { StopUpcoming, UpcomingArrival } from "shared/api/generated/model";
@@ -18,7 +19,7 @@ interface UpcomingListProps {
   routeIds?: string[];
   /** Only show this direction of those routes */
   directionId?: number;
-  /** Show at most this many buses */
+  /** Show at most this many routes */
   limit?: number;
   /** Shown when no bus matches, instead of the generic message */
   emptyTitle?: string;
@@ -26,8 +27,9 @@ interface UpcomingListProps {
 
 /**
  * The next hour of buses at a stop, shared by Nearby and the Explore stop
- * page: loading skeleton, live-tracking outage banner, rows, and the
- * "no buses in the next hour" message.
+ * page: loading skeleton, live-tracking outage banner, one row per route
+ * and destination (its next bus, then the ones after), and the "no buses
+ * in the next hour" message.
  */
 export const UpcomingList: React.FC<UpcomingListProps> = ({
   data,
@@ -42,7 +44,8 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
   const matches = (arrival: UpcomingArrival) =>
     (!routeIds || routeIds.includes(arrival.routeId)) &&
     (directionId === undefined || arrival.directionId === directionId);
-  const arrivals = (data?.arrivals ?? []).filter(matches).slice(0, limit);
+  const arrivals = (data?.arrivals ?? []).filter(matches);
+  const groups = groupArrivals(arrivals).slice(0, limit);
   useTrackArrivalsShown(data, arrivals, routeIds, directionId);
 
   if (!data) {
@@ -88,11 +91,12 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
         </Box>
       ) : (
         <Box aria-live={"polite"} component={"ul"} sx={{ m: 0, p: 0 }}>
-          {arrivals.map((arrival) => (
+          {groups.map(({ next: arrival, later }) => (
             <UpcomingRow
               arrival={arrival}
               expanded={arrival.tripId === expandedTripId}
-              key={`${arrival.tripId}-${arrival.scheduledAt}`}
+              key={`${arrival.routeId}-${arrival.headsign}`}
+              later={later}
               nowSeconds={nowSeconds}
               onToggle={() => {
                 if (arrival.tripId !== expandedTripId) {
