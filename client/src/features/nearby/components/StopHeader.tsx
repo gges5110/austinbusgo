@@ -1,7 +1,10 @@
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import {
   Box,
+  Button,
   Chip,
   IconButton,
   Stack,
@@ -13,6 +16,9 @@ import { formatDistance } from "features/nearby/utils/geo";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Stop } from "shared/api/generated/model";
+import { useFavorites } from "shared/components/AddToFavorites/useFavorites";
+import { track } from "shared/track";
+import { Stop as SavedStop } from "shared/types/interface.d";
 
 /** Data older than this is flagged as stale */
 const STALE_AFTER_SECONDS = 60;
@@ -65,6 +71,7 @@ export const StopHeader: React.FC<StopHeaderProps> = ({
             )}
           </Typography>
         </Box>
+        <SaveStopButton stop={stop} />
         {pinned ? (
           <Tooltip title={"Unpin: follow my location"}>
             <IconButton
@@ -103,5 +110,35 @@ export const StopHeader: React.FC<StopHeaderProps> = ({
         </Stack>
       )}
     </Box>
+  );
+};
+
+/**
+ * Save the stop with a labelled button (not just an icon): saved stops are
+ * one tap from Nearby next time, whichever stop GPS picks
+ */
+const SaveStopButton: React.FC<{ stop: Stop }> = ({ stop }) => {
+  const { addToFavorites, containsFavorite, removeFromFavorites } =
+    useFavorites();
+  const value = stop as SavedStop;
+  const saved = containsFavorite(value);
+  return (
+    <Button
+      aria-pressed={saved}
+      onClick={() => {
+        if (saved) {
+          removeFromFavorites(value);
+        } else {
+          addToFavorites(value);
+          track("save", ["stop", stop.stopId]);
+        }
+      }}
+      size={"small"}
+      startIcon={saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+      sx={{ flexShrink: 0, textTransform: "none" }}
+      variant={saved ? "text" : "outlined"}
+    >
+      {saved ? "Saved" : "Save"}
+    </Button>
   );
 };

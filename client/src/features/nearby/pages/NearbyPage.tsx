@@ -6,11 +6,13 @@ import NearMeIcon from "@mui/icons-material/NearMe";
 import {
   Box,
   Button,
+  Chip,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Skeleton,
+  Stack,
   Typography,
 } from "@mui/material";
 import { NearbySheet } from "features/nearby/components/NearbySheet";
@@ -163,6 +165,8 @@ export const NearbyPage: React.FC = () => {
         nowSeconds={nowSeconds}
         onToggle={toggleTrip}
       />
+
+      <YourStopChips currentStopId={stop?.stopId ?? stopId} />
 
       {!pinned && <StopIdEntry />}
     </NearbySheet>
@@ -360,10 +364,10 @@ const LocationPrompt: React.FC<{
 const MAX_RECENT_STOPS = 3;
 
 /**
- * One tap back to the rider's stops: saved stops, then the last few they
- * opened (search, map, or stop ID), most recent first.
+ * The rider's stops: saved ones, then the last few they opened (search,
+ * map, or stop ID), most recent first. Leaves out `currentStopId`.
  */
-const YourStops: React.FC = () => {
+const useYourStops = (currentStopId?: string) => {
   const favorites = useAtomValue(favoritesAtom);
   const { recentSearches } = useRecentSearches();
   const saved = favorites.filter(
@@ -376,7 +380,16 @@ const YourStops: React.FC = () => {
     .filter((stop) => !savedIds.has(stop.stopId))
     .slice(0, MAX_RECENT_STOPS);
 
-  if (saved.length + recent.length === 0) return null;
+  return [
+    ...saved.map((stop) => ({ stop, Icon: BookmarkIcon })),
+    ...recent.map((stop) => ({ stop, Icon: HistoryIcon })),
+  ].filter(({ stop }) => stop.stopId !== currentStopId);
+};
+
+/** One tap back to the rider's stops, on the first screen */
+const YourStops: React.FC = () => {
+  const stops = useYourStops();
+  if (stops.length === 0) return null;
 
   return (
     <List
@@ -391,10 +404,7 @@ const YourStops: React.FC = () => {
         </Typography>
       }
     >
-      {[
-        ...saved.map((stop) => ({ stop, Icon: BookmarkIcon })),
-        ...recent.map((stop) => ({ stop, Icon: HistoryIcon })),
-      ].map(({ stop, Icon }) => (
+      {stops.map(({ stop, Icon }) => (
         <ListItemButton
           component={RouterLink}
           key={stop.stopId}
@@ -410,5 +420,38 @@ const YourStops: React.FC = () => {
         </ListItemButton>
       ))}
     </List>
+  );
+};
+
+/**
+ * The rider's other stops under the arrivals, so the stop near home and
+ * the one near work are each one tap away whichever one GPS picked
+ */
+const YourStopChips: React.FC<{ currentStopId?: string }> = ({
+  currentStopId,
+}) => {
+  const stops = useYourStops(currentStopId);
+  if (stops.length === 0) return null;
+
+  return (
+    <Box sx={{ px: 2, pt: 1.5 }}>
+      <Typography color={"text.secondary"} variant={"caption"}>
+        Your stops
+      </Typography>
+      <Stack direction={"row"} sx={{ flexWrap: "wrap", gap: 1, mt: 0.5 }}>
+        {stops.map(({ stop, Icon }) => (
+          <Chip
+            clickable={true}
+            component={RouterLink}
+            icon={<Icon fontSize={"small"} />}
+            key={stop.stopId}
+            label={stop.stopName}
+            size={"small"}
+            to={`/nearby/stop/${stop.stopId}`}
+            variant={"outlined"}
+          />
+        ))}
+      </Stack>
+    </Box>
   );
 };
