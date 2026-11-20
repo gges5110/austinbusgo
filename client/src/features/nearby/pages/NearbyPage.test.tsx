@@ -203,6 +203,38 @@ describe("NearbyPage", () => {
     expect(request).toHaveBeenCalled();
   });
 
+  test("tapped again while blocked: says the browser won't ask again", () => {
+    mocks.geolocation.mockReturnValue({
+      status: "denied",
+      request: vi.fn(),
+      supported: true,
+      stillBlocked: true,
+    });
+
+    renderAt("/nearby");
+
+    expect(screen.getByText("Location is still blocked")).toBeTruthy();
+    expect(screen.getByText(/won't ask again/)).toBeTruthy();
+    expect(screen.getByLabelText("Stop ID")).toBeTruthy();
+  });
+
+  test("location blocked on an iPhone: only the iPhone steps", () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"
+    );
+    mocks.geolocation.mockReturnValue({
+      status: "denied",
+      request: vi.fn(),
+      supported: true,
+    });
+
+    renderAt("/nearby");
+
+    expect(screen.getByText(/Website Settings › Location/)).toBeTruthy();
+    expect(screen.queryByText(/Android:/)).toBeNull();
+    vi.restoreAllMocks();
+  });
+
   test("no geolocation in the browser: no dead retry button", () => {
     mocks.geolocation.mockReturnValue({
       status: "unavailable",

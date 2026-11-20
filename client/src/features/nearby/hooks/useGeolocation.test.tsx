@@ -127,6 +127,23 @@ describe("useGeolocation", () => {
     expect(result.current.status).toBe("locating");
   });
 
+  test("a tap that's refused, then another while blocked: still blocked", async () => {
+    setPermission("prompt");
+    const { result } = render();
+    await waitFor(() => expect(result.current.status).toBe("idle"));
+
+    act(() => result.current.request());
+    act(() => deny());
+    // The first refusal is the rider's answer to the prompt
+    expect(result.current.status).toBe("denied");
+    expect(result.current.stillBlocked).toBe(false);
+
+    act(() => result.current.request());
+    expect(result.current.stillBlocked).toBe(false);
+    act(() => deny());
+    expect(result.current.stillBlocked).toBe(true);
+  });
+
   test("a refusal forgets the opt-in so later visits don't prompt on load", async () => {
     setPermission("prompt");
     localStorage.setItem(STORAGE_KEY, "true");

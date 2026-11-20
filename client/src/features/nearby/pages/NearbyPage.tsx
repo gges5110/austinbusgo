@@ -109,6 +109,7 @@ export const NearbyPage: React.FC = () => {
         <LocationPrompt
           onRequest={geolocation.supported ? geolocation.request : undefined}
           status={geolocation.status}
+          stillBlocked={geolocation.stillBlocked}
         />
       </NearbySheet>
     );
@@ -261,11 +262,22 @@ const Message: React.FC<React.PropsWithChildren<{ title: string }>> = ({
   </Box>
 );
 
-/** How to unblock location for this site, by browser */
-const UNBLOCK_HELP = [
-  "iPhone: tap aA in the address bar › Website Settings › Location › Allow.",
-  "Android: tap the icon left of the address › Permissions › Location.",
-];
+/** How to unblock location for this site, by device */
+const UNBLOCK_HELP = {
+  iphone:
+    "iPhone: tap aA in the address bar › Website Settings › Location › Allow.",
+  android:
+    "Android: tap the icon left of the address › Permissions › Location.",
+  computer:
+    "Computer: click the icon left of the address › Site settings › Location › Allow.",
+};
+
+/** Just the rider's device when we can tell, else all of them */
+const unblockHelp = (userAgent = navigator.userAgent) => {
+  if (/iPhone|iPad|iPod/.test(userAgent)) return [UNBLOCK_HELP.iphone];
+  if (/Android/.test(userAgent)) return [UNBLOCK_HELP.android];
+  return Object.values(UNBLOCK_HELP);
+};
 
 /**
  * No location yet: the first-visit welcome ("idle"), or location blocked /
@@ -275,7 +287,9 @@ const LocationPrompt: React.FC<{
   /** Undefined when the browser has no geolocation: no button to offer */
   onRequest?: () => void;
   status: GeolocationStatus;
-}> = ({ onRequest, status }) => {
+  /** Tapped again and still blocked: the browser won't ask until unblocked */
+  stillBlocked?: boolean;
+}> = ({ onRequest, status, stillBlocked = false }) => {
   const firstVisit = status === "idle";
 
   return (
@@ -290,7 +304,9 @@ const LocationPrompt: React.FC<{
           {firstVisit
             ? "See the next buses at your stop"
             : status === "denied"
-              ? "Location is blocked for this site"
+              ? stillBlocked
+                ? "Location is still blocked"
+                : "Location is blocked for this site"
               : "Couldn't get your location"}
         </Typography>
         <Typography
@@ -302,8 +318,10 @@ const LocationPrompt: React.FC<{
             "Use your location to find the stop you're at, or enter the stop ID from the sign."
           ) : status === "denied" ? (
             <>
-              To use it, allow location in your browser, then try again.
-              {UNBLOCK_HELP.map((line) => (
+              {stillBlocked
+                ? "Your browser won't ask again until you allow location for this site in its settings. Or enter the stop ID from the sign below."
+                : "To use it, allow location in your browser, then try again."}
+              {unblockHelp().map((line) => (
                 <Box
                   component={"span"}
                   key={line}

@@ -17,6 +17,11 @@ export interface GeolocationState {
   request: () => void;
   /** False when the browser has no geolocation at all (nothing to retry) */
   supported: boolean;
+  /**
+   * The rider tapped again while blocked and it's still blocked: the
+   * browser won't ask again until location is allowed in its settings
+   */
+  stillBlocked: boolean;
 }
 
 /**
@@ -38,10 +43,11 @@ export const useGeolocation = (enabled = true): GeolocationState => {
   // Until the permission check answers, show "locating" rather than flash
   // the first-visit screen at a rider who already allowed location
   const [checking, setChecking] = useState(true);
+  const [stillBlocked, setStillBlocked] = useState(false);
   // Whether we may watch now. (The stored opt-in loads after first render.)
   const requested = tapped || optedIn || allowedByBrowser;
   const [state, setState] = useState<
-    Omit<GeolocationState, "request" | "supported">
+    Omit<GeolocationState, "request" | "supported" | "stillBlocked">
   >({
     status: supported ? "locating" : "unavailable",
   });
@@ -126,10 +132,12 @@ export const useGeolocation = (enabled = true): GeolocationState => {
 
   // Record how a tap on "Use my location" turned out (once per tap)
   const awaitingTap = useRef(false);
+  const tappedWhileDenied = useRef(false);
   useEffect(() => {
     if (awaitingTap.current && state.status !== "locating") {
       awaitingTap.current = false;
       track("location", [state.status, "tap"]);
+      setStillBlocked(tappedWhileDenied.current && state.status === "denied");
     }
     // Every update, not just status changes: a re-tap while blocked ends
     // "denied" → "locating" → "denied"
@@ -137,7 +145,11 @@ export const useGeolocation = (enabled = true): GeolocationState => {
 
   const hasFix = useRef(false);
   hasFix.current = state.status === "granted";
+  const denied = useRef(false);
+  denied.current = state.status === "denied";
   const request = useCallback(() => {
+    tappedWhileDenied.current = denied.current;
+    setStillBlocked(false);
     if (hasFix.current) {
       // Already have a fix: the watch keeps it, so record the outcome now
       track("location", ["granted", "tap"]);
@@ -155,5 +167,11 @@ export const useGeolocation = (enabled = true): GeolocationState => {
         ? "locating"
         : "idle";
 
-  return { ...state, status, request, supported };
+  return {
+    ...state,
+    status,
+    request,
+    supported,
+    stillBlocked: stillBlocked && status === "denied",
+  };
 };
