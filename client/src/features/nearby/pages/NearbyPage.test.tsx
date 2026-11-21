@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { Provider as JotaiProvider } from "jotai";
 import React from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -97,6 +97,33 @@ describe("NearbyPage", () => {
     expect(screen.getByRole("heading", { name: stop.stopName })).toBeTruthy();
     expect(screen.getByText("7 min")).toBeTruthy();
     expect(screen.getByText("2 stops away")).toBeTruthy();
+  });
+
+  test("saves the stop from its header", () => {
+    renderAt("/nearby");
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByRole("button", { name: "Saved" }).getAttribute("aria-pressed")
+    ).toBe("true");
+    const favorites = JSON.parse(localStorage.getItem("favorites") ?? "[]");
+    expect(favorites.map((f: { stopId: string }) => f.stopId)).toEqual([
+      "5869",
+    ]);
+  });
+
+  test("the rider's other stops sit under the arrivals, not this one", () => {
+    const other = { ...stop, stopId: "1002", stopName: "Republic Square" };
+    localStorage.setItem("favorites", JSON.stringify([stop, other]));
+
+    renderAt("/nearby");
+
+    const links = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"))
+      .filter((href) => href?.startsWith("/nearby/stop/"));
+    expect(links).toEqual(["/nearby/stop/1002"]);
   });
 
   test("while locating, offers the stop-ID field", () => {
