@@ -211,7 +211,7 @@ Run `make help` to see all available targets organized by category.
 
 ### Cloudflare Workers
 - `workers/events`, `workers/gtfs-rt-proxy` and `workers/graphql-edge-cache` deploy from `.github/workflows/deployWorkers.yml` when their files change on `main` (or by hand: Actions → Deploy Workers); PRs that touch them run their type check and tests
-- `workers/graphql-edge-cache` deploys with a fresh `CACHE_VERSION` (then a cache warm-up) from `deployWorkers.yml` when its code changes, and from `deployBackend.yml` after each data load; never deploy it plainly, which resets the version to `v1`. It forwards only `/api/` paths, always to the backend host (`src/upstream.ts`)
+- `workers/graphql-edge-cache` deploys with a fresh `CACHE_VERSION` (then a cache warm-up) from `deployWorkers.yml` when its code changes, and from `deployBackend.yml` after each data load; never deploy it plainly, which resets the version to `v1`. It forwards only `/api/` paths, always to the backend host (`src/upstream.ts`), with only the API's own query parameters (unknown ones are dropped so they can't bust the cache). Backend-bound requests (misses) are rate limited per IP (`MISS_LIMITER` in its `wrangler.toml`), and carry the `ORIGIN_SECRET` GitHub secret as `X-Origin-Auth`; when the backend has `ORIGIN_SECRET` set it refuses requests without it (except `/api/rt/status`), so the Cloud Run URL can't be used to get around the worker. Both deploy workflows push the secret
 
 ### Git Workflow
 - Git hooks installed via `./setup-hooks.sh`

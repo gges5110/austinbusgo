@@ -9,11 +9,15 @@
  *
  * - `X-Edge-Cache: HIT | MISS | BYPASS` reports what happened.
  * - Non-200 responses are never cached.
+ * - Requests that would reach the backend are rate limited per IP (429).
+ * - Upstream requests carry ORIGIN_SECRET, which the backend requires, so
+ *   the Cloud Run URL can't be hit directly to get around this worker.
  *
  * All data served by the backend is public and identical for every user,
  * which is what makes shared caching safe here.
  */
 
+import { overLimit } from "./limit";
 import { ttlForPath } from "./ttl";
 import { upstreamUrl as toUpstream } from "./upstream";
 
@@ -25,6 +29,25 @@ interface Env {
    * load so static entries don't outlive the GTFS data they came from.
    */
   CACHE_VERSION?: string;
+  /** Sent to the backend as X-Origin-Auth (a worker secret) */
+  ORIGIN_SECRET?: string;
+  /** Per-IP limit on backend-bound requests (wrangler.toml) */
+  MISS_LIMITER?: RateLimit;
+}
+
+const RETRY_AFTER_SECONDS = 60;
+
+function fetchUpstream(url: URL, env: Env): Promise<Response> {
+  return fetch(url.toString(), {
+    headers: env.ORIGIN_SECRET ? { "X-Origin-Auth": env.ORIGIN_SECRET } : {},
+  });
+}
+
+function tooManyRequests(): Response {
+  return new Response("Too Many Requests", {
+    status: 429,
+    headers: { ...CORS_HEADERS, "Retry-After": String(RETRY_AFTER_SECONDS) },
+  });
 }
 
 const CORS_HEADERS = {
@@ -68,17 +91,18 @@ export default {
 
     const ttl = ttlForPath(url.pathname);
     if (ttl === undefined) {
+      if (await overLimit(request, env.MISS_LIMITER)) return tooManyRequests();
       return withEdgeCacheHeaders(
-        await fetch(upstreamUrl.toString()),
+        await fetchUpstream(upstreamUrl, env),
         "BYPASS",
       );
     }
 
-    // Sort query params so parameter order never splits the cache
-    url.searchParams.sort();
+    // The upstream URL's query is filtered and sorted, so unknown or
+    // reordered parameters never split the cache
     const cacheKey = new Request(
       new URL(
-        `/__edge-cache/${env.CACHE_VERSION ?? "v1"}${url.pathname}?${url.searchParams}`,
+        `/__edge-cache/${env.CACHE_VERSION ?? "v1"}${url.pathname}${upstreamUrl.search}`,
         request.url,
       ).toString(),
     );
@@ -89,7 +113,8 @@ export default {
       return withEdgeCacheHeaders(cached, "HIT");
     }
 
-    const upstream = await fetch(upstreamUrl.toString());
+    if (await overLimit(request, env.MISS_LIMITER)) return tooManyRequests();
+    const upstream = await fetchUpstream(upstreamUrl, env);
     if (upstream.status !== 200) {
       return withEdgeCacheHeaders(upstream, "MISS");
     }
