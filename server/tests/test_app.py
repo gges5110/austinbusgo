@@ -67,3 +67,44 @@ def test_realtime_feed_errors_are_503_not_500():
 
     assert response.status_code == 503
     assert "ConnectTimeout" in response.json()["detail"]
+
+
+def test_with_an_origin_secret_only_the_edge_cache_gets_in(mocker):
+    mocker.patch("server.config.origin_secret", "s3cret")
+    app = make_app(mocker)
+
+    @app.get("/api/ping")
+    async def ping():
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        assert client.get("/api/ping").status_code == 403
+        assert (
+            client.get("/api/ping", headers={"X-Origin-Auth": "wrong"}).status_code
+            == 403
+        )
+        assert (
+            client.get("/api/ping", headers={"X-Origin-Auth": "s3cret"}).status_code
+            == 200
+        )
+
+
+def test_the_status_page_still_reaches_the_backend_directly(mocker):
+    mocker.patch("server.config.origin_secret", "s3cret")
+    app = make_app(mocker)
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        # Not 403: the route itself runs (its mocked database may fail)
+        assert client.get("/api/rt/status").status_code != 403
+
+
+def test_without_an_origin_secret_anyone_gets_in(mocker):
+    mocker.patch("server.config.origin_secret", None)
+    app = make_app(mocker)
+
+    @app.get("/api/ping")
+    async def ping():
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        assert client.get("/api/ping").status_code == 200

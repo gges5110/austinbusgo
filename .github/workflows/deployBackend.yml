@@ -62,11 +62,13 @@ jobs:
 
       - name: Compare with the live feed
         id: feed
+        env:
+          ORIGIN_SECRET: ${{ secrets.ORIGIN_SECRET }}
         run: |
           new=$(python -c "import sqlite3; print(sqlite3.connect('etl/gtfs.db').execute('SELECT feed_version FROM feed_info').fetchone()[0])")
           url=$(gcloud run services describe "$CLOUD_RUN_SERVICE" --region "$GCP_REGION" --format='value(status.url)')
           # An unreachable backend reads as a changed feed, so it gets redeployed
-          live=$(curl -sf "$url/api/feed-info" | python -c "import json, sys; print(json.load(sys.stdin).get('feedVersion') or '')" || true)
+          live=$(curl -sf -H "X-Origin-Auth: $ORIGIN_SECRET" "$url/api/feed-info" | python -c "import json, sys; print(json.load(sys.stdin).get('feedVersion') or '')" || true)
           changed=$([ "$new" = "$live" ] && echo false || echo true)
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
           {
@@ -102,6 +104,10 @@ jobs:
           flags: >-
             --service-account=${{ env.RUNTIME_SERVICE_ACCOUNT }}
             --clear-cloudsql-instances --remove-env-vars=DATABASE_URL
+          # Only requests carrying this (the edge-cache worker's) get in;
+          # empty turns the check off
+          env_vars: |
+            ORIGIN_SECRET=${{ secrets.ORIGIN_SECRET }}
 
   invalidate-edge-cache:
     needs: [deploy]

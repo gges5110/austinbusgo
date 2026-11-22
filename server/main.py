@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+import hmac
 import logging
 
 from fastapi import FastAPI, Request
@@ -9,6 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from server import logging_config  # noqa: F401 - Configure logging on import
+from server import config
 from server.config import db_path
 from server import database
 
@@ -40,6 +42,10 @@ async def lifespan(app: FastAPI):
     warm.cancel()
 
 
+# Reachable without the edge-cache secret
+OPEN_PATHS = {"/api/rt/status"}
+
+
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
 
@@ -51,6 +57,22 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router)
+
+    # Only the edge-cache worker may call the backend (it adds the shared
+    # secret). /api/rt/status stays open: the status page times the backend
+    # directly, and it is cheap (one row plus the shared, cached feeds).
+    @app.middleware("http")
+    async def require_origin_secret(request: Request, call_next):
+        secret = config.origin_secret
+        if (
+            secret
+            and request.url.path not in OPEN_PATHS
+            and not hmac.compare_digest(
+                request.headers.get("X-Origin-Auth", ""), secret
+            )
+        ):
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+        return await call_next(request)
 
     # Live-bus endpoints when data.texas.gov is down or slow: say so (503,
     # never cached by the edge) instead of a bare 500

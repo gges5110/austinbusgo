@@ -98,6 +98,19 @@ jobs:
       - name: Test
         run: npm run --if-present test
 
+      # The edge cache sends it to the backend, which refuses requests
+      # without it; set before the deploy so the new code never runs without
+      - name: Set the backend's shared secret
+        if: matrix.worker == 'graphql-edge-cache'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ORIGIN_SECRET: ${{ secrets.ORIGIN_SECRET }}
+        run: |
+          if [ -n "$ORIGIN_SECRET" ]; then
+            printf %s "$ORIGIN_SECRET" | npx wrangler secret put ORIGIN_SECRET
+          fi
+
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
