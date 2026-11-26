@@ -11,6 +11,7 @@ import { useFollowBus } from "features/stop/hooks/useFollowBus";
 import * as React from "react";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Stop } from "shared/api/generated/model";
 import { AddToFavorites } from "shared/components/AddToFavorites/AddToFavorites";
 import { BackButton } from "shared/components/BackButton/BackButton";
 import { MenuPanel } from "shared/components/MenuPanel/MenuPanel";
@@ -47,7 +48,11 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
   const [searchParams] = useSearchParams();
   const routeId = searchParams.get("routeId") || "";
   const stop = useDataFromLoader(stopLoader);
-  useTitle(`${stop.stopName} - Austin Bus Go`);
+  const code = stop.stopCode ?? stop.stopId;
+  // Same as the prerendered page's title, so it doesn't change on load
+  useTitle(
+    `${stop.stopName} Bus Stop (${code}) – Live Arrivals | Austin Bus Go`
+  );
 
   const upcoming = useUpcoming(String(stop.stopId));
   const nowSeconds = useServerNow(upcoming.clockOffset);
@@ -108,7 +113,9 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
               }}
             >
               <PlaceOutlinedIcon />
-              <Typography variant={"subtitle1"}>{stop.stopName}</Typography>
+              <Typography component={"h1"} variant={"subtitle1"}>
+                {stop.stopName}
+              </Typography>
               <WheelchairBoardingIcon
                 wheelchairBoarding={stop.wheelchairBoarding}
               />
@@ -187,6 +194,40 @@ export const StopMenu: React.FC<StopMenuProps> = ({ hideBackButton }) => {
       </Box>
       <Divider />
       <StopRoutes routes={stop.routes} />
+      <AboutStop code={String(code)} stop={stop} />
     </MenuPanel>
+  );
+};
+
+/** "490" / "7 and 10" / "1, 7 and 10" */
+const listRouteIds = (routeIds: string[]) =>
+  routeIds.length <= 1
+    ? routeIds.join("")
+    : `${routeIds.slice(0, -1).join(", ")} and ${routeIds.at(-1)}`;
+
+/**
+ * What this page is, in a sentence. The prerendered HTML says it before
+ * the app loads; this keeps saying it after, so a stop with no bus soon
+ * still reads as a real page about the stop (not an empty one).
+ */
+const AboutStop: React.FC<{
+  code: string;
+  stop: Stop;
+}> = ({ code, stop }) => {
+  const routeIds = (stop.routes ?? []).map((route) => route.routeId);
+  return (
+    <Typography
+      color={"text.secondary"}
+      component={"p"}
+      sx={{ px: 2, py: 1.5 }}
+      variant={"body2"}
+    >
+      {`${stop.stopName} is CapMetro bus stop ${code} in Austin, Texas`}
+      {routeIds.length > 0 &&
+        `, served by route${routeIds.length === 1 ? "" : "s"} ${listRouteIds(
+          routeIds
+        )}`}
+      . See live arrival predictions and where each bus is right now.
+    </Typography>
   );
 };

@@ -6,6 +6,7 @@ import {
   Divider,
   ListItemButton,
   ListItemText,
+  Typography,
 } from "@mui/material";
 import { useDataFromLoader } from "app/Router";
 import { RouteNextBus } from "features/route/components/RouteNextBus/RouteNextBus";
@@ -33,7 +34,10 @@ export const RouteMenu = () => {
   const { viewStatePathname } = useViewStatePathname();
   const [showAllStops, setShowAllStops] = useState(false);
 
-  useTitle(`${route.routeId} ${routeDisplayName(route)} - Austin Bus Go`);
+  // Same as the prerendered page's title, so it doesn't change on load
+  useTitle(
+    `Route ${route.routeId} ${routeDisplayName(route)} – Live Bus Tracker | Austin Bus Go`
+  );
 
   const setDirection = (directionId: Trip["directionId"]) => {
     if (directionId !== undefined) {
@@ -51,6 +55,7 @@ export const RouteMenu = () => {
         <Box sx={{ alignItems: "center", display: "flex", pl: 1, pr: 0.5 }}>
           <Box sx={{ flex: 1, minWidth: 0, py: 1 }}>
             <RouteDisplayBanner
+              nameComponent={"h1"}
               routeColor={route.routeColor}
               routeId={route.routeId}
               routeName={routeDisplayName(route)}
@@ -92,6 +97,17 @@ export const RouteMenu = () => {
       <Collapse id={"route-all-stops"} in={showAllStops}>
         <RouteStopsTimeline live={showAllStops} route={route} stops={stops} />
       </Collapse>
+      {/* What this page is, in a sentence, as the prerendered HTML says
+          before the app loads: without it a route with no bus soon reads
+          to search engines as an empty (soft 404) page */}
+      <Typography
+        color={"text.secondary"}
+        component={"p"}
+        sx={{ px: 2, py: 1.5 }}
+        variant={"body2"}
+      >
+        {`Route ${route.routeId} (${routeDisplayName(route)}) is a CapMetro bus route in Austin, Texas with ${stops.length} stops. See where each bus is right now and when the next one reaches your stop.`}
+      </Typography>
     </MenuPanel>
   );
 };

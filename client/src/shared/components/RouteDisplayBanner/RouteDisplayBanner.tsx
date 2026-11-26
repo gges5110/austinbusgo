@@ -10,6 +10,8 @@ interface RouteDisplayBannerProps {
   routeId: string;
   routeName: string;
   useBusIcon?: boolean;
+  /** "h1" when the banner names the page */
+  nameComponent?: React.ElementType;
 }
 
 export const RouteDisplayBanner: React.FC<RouteDisplayBannerProps> = ({
@@ -17,6 +19,7 @@ export const RouteDisplayBanner: React.FC<RouteDisplayBannerProps> = ({
   routeColor,
   routeName,
   useBusIcon = false,
+  nameComponent = "span",
 }) => {
   return (
     <Box
@@ -29,7 +32,9 @@ export const RouteDisplayBanner: React.FC<RouteDisplayBannerProps> = ({
     >
       {useBusIcon ? <DirectionsBusIcon /> : <RouteIcon />}
       <RouteIdDisplay routeColor={routeColor} routeId={routeId} />
-      <Typography variant={"subtitle1"}>{routeName}</Typography>
+      <Typography component={nameComponent} variant={"subtitle1"}>
+        {routeName}
+      </Typography>
     </Box>
   );
 };

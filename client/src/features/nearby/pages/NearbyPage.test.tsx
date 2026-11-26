@@ -333,10 +333,12 @@ describe("NearbyPage", () => {
 
     renderAt("/nearby");
 
-    expect(screen.getByText("No buses in the next hour")).toBeTruthy();
+    // Leads with the next bus, not "No buses" (reads as an empty page)
     expect(
       screen.getByText(/Next bus: Route 7 Duval, (tomorrow )?at/)
     ).toBeTruthy();
+    expect(screen.getByText("None in the next hour")).toBeTruthy();
+    expect(screen.queryByText("No buses in the next hour")).toBeNull();
   });
 
   test("realtime outage banner", () => {
