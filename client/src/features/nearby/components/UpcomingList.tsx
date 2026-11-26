@@ -74,19 +74,37 @@ export const UpcomingList: React.FC<UpcomingListProps> = ({
       )}
       {arrivals.length === 0 ? (
         <Box sx={{ px: 2, py: 3, textAlign: "center" }}>
-          <Typography variant={"subtitle1"}>
-            {emptyTitle ??
-              (hiddenByFilter
-                ? "No buses on the selected routes in the next hour"
-                : "No buses in the next hour")}
-          </Typography>
-          {next && (
-            <Typography color={"text.secondary"} variant={"body2"}>
-              {`Next bus: Route ${next.routeId} ${formatHeadsign(
-                next.headsign,
-                next.routeId
-              )}, ${formatNextBusTime(next.scheduledAt, nowSeconds)}`}
-            </Typography>
+          {next && !emptyTitle && !hiddenByFilter ? (
+            // Lead with when the next bus comes: a page whose main line is
+            // "No buses" reads to search engines as an empty (soft 404) page
+            <>
+              <Typography variant={"subtitle1"}>
+                {`Next bus: Route ${next.routeId} ${formatHeadsign(
+                  next.headsign,
+                  next.routeId
+                )}, ${formatNextBusTime(next.scheduledAt, nowSeconds)}`}
+              </Typography>
+              <Typography color={"text.secondary"} variant={"body2"}>
+                None in the next hour
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography variant={"subtitle1"}>
+                {emptyTitle ??
+                  (hiddenByFilter
+                    ? "No buses on the selected routes in the next hour"
+                    : "No buses in the next hour")}
+              </Typography>
+              {next && (
+                <Typography color={"text.secondary"} variant={"body2"}>
+                  {`Next bus: Route ${next.routeId} ${formatHeadsign(
+                    next.headsign,
+                    next.routeId
+                  )}, ${formatNextBusTime(next.scheduledAt, nowSeconds)}`}
+                </Typography>
+              )}
+            </>
           )}
         </Box>
       ) : (
